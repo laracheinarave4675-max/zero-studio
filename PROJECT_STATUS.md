@@ -114,11 +114,12 @@ Implemented on the existing development branch:
 - Add/remove/select, rename, show/hide, lock/unlock, and reorder layer controls.
 - Non-destructive vector eraser: eraser strokes are stored as ordered vector operations and exported as SVG masks; later strokes remain visible above earlier erase operations.
 - v1 `.zero` files with `frames[].paths` migrate to one layer per frame when opened.
-- SVG sequence export now includes layer visibility and eraser masks.
+- SVG sequence export includes layer visibility and eraser masks.
+- ZIP export creates a standalone archive containing the editable project, a manifest, and one SVG file per frame.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
 - Added 13 Node tests covering v1 migration, layer operations and rename validation, locked layers, eraser masks/order, hidden layers, validation, v2 round-trip, consecutive erasures, and unique mask IDs.
 - Drawing input consumes coalesced pointer samples where supported; pointer cancellation discards the incomplete gesture.
-- Added GitHub Actions workflow for Node test execution.
+- Added GitHub Actions workflow for Node test execution across all `tests/*.test.mjs` files, including ZIP archive tests.
 
 ### Validation record
 - Initial GitHub Actions attempt exposed one incorrect test fixture (it attempted to draw after locking the layer); the fixture was corrected.
@@ -134,7 +135,9 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [x] Added validated layer renaming (trimmed, non-empty, maximum 80 characters) with undo history.
 - [x] Added a regression test for successful rename and invalid names/IDs.
 - [x] Pointer input uses browser-coalesced samples where available; pointer cancellation discards the unfinished gesture.
-- [ ] Re-run CI and perform actual Android touch/stylus checks; no physical-device test is claimed.
+- [x] ZIP32 archive writer with UTF-8 filenames, CRC32, central directory, and path/duplicate validation.
+- [x] ZIP archive tests added to CI.
+- [ ] Test downloading and opening the ZIP on the physical Android phone; no device test is claimed.
 
 ## Next actions
 
