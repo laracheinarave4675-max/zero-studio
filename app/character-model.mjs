@@ -4,8 +4,11 @@ export const CHARACTER_MODEL_VERSION=1;
 const part=(id,name,layer,d,stroke,width=8,fill="none")=>({id,name,layer,path:{d,stroke,width,fill}});
 
 // Original reusable vector study. Parts remain ordinary editable SVG paths.
-export function createNoriModel(){
- return {
+export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
+
+export function createNoriModel(expression="neutral"){
+ if(!NORI_EXPRESSIONS.includes(expression))throw Error("تعبير الشخصية غير مدعوم");
+ const model={
   format:"zero-character-model",version:CHARACTER_MODEL_VERSION,id:"nori-base",name:"Nori — نموذج الشخصية",
   canvas:{width:1920,height:1080},guide:{headRatio:0.34,bodyRatio:0.46,legRatio:0.20,view:"front"},
   palette:{line:"#263449",skin:"#f4c7a1",hair:"#27364d",cloth:"#66bfae",accent:"#e9a65b"},
@@ -23,6 +26,19 @@ export function createNoriModel(){
    part("leg-right","الساق اليمنى","الأطراف","M 1055 850 L 1070 1010","#263449",30,"none")
   ]
  };
+ const face={
+  neutral:{left:"M 855 405 Q 885 375 915 405 Q 885 435 855 405 Z",right:"M 1005 405 Q 1035 375 1065 405 Q 1035 435 1005 405 Z",mouth:"M 930 485 Q 960 510 990 485"},
+  happy:{left:"M 855 420 Q 885 380 915 420",right:"M 1005 420 Q 1035 380 1065 420",mouth:"M 920 475 Q 960 545 1000 475"},
+  sad:{left:"M 855 405 Q 885 435 915 405",right:"M 1005 405 Q 1035 435 1065 405",mouth:"M 925 510 Q 960 470 995 510"},
+  surprised:{left:"M 870 405 A 15 25 0 1 0 900 405 A 15 25 0 1 0 870 405 Z",right:"M 1020 405 A 15 25 0 1 0 1050 405 A 15 25 0 1 0 1020 405 Z",mouth:"M 945 480 A 15 22 0 1 0 975 480 A 15 22 0 1 0 945 480 Z"}
+ };
+ for(const item of model.parts){
+  if(item.id==="eye-left")item.path.d=face[expression].left;
+  if(item.id==="eye-right")item.path.d=face[expression].right;
+  if(item.id==="mouth")item.path.d=face[expression].mouth;
+ }
+ model.expression=expression;
+ return model;
 }
 
 export function validateCharacterModel(model){
