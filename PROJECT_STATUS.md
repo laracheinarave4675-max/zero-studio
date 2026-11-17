@@ -73,13 +73,38 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Durable project README created.
 - [x] Project status and constraints documented.
 - [ ] Prior v0.1 prototype imported and re-reviewed.
-- [ ] App source committed to repository.
+- [x] First mobile vector drawing workspace source committed on `feature/mobile-drawing-workspace`.
 - [ ] Android browser/device smoke test.
-- [ ] Automated SVG drawing-command contract.
+- [ ] Android browser/device smoke test.
+- [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
+- [ ] Full SVG parser and geometric bounds validation.
 - [ ] First controlled AI-assisted vector drawing test.
 - [ ] First short animation test with measurable drawing count and quality review.
 - [ ] Production departments/agents orchestration.
 - [ ] Sound, editing, and export pipeline integration.
+
+## First implementation — feature/mobile-drawing-workspace
+
+Committed an initial browser-based drawing workspace under `app/`:
+- Arabic RTL responsive interface.
+- SVG 1920×1080 touch drawing surface with pen and prototype white-stroke eraser.
+- Frame add/duplicate/delete/select, previous-frame onion-skin preview, and playback at selectable 6/12/24 FPS.
+- Undo/redo history.
+- Save/open `.zero` JSON project files (local download/upload).
+- Export all frames as an SVG-sequence JSON bundle.
+- Strictly limited v1 vector-path JSON command input; no image-generation provider is connected.
+- PWA manifest and basic app-shell service worker.
+
+### Checks performed in this session
+- [x] JavaScript parse check for `app/app.js` passed using the connected execution environment.
+- [x] JavaScript parse check for `app/sw.js` passed.
+- [x] `app/manifest.webmanifest` parsed as valid JSON.
+- [ ] Physical Android interaction and touch testing.
+- [ ] Browser/PWA install and offline behavior.
+- [ ] Project save/open round-trip in a real browser.
+- [ ] SVG export opened in a separate Android drawing/animation app.
+
+Known prototype limitations: eraser paints white rather than removing vector geometry; no layer system, no semantic character drawing, no automatic keyframes/in-betweens, no AI model/provider, and no ZIP exporter. The 24 FPS playback selector does not produce 24 new drawings per second; the explicit 24-independent-drawings/sec goal remains unchanged and unproven.
 
 ## Next actions
 
