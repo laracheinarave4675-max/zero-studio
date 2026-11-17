@@ -25,6 +25,10 @@ Open `app/index.html` through an HTTPS static host (or a local web server) to us
 
 The development branch now includes project format v2 with editable per-frame layers (including renaming), a non-destructive SVG-mask vector eraser, ZIP export, and an optional text-only Gemini-to-SVG proposal workflow with explicit approval. Drawing input uses coalesced pointer samples where supported and discards cancelled gestures. Version 1 projects are migrated when opened. See [AI vector drawing adapter](docs/AI_VECTOR_DRAWING.md), [drawing command and layer model](docs/DRAWING_COMMANDS.md), [engine tests](tests/engine.test.mjs), and the Android test plan.
 
+## First animation proof
+
+The repository includes an editable one-second, 24-frame vector waving/blinking character test at `examples/24-drawings-one-second.zero`. It is a simple pipeline proof, not professional anime animation. See [animation proof notes](docs/ANIMATION_PROOF.md).
+
 ## Current state
 
 The repository is being established as the durable project record. The earlier v0.1 prototype was created outside this repository in a previous work session; it has not yet been imported here or validated on a real Android device. See PROJECT_STATUS.md for exact status.
