@@ -40,7 +40,7 @@ The loader accepts v1 project files with \`frames[].paths\` and migrates each fr
 - Locked layers reject drawing and erasing.
 - Layer count is capped at 100; operations per layer at 10,000.
 
-## ZIP export bundle
+## Reusable character model v1\n\n`app/character-model.mjs` defines an original Nori front-view construction model as 11 named, validated SVG path parts grouped into four editable layers (body, head, face, limbs). `validateCharacterModel` checks format/version, identity, unique part IDs, layer metadata, fixed 1920×1080 canvas dimensions, and each path through the drawing engine validator. `addCharacterModelToFrame` copies the model into a frame as ordinary stroke operations; no raster artwork, embedded SVG markup, transforms, scripts, or external assets are accepted. The workspace exposes this as an insertable starting model. It is a simple construction study, not a finished model sheet with turnaround, expression library, rig deformation, or pose interpolation.\n\n## ZIP export bundle
 
 The workspace exports a dependency-free ZIP32 archive containing `project.zero`, `manifest.json`, and one editable SVG per frame under `frames/`. Entries use UTF-8 names and are stored without compression for compatibility; ZIP32 size limits apply. Unsafe and duplicate archive paths are rejected.
 
@@ -52,7 +52,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite contains 26 tests, including 15 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, and 2 animation-proof tests. GitHub Actions run #124 passed all 26 tests and the JavaScript syntax checks.
+The suite now includes 30 tests: 15 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 4 character-model tests. The latest CI run must be checked after this change.
 
 ## AI proposal path
 
@@ -60,4 +60,4 @@ The optional Gemini text-only adapter produces a JSON proposal of editable SVG p
 
 ## Current limitations
 
-This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no live-tested AI provider integration yet. The Gemini text-to-vector adapter is implemented but still needs a real API key test. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Multi-point freehand strokes are interpolated into cubic Bézier curves; this is not pressure-sensitive brush simulation and still needs physical Android feel testing. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
+This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no live-tested AI provider integration yet. The Gemini text-to-vector adapter is implemented but still needs a real API key test. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Multi-point freehand strokes are interpolated into cubic Bézier curves; this is not pressure-sensitive brush simulation and still needs physical Android feel testing. The character model is an initial reusable construction template, not a full rig or professional model sheet. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
