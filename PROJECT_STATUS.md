@@ -78,7 +78,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
 - [ ] Full SVG parser and geometric bounds validation.
 - [x] First AI vector drawing adapter implemented with preview and explicit approval; [ ] live API-key test.
-- [ ] First short animation test with measurable drawing count and quality review.
+- [x] First one-second animation proof created: 24 distinct vector frame documents at 24 FPS, with automated uniqueness test; [ ] human quality review and Android playback.
 - [ ] Production departments/agents orchestration.
 - [ ] Sound, editing, and export pipeline integration.
 
@@ -140,6 +140,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [ ] Test downloading and opening the ZIP on the physical Android phone; no device test is claimed.
 - [x] Added a text-only Gemini vector proposal adapter with local validation and approve/reject preview.
 - [ ] Test the adapter using a real user API key and confirm provider access from the user network.
+- [x] Added a one-second original vector character wave/blink sample with 24 unique frames; no raster image generation used.
 
 ## Next actions
 
