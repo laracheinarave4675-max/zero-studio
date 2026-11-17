@@ -23,6 +23,20 @@ export function pointsToPath(points){
  }
  return d;
 }
+
+export function shapePath(kind,start,end){
+ const values=[start?.x,start?.y,end?.x,end?.y].map(Number);
+ if(values.some(v=>!Number.isFinite(v)||Math.abs(v)>1000000))throw Error("إحداثيات الشكل غير صالحة");
+ const [x1,y1,x2,y2]=values,fmt=n=>Number(n.toFixed(1)).toString(),p=(x,y)=>fmt(x)+" "+fmt(y);
+ if(kind==="line")return "M "+p(x1,y1)+" L "+p(x2,y2);
+ if(kind==="rect")return "M "+p(x1,y1)+" L "+p(x2,y1)+" L "+p(x2,y2)+" L "+p(x1,y2)+" Z";
+ if(kind==="ellipse"){
+  const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2,ry=Math.abs(y2-y1)/2,k=.5522847498;
+  return "M "+p(cx,cy-ry)+" C "+p(cx+k*rx,cy-ry)+" "+p(cx+rx,cy-k*ry)+" "+p(cx+rx,cy)+" C "+p(cx+rx,cy+k*ry)+" "+p(cx+k*rx,cy+ry)+" "+p(cx,cy+ry)+" C "+p(cx-k*rx,cy+ry)+" "+p(cx-rx,cy+k*ry)+" "+p(cx-rx,cy)+" C "+p(cx-rx,cy-k*ry)+" "+p(cx-k*rx,cy-ry)+" "+p(cx,cy-ry)+" Z";
+ }
+ throw Error("أداة الشكل غير مدعومة");
+}
+
 function normalizeLayer(l,i){if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{if(o?.kind==="erase"||o?.kind==="stroke")return{kind:o.kind,path:validatePath(o.path)};if(typeof o?.d==="string")return{kind:"stroke",path:validatePath(o)};throw Error("عملية طبقة غير معروفة")});if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations}}
 export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
