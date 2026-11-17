@@ -39,16 +39,20 @@ The loader accepts v1 project files with \`frames[].paths\` and migrates each fr
 - Locked layers reject drawing and erasing.
 - Layer count is capped at 100; operations per layer at 10,000.
 
+## ZIP export bundle
+
+The workspace exports a dependency-free ZIP32 archive containing `project.zero`, `manifest.json`, and one editable SVG per frame under `frames/`. Entries use UTF-8 names and are stored without compression for compatibility; ZIP32 size limits apply. Unsafe and duplicate archive paths are rejected.
+
 ## Automated tests
 
 Run with Node.js 22 or newer:
 
 ```sh
-node --test tests/engine.test.mjs
+node --test tests/*.test.mjs
 ```
 
-The suite now contains 13 tests for project creation/migration, layer operations and renaming, locking, vector erase masks and ordering, hidden layers, path validation, v2 round-trip, and mask ID uniqueness. CI must be checked after this revision.
+The suite now contains 13 engine tests plus ZIP archive tests for project creation/migration, layer operations and renaming, locking, vector erase masks and ordering, hidden layers, path validation, v2 round-trip, and mask ID uniqueness. CI must be checked after this revision.
 
 ## Current limitations
 
-This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no AI provider. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Browser/Android behavior and export rendering still require device testing.
+This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no AI provider. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
