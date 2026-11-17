@@ -19,3 +19,10 @@ test("canvas pan and zoom controls are wired for mobile drawing",()=>{
  assert.match(app,/function zoomCanvas/);
  assert.match(app,/function resetCanvasView/);
 });
+
+test("character rig editor has a touch-sized viewport and draggable joints",()=>{
+ assert.match(html,/id="characterRigCanvas"/);
+ assert.match(html,/id="characterRigHandles"/);
+ assert.match(app,/rigCanvas\.addEventListener\("pointermove"/);
+ assert.match(app,/data-joint/);
+});
