@@ -83,6 +83,7 @@ export function validateCharacterModel(model){
  if(!model||model.format!=="zero-character-model"||model.version!==CHARACTER_MODEL_VERSION)throw Error("صيغة نموذج الشخصية غير مدعومة");
  if(typeof model.id!=="string"||!model.id.trim()||typeof model.name!=="string"||!model.name.trim())throw Error("هوية نموذج الشخصية غير صالحة");
  if(!Array.isArray(model.parts)||!model.parts.length||model.parts.length>200)throw Error("أجزاء نموذج الشخصية غير صالحة");
+ if(!model.parts.some(p=>p?.visible!==false))throw Error("يجب أن يحتوي النموذج على جزء ظاهر واحد على الأقل");
  const ids=new Set();
  const parts=model.parts.map(p=>{
   if(!p||typeof p.id!=="string"||!p.id.trim()||ids.has(p.id))throw Error("معرّف جزء الشخصية مكرر أو غير صالح");
