@@ -51,7 +51,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite now contains 13 engine tests plus ZIP archive tests for project creation/migration, layer operations and renaming, locking, vector erase masks and ordering, hidden layers, path validation, v2 round-trip, and mask ID uniqueness. CI must be checked after this revision.
+The suite contains 13 engine tests and 3 ZIP tests (16 total), covering layer/project behavior, CRC32, ZIP local and central directory records, UTF-8 filenames, and rejection of unsafe or duplicate paths. GitHub Actions runs all suites.
 
 ## Current limitations
 
