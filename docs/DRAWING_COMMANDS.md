@@ -53,6 +53,10 @@ node --test tests/*.test.mjs
 
 The suite contains 13 engine tests and 3 ZIP tests (16 total), covering layer/project behavior, CRC32, ZIP local and central directory records, UTF-8 filenames, and rejection of unsafe or duplicate paths. GitHub Actions runs all suites.
 
+## AI proposal path
+
+The optional Gemini text-only adapter produces a JSON proposal of editable SVG paths. The paths are validated locally, displayed on a temporary preview layer, and only appended to the selected project layer after explicit approval. The API key is not saved in project data, local storage, or ZIP exports. See [AI vector drawing adapter](AI_VECTOR_DRAWING.md) for provider, privacy, and quota details.
+
 ## Current limitations
 
 This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no AI provider. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
