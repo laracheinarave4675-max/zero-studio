@@ -77,7 +77,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Android browser/device smoke test.
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
 - [ ] Full SVG parser and geometric bounds validation.
-- [ ] First controlled AI-assisted vector drawing test.
+- [x] First AI vector drawing adapter implemented with preview and explicit approval; [ ] live API-key test.
 - [ ] First short animation test with measurable drawing count and quality review.
 - [ ] Production departments/agents orchestration.
 - [ ] Sound, editing, and export pipeline integration.
@@ -138,6 +138,8 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [x] ZIP32 archive writer with UTF-8 filenames, CRC32, central directory, and path/duplicate validation.
 - [x] ZIP archive tests added to CI.
 - [ ] Test downloading and opening the ZIP on the physical Android phone; no device test is claimed.
+- [x] Added a text-only Gemini vector proposal adapter with local validation and approve/reject preview.
+- [ ] Test the adapter using a real user API key and confirm provider access from the user network.
 
 ## Next actions
 
