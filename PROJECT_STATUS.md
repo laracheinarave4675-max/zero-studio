@@ -85,6 +85,8 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 
 ## First implementation — feature/mobile-drawing-workspace
 
+Review pull request: https://github.com/laracheinarave4675-max/zero-studio/pull/1 (draft; not merged into `main`).
+
 Committed an initial browser-based drawing workspace under `app/`:
 - Arabic RTL responsive interface.
 - SVG 1920×1080 touch drawing surface with pen and prototype white-stroke eraser.
