@@ -8,7 +8,8 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Draw with stylus if available.
 - [ ] Change color and stroke width.
 - [ ] Undo and redo strokes.
-- [ ] Add/delete/select/reorder layers; toggle visibility and lock state.
+- [ ] Add/delete/select/reorder/rename layers; toggle visibility and lock state.
+- [ ] Interrupt a stroke with Android pointer cancellation and confirm the incomplete stroke is discarded.
 - [ ] Verify vector eraser removes earlier strokes but preserves later strokes and other layers.
 - [ ] Save and reopen a v1 project; confirm it migrates to a single layer per frame.
 - [ ] Save and reopen a v2 multi-layer project including eraser masks.
