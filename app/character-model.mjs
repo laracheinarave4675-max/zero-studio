@@ -1,4 +1,4 @@
-import {createLayer,appendOperation,validatePath} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
@@ -80,6 +80,30 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
  model.id="nori-"+view+"-"+pose+"-"+expression;
  model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
+}
+
+
+export function applyNoriPalette(model,overrides={}){
+ const source=validateCharacterModel(model);
+ const next=JSON.parse(JSON.stringify(source));
+ const palette={
+  line:safeColor(overrides.line,next.palette.line),
+  skin:safeColor(overrides.skin,next.palette.skin),
+  hair:safeColor(overrides.hair,next.palette.hair),
+  cloth:safeColor(overrides.cloth,next.palette.cloth),
+  accent:safeColor(overrides.accent,next.palette.accent)
+ };
+ for(const item of next.parts){
+  if(item.id==="body")item.path.fill=palette.cloth;
+  else if(["head","neck","hand-right"].includes(item.id))item.path.fill=palette.skin;
+  else if(item.id==="hair")item.path.fill=palette.hair;
+  else if(item.id==="mouth")item.path.stroke=palette.accent;
+  else if(item.path.stroke!=="none")item.path.stroke=palette.line;
+  if(["eye-left","eye-right"].includes(item.id))item.path.fill=palette.line;
+ }
+ next.palette=palette;
+ next.id=String(next.id)+"-palette";
+ return validateCharacterModel(next);
 }
 
 export function validateCharacterModel(model){
