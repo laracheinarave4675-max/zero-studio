@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createFrame} from "../app/engine.mjs";
+import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
 import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
@@ -82,4 +82,24 @@ test("custom character models reject non-boolean visibility and invalid dimensio
 test("character model requires at least one visible part for insertion",()=>{
  const model=createNoriModel();
  assert.throws(()=>validateCharacterModel({...model,parts:model.parts.map(p=>({...p,visible:false}))}),/ظاهر/);
+});
+
+test("front-view Nori pose keyframes can generate editable in-between frames",()=>{
+ const make=pose=>{const frame=createFrame();addCharacterModelToFrame(frame,createNoriModel("neutral","front",pose));return frame};
+ const neutral=make("neutral");
+ for(const pose of ["wave","walk","sit"]){
+  const between=createInbetweenFrames(neutral,make(pose),2);
+  assert.equal(between.length,2);
+  assert.equal(between[0].layers.length,4);
+  assert.ok(between.every(frame=>frame.layers.every(layer=>layer.operations.length>0)));
+ }
+});
+test("Nori facial expression keyframes interpolate without changing path topology",()=>{
+ const make=expression=>{const frame=createFrame();addCharacterModelToFrame(frame,createNoriModel(expression,"front","neutral"));return frame};
+ const neutral=make("neutral");
+ for(const expression of ["happy","sad","surprised"]){
+  const between=createInbetweenFrames(neutral,make(expression),1);
+  assert.equal(between.length,1);
+  assert.equal(between[0].layers[2].operations.length,3);
+ }
 });
