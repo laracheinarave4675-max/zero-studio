@@ -65,6 +65,7 @@ export function createInbetweenFrames(startFrame,endFrame,count=1){
   return a.operations.map((op,j)=>{
    const other=b.operations[j];
    if(op.kind!==other.kind)throw Error("ترتيب أنواع العمليات مختلف بين الإطارين");
+   if(op.path.stroke!==other.path.stroke||op.path.fill!==other.path.fill)throw Error("ألوان المسارات مختلفة؛ وحّد الألوان قبل الاستيفاء");
    return{kind:op.kind,from:op.path,to:other.path};
   });
  });
