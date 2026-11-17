@@ -74,7 +74,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Project status and constraints documented.
 - [ ] Prior v0.1 prototype imported and re-reviewed.
 - [x] First mobile vector drawing workspace source committed on `feature/mobile-drawing-workspace`.
-- [ ] Android browser/device smoke test.
+- [ ] Android browser/device smoke test (public test URL is live; physical interaction remains pending).
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
 - [ ] Full SVG parser and geometric bounds validation.
 - [x] First AI vector drawing adapter implemented with preview and explicit approval; [ ] live API-key test.
@@ -154,7 +154,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Next actions
 
-1. Deploy a test copy so the user can open the workspace on Android; the private repository has not been published, and the user must connect a hosting provider or explicitly authorize a public app-only mirror.
+1. [x] Publish the app-only test build at https://zero-studio-three.vercel.app/ while keeping the GitHub repository private; current snapshot includes smooth cubic drawing and service-worker cache v5. Manual upload is required after future source changes because GitHub Login Connection is not linked.
 2. Run the app on the physical Android phone: touch/stylus drawing, layer rename/visibility/locking, undo/redo, project save/open, ZIP download/open, and 24-frame playback.
 3. Test the Gemini adapter with a real user-owned API key entered directly into the password field; verify response quality and quotas without sharing the key in chat.
 4. Improve the drawing agent with a persistent character model sheet, shape construction, frame-to-frame continuity checks, and staged keyframe/in-between workflows.
@@ -182,3 +182,4 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [x] Pointer coalesced samples remain supported; generated paths are stored as ordinary editable SVG paths and continue to work with undo, masks, and SVG/ZIP export.
 - [x] Added engine tests for curve generation, endpoint preservation, tap/straight-line handling, and invalid point rejection.
 - [ ] Physical Android feel/latency and curve quality review remains pending; smoothing is mathematical interpolation, not stylus pressure or a brush engine.
+- [x] Published the smooth-curve update to the existing public Vercel test URL; the deployment returned READY and the deployed app/engine files were checked for the new converter. GitHub Actions run #124 passed all 26 tests.
