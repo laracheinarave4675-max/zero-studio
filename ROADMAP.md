@@ -13,7 +13,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] SVG/vector drawing surface with pointer/touch support (physical-device test pending).
 - [x] Layer management: add/remove/select, rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.
 - [x] Undo/redo and JSON project save/load implementation (browser round-trip test pending).
-- [x] SVG sequence JSON export; [ ] ZIP archive export.
+- [x] SVG sequence JSON export; [x] ZIP archive export (automated archive structure tests; Android download/open test pending).
 - [ ] Offline/PWA behavior where supported (service worker now caches the drawing engine module; device test pending).
 - [ ] Test on the user's Android browser/device.
 
