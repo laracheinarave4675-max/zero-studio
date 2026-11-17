@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -40,4 +40,29 @@ test("geometric tools create editable line, rectangle and closed ellipse vector 
 test("geometric tools reject invalid coordinates and unknown shapes",()=>{
  assert.throws(()=>shapePath("ellipse",{x:NaN,y:0},{x:1,y:2}),/غير صالحة/);
  assert.throws(()=>shapePath("star",{x:0,y:0},{x:5,y:5}),/غير مدعومة/);
+});
+
+test("SVG path interpolation preserves command topology and interpolates coordinates",()=>{
+ const mid=interpolatePathData("M 0 0 Q 10 20 20 0","M 10 10 Q 30 40 50 10",.5);
+ assert.equal(mid,"M 5 5 Q 20 30 35 5");
+ assert.throws(()=>interpolatePathData("M 0 0 L 10 10","M 0 0 C 1 1 2 2 10 10",.5),/غير متطابقة/);
+ assert.throws(()=>interpolatePathData("M 0 0","M 1 1",2),/بين صفر وواحد/);
+});
+test("in-between frame generation creates independent editable vector frames",()=>{
+ const a=createFrame(),b=createFrame();
+ appendOperation(a.layers[0],"stroke",{d:"M 0 0 L 100 100",stroke:"#172033",width:4,fill:"none"});
+ appendOperation(b.layers[0],"stroke",{d:"M 20 40 L 200 240",stroke:"#172033",width:8,fill:"none"});
+ const frames=createInbetweenFrames(a,b,2);
+ assert.equal(frames.length,2);assert.notEqual(frames[0].id,frames[1].id);
+ assert.equal(frames[0].layers[0].operations[0].path.d,"M 6.7 13.3 L 133.3 146.7");
+ assert.equal(frames[1].layers[0].operations[0].path.width,6.666666666666666);
+ frames[0].layers[0].operations[0].path.d="M 1 1";
+ assert.notEqual(frames[1].layers[0].operations[0].path.d,"M 1 1");
+});
+test("in-between generation rejects mismatched layer structure and unsupported operation topology",()=>{
+ const a=createFrame(),b=createFrame();
+ appendOperation(a.layers[0],"stroke",{d:"M 0 0 L 10 10"});
+ appendOperation(b.layers[0],"stroke",{d:"M 0 0 C 1 1 2 2 10 10"});
+ assert.throws(()=>createInbetweenFrames(a,b,1),/غير متطابقة/);
+ assert.throws(()=>createInbetweenFrames(a,b,0),/من 1 إلى 24/);
 });
