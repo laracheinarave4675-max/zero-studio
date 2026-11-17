@@ -116,12 +116,12 @@ Implemented on the existing development branch:
 - v1 `.zero` files with `frames[].paths` migrate to one layer per frame when opened.
 - SVG sequence export now includes layer visibility and eraser masks.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
-- Added 11 Node tests covering v1 migration, layer operations, locked layers, eraser masks/order, hidden layers, validation, and v2 round-trip.
+- Added 12 Node tests covering v1 migration, layer operations, locked layers, eraser masks/order, hidden layers, validation, v2 round-trip, consecutive erasures, and unique mask IDs.
 - Added GitHub Actions workflow for Node test execution.
 
 ### Validation record
 - Initial GitHub Actions run: 9/10 tests passed. One test fixture attempted to add operations after setting the layer locked; this was a test setup error, not an engine failure.
-- Corrected that fixture and added a consecutive-eraser regression test. A fresh passing CI run has not yet been confirmed.
+- Corrected that fixture and added consecutive-eraser and cross-layer mask-ID regression tests. Executed 12 equivalent engine behavior assertions directly in the connected JavaScript runtime; all 12 passed. A fresh passing GitHub Actions run has not yet been confirmed.
 - Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
 
 Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; no layer rename UI; full SVG path parser and pressure-sensitive stylus support are not implemented. No AI provider or raster image generation is connected.
