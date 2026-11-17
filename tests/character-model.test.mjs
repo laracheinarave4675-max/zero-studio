@@ -62,3 +62,19 @@ test("wave, walk and sit pose presets change limb geometry",()=>{
  assert.notEqual(path(neutral,"leg-left"),path(walk,"leg-left"));
  assert.notEqual(path(neutral,"leg-right"),path(sit,"leg-right"));
 });
+
+test("custom model package preserves imported editable vector parts through validation and insertion",()=>{
+ const original=createNoriModel("happy","side","walk");
+ original.id="user-character-01";original.name="شخصيتي";
+ const imported=validateCharacterModel(JSON.parse(JSON.stringify(original)));
+ assert.equal(imported.id,"user-character-01");
+ assert.equal(imported.view,"side");assert.equal(imported.pose,"walk");
+ const frame=createFrame(),layers=addCharacterModelToFrame(frame,imported);
+ assert.ok(layers.length>=2);
+ assert.ok(layers.every(layer=>layer.operations.every(op=>op.kind==="stroke")));
+});
+test("custom character models reject non-boolean visibility and invalid dimensions",()=>{
+ const model=createNoriModel();
+ assert.throws(()=>validateCharacterModel({...model,parts:model.parts.map((p,i)=>i? p:{...p,visible:"yes"})}),/ظهور/);
+ assert.throws(()=>validateCharacterModel({...model,canvas:{width:100,height:100}}),/1920/);
+});
