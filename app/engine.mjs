@@ -52,9 +52,9 @@ export function pathGeometryBounds(d){
 }
 
 export function validatePath(p){
- if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000||!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\\-\\s]+$/.test(p.d))throw Error("بيانات مسار SVG غير صالحة");
- const numbers=p.d.match(/[-+]?(?:\\d*\\.\\d+|\\d+\\.?\\d*)(?:[eE][-+]?\\d+)?/g)||[];
- if(numbers.some(x=>!Number.isFinite(+x)||Math.abs(+x)>1000000))throw Error("إحداثيات المسار خارج الحدود");
+ if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000)throw Error("بيانات مسار SVG غير صالحة");
+ const tokens=tokenizePathData(p.d);
+ if(tokens.some(token=>"number"in token&&(!Number.isFinite(token.number)||Math.abs(token.number)>1000000)))throw Error("إحداثيات المسار خارج الحدود");
  pathGeometryBounds(p.d);
  return{d:p.d,stroke:safeColor(p.stroke),width:Math.max(.2,Math.min(100,+p.width||5)),fill:p.fill==="none"?"none":safeColor(p.fill,"none")};
 }
