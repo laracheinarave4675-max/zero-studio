@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -90,4 +90,32 @@ test("SVG parser validates command arity, move origin, arc flags and relative ge
  assert.throws(()=>validatePath({d:"M 0 0 C 1 2"}),/معاملات/);
  assert.throws(()=>validatePath({d:"M 0 0 A 5 5 0 2 0 20 20"}),/قوس/);
  assert.throws(()=>validatePath({d:"M 999999 0 l 10 0"}),/التراكمية/);
+});
+
+test("drawn operations receive stable IDs that survive project normalization and export",()=>{
+ const frame=createFrame(),layer=frame.layers[0],id=appendOperation(layer,"stroke",line());
+ assert.ok(id);assert.equal(layer.operations[0].id,id);
+ const normalized=normalizeProject({format:"zero-studio",version:2,name:"ids",frames:[{id:"f",layers:[{...layer,operations:[{...layer.operations[0]}]}]}]});
+ assert.equal(normalized.frames[0].layers[0].operations[0].id,id);
+ assert.match(frameSvg(normalized.frames[0]),new RegExp('data-operation="'+id+'"'));
+});
+test("translate vector paths moves absolute coordinates while retaining relative deltas",()=>{
+ assert.equal(translatePathData("M 10 20 l 5 6 H 30 V 40",5,-2),"M 15 18 l 5 6 H 35 V 38");
+ assert.equal(translatePathData("M 0 0 C 10 10 20 20 30 30",2,3),"M 2 3 C 12 13 22 23 32 33");
+ assert.throws(()=>translatePathData("M 0 0",Infinity,1),/غير صالحة/);
+});
+test("selected vector operations can be moved and deleted, but locked layers reject edits",()=>{
+ const layer=createLayer(),id=appendOperation(layer,"stroke",line(10));
+ translateOperation(layer,id,5,10);
+ assert.equal(layer.operations[0].path.d,"M 15 20 L 55 50");
+ const removed=removeOperation(layer,id);
+ assert.equal(removed.id,id);assert.equal(layer.operations.length,0);
+ layer.locked=true;
+ assert.throws(()=>removeOperation(layer,"missing"),/مقفلة/);
+ assert.throws(()=>translateOperation(layer,"missing",1,1),/مقفلة/);
+});
+test("legacy layers receive unique operation IDs during normalization",()=>{
+ const p=normalizeProject({format:"zero-studio",version:1,name:"legacy",fps:24,frames:[{paths:[line(),line(80)]}]});
+ const ids=p.frames[0].layers[0].operations.map(op=>op.id);
+ assert.equal(ids.length,2);assert.equal(new Set(ids).size,2);
 });
