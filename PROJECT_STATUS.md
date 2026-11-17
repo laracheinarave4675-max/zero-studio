@@ -111,12 +111,13 @@ Known prototype limitations: eraser paints white rather than removing vector geo
 
 Implemented on the existing development branch:
 - Project format v2 with frame-local ordered layers (name, visibility, lock, ordered operations).
-- Add/remove/select, show/hide, lock/unlock, and reorder layer controls.
+- Add/remove/select, rename, show/hide, lock/unlock, and reorder layer controls.
 - Non-destructive vector eraser: eraser strokes are stored as ordered vector operations and exported as SVG masks; later strokes remain visible above earlier erase operations.
 - v1 `.zero` files with `frames[].paths` migrate to one layer per frame when opened.
 - SVG sequence export now includes layer visibility and eraser masks.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
-- Added 12 Node tests covering v1 migration, layer operations, locked layers, eraser masks/order, hidden layers, validation, v2 round-trip, consecutive erasures, and unique mask IDs.
+- Added 13 Node tests covering v1 migration, layer operations and rename validation, locked layers, eraser masks/order, hidden layers, validation, v2 round-trip, consecutive erasures, and unique mask IDs.
+- Drawing input consumes coalesced pointer samples where supported; pointer cancellation discards the incomplete gesture.
 - Added GitHub Actions workflow for Node test execution.
 
 ### Validation record
@@ -126,7 +127,14 @@ Implemented on the existing development branch:
 - JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
 - Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
 
-Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; no layer rename UI; full SVG path parser and pressure-sensitive stylus support are not implemented. No AI provider or raster image generation is connected.
+Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; full SVG path parser and pressure-sensitive stylus width are not implemented. No AI provider or raster image generation is connected.
+
+## Drawing input and layer usability update — feature/mobile-drawing-workspace
+
+- [x] Added validated layer renaming (trimmed, non-empty, maximum 80 characters) with undo history.
+- [x] Added a regression test for successful rename and invalid names/IDs.
+- [x] Pointer input uses browser-coalesced samples where available; pointer cancellation discards the unfinished gesture.
+- [ ] Re-run CI and perform actual Android touch/stylus checks; no physical-device test is claimed.
 
 ## Next actions
 
