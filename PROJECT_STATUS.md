@@ -75,7 +75,6 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Prior v0.1 prototype imported and re-reviewed.
 - [x] First mobile vector drawing workspace source committed on `feature/mobile-drawing-workspace`.
 - [ ] Android browser/device smoke test.
-- [ ] Android browser/device smoke test.
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
 - [ ] Full SVG parser and geometric bounds validation.
 - [ ] First controlled AI-assisted vector drawing test.
@@ -107,6 +106,25 @@ Committed an initial browser-based drawing workspace under `app/`:
 - [ ] SVG export opened in a separate Android drawing/animation app.
 
 Known prototype limitations: eraser paints white rather than removing vector geometry; no layer system, no semantic character drawing, no automatic keyframes/in-betweens, no AI model/provider, and no ZIP exporter. The 24 FPS playback selector does not produce 24 new drawings per second; the explicit 24-independent-drawings/sec goal remains unchanged and unproven.
+
+## Layer and vector eraser milestone — feature/mobile-drawing-workspace
+
+Implemented on the existing development branch:
+- Project format v2 with frame-local ordered layers (name, visibility, lock, ordered operations).
+- Add/remove/select, show/hide, lock/unlock, and reorder layer controls.
+- Non-destructive vector eraser: eraser strokes are stored as ordered vector operations and exported as SVG masks; later strokes remain visible above earlier erase operations.
+- v1 `.zero` files with `frames[].paths` migrate to one layer per frame when opened.
+- SVG sequence export now includes layer visibility and eraser masks.
+- Service-worker cache updated to include the ES module engine and use a new cache version.
+- Added 11 Node tests covering v1 migration, layer operations, locked layers, eraser masks/order, hidden layers, validation, and v2 round-trip.
+- Added GitHub Actions workflow for Node test execution.
+
+### Validation record
+- Initial GitHub Actions run: 9/10 tests passed. One test fixture attempted to add operations after setting the layer locked; this was a test setup error, not an engine failure.
+- Corrected that fixture and added a consecutive-eraser regression test. A fresh passing CI run has not yet been confirmed.
+- Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
+
+Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; no layer rename UI; full SVG path parser and pressure-sensitive stylus support are not implemented. No AI provider or raster image generation is connected.
 
 ## Next actions
 
