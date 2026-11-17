@@ -181,7 +181,6 @@ export function applyNoriRigPose(model,jointUpdates={}){
   const x=wrist.x,y=wrist.y;
   hand.path.d="M "+fmt(x-18)+" "+fmt(y-5)+" C "+fmt(x-34)+" "+fmt(y-18)+" "+fmt(x-16)+" "+fmt(y-36)+" "+fmt(x-2)+" "+fmt(y-18)+" C "+fmt(x+5)+" "+fmt(y-40)+" "+fmt(x+22)+" "+fmt(y-27)+" "+fmt(x+12)+" "+fmt(y-7)+" Q "+fmt(x+31)+" "+fmt(y+3)+" "+fmt(x+14)+" "+fmt(y+18)+" Q "+fmt(x)+" "+fmt(y+25)+" "+fmt(x-18)+" "+fmt(y+10)+" Z";
  }
- next.id=next.id+"-rigged";
  return validateCharacterModel(next);
 }
 
