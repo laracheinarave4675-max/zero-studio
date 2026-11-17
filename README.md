@@ -16,7 +16,7 @@ Open the currently published test build: https://zero-studio-three.vercel.app/ .
 
 ## Drawing and character toolset
 
-The development workspace includes a freehand SVG pen, optional stylus-pressure outlines, vector eraser, line/rectangle/ellipse tools, shape fill, item selection/move/delete, mobile pan/zoom, layer controls, and topology-matched in-between generation. Character tools include Nori with 12 editable parts, three starter views, four poses, four facial expressions, a customizable palette, and validated `.zchar` import/export. These are working foundations, not a completed professional rig or character-model-sheet editor. Physical Android testing remains pending. GitHub Actions run #297 passed all 55 tests and syntax checks.
+The development workspace includes a freehand SVG pen, optional stylus-pressure outlines, vector eraser, line/rectangle/ellipse tools, shape fill, item selection/move/style/duplicate/delete, mobile pan/zoom, layer controls, and topology-matched in-between generation. Character tools include Nori with 12 editable parts, three starter views, four poses, four facial expressions, a customizable palette, validated `.zchar` import/export, and an 11-cell editable SVG model-sheet export. These are working foundations, not a completed professional rig or character-model-sheet editor. Physical Android testing remains pending. GitHub Actions run #322 passed all 58 tests and syntax checks.
 
 ## Start here
 
