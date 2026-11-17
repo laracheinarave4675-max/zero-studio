@@ -117,13 +117,13 @@ Implemented on the existing development branch:
 - SVG sequence export includes layer visibility and eraser masks.
 - ZIP export creates a standalone archive containing the editable project, a manifest, and one SVG file per frame.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
-- Added 13 engine, 4 Gemini-adapter, 2 workspace DOM, and 3 ZIP tests (22 total).
+- Added 13 engine, 4 Gemini-adapter, 2 workspace DOM, 3 ZIP, and 2 animation-proof tests (24 total).
 - Drawing input consumes coalesced pointer samples where supported; pointer cancellation discards the incomplete gesture.
 - Added GitHub Actions workflow for Node test execution across all `tests/*.test.mjs` files, including ZIP archive tests.
 
 ### Validation record
 - Initial GitHub Actions attempt exposed one incorrect test fixture (it attempted to draw after locking the layer); the fixture was corrected.
-- GitHub Actions run #91 completed successfully: 22 tests passed, 0 failed. Syntax checks passed for the app controller, engine, ZIP module, Gemini adapter, and service worker.
+- GitHub Actions run #102 completed successfully: 24 tests passed, 0 failed. Syntax checks passed for the app controller, engine, ZIP module, Gemini adapter, and service worker.
 - Independently executed 12 equivalent engine behavior assertions in the connected JavaScript runtime; all passed.
 - JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
 - Automated DOM checks confirm all controller IDs exist and the AI proposal controls/preview layer are present. Browser rendering and actual Android touch interaction remain untested.
@@ -140,7 +140,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [ ] Test downloading and opening the ZIP on the physical Android phone; no device test is claimed.
 - [x] Added a text-only Gemini vector proposal adapter with local validation and approve/reject preview.
 - [ ] Test the adapter using a real user API key and confirm provider access from the user network.
-- [x] Added a one-second original vector character wave/blink sample with 24 unique frames; no raster image generation used.
+- [x] Added a one-second original vector character wave/blink sample with 24 unique frames; automated CI confirms 24 distinct frames at 24 FPS; no raster image generation used.
 
 ## Next actions
 
