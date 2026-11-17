@@ -14,7 +14,7 @@
 
 Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. Physical Android testing is still pending.
 
-## Reusable character construction milestone\n\nThe workspace now includes an original Nori front-view starter model made from 11 editable SVG path parts grouped into four layers, with four facial-expression presets. It is a construction template, not yet a complete model sheet, turnaround, articulated rig, or pose library. GitHub Actions run #144 passed all 30 tests and syntax checks. The updated test build is available at https://zero-studio-three.vercel.app/.\n\n## Start here
+## Reusable character construction milestone\n\nThe workspace now includes an original Nori front-view starter model made from 12 editable SVG path parts grouped into up to four layers, with four facial-expression presets, three viewing directions, and four starter poses. The drawing palette also includes line, rectangle, and ellipse tools. It is a construction template, not yet a complete model sheet, turnaround, articulated rig, or pose library. GitHub Actions run #144 passed all 30 tests and syntax checks. The updated test build is available at https://zero-studio-three.vercel.app/.\n\n## Start here
 
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md) before continuing work.
 2. Read [DECISIONS.md](DECISIONS.md) before changing core architecture or constraints.
