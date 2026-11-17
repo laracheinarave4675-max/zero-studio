@@ -14,7 +14,11 @@
 
 Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. Physical Android testing is still pending.
 
-## Reusable character construction milestone\n\nThe workspace now includes an original Nori front-view starter model made from 12 editable SVG path parts grouped into up to four layers, with four facial-expression presets, three viewing directions, and four starter poses. The drawing palette also includes line, rectangle, and ellipse tools. It is a construction template, not yet a complete model sheet, turnaround, articulated rig, or pose library. GitHub Actions run #144 passed all 30 tests and syntax checks. The updated test build is available at https://zero-studio-three.vercel.app/.\n\n## Start here
+## Drawing and character toolset
+
+The development workspace includes a freehand SVG pen, optional stylus-pressure outlines, vector eraser, line/rectangle/ellipse tools, shape fill, item selection/move/delete, mobile pan/zoom, layer controls, and topology-matched in-between generation. Character tools include Nori with 12 editable parts, three starter views, four poses, four facial expressions, a customizable palette, and validated `.zchar` import/export. These are working foundations, not a completed professional rig or character-model-sheet editor. Physical Android testing remains pending. GitHub Actions run #297 passed all 55 tests and syntax checks.
+
+## Start here
 
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md) before continuing work.
 2. Read [DECISIONS.md](DECISIONS.md) before changing core architecture or constraints.
@@ -23,7 +27,7 @@ Open the currently published test build: https://zero-studio-three.vercel.app/ .
 
 ## Run the prototype
 
-Open `app/index.html` through an HTTPS static host (or a local web server) to use the first drawing workspace. It is not yet deployed, and opening it directly as a `file://` URL may prevent PWA features. See [Android test plan](docs/ANDROID_TEST_PLAN.md) and [drawing command schema](docs/DRAWING_COMMANDS.md).
+Open the public Android test copy at https://zero-studio-three.vercel.app/ . It is a manually uploaded static snapshot, not automatically synchronized with GitHub. The repository remains private. See [Android test plan](docs/ANDROID_TEST_PLAN.md) and [drawing command schema](docs/DRAWING_COMMANDS.md).
 
 ## Current drawing engine milestone
 
@@ -35,4 +39,4 @@ The repository includes an editable one-second, 24-frame vector waving/blinking 
 
 ## Current state
 
-The repository is being established as the durable project record. The earlier v0.1 prototype was created outside this repository in a previous work session; it has not yet been imported here or validated on a real Android device. See PROJECT_STATUS.md for exact status.
+The repository remains the durable project record. The deployed workspace is still a test build; the earlier external v0.1 prototype has not been imported, and physical Android behavior remains unverified. See PROJECT_STATUS.md for the exact implementation status and remaining work.
