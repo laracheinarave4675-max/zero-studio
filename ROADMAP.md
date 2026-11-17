@@ -22,12 +22,12 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Initial path syntax, numeric bounds, stroke width, and color validation; [ ] full SVG parser and geometric bounds validation.
 - [x] Initial validated path operations convert to editable SVG elements.
 - [x] Consume coalesced Pointer Event samples where available; discard cancelled gestures.
-- [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.
+- [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.\n- [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
 - [x] AI-proposed vector operations can be previewed and explicitly approved/rejected (Gemini text-only adapter; live API key test pending).
 - [ ] No raster image-generation fallback.
 
 ## Phase 3 — Animation proof of concept
-- [x] Add an initial reusable character construction model (Nori: 11 vector parts, 4 editable layers, validated schema).\n- [ ] Complete front/side/back model sheets, proportions, and pose library.\n- [x] Add four starter facial expression presets to the Nori vector model.\n- [ ] Add articulated rig/deformation and reusable character instances across frames.
+- [x] Add an initial reusable character construction model (Nori: 11 vector parts, 4 editable layers, validated schema).\n- [x] Add front/side/back starter model views.\n- [x] Add four starter poses and four expressions (48 pre-authored Nori variants).\n- [ ] Create artist-refinable professional model sheets with proportions/turnarounds and customizable anatomy.\n- [x] Add four starter facial expression presets to the Nori vector model.\n- [ ] Add articulated rig/deformation and reusable character instances across frames.
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
