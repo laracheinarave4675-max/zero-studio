@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -129,4 +129,25 @@ test("Nori model sheet exports 11 editable vector cells for views, expressions a
  assert.match(sheet,/Pose/);
  assert.match(sheet,/<path /);
  assert.doesNotMatch(sheet,/<image/);
+});
+
+test("Nori skeleton contains validated joints and four connected limb chains",()=>{
+ const model=validateCharacterModel(createNoriModel());
+ assert.equal(Object.keys(model.rig.joints).length,NORI_JOINT_KEYS.length);
+ assert.equal(model.rig.bones.length,4);
+ assert.deepEqual(model.rig.bones.map(b=>b.partId),["arm-left","arm-right","leg-left","leg-right"]);
+});
+test("dragging Nori rig joints deforms matching vector parts and preserves other features",()=>{
+ const base=createNoriModel(),moved=applyNoriRigPose(base,{"elbow-left":{x:700,y:650},"wrist-left":{x:680,y:760}});
+ const part=(model,id)=>model.parts.find(p=>p.id===id).path.d;
+ assert.notEqual(part(base,"arm-left"),part(moved,"arm-left"));
+ assert.equal(part(base,"arm-right"),part(moved,"arm-right"));
+ assert.equal(part(base,"body"),part(moved,"body"));
+ assert.equal(moved.rig.joints["elbow-left"].x,700);
+});
+test("Nori rig rejects unknown joints and validates all coordinates",()=>{
+ const base=createNoriModel();
+ assert.throws(()=>applyNoriRigPose(base,{"wing":{x:10,y:10}}),/مفصل/);
+ const invalid={...base,rig:{...base.rig,joints:{...base.rig.joints,"wrist-left":{x:NaN,y:2,visible:true}}}};
+ assert.throws(()=>validateCharacterModel(invalid),/بيانات مفصل/);
 });
