@@ -79,6 +79,30 @@ export function createInbetweenFrames(startFrame,endFrame,count=1){
  });
 }
 
+
+export function pressureOutlinePath(points,baseWidth=5){
+ if(!Array.isArray(points)||!points.length)return"";
+ if(!Number.isFinite(baseWidth)||baseWidth<=0||baseWidth>100)throw Error("عرض القلم غير صالح");
+ const clean=points.map(p=>({x:Number(p?.x),y:Number(p?.y),pressure:Number(p?.pressure??.5)}));
+ if(clean.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.pressure)||Math.abs(p.x)>1000000||Math.abs(p.y)>1000000))throw Error("عينات ضغط القلم غير صالحة");
+ const fmt=n=>Number(n.toFixed(2)).toString(),pt=p=>fmt(p.x)+" "+fmt(p.y);
+ const radius=p=>baseWidth*(.12+.88*Math.max(.05,Math.min(1,p.pressure)))/2;
+ if(clean.length===1){
+  const r=radius(clean[0]),k=.55228475*r,x=clean[0].x,y=clean[0].y;
+  return "M "+pt({x:x+r,y})+" C "+pt({x:x+r,y:y+k})+" "+pt({x:x+k,y:y+r})+" "+pt({x,y:y+r})+" C "+pt({x:x-k,y:y+r})+" "+pt({x:x-r,y:y+k})+" "+pt({x:x-r,y})+" C "+pt({x:x-r,y:y-k})+" "+pt({x:x-k,y:y-r})+" "+pt({x,y:y-r})+" C "+pt({x:x+k,y:y-r})+" "+pt({x:x+r,y:y-k})+" "+pt({x:x+r,y})+" Z";
+ }
+ const left=[],right=[];
+ for(let i=0;i<clean.length;i++){
+  const prev=clean[Math.max(0,i-1)],next=clean[Math.min(clean.length-1,i+1)];
+  let dx=next.x-prev.x,dy=next.y-prev.y,len=Math.hypot(dx,dy);
+  if(len<.001){dx=1;dy=0;len=1}
+  const nx=-dy/len,ny=dx/len,r=radius(clean[i]);
+  left.push({x:clean[i].x+nx*r,y:clean[i].y+ny*r});
+  right.push({x:clean[i].x-nx*r,y:clean[i].y-ny*r});
+ }
+ return "M "+pt(left[0])+" "+left.slice(1).map(p=>"L "+pt(p)).join(" ")+" "+right.slice().reverse().map(p=>"L "+pt(p)).join(" ")+" Z";
+}
+
 function normalizeLayer(l,i){if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{if(o?.kind==="erase"||o?.kind==="stroke")return{kind:o.kind,path:validatePath(o.path)};if(typeof o?.d==="string")return{kind:"stroke",path:validatePath(o)};throw Error("عملية طبقة غير معروفة")});if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations}}
 export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
