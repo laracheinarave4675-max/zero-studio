@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -79,4 +79,15 @@ test("pressure outline handles taps and rejects invalid samples",()=>{
  assert.equal(pressureOutlinePath([],10),"");
  assert.throws(()=>pressureOutlinePath([{x:0,y:0,pressure:Infinity}],5),/غير صالحة/);
  assert.throws(()=>pressureOutlinePath([{x:0,y:0}],101),/غير صالح/);
+});
+
+test("SVG parser validates command arity, move origin, arc flags and relative geometry",()=>{
+ const valid="M 10 10 l 20 0 h 5 v 5 C 40 20 45 25 50 30 s 10 10 20 0 Q 80 20 90 30 t 10 10 A 4 5 0 0 1 110 50 z";
+ const bounds=pathGeometryBounds(valid);
+ assert.ok(bounds.minX<=10&&bounds.maxX>=110&&bounds.minY<=10&&bounds.maxY>=50);
+ assert.throws(()=>validatePath({d:"M 0"}),/معاملات/);
+ assert.throws(()=>validatePath({d:"L 0 0"}),/يبدأ/);
+ assert.throws(()=>validatePath({d:"M 0 0 C 1 2"}),/معاملات/);
+ assert.throws(()=>validatePath({d:"M 0 0 A 5 5 0 2 0 20 20"}),/قوس/);
+ assert.throws(()=>validatePath({d:"M 999999 0 l 10 0"}),/التراكمية/);
 });
