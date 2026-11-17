@@ -58,6 +58,10 @@ The suite now includes 36 tests: 17 engine tests, 4 Gemini adapter tests, 2 work
 
 The optional Gemini text-only adapter produces a JSON proposal of editable SVG paths. The paths are validated locally, displayed on a temporary preview layer, and only appended to the selected project layer after explicit approval. The API key is not saved in project data, local storage, or ZIP exports. See [AI vector drawing adapter](AI_VECTOR_DRAWING.md) for provider, privacy, and quota details.
 
+## Geometric drawing tools
+
+The mobile drawing palette provides a freehand pen, vector eraser, straight line, rectangle, and ellipse. Rectangles and ellipses are closed SVG paths and can optionally be filled with the current color. Every completed shape is stored as an ordinary editable stroke operation and is included in undo/redo, project save, and SVG/ZIP export.
+
 ## Current limitations
 
 This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no live-tested AI provider integration yet. The Gemini text-to-vector adapter is implemented but still needs a real API key test. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Multi-point freehand strokes are interpolated into cubic Bézier curves; this is not pressure-sensitive brush simulation and still needs physical Android feel testing. The character model provides starter view/pose/expression presets, not a fully articulated rig or professional production-ready model sheet. Geometry is pre-authored per preset; it is not freeform skeletal deformation. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
