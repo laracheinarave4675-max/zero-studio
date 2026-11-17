@@ -5,7 +5,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 (()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
 function createBaseNori(){return applyNoriPalette(createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value),noriPalette())}
-function characterModelSelection(){if(selectedCharacterModel)return selectedCharacterModel;return rigModel||applyNoriRigPose(createBaseNori(),{})}
+function characterModelSelection(){return rigModel||selectedCharacterModel||applyNoriRigPose(createBaseNori(),{})}
 function renderRigEditor(){
  if(!rigCanvas)return;
  if(selectedCharacterModel&&!selectedCharacterModel.rig){$("characterRigPanel").hidden=true;return}
@@ -24,7 +24,7 @@ function renderRigEditor(){
  }
  for(const key of NORI_JOINT_KEYS){
   const joint=point(key);if(!joint.visible)continue;
-  const circle=document.createElementNS(NS,"circle");circle.setAttribute("cx",joint.x);circle.setAttribute("cy",joint.y);circle.setAttribute("r","28");circle.setAttribute("fill","#fff");circle.setAttribute("stroke","#0284c7");circle.setAttribute("stroke-width","10");circle.setAttribute("data-joint",key);circle.setAttribute("role","button");circle.setAttribute("aria-label",key);rigHandles.appendChild(circle);
+  const circle=document.createElementNS(NS,"circle");circle.setAttribute("cx",joint.x);circle.setAttribute("cy",joint.y);circle.setAttribute("r","65");circle.setAttribute("fill","#fff");circle.setAttribute("stroke","#0284c7");circle.setAttribute("stroke-width","10");circle.setAttribute("data-joint",key);circle.setAttribute("role","button");circle.setAttribute("aria-label",key);rigHandles.appendChild(circle);
  }
 }
 function updateRigPalette(){
@@ -107,7 +107,7 @@ rigCanvas.addEventListener("pointermove",e=>{
 });
 rigCanvas.addEventListener("pointerup",()=>{if(!rigDrag)return;rigDrag=null;$("characterStatus").textContent="تم تعديل وضعية المفصل؛ ستضاف الشخصية بهذه الوضعية."});
 rigCanvas.addEventListener("pointercancel",()=>{if(!rigDrag)return;rigModel=rigDrag.startModel;rigDrag=null;renderRigEditor()});
-$("addCharacterBtn").onclick=()=>{try{const model=selectedCharacterModel||createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value);const needed=new Set(model.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;if(frame().layers.length+needed>100)throw Error("لا توجد مساحة كافية لطبقات الشخصية");snapshot();const added=addCharacterModelToFrame(frame(),model);if(!added.length)throw Error("النموذج لا يحتوي على أجزاء ظاهرة");activeLayerId=added[added.length-1].id;render();$("characterStatus").textContent="أضيف "+model.name+" إلى "+added.length+" طبقات متجهية مستقلة."}catch(error){$("characterStatus").textContent="تعذر إضافة النموذج: "+error.message}};
+$("addCharacterBtn").onclick=()=>{try{const model=characterModelSelection();const needed=new Set(model.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;if(frame().layers.length+needed>100)throw Error("لا توجد مساحة كافية لطبقات الشخصية");snapshot();const added=addCharacterModelToFrame(frame(),model);if(!added.length)throw Error("النموذج لا يحتوي على أجزاء ظاهرة");activeLayerId=added[added.length-1].id;render();$("characterStatus").textContent="أضيف "+model.name+" إلى "+added.length+" طبقات متجهية مستقلة."}catch(error){$("characterStatus").textContent="تعذر إضافة النموذج: "+error.message}};
 $("deleteLayerBtn").onclick=()=>{snapshot();try{removeLayer(frame(),activeLayerId);activeLayerId=frame().layers[0].id;render()}catch(e){history.pop();buttons();status(e.message,false)}};
 $("addFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();project.frames.splice(current+1,0,createFrame());current++;activeLayerId=frame().layers[0].id;render()};
 $("inbetweenBtn").onclick=()=>{if(current>=project.frames.length-1){status("اختر إطاراً يليه إطار مفتاحي ثانٍ.",false);return}try{const generated=createInbetweenFrames(frame(),project.frames[current+1],+$("inbetweenCount").value);if(project.frames.length+generated.length>600)throw Error("سيتم تجاوز حد 600 إطار");snapshot();project.frames.splice(current+1,0,...generated);current++;activeLayerId=frame().layers[0].id;render();status("تم توليد "+generated.length+" إطار وسيط قابل للتحرير.")}catch(error){status("تعذر التوليد: "+error.message,false)}};
