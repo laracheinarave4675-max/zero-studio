@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -118,4 +118,21 @@ test("legacy layers receive unique operation IDs during normalization",()=>{
  const p=normalizeProject({format:"zero-studio",version:1,name:"legacy",fps:24,frames:[{paths:[line(),line(80)]}]});
  const ids=p.frames[0].layers[0].operations.map(op=>op.id);
  assert.equal(ids.length,2);assert.equal(new Set(ids).size,2);
+});
+
+test("selected vector operations can be restyled and duplicated with new identities",()=>{
+ const layer=createLayer(),id=appendOperation(layer,"stroke",{d:"M 0 0 L 20 20",stroke:"#112233",width:3,fill:"none"});
+ const updated=updateOperation(layer,id,{stroke:"#abcdef",width:9});
+ assert.equal(updated.path.stroke,"#abcdef");assert.equal(updated.path.width,9);
+ const copy=duplicateOperation(layer,id);
+ assert.notEqual(copy.id,id);assert.equal(copy.path.stroke,"#abcdef");assert.equal(layer.operations.length,2);
+ assert.equal(layer.operations[0].id,id);assert.equal(layer.operations[1].id,copy.id);
+ assert.throws(()=>updateOperation(layer,"missing",{stroke:"#ffffff"}),/غير موجود/);
+});
+test("restyle and duplicate reject unsafe styles and locked layers",()=>{
+ const layer=createLayer(),id=appendOperation(layer,"stroke",line());
+ assert.equal(updateOperation(layer,id,{stroke:"url(javascript:alert(1))"}).path.stroke,"#172033");
+ layer.locked=true;
+ assert.throws(()=>updateOperation(layer,id,{width:20}),/مقفلة/);
+ assert.throws(()=>duplicateOperation(layer,id),/مقفلة/);
 });
