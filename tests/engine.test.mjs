@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -65,4 +65,18 @@ test("in-between generation rejects mismatched layer structure and unsupported o
  appendOperation(b.layers[0],"stroke",{d:"M 0 0 C 1 1 2 2 10 10"});
  assert.throws(()=>createInbetweenFrames(a,b,1),/غير متطابقة/);
  assert.throws(()=>createInbetweenFrames(a,b,0),/من 1 إلى 24/);
+});
+
+test("pressure-sensitive strokes create filled outlines whose width follows stylus pressure",()=>{
+ const light=pressureOutlinePath([{x:10,y:10,pressure:.1},{x:50,y:10,pressure:.1}],20);
+ const firm=pressureOutlinePath([{x:10,y:10,pressure:1},{x:50,y:10,pressure:1}],20);
+ assert.match(light,/^M /);assert.match(light,/ Z$/);
+ assert.notEqual(light,firm);
+ assert.ok(Math.abs((+firm.match(/M ([0-9.]+)/)[1])-(+light.match(/M ([0-9.]+)/)[1]))>5);
+});
+test("pressure outline handles taps and rejects invalid samples",()=>{
+ assert.match(pressureOutlinePath([{x:5,y:8,pressure:.5}],12),/^M .* Z$/);
+ assert.equal(pressureOutlinePath([],10),"");
+ assert.throws(()=>pressureOutlinePath([{x:0,y:0,pressure:Infinity}],5),/غير صالحة/);
+ assert.throws(()=>pressureOutlinePath([{x:0,y:0}],101),/غير صالح/);
 });
