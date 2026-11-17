@@ -15,6 +15,7 @@ The drawing interface accepts editable vector path operations. It does not accep
 - Width is clamped to 0.2–100 SVG units.
 - Canvas viewBox is 1920×1080.
 - Raster payloads, data URLs, external URLs, scripts, event attributes, and embedded HTML are rejected.
+- Touch/stylus point samples are converted to cubic Bézier segments using Catmull–Rom-style tangents; one-point taps and two-point straight gestures have dedicated handling.
 
 ## Project format v2
 
@@ -59,4 +60,4 @@ The optional Gemini text-only adapter produces a JSON proposal of editable SVG p
 
 ## Current limitations
 
-This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no live-tested AI provider integration yet. The Gemini text-to-vector adapter is implemented but still needs a real API key test. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
+This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no live-tested AI provider integration yet. The Gemini text-to-vector adapter is implemented but still needs a real API key test. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Multi-point freehand strokes are interpolated into cubic Bézier curves; this is not pressure-sensitive brush simulation and still needs physical Android feel testing. ZIP structure and CRC handling are covered by automated tests; browser download behavior, archive opening on Android, and SVG rendering still require device testing.
