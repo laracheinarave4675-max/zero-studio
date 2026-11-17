@@ -1,16 +1,20 @@
 import {createLayer,appendOperation,validatePath} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
-const part=(id,name,layer,d,stroke,width=8,fill="none")=>({id,name,layer,path:{d,stroke,width,fill}});
-
-// Original reusable vector study. Parts remain ordinary editable SVG paths.
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
+export const NORI_VIEWS=["front","side","back"];
+export const NORI_POSES=["neutral","wave","walk","sit"];
+const part=(id,name,layer,d,stroke,width=8,fill="none",visible=true)=>({id,name,layer,visible,path:{d,stroke,width,fill}});
 
-export function createNoriModel(expression="neutral"){
+// Nori is built from ordinary editable path operations, never a raster drawing.
+export function createNoriModel(expression="neutral",view="front",pose="neutral"){
  if(!NORI_EXPRESSIONS.includes(expression))throw Error("تعبير الشخصية غير مدعوم");
+ if(!NORI_VIEWS.includes(view))throw Error("زاوية الشخصية غير مدعومة");
+ if(!NORI_POSES.includes(pose))throw Error("وضعية الشخصية غير مدعومة");
  const model={
   format:"zero-character-model",version:CHARACTER_MODEL_VERSION,id:"nori-base",name:"Nori — نموذج الشخصية",
-  canvas:{width:1920,height:1080},guide:{headRatio:0.34,bodyRatio:0.46,legRatio:0.20,view:"front"},
+  canvas:{width:1920,height:1080},guide:{headRatio:.34,bodyRatio:.46,legRatio:.20,view,pose},
+  expression,view,pose,
   palette:{line:"#263449",skin:"#f4c7a1",hair:"#27364d",cloth:"#66bfae",accent:"#e9a65b"},
   parts:[
    part("body","الجذع","الجسم","M 825 565 Q 960 520 1095 565 L 1125 850 Q 960 925 795 850 Z","#263449",9,"#66bfae"),
@@ -23,7 +27,8 @@ export function createNoriModel(expression="neutral"){
    part("arm-left","الذراع اليسرى","الأطراف","M 820 610 Q 735 690 760 790","#263449",24,"none"),
    part("arm-right","الذراع اليمنى","الأطراف","M 1100 610 Q 1185 690 1160 790","#263449",24,"none"),
    part("leg-left","الساق اليسرى","الأطراف","M 865 850 L 850 1010","#263449",30,"none"),
-   part("leg-right","الساق اليمنى","الأطراف","M 1055 850 L 1070 1010","#263449",30,"none")
+   part("leg-right","الساق اليمنى","الأطراف","M 1055 850 L 1070 1010","#263449",30,"none"),
+   part("hand-right","اليد اليمنى","الأطراف","M 1130 405 C 1100 390 1095 365 1110 350 C 1120 335 1135 345 1140 360 C 1145 335 1165 340 1165 360 C 1180 340 1195 355 1180 375 C 1200 370 1205 390 1185 405 Z","#263449",7,"#f4c7a1",false)
   ]
  };
  const face={
@@ -37,7 +42,40 @@ export function createNoriModel(expression="neutral"){
   if(item.id==="eye-right")item.path.d=face[expression].right;
   if(item.id==="mouth")item.path.d=face[expression].mouth;
  }
- model.expression=expression;
+ if(view==="side"){
+  Object.assign(model.parts.find(p=>p.id==="head").path,{d:"M 910 205 C 820 210 790 320 825 430 C 845 520 900 585 1015 575 C 1080 560 1100 500 1080 450 Q 1045 420 1090 400 Q 1055 365 1080 330 C 1090 245 1010 190 910 205 Z"});
+  model.parts.find(p=>p.id==="hair").path.d="M 825 420 C 765 270 850 155 970 170 C 1095 180 1150 285 1100 405 L 1065 350 L 1030 390 L 1000 315 L 950 365 L 910 305 L 870 385 Z";
+  model.parts.find(p=>p.id==="eye-left").path.d="M 1000 405 Q 1025 380 1045 405 Q 1025 430 1000 405 Z";
+  model.parts.find(p=>p.id==="eye-right").visible=false;
+  model.parts.find(p=>p.id==="mouth").path.d="M 1055 485 Q 1080 500 1095 480";
+  model.parts.find(p=>p.id==="body").path.d="M 900 565 Q 1000 535 1040 585 L 1070 845 Q 965 910 865 850 Z";
+  model.parts.find(p=>p.id==="arm-left").path.d="M 900 620 Q 845 700 875 790";
+  model.parts.find(p=>p.id==="arm-right").visible=false;
+  model.parts.find(p=>p.id==="leg-left").path.d="M 930 850 Q 900 920 900 1010";
+  model.parts.find(p=>p.id==="leg-right").visible=false;
+ }else if(view==="back"){
+  model.parts.find(p=>p.id==="hair").path.d="M 780 390 C 735 245 840 155 960 170 C 1090 145 1185 250 1140 405 L 1125 560 Q 960 635 795 560 Z";
+  for(const id of ["eye-left","eye-right","mouth"])model.parts.find(p=>p.id===id).visible=false;
+  model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 735 690 760 790";
+  model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1185 690 1160 790";
+ }
+ if(pose==="wave"&&view!=="back"){
+  const hand=model.parts.find(p=>p.id==="hand-right");hand.visible=true;
+  model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1160 555 1130 430";
+ }else if(pose==="walk"){
+  model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 735 655 700 735";
+  model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1185 665 1220 730";
+  model.parts.find(p=>p.id==="leg-left").path.d="M 865 850 Q 825 900 780 965";
+  model.parts.find(p=>p.id==="leg-right").path.d="M 1055 850 Q 1100 910 1150 970";
+ }else if(pose==="sit"){
+  model.parts.find(p=>p.id==="body").path.d="M 825 565 Q 960 520 1095 565 L 1125 805 Q 960 865 795 805 Z";
+  model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 780 700 875 755";
+  model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1140 700 1045 755";
+  model.parts.find(p=>p.id==="leg-left").path.d="M 850 805 Q 760 850 720 930";
+  model.parts.find(p=>p.id==="leg-right").path.d="M 1070 805 Q 1160 850 1200 930";
+ }
+ model.id="nori-"+view+"-"+pose+"-"+expression;
+ model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
 }
 
@@ -50,6 +88,7 @@ export function validateCharacterModel(model){
   if(!p||typeof p.id!=="string"||!p.id.trim()||ids.has(p.id))throw Error("معرّف جزء الشخصية مكرر أو غير صالح");
   ids.add(p.id);
   if(typeof p.name!=="string"||typeof p.layer!=="string"||!p.layer.trim())throw Error("بيانات جزء الشخصية غير مكتملة");
+  if(p.visible!==undefined&&typeof p.visible!=="boolean")throw Error("حالة ظهور جزء الشخصية غير صالحة");
   return {...p,path:validatePath(p.path)};
  });
  const canvas=model.canvas||{};
@@ -60,6 +99,7 @@ export function validateCharacterModel(model){
 export function addCharacterModelToFrame(frame,model){
  const safe=validateCharacterModel(model),groups=new Map();
  for(const item of safe.parts){
+  if(item.visible===false)continue;
   if(!groups.has(item.layer))groups.set(item.layer,createLayer(item.layer));
   appendOperation(groups.get(item.layer),"stroke",item.path);
  }
