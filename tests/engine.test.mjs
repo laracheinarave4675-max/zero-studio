@@ -29,3 +29,15 @@ test("freehand path conversion handles taps, straight gestures and invalid point
  assert.equal(pointsToPath([{x:1,y:2},{x:3,y:4}]),"M 1 2 L 3 4");
  assert.throws(()=>pointsToPath([{x:0,y:0},{x:Infinity,y:2}]),/غير صالحة/);
 });
+
+test("geometric tools create editable line, rectangle and closed ellipse vector paths",()=>{
+ const a={x:10,y:20},b={x:110,y:220};
+ assert.equal(shapePath("line",a,b),"M 10 20 L 110 220");
+ assert.equal(shapePath("rect",a,b),"M 10 20 L 110 20 L 110 220 L 10 220 Z");
+ const ellipse=shapePath("ellipse",a,b);
+ assert.match(ellipse,/^M 60 20 C /);assert.equal((ellipse.match(/ C /g)||[]).length,4);assert.ok(ellipse.endsWith("Z"));
+});
+test("geometric tools reject invalid coordinates and unknown shapes",()=>{
+ assert.throws(()=>shapePath("ellipse",{x:NaN,y:0},{x:1,y:2}),/غير صالحة/);
+ assert.throws(()=>shapePath("star",{x:0,y:0},{x:5,y:5}),/غير مدعومة/);
+});
