@@ -12,3 +12,10 @@ test("selection, move, and delete controls are present in the mobile workspace",
  assert.match(app,/translateOperation/);
  assert.match(app,/removeOperation/);
 });
+
+test("canvas pan and zoom controls are wired for mobile drawing",()=>{
+ for(const id of ["zoomInBtn","zoomOutBtn","zoomResetBtn"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/data-tool="pan"/);
+ assert.match(app,/function zoomCanvas/);
+ assert.match(app,/function resetCanvasView/);
+});
