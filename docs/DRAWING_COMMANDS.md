@@ -52,7 +52,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite now includes 30 tests: 15 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 4 character-model tests. The latest CI run must be checked after this change.
+The suite now includes 30 tests: 15 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 4 character-model tests. GitHub Actions run #144 passed on commit `ddc963d3f26ae2f6629be7d7f1fe9fb2e7626890`; all 30 tests and the JavaScript syntax checks passed.
 
 ## AI proposal path
 
