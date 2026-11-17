@@ -4,6 +4,15 @@ export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
 export const NORI_VIEWS=["front","side","back"];
 export const NORI_POSES=["neutral","wave","walk","sit"];
+
+export const NORI_JOINT_KEYS=["shoulder-left","elbow-left","wrist-left","shoulder-right","elbow-right","wrist-right","hip-left","knee-left","ankle-left","hip-right","knee-right","ankle-right"];
+export const NORI_RIG_BONES=[
+ {id:"arm-left",from:"shoulder-left",through:"elbow-left",to:"wrist-left",partId:"arm-left"},
+ {id:"arm-right",from:"shoulder-right",through:"elbow-right",to:"wrist-right",partId:"arm-right"},
+ {id:"leg-left",from:"hip-left",through:"knee-left",to:"ankle-left",partId:"leg-left"},
+ {id:"leg-right",from:"hip-right",through:"knee-right",to:"ankle-right",partId:"leg-right"}
+];
+
 const part=(id,name,layer,d,stroke,width=8,fill="none",visible=true)=>({id,name,layer,visible,path:{d,stroke,width,fill}});
 
 // Nori is built from ordinary editable path operations, never a raster drawing.
@@ -77,6 +86,19 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
   model.parts.find(p=>p.id==="leg-left").path.d="M 850 805 Q 760 850 720 930";
   model.parts.find(p=>p.id==="leg-right").path.d="M 1070 805 Q 1160 850 1200 930";
  }
+ const joints={
+  "shoulder-left":{x:820,y:610,visible:true},"elbow-left":{x:735,y:690,visible:true},"wrist-left":{x:760,y:790,visible:true},
+  "shoulder-right":{x:1100,y:610,visible:view!=="side"},"elbow-right":{x:1185,y:690,visible:view!=="side"},"wrist-right":{x:1160,y:790,visible:view!=="side"},
+  "hip-left":{x:865,y:850,visible:true},"knee-left":{x:855,y:930,visible:true},"ankle-left":{x:850,y:1010,visible:true},
+  "hip-right":{x:1055,y:850,visible:view!=="side"},"knee-right":{x:1065,y:930,visible:view!=="side"},"ankle-right":{x:1070,y:1010,visible:view!=="side"}
+ };
+ if(view==="side"){
+  Object.assign(joints,{"shoulder-left":{x:900,y:620,visible:true},"elbow-left":{x:845,y:700,visible:true},"wrist-left":{x:875,y:790,visible:true},"hip-left":{x:930,y:850,visible:true},"knee-left":{x:900,y:920,visible:true},"ankle-left":{x:900,y:1010,visible:true}});
+ }
+ if(pose==="wave"&&view==="front")Object.assign(joints,{"elbow-right":{x:1160,y:555,visible:true},"wrist-right":{x:1130,y:430,visible:true}});
+ if(pose==="walk")Object.assign(joints,{"elbow-left":{x:735,y:655,visible:true},"wrist-left":{x:700,y:735,visible:true},"elbow-right":{x:1185,y:665,visible:view!=="side"},"wrist-right":{x:1220,y:730,visible:view!=="side"},"knee-left":{x:825,y:900,visible:true},"ankle-left":{x:780,y:965,visible:true},"knee-right":{x:1100,y:910,visible:view!=="side"},"ankle-right":{x:1150,y:970,visible:view!=="side"}});
+ if(pose==="sit")Object.assign(joints,{"elbow-left":{x:780,y:700,visible:true},"wrist-left":{x:875,y:755,visible:true},"elbow-right":{x:1140,y:700,visible:view!=="side"},"wrist-right":{x:1045,y:755,visible:view!=="side"},"hip-left":{x:850,y:805,visible:true},"knee-left":{x:760,y:850,visible:true},"ankle-left":{x:720,y:930,visible:true},"hip-right":{x:1070,y:805,visible:view!=="side"},"knee-right":{x:1160,y:850,visible:view!=="side"},"ankle-right":{x:1200,y:930,visible:view!=="side"}});
+ model.rig={version:1,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
  model.id="nori-"+view+"-"+pose+"-"+expression;
  model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
@@ -119,9 +141,48 @@ export function validateCharacterModel(model){
   if(p.visible!==undefined&&typeof p.visible!=="boolean")throw Error("حالة ظهور جزء الشخصية غير صالحة");
   return {...p,path:validatePath(p.path)};
  });
+
+ if(model.rig!==undefined){
+  if(!model.rig||model.rig.version!==1||!model.rig.joints||typeof model.rig.joints!=="object")throw Error("هيكل مفاصل الشخصية غير صالح");
+  for(const key of NORI_JOINT_KEYS){
+   const joint=model.rig.joints[key];
+   if(!joint||!Number.isFinite(joint.x)||!Number.isFinite(joint.y)||joint.x<0||joint.x>1920||joint.y<0||joint.y>1080||typeof joint.visible!=="boolean")throw Error("بيانات مفصل الشخصية غير صالحة: "+key);
+  }
+  if(!Array.isArray(model.rig.bones)||model.rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
+  for(let i=0;i<NORI_RIG_BONES.length;i++){
+   const actual=model.rig.bones[i],expected=NORI_RIG_BONES[i];
+   if(!actual||actual.id!==expected.id||actual.from!==expected.from||actual.through!==expected.through||actual.to!==expected.to||actual.partId!==expected.partId)throw Error("توصيل عظام الشخصية غير صالح");
+  }
+ }
  const canvas=model.canvas||{};
  if(canvas.width!==1920||canvas.height!==1080)throw Error("أبعاد نموذج الشخصية يجب أن تكون 1920×1080");
  return {...model,parts};
+}
+
+
+export function applyNoriRigPose(model,jointUpdates={}){
+ const safe=validateCharacterModel(model);
+ if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
+ const next=JSON.parse(JSON.stringify(safe));
+ for(const [key,value] of Object.entries(jointUpdates)){
+  if(!NORI_JOINT_KEYS.includes(key)||!value||!Number.isFinite(value.x)||!Number.isFinite(value.y))throw Error("تعديل مفصل غير صالح");
+  next.rig.joints[key]={...next.rig.joints[key],x:Math.max(0,Math.min(1920,value.x)),y:Math.max(0,Math.min(1080,value.y))};
+ }
+ const fmt=n=>Number(n.toFixed(1)).toString();
+ for(const bone of NORI_RIG_BONES){
+  const start=next.rig.joints[bone.from],middle=next.rig.joints[bone.through],end=next.rig.joints[bone.to];
+  const partItem=next.parts.find(item=>item.id===bone.partId);
+  if(!partItem||partItem.visible===false)continue;
+  const control={x:2*middle.x-(start.x+end.x)/2,y:2*middle.y-(start.y+end.y)/2};
+  partItem.path.d="M "+fmt(start.x)+" "+fmt(start.y)+" Q "+fmt(control.x)+" "+fmt(control.y)+" "+fmt(end.x)+" "+fmt(end.y);
+ }
+ const hand=next.parts.find(item=>item.id==="hand-right"),wrist=next.rig.joints["wrist-right"];
+ if(hand&&hand.visible!==false&&wrist.visible!==false){
+  const x=wrist.x,y=wrist.y;
+  hand.path.d="M "+fmt(x-18)+" "+fmt(y-5)+" C "+fmt(x-34)+" "+fmt(y-18)+" "+fmt(x-16)+" "+fmt(y-36)+" "+fmt(x-2)+" "+fmt(y-18)+" C "+fmt(x+5)+" "+fmt(y-40)+" "+fmt(x+22)+" "+fmt(y-27)+" "+fmt(x+12)+" "+fmt(y-7)+" Q "+fmt(x+31)+" "+fmt(y+3)+" "+fmt(x+14)+" "+fmt(y+18)+" Q "+fmt(x)+" "+fmt(y+25)+" "+fmt(x-18)+" "+fmt(y+10)+" Z";
+ }
+ next.id=next.id+"-rigged";
+ return validateCharacterModel(next);
 }
 
 export function addCharacterModelToFrame(frame,model){
