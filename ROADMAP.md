@@ -11,7 +11,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 ## Phase 1 — Reliable drawing workspace
 - [x] Mobile-first Arabic RTL workspace (initial prototype committed; Android testing pending).
 - [x] SVG/vector drawing surface with pointer/touch support (physical-device test pending).
-- [x] Layer management: add/remove/select, visibility, locking, reorder (Android testing pending); [x] basic frame management.
+- [x] Layer management: add/remove/select, rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.
 - [x] Undo/redo and JSON project save/load implementation (browser round-trip test pending).
 - [x] SVG sequence JSON export; [ ] ZIP archive export.
 - [ ] Offline/PWA behavior where supported (service worker now caches the drawing engine module; device test pending).
@@ -21,6 +21,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Initial versioned drawing-command schema documented in docs/DRAWING_COMMANDS.md.
 - [x] Initial path syntax, numeric bounds, stroke width, and color validation; [ ] full SVG parser and geometric bounds validation.
 - [x] Initial validated path operations convert to editable SVG elements.
+- [x] Consume coalesced Pointer Event samples where available; discard cancelled gestures.
 - [ ] AI-proposed operation review/approval (manual JSON input only in current prototype).
 - [ ] No raster image-generation fallback.
 
