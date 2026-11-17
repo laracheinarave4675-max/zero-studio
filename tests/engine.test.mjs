@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
 test("v1 projects migrate their paths into a layer",()=>{const p=normalizeProject({format:"zero-studio",version:1,name:"old",fps:24,frames:[{id:"f1",paths:[line()]}]});assert.equal(p.version,2);assert.equal(p.frames[0].layers[0].operations[0].kind,"stroke");assert.equal(p.frames[0].layers[0].operations[0].path.d,line().d)});
 test("add, reorder and remove layers while retaining one",()=>{const f=createFrame(),a=f.layers[0],b=addLayer(f,"حبر");assert.equal(f.layers.length,2);assert.equal(reorderLayer(f,b.id,-1),true);assert.equal(f.layers[0].id,b.id);removeLayer(f,b.id);assert.equal(f.layers.length,1);assert.throws(()=>removeLayer(f,a.id),/طبقة واحدة/)});
+test("layer rename trims whitespace and rejects empty or overlong names",()=>{const f=createFrame(),l=f.layers[0];assert.equal(renameLayer(f,l.id,"  حبر رئيسي  ").name,"حبر رئيسي");assert.throws(()=>renameLayer(f,l.id,"   "),/فارغ/);assert.throws(()=>renameLayer(f,l.id,"x".repeat(81)),/80/);assert.throws(()=>renameLayer(f,"missing","x"),/غير موجودة/)});
 test("locked layers reject drawing operations",()=>{const l=createLayer();l.locked=true;assert.throws(()=>appendOperation(l,"stroke",line()),/مقفلة/)});
 test("vector eraser creates a real SVG mask rather than a white paint stroke",()=>{const l=createLayer();appendOperation(l,"stroke",line());appendOperation(l,"erase",{d:"M 20 20 L 30 30",stroke:"#000",width:24,fill:"none"});const svg=layerSvg(l);assert.match(svg,/<mask/);assert.match(svg,/stroke="black"/);assert.doesNotMatch(svg,/stroke="#fff"/)});
 test("eraser affects earlier strokes, later strokes remain on top",()=>{const l=createLayer();appendOperation(l,"stroke",line(1));appendOperation(l,"erase",line(2));appendOperation(l,"stroke",line(3));const svg=layerSvg(l);assert.ok(svg.indexOf("<g mask=")<svg.lastIndexOf('d="M 3 10'))});
