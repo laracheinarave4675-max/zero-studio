@@ -117,13 +117,13 @@ Implemented on the existing development branch:
 - SVG sequence export includes layer visibility and eraser masks.
 - ZIP export creates a standalone archive containing the editable project, a manifest, and one SVG file per frame.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
-- Added 13 Node tests covering v1 migration, layer operations and rename validation, locked layers, eraser masks/order, hidden layers, validation, v2 round-trip, consecutive erasures, and unique mask IDs.
+- Added 13 engine tests plus 3 ZIP tests (16 total), including CRC32 and archive directory/path validation.
 - Drawing input consumes coalesced pointer samples where supported; pointer cancellation discards the incomplete gesture.
 - Added GitHub Actions workflow for Node test execution across all `tests/*.test.mjs` files, including ZIP archive tests.
 
 ### Validation record
 - Initial GitHub Actions attempt exposed one incorrect test fixture (it attempted to draw after locking the layer); the fixture was corrected.
-- Final GitHub Actions run #23 completed successfully: `node --test tests/engine.test.mjs` — 12 tests passed, 0 failed.
+- Earlier GitHub Actions run #23 passed the original engine suite (12/12). The layer-rename revision then passed 13/13 tests in run #42. The new ZIP test suite is now included in CI and awaits its run.
 - Independently executed 12 equivalent engine behavior assertions in the connected JavaScript runtime; all passed.
 - JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
 - Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
