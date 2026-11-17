@@ -142,6 +142,16 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [ ] Test the adapter using a real user API key and confirm provider access from the user network.
 - [x] Added a one-second original vector character wave/blink sample with 24 unique frames; automated CI confirms 24 distinct frames at 24 FPS; no raster image generation used.
 
+## Public Android test deployment — 2026-11-17
+
+- [x] Created Vercel project `zero-studio` in the user's authorized Hobby team.
+- [x] Published the static app files from branch `feature/mobile-drawing-workspace` at commit `52be940755d46d69efc051d2acaa8f8fe711d7e1`.
+- [x] Deployment reached `READY`; HTML, app controller, engine module, CSS, service worker, and web manifest each returned HTTP 200 in deployment fetch checks.
+- Public test URL: https://zero-studio-three.vercel.app/
+- GitHub repository remains private. Vercel password and SSO deployment protection are disabled so the app URL is publicly reachable, as explicitly approved by the user.
+- GitHub Login Connection was not available to Vercel, so this is a manual static snapshot upload, not an automatic Git-linked deployment. Future code changes do not appear at this URL until a new deployment is uploaded.
+- The deployment is a test copy, not evidence of physical Android validation. Touch/stylus behavior, PWA installation/offline behavior, project round-trip, ZIP download/open, and real Gemini API calls remain to be tested on the user's phone/network.
+
 ## Next actions
 
 1. Deploy a test copy so the user can open the workspace on Android; the private repository has not been published, and the user must connect a hosting provider or explicitly authorize a public app-only mirror.
