@@ -91,6 +91,13 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 
 ## Change log
 
+### 2026-11-17 — GitHub access recheck and continuity confirmation
+- Rechecked the private repository using the connected GitHub integration; `laracheinarave4675-max/zero-studio` is now discoverable.
+- GitHub reports `admin`, `maintain`, and `push` permissions for the connected identity.
+- Verified that README.md, PROJECT_STATUS.md, DECISIONS.md, and ROADMAP.md exist on the main branch and contain the project constraints and staged plan.
+- No app source was changed in this step; importing the previous v0.1 prototype remains the next implementation task.
+
+
 ### 2026-11-17 — GitHub connection and documentation baseline
 - Confirmed access to the private repository through the connected GitHub integration.
 - Confirmed push/admin permissions.
