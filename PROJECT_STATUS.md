@@ -173,3 +173,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Confirmed access to the private repository through the connected GitHub integration.
 - Confirmed push/admin permissions.
 - Began durable project documentation so future sessions can resume from repository state rather than relying on conversational recall.
+
+
+## Smooth vector drawing milestone — 2026-11-17
+
+- [x] Replaced straight-line freehand point joining with Catmull–Rom-derived cubic Bézier segments in the drawing engine.
+- [x] One-point taps produce a tiny round-capped stroke; two-point gestures remain a straight segment; longer gestures produce cubic curves passing through the sampled points.
+- [x] Pointer coalesced samples remain supported; generated paths are stored as ordinary editable SVG paths and continue to work with undo, masks, and SVG/ZIP export.
+- [x] Added engine tests for curve generation, endpoint preservation, tap/straight-line handling, and invalid point rejection.
+- [ ] Physical Android feel/latency and curve quality review remains pending; smoothing is mathematical interpolation, not stylus pressure or a brush engine.
