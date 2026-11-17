@@ -55,7 +55,7 @@ test("in-between frame generation creates independent editable vector frames",()
  const frames=createInbetweenFrames(a,b,2);
  assert.equal(frames.length,2);assert.notEqual(frames[0].id,frames[1].id);
  assert.equal(frames[0].layers[0].operations[0].path.d,"M 6.7 13.3 L 133.3 146.7");
- assert.equal(frames[1].layers[0].operations[0].path.width,6.666666666666666);
+ assert.equal(frames[0].layers[0].operations[0].path.width,5.333333333333333);
  frames[0].layers[0].operations[0].path.d="M 1 1";
  assert.notEqual(frames[1].layers[0].operations[0].path.d,"M 1 1");
 });
