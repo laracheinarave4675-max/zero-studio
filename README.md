@@ -23,7 +23,7 @@ Open `app/index.html` through an HTTPS static host (or a local web server) to us
 
 ## Current drawing engine milestone
 
-The development branch now includes project format v2 with editable per-frame layers and a non-destructive SVG-mask vector eraser. Version 1 projects are migrated when opened. See [drawing command and layer model](docs/DRAWING_COMMANDS.md), [engine tests](tests/engine.test.mjs), and the Android test plan.
+The development branch now includes project format v2 with editable per-frame layers (including renaming) and a non-destructive SVG-mask vector eraser. Drawing input uses coalesced pointer samples where supported and discards cancelled gestures. Version 1 projects are migrated when opened. See [drawing command and layer model](docs/DRAWING_COMMANDS.md), [engine tests](tests/engine.test.mjs), and the Android test plan.
 
 ## Current state
 
