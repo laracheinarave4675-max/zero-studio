@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -102,4 +102,20 @@ test("Nori facial expression keyframes interpolate without changing path topolog
   assert.equal(between.length,1);
   assert.equal(between[0].layers[3].operations.length,3);
  }
+});
+
+test("Nori palette overrides recolor semantic parts without mutating the base model",()=>{
+ const base=createNoriModel(),variant=applyNoriPalette(base,{line:"#111111",skin:"#ffccaa",hair:"#aa3377",cloth:"#228855",accent:"#ffaa00"});
+ const find=(m,id)=>m.parts.find(p=>p.id===id).path;
+ assert.equal(find(variant,"body").fill,"#228855");
+ assert.equal(find(variant,"head").fill,"#ffccaa");
+ assert.equal(find(variant,"hair").fill,"#aa3377");
+ assert.equal(find(variant,"eye-left").stroke,"#111111");
+ assert.equal(find(variant,"mouth").stroke,"#ffaa00");
+ assert.notEqual(JSON.stringify(base),JSON.stringify(variant));
+});
+test("Nori palette overrides reject invalid color inputs safely",()=>{
+ const variant=applyNoriPalette(createNoriModel(),{skin:"url(javascript:alert(1))",line:"#123"});
+ assert.equal(variant.palette.skin,"#f4c7a1");
+ assert.equal(variant.palette.line,"#123");
 });
