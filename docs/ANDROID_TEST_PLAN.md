@@ -8,6 +8,10 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Draw with stylus if available.
 - [ ] Change color and stroke width.
 - [ ] Undo and redo strokes.
+- [ ] Add/delete/select/reorder layers; toggle visibility and lock state.
+- [ ] Verify vector eraser removes earlier strokes but preserves later strokes and other layers.
+- [ ] Save and reopen a v1 project; confirm it migrates to a single layer per frame.
+- [ ] Save and reopen a v2 multi-layer project including eraser masks.
 - [ ] Add, duplicate, select, and delete frames.
 - [ ] Confirm onion-skin display of previous frame.
 - [ ] Preview at 6, 12, and 24 playback FPS.
