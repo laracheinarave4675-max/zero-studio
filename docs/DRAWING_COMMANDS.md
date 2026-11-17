@@ -52,13 +52,13 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite now includes 36 tests: 17 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 8 character-model tests. The new shape and 48-variant checks run in GitHub Actions.
+The suite now includes 38 tests: 20 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 7 character-model tests. The new shape and 48-variant checks run in GitHub Actions.
 
 ## AI proposal path
 
 The optional Gemini text-only adapter produces a JSON proposal of editable SVG paths. The paths are validated locally, displayed on a temporary preview layer, and only appended to the selected project layer after explicit approval. The API key is not saved in project data, local storage, or ZIP exports. See [AI vector drawing adapter](AI_VECTOR_DRAWING.md) for provider, privacy, and quota details.
 
-## Geometric drawing tools
+## Character model packages\n\nA model can be exported as a standalone `.zchar` JSON file and imported later. Imported packages are size-limited and validated before insertion; every part is rechecked through the SVG path validator, duplicate IDs are rejected, and optional visibility flags control which parts are inserted. A character is copied into the current frame as ordinary editable path layers. The app does not upload the character package to a server.\n\n## Geometric drawing tools
 
 The mobile drawing palette provides a freehand pen, vector eraser, straight line, rectangle, and ellipse. Rectangles and ellipses are closed SVG paths and can optionally be filled with the current color. Every completed shape is stored as an ordinary editable stroke operation and is included in undo/redo, project save, and SVG/ZIP export.
 
