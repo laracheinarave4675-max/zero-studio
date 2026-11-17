@@ -155,15 +155,55 @@ export function pressureOutlinePath(points,baseWidth=5){
  return "M "+pt(left[0])+" "+left.slice(1).map(p=>"L "+pt(p)).join(" ")+" "+right.slice().reverse().map(p=>"L "+pt(p)).join(" ")+" Z";
 }
 
-function normalizeLayer(l,i){if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{if(o?.kind==="erase"||o?.kind==="stroke")return{kind:o.kind,path:validatePath(o.path)};if(typeof o?.d==="string")return{kind:"stroke",path:validatePath(o)};throw Error("عملية طبقة غير معروفة")});if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations}}
+function normalizeLayer(l,i){
+ if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");
+ const ids=new Set();
+ const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{
+  if(o?.kind!=="erase"&&o?.kind!=="stroke"&&typeof o?.d!=="string")throw Error("عملية طبقة غير معروفة");
+  const kind=o.kind==="erase"?"erase":"stroke",path=validatePath(o.path||o);
+  let id=typeof o.id==="string"&&o.id.length>0&&o.id.length<=100?o.id:uid("op");
+  if(ids.has(id))id=uid("op");
+  ids.add(id);
+  return{id,kind,path};
+ });
+ if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");
+ return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations};
+}
 export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function renameLayer(f,id,name){const l=f.layers.find(x=>x.id===id);if(!l)throw Error("الطبقة غير موجودة");const next=String(name??"").trim();if(!next)throw Error("اسم الطبقة لا يمكن أن يكون فارغاً");if(next.length>80)throw Error("اسم الطبقة يتجاوز 80 حرفاً");l.name=next;return l}
 export function removeLayer(f,id){if(f.layers.length<=1)throw Error("يجب إبقاء طبقة واحدة على الأقل");const i=f.layers.findIndex(l=>l.id===id);if(i<0)throw Error("الطبقة غير موجودة");f.layers.splice(i,1)}
 export function reorderLayer(f,id,delta){const i=f.layers.findIndex(l=>l.id===id),j=i+delta;if(i<0||j<0||j>=f.layers.length)return false;[f.layers[i],f.layers[j]]=[f.layers[j],f.layers[i]];return true}
-export function appendOperation(l,kind,path){if(l.locked)throw Error("الطبقة مقفلة");if(!["stroke","erase"].includes(kind))throw Error("نوع العملية غير مدعوم");if(l.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");l.operations.push({kind,path:validatePath(path)})}
+export function appendOperation(l,kind,path){if(l.locked)throw Error("الطبقة مقفلة");if(!["stroke","erase"].includes(kind))throw Error("نوع العملية غير مدعوم");if(l.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");const id=uid("op");l.operations.push({id,kind,path:validatePath(path)});return id}
+export function removeOperation(l,id){if(l.locked)throw Error("الطبقة مقفلة");const index=l.operations.findIndex(op=>op.id===id);if(index<0)throw Error("العنصر المحدد غير موجود");return l.operations.splice(index,1)[0]}
+export function translatePathData(d,dx,dy){
+ if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.abs(dx)>1000000||Math.abs(dy)>1000000)throw Error("إزاحة العنصر غير صالحة");
+ const tokens=tokenizePathData(d),out=[];let i=0;
+ while(i<tokens.length){
+  if(!("command"in tokens[i]))throw Error("بنية مسار غير متوقعة");
+  const command=tokens[i++].command,upper=command.toUpperCase(),relative=command!==upper,arity=PATH_ARITY[upper];
+  out.push(command);
+  if(arity===0)continue;
+  const values=[];
+  while(i<tokens.length&&!("command"in tokens[i]))values.push(tokens[i++].number);
+  if(!values.length||values.length%arity!==0)throw Error("معاملات المسار غير مكتملة");
+  for(let index=0;index<values.length;index++){
+   let shift=0;
+   if(!relative){
+    if(["M","L","T"].includes(upper))shift=index%2===0?dx:dy;
+    else if(upper==="H")shift=dx;
+    else if(upper==="V")shift=dy;
+    else if(upper==="C"||upper==="S"||upper==="Q")shift=index%2===0?dx:dy;
+    else if(upper==="A")shift=index%7===5?dx:index%7===6?dy:0;
+   }else if(upper==="M"&&index<2){shift=index===0?dx:dy}
+   out.push(String(+(values[index]+shift).toFixed(3)));
+  }
+ }
+ return out.join(" ");
+}
+export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
-const markup=(p,color)=>'<path d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" stroke-linecap="round" stroke-linejoin="round"/>';
-export function layerSvg(l,i=0,prefix="drawing"){if(!l.visible)return"";let pending=[],erasures=[],out="",k=0;const flush=()=>{if(!pending.length)return;if(erasures.length){const id="erase-mask-"+prefix+"-"+i+"-"+k++;out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(p=>markup(p,"black")).join("")+'</mask></defs><g mask="url(#'+id+')">'+pending.map(p=>markup(p)).join("")+"</g>"}else out+=pending.map(p=>markup(p)).join("");pending=[];erasures=[]};for(const op of l.operations){if(op.kind==="erase"){if(pending.length)erasures.push(op.path);continue}if(op.kind==="stroke"){if(erasures.length)flush();pending.push(op.path)}}flush();return'<g data-layer="'+esc(l.id)+'">'+out+"</g>"}
+const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+export function layerSvg(l,i=0,prefix="drawing"){if(!l.visible)return"";let pending=[],erasures=[],out="",k=0;const flush=()=>{if(!pending.length)return;if(erasures.length){const id="erase-mask-"+prefix+"-"+i+"-"+k++;out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(op=>markup(op.path,"black",op.id)).join("")+'</mask></defs><g mask="url(#'+id+')">'+pending.map(op=>markup(op.path,undefined,op.id)).join("")+"</g>"}else out+=pending.map(op=>markup(op.path,undefined,op.id)).join("");pending=[];erasures=[]};for(const op of l.operations){if(op.kind==="erase"){if(pending.length)erasures.push(op);continue}if(op.kind==="stroke"){if(erasures.length)flush();pending.push(op)}}flush();return'<g data-layer="'+esc(l.id)+'">'+out+"</g>"}
 export function frameSvg(f,prefix="export"){return'<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+f.layers.map((l,i)=>layerSvg(l,i,prefix)).join("")+"</svg>"}
 export function renderLayerInto(svg,l,i=0,prefix="live"){const markupSvg='<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+layerSvg(l,i,prefix)+'</svg>';const parsed=new DOMParser().parseFromString(markupSvg,"image/svg+xml");for(const node of parsed.documentElement.childNodes)if(node.nodeType===1)svg.appendChild(document.importNode(node,true))}
