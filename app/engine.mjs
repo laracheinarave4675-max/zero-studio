@@ -6,6 +6,23 @@ export const createFrame=()=>({id:uid("frame"),layers:[createLayer()]});
 export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()]});
 export function safeColor(c,f="#172033"){return typeof c==="string"&&(/^#[0-9a-f]{3,8}$/i.test(c)||/^(black|white|red|blue|green|none)$/i.test(c))?c:f}
 export function validatePath(p){if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000||!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\-\s]+$/.test(p.d))throw Error("بيانات مسار SVG غير صالحة");const n=p.d.match(/[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)||[];if(n.some(x=>!Number.isFinite(+x)||Math.abs(+x)>1000000))throw Error("إحداثيات المسار خارج الحدود");return{d:p.d,stroke:safeColor(p.stroke),width:Math.max(.2,Math.min(100,+p.width||5)),fill:p.fill==="none"?"none":safeColor(p.fill,"none")}}
+export function pointsToPath(points){
+ if(!Array.isArray(points)||!points.length)return"";
+ const clean=points.map(p=>({x:Number(p?.x),y:Number(p?.y)}));
+ if(clean.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))throw Error("نقاط الرسم غير صالحة");
+ const fmt=n=>Number(n.toFixed(1)).toString();
+ const point=p=>fmt(p.x)+" "+fmt(p.y);
+ if(clean.length===1)return"M "+point(clean[0])+" l 0.1 0";
+ if(clean.length===2)return"M "+point(clean[0])+" L "+point(clean[1]);
+ let d="M "+point(clean[0]);
+ for(let i=0;i<clean.length-1;i++){
+  const p0=clean[Math.max(0,i-1)],p1=clean[i],p2=clean[i+1],p3=clean[Math.min(clean.length-1,i+2)];
+  const c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6};
+  const c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
+  d+=" C "+point(c1)+" "+point(c2)+" "+point(p2);
+ }
+ return d;
+}
 function normalizeLayer(l,i){if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{if(o?.kind==="erase"||o?.kind==="stroke")return{kind:o.kind,path:validatePath(o.path)};if(typeof o?.d==="string")return{kind:"stroke",path:validatePath(o)};throw Error("عملية طبقة غير معروفة")});if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations}}
 export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
