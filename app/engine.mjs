@@ -5,6 +5,52 @@ export const createLayer=(name="طبقة 1")=>({id:uid("layer"),name,visible:tru
 export const createFrame=()=>({id:uid("frame"),layers:[createLayer()]});
 export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()]});
 export function safeColor(c,f="#172033"){return typeof c==="string"&&(/^#[0-9a-f]{3,8}$/i.test(c)||/^(black|white|red|blue|green|none)$/i.test(c))?c:f}
+
+const PATH_ARITY={M:2,L:2,H:1,V:1,C:6,S:4,Q:4,T:2,A:7,Z:0};
+export function pathGeometryBounds(d){
+ if(typeof d!=="string"||!d.length||d.length>100000)throw Error("بيانات مسار SVG غير صالحة");
+ const tokens=tokenizePathData(d);
+ if(!tokens.length||!("command"in tokens[0])||!/[Mm]/.test(tokens[0].command))throw Error("يجب أن يبدأ مسار SVG بأمر M");
+ let i=0,command=null,x=0,y=0,sx=0,sy=0,hasMove=false;
+ let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+ const include=(px,py)=>{if(!Number.isFinite(px)||!Number.isFinite(py)||Math.abs(px)>1000000||Math.abs(py)>1000000)throw Error("إحداثيات المسار التراكمية خارج الحدود");minX=Math.min(minX,px);minY=Math.min(minY,py);maxX=Math.max(maxX,px);maxY=Math.max(maxY,py)};
+ while(i<tokens.length){
+  if("command"in tokens[i])command=tokens[i++].command;
+  else if(!command)throw Error("أمر SVG مفقود قبل الإحداثيات");
+  const upper=command.toUpperCase(),relative=command!==upper,arity=PATH_ARITY[upper];
+  if(arity===undefined)throw Error("أمر SVG غير مدعوم");
+  if(upper==="Z"){if(!hasMove)throw Error("لا يمكن إغلاق مسار قبل نقطة البداية");x=sx;y=sy;include(x,y);command=null;continue}
+  const values=[];
+  while(i<tokens.length&&!("command"in tokens[i]))values.push(tokens[i++].number);
+  if(!values.length||values.length%arity!==0)throw Error("عدد معاملات أمر SVG غير مكتمل");
+  const groups=values.length/arity;
+  for(let g=0;g<groups;g++){
+   const v=values.slice(g*arity,(g+1)*arity);
+   const effective=upper==="M"&&g>0?"L":upper;
+   const rel=relative;
+   const point=(px,py)=>({x:rel?x+px:px,y:rel?y+py:py});
+   if(effective==="M"||effective==="L"||effective==="T"){
+    const p=point(v[0],v[1]);x=p.x;y=p.y;include(x,y);
+    if(effective==="M"){sx=x;sy=y;hasMove=true}
+   }else if(effective==="H"){
+    x=rel?x+v[0]:v[0];include(x,y);
+   }else if(effective==="V"){
+    y=rel?y+v[0]:v[0];include(x,y);
+   }else if(effective==="C"){
+    for(let k=0;k<6;k+=2){const p=point(v[k],v[k+1]);include(p.x,p.y);if(k===4){x=p.x;y=p.y}}
+   }else if(effective==="S"||effective==="Q"){
+    for(let k=0;k<4;k+=2){const p=point(v[k],v[k+1]);include(p.x,p.y);if(k===2){x=p.x;y=p.y}}
+   }else if(effective==="A"){
+    if(v[0]<0||v[1]<0||(v[3]!==0&&v[3]!==1)||(v[4]!==0&&v[4]!==1))throw Error("معاملات قوس SVG غير صالحة");
+    include(x-v[0],y-v[1]);include(x+v[0],y+v[1]);
+    const p=point(v[5],v[6]);x=p.x;y=p.y;include(x,y);
+   }
+  }
+ }
+ if(!hasMove)throw Error("مسار SVG لا يحتوي نقطة بداية");
+ return{minX,minY,maxX,maxY,width:maxX-minX,height:maxY-minY};
+}
+
 export function validatePath(p){if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000||!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\-\s]+$/.test(p.d))throw Error("بيانات مسار SVG غير صالحة");const n=p.d.match(/[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)||[];if(n.some(x=>!Number.isFinite(+x)||Math.abs(+x)>1000000))throw Error("إحداثيات المسار خارج الحدود");return{d:p.d,stroke:safeColor(p.stroke),width:Math.max(.2,Math.min(100,+p.width||5)),fill:p.fill==="none"?"none":safeColor(p.fill,"none")}}
 export function pointsToPath(points){
  if(!Array.isArray(points)||!points.length)return"";
