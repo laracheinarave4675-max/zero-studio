@@ -32,7 +32,8 @@ The loader accepts v1 project files with \`frames[].paths\` and migrates each fr
 ## Layer behavior
 
 - Layers are frame-local, ordered bottom-to-top.
-- Visibility and lock state are stored in the project.
+- Visibility, lock state, and editable layer names are stored in the project.
+- Layer names can be changed in the workspace; names are trimmed, non-empty, and limited to 80 characters.
 - Reordering changes compositing order.
 - A frame must retain at least one layer.
 - Locked layers reject drawing and erasing.
@@ -46,8 +47,8 @@ Run with Node.js 22 or newer:
 node --test tests/engine.test.mjs
 ```
 
-The suite contains 12 tests for project creation/migration, layer operations, locking, vector erase masks and ordering, hidden layers, path validation, v2 round-trip, and mask ID uniqueness. Twelve equivalent behavior assertions passed in the connected JavaScript runtime. The latest GitHub Actions run has not yet been confirmed green.
+The suite now contains 13 tests for project creation/migration, layer operations and renaming, locking, vector erase masks and ordering, hidden layers, path validation, v2 round-trip, and mask ID uniqueness. CI must be checked after this revision.
 
 ## Current limitations
 
-This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. There is no layer rename UI yet, no full SVG path parser, no stylus pressure curve, and no AI provider. Browser/Android behavior and export rendering still require device testing.
+This is still a drawing-engine prototype. The vector eraser uses non-destructive SVG masks rather than splitting paths into smaller geometric fragments. Layer renaming is implemented. There is still no full SVG path parser, no stylus pressure curve, and no AI provider. Pointer Events consume coalesced samples where supported; a cancelled pointer gesture is discarded rather than committed. Browser/Android behavior and export rendering still require device testing.
