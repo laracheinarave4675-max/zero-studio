@@ -21,6 +21,10 @@
 
 Open `app/index.html` through an HTTPS static host (or a local web server) to use the first drawing workspace. It is not yet deployed, and opening it directly as a `file://` URL may prevent PWA features. See [Android test plan](docs/ANDROID_TEST_PLAN.md) and [drawing command schema](docs/DRAWING_COMMANDS.md).
 
+## Current drawing engine milestone
+
+The development branch now includes project format v2 with editable per-frame layers and a non-destructive SVG-mask vector eraser. Version 1 projects are migrated when opened. See [drawing command and layer model](docs/DRAWING_COMMANDS.md), [engine tests](tests/engine.test.mjs), and the Android test plan.
+
 ## Current state
 
 The repository is being established as the durable project record. The earlier v0.1 prototype was created outside this repository in a previous work session; it has not yet been imported here or validated on a real Android device. See PROJECT_STATUS.md for exact status.
