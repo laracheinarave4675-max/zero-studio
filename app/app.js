@@ -1,9 +1,48 @@
 import{WIDTH,HEIGHT,createProject,createFrame,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
 import{generateVectorProposal}from"./gemini-drawing.mjs";
-import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,createNoriModelSheetSvg}from"./character-model.mjs";
-(()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
-function characterModelSelection(){if(selectedCharacterModel)return selectedCharacterModel;return applyNoriPalette(createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value),{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value})}\nfunction status(s,ok=true){$("commandStatus").textContent=s;$("commandStatus").style.color=ok?"var(--accent)":"#ff9999"}function snapshot(){history.push(JSON.stringify(project));if(history.length>100)history.shift();future=[];buttons()}function restore(s){project=JSON.parse(s);current=Math.min(current,project.frames.length-1);activeLayerId=frame().layers[0].id;render()}function buttons(){$("undoBtn").disabled=!history.length;$("redoBtn").disabled=!future.length;const selected=selection&&frame().layers.find(l=>l.id===selection.layerId);$("deleteSelectionBtn").disabled=!selected||selected.locked;$("applyStyleBtn").disabled=!selected||selected.locked;$("duplicateSelectionBtn").disabled=!selected||selected.locked}function undo(){if(history.length){future.push(JSON.stringify(project));restore(history.pop());buttons()}}function redo(){if(future.length){history.push(JSON.stringify(project));restore(future.pop());buttons()}}
+import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg}from"./character-model.mjs";
+(()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
+function createBaseNori(){return applyNoriPalette(createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value),noriPalette())}
+function characterModelSelection(){if(selectedCharacterModel)return selectedCharacterModel;return rigModel||applyNoriRigPose(createBaseNori(),{})}
+function renderRigEditor(){
+ if(!rigCanvas)return;
+ if(selectedCharacterModel&&!selectedCharacterModel.rig){$("characterRigPanel").hidden=true;return}
+ $("characterRigPanel").hidden=false;
+ if(!rigModel)rigModel=applyNoriRigPose(createBaseNori(),{});
+ rigArt.replaceChildren();rigBones.replaceChildren();rigHandles.replaceChildren();
+ const previewFrame=createFrame();addCharacterModelToFrame(previewFrame,rigModel);
+ previewFrame.layers.forEach((entry,index)=>renderLayerInto(rigArt,entry,index,"character-rig-preview"));
+ const point=key=>rigModel.rig.joints[key];
+ for(const bone of NORI_RIG_BONES){
+  const start=point(bone.from),middle=point(bone.through),end=point(bone.to);
+  if(!start.visible||!middle.visible||!end.visible)continue;
+  const line1=document.createElementNS(NS,"path");
+  line1.setAttribute("d","M "+start.x+" "+start.y+" L "+middle.x+" "+middle.y+" L "+end.x+" "+end.y);
+  line1.setAttribute("fill","none");line1.setAttribute("stroke","#f59e0b");line1.setAttribute("stroke-width","14");line1.setAttribute("stroke-linecap","round");line1.setAttribute("opacity",".8");rigBones.appendChild(line1);
+ }
+ for(const key of NORI_JOINT_KEYS){
+  const joint=point(key);if(!joint.visible)continue;
+  const circle=document.createElementNS(NS,"circle");circle.setAttribute("cx",joint.x);circle.setAttribute("cy",joint.y);circle.setAttribute("r","28");circle.setAttribute("fill","#fff");circle.setAttribute("stroke","#0284c7");circle.setAttribute("stroke-width","10");circle.setAttribute("data-joint",key);circle.setAttribute("role","button");circle.setAttribute("aria-label",key);rigHandles.appendChild(circle);
+ }
+}
+function updateRigPalette(){
+ if(selectedCharacterModel)return;
+ const base=createBaseNori(),updates={};
+ for(const key of NORI_JOINT_KEYS)updates[key]={x:rigModel?.rig?.joints?.[key]?.x??base.rig.joints[key].x,y:rigModel?.rig?.joints?.[key]?.y??base.rig.joints[key].y};
+ rigModel=applyNoriRigPose(base,updates);renderRigEditor();
+}
+function resetRigModel(){
+ selectedCharacterModel=null;rigModel=applyNoriRigPose(createBaseNori(),{});renderRigEditor();
+}
+function rigCoords(e){
+ const point=rigCanvas.createSVGPoint();point.x=e.clientX;point.y=e.clientY;
+ const matrix=rigCanvas.getScreenCTM();if(!matrix)return{x:0,y:0};
+ const transformed=point.matrixTransform(matrix.inverse());
+ return{x:Math.max(0,Math.min(WIDTH,transformed.x)),y:Math.max(0,Math.min(HEIGHT,transformed.y))};
+}
+\nfunction status(s,ok=true){$("commandStatus").textContent=s;$("commandStatus").style.color=ok?"var(--accent)":"#ff9999"}function snapshot(){history.push(JSON.stringify(project));if(history.length>100)history.shift();future=[];buttons()}function restore(s){project=JSON.parse(s);current=Math.min(current,project.frames.length-1);activeLayerId=frame().layers[0].id;render()}function buttons(){$("undoBtn").disabled=!history.length;$("redoBtn").disabled=!future.length;const selected=selection&&frame().layers.find(l=>l.id===selection.layerId);$("deleteSelectionBtn").disabled=!selected||selected.locked;$("applyStyleBtn").disabled=!selected||selected.locked;$("duplicateSelectionBtn").disabled=!selected||selected.locked}function undo(){if(history.length){future.push(JSON.stringify(project));restore(history.pop());buttons()}}function redo(){if(future.length){history.push(JSON.stringify(project));restore(future.pop());buttons()}}
 function renderFrame(g,f,opacity=1){g.replaceChildren();g.setAttribute("opacity",opacity);f.layers.forEach((l,i)=>renderLayerInto(g,l,i,g.id||"render"))}
 function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18);else onion.replaceChildren();renderFrames();renderLayers();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))?"none":"block";buttons()}
 function renderFrames(){$("frameList").replaceChildren();project.frames.forEach((f,i)=>{const b=document.createElement("button");b.className="frame-thumb"+(i===current?" selected":"");b.type="button";const s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 1920 1080");const bg=document.createElementNS(NS,"rect");bg.setAttribute("width",WIDTH);bg.setAttribute("height",HEIGHT);bg.setAttribute("fill","#fff");s.appendChild(bg);f.layers.forEach((l,n)=>renderLayerInto(s,l,n,"thumb-"+i));b.appendChild(s);const n=document.createElement("span");n.textContent=i+1;b.appendChild(n);b.onclick=()=>{stop();current=i;activeLayerId=frame().layers[0].id;selection=null;selectionDrag=null;clearProposal();render()};$("frameList").appendChild(b)})}
@@ -50,8 +89,24 @@ $("addLayerBtn").onclick=()=>{snapshot();const l=addLayer(frame());activeLayerId
 $("exportCharacterSheetBtn").onclick=()=>{try{const svg=createNoriModelSheetSvg({line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value});download("nori-model-sheet.svg",new Blob([svg],{type:"image/svg+xml"}));$("characterStatus").textContent="تم تصدير ورقة Nori المتجهية: 3 اتجاهات و4 تعبيرات و4 وضعيات."}catch(error){$("characterStatus").textContent="تعذر إنشاء ورقة النموذج: "+error.message}};
 $("exportCharacterBtn").onclick=()=>{try{const model=characterModelSelection();download((model.name.replace(/[^\\p{L}\\p{N}-]+/gu,"-")||"character")+".zchar",new Blob([JSON.stringify(model,null,2)],{type:"application/json"}));$("characterStatus").textContent="تم تصدير نموذج الشخصية كملف ZCHAR مستقل."}catch(error){$("characterStatus").textContent="تعذر التصدير: "+error.message}};
 $("importCharacterBtn").onclick=()=>$("characterFile").click();
-$("characterFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error("ملف الشخصية أكبر من 5 ميغابايت");selectedCharacterModel=validateCharacterModel(JSON.parse(await file.text()));$("characterStatus").textContent="تم تحميل "+selectedCharacterModel.name+". سيُضاف هذا النموذج عند الضغط على زر الإضافة."}catch(error){selectedCharacterModel=null;$("characterStatus").textContent="ملف شخصية غير صالح: "+error.message}finally{e.target.value=""}};
-$("useNoriBtn").onclick=()=>{selectedCharacterModel=null;$("characterStatus").textContent="تم اختيار نموذج Nori المدمج."};
+$("characterFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error("ملف الشخصية أكبر من 5 ميغابايت");selectedCharacterModel=validateCharacterModel(JSON.parse(await file.text()));rigModel=selectedCharacterModel.rig?selectedCharacterModel:null;renderRigEditor();$("characterStatus").textContent="تم تحميل "+selectedCharacterModel.name+". سيُضاف هذا النموذج عند الضغط على زر الإضافة."}catch(error){selectedCharacterModel=null;resetRigModel();$("characterStatus").textContent="ملف شخصية غير صالح: "+error.message}finally{e.target.value=""}};
+$("useNoriBtn").onclick=()=>{resetRigModel();$("characterStatus").textContent="تم اختيار نموذج Nori المدمج."};
+$("resetRigBtn").onclick=()=>{resetRigModel();$("characterStatus").textContent="أعيدت المفاصل إلى الوضعية المحددة."};
+for(const id of ["characterView","characterPose","characterExpression"]){$(id).onchange=()=>resetRigModel()}
+for(const id of ["characterLine","characterSkin","characterHair","characterCloth","characterAccent"]){$(id).onchange=()=>updateRigPalette()}
+rigCanvas.addEventListener("pointerdown",e=>{
+ const target=e.target.closest?.("[data-joint]");if(!target||selectedCharacterModel&&!selectedCharacterModel.rig)return;
+ rigDrag={joint:target.getAttribute("data-joint"),startModel:JSON.parse(JSON.stringify(rigModel))};
+ rigCanvas.setPointerCapture?.(e.pointerId);e.preventDefault();
+});
+rigCanvas.addEventListener("pointermove",e=>{
+ if(!rigDrag)return;
+ const position=rigCoords(e);
+ rigModel=applyNoriRigPose(rigDrag.startModel,{[rigDrag.joint]:position});
+ renderRigEditor();
+});
+rigCanvas.addEventListener("pointerup",()=>{if(!rigDrag)return;rigDrag=null;$("characterStatus").textContent="تم تعديل وضعية المفصل؛ ستضاف الشخصية بهذه الوضعية."});
+rigCanvas.addEventListener("pointercancel",()=>{if(!rigDrag)return;rigModel=rigDrag.startModel;rigDrag=null;renderRigEditor()});
 $("addCharacterBtn").onclick=()=>{try{const model=selectedCharacterModel||createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value);const needed=new Set(model.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;if(frame().layers.length+needed>100)throw Error("لا توجد مساحة كافية لطبقات الشخصية");snapshot();const added=addCharacterModelToFrame(frame(),model);if(!added.length)throw Error("النموذج لا يحتوي على أجزاء ظاهرة");activeLayerId=added[added.length-1].id;render();$("characterStatus").textContent="أضيف "+model.name+" إلى "+added.length+" طبقات متجهية مستقلة."}catch(error){$("characterStatus").textContent="تعذر إضافة النموذج: "+error.message}};
 $("deleteLayerBtn").onclick=()=>{snapshot();try{removeLayer(frame(),activeLayerId);activeLayerId=frame().layers[0].id;render()}catch(e){history.pop();buttons();status(e.message,false)}};
 $("addFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();project.frames.splice(current+1,0,createFrame());current++;activeLayerId=frame().layers[0].id;render()};
@@ -70,4 +125,4 @@ $("aiRejectBtn").onclick=()=>{clearProposal();aiStatus("تم رفض الاقتر
 $("applyCommandsBtn").onclick=()=>{try{const d=JSON.parse($("commandInput").value);if(d.version!==1||!Array.isArray(d.operations)||d.operations.length>100)throw Error("المخطط يتطلب version 1 و100 عملية كحد أقصى");const ops=d.operations.map(validatePath);snapshot();ops.forEach(p=>appendOperation(layer(),"stroke",p));render();status("أضيفت "+ops.length+" عملية إلى "+layer().name)}catch(err){status("لم تُضف الأوامر: "+err.message,false)}};
 function stop(){playing=false;clearInterval(timer);$("playBtn").textContent="▶ معاينة"}$("playBtn").onclick=()=>{if(playing){stop();render();return}if(project.frames.length<2)return;playing=true;$("playBtn").textContent="■ إيقاف";let i=current;timer=setInterval(()=>{i=(i+1)%project.frames.length;current=i;renderFrame(art,frame());$("frameInfo").textContent="الإطار "+(i+1)+" من "+project.frames.length},1000/+$("fpsSelect").value)};
 $("newProjectBtn").onclick=()=>{if(!confirm("بدء مشروع جديد؟ احفظ عملك الحالي أولاً"))return;stop();snapshot();project=createProject("مشروع جديد");current=0;activeLayerId=frame().layers[0].id;$("projectName").value="مشروع جديد";$("saveState").textContent="مشروع جديد";render()};
-if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render()})();
+if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render();resetRigModel()})();
