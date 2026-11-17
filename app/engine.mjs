@@ -3,7 +3,7 @@ const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
 export const createLayer=(name="طبقة 1")=>({id:uid("layer"),name,visible:true,locked:false,operations:[]});
 export const createFrame=()=>({id:uid("frame"),layers:[createLayer()]});
-export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()]});
+export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()],characterLibrary:[]});
 export function safeColor(c,f="#172033"){return typeof c==="string"&&(/^#[0-9a-f]{3,8}$/i.test(c)||/^(black|white|red|blue|green|none)$/i.test(c))?c:f}
 
 const PATH_ARITY={M:2,L:2,H:1,V:1,C:6,S:4,Q:4,T:2,A:7,Z:0};
@@ -169,7 +169,33 @@ function normalizeLayer(l,i){
  if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");
  return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations};
 }
-export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({id:uid("op"),kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
+function normalizeCharacterAsset(asset,index){
+ if(!asset||typeof asset!=="object"||!asset.model||typeof asset.model!=="object")throw Error("عنصر مكتبة الشخصيات غير صالح");
+ const source=asset.model,serialized=JSON.stringify(source);
+ if(serialized.length>5*1024*1024)throw Error("نموذج الشخصية يتجاوز 5 ميغابايت");
+ if(source.format!=="zero-character-model"||source.version!==1||!Array.isArray(source.parts)||!source.parts.length||source.parts.length>200)throw Error("صيغة نموذج مكتبة الشخصيات غير مدعومة");
+ const parts=source.parts.map((part,i)=>{
+  if(!part||typeof part.id!=="string"||typeof part.name!=="string"||typeof part.layer!=="string"||!part.layer.trim())throw Error("جزء شخصية غير صالح في المكتبة");
+  if(part.visible!==undefined&&typeof part.visible!=="boolean")throw Error("حالة ظهور جزء الشخصية غير صالحة");
+  return{id:part.id,name:part.name,layer:part.layer,visible:part.visible!==false,path:validatePath(part.path)};
+ });
+ const model={format:"zero-character-model",version:1,id:String(source.id||"character-"+index).slice(0,100),name:String(source.name||"شخصية مستوردة").slice(0,100),canvas:{width:WIDTH,height:HEIGHT},palette:source.palette&&typeof source.palette==="object"?source.palette:{},guide:source.guide&&typeof source.guide==="object"?source.guide:{},expression:String(source.expression||"neutral"),view:String(source.view||"front"),pose:String(source.pose||"neutral"),parts};
+ if(source.rig!==undefined)model.rig=source.rig;
+ return{id:typeof asset.id==="string"&&asset.id?asset.id:uid("character"),name:String(asset.name||model.name).slice(0,100),model};
+}
+
+export function normalizeProject(p){
+ if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");
+ const frames=p.frames.map(f=>{
+  if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({id:uid("op"),kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}
+  if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");
+  return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)};
+ });
+ const rawLibrary=Array.isArray(p.characterLibrary)?p.characterLibrary:[];
+ if(rawLibrary.length>100)throw Error("تحتوي مكتبة الشخصيات على أكثر من 100 نموذج");
+ const characterLibrary=rawLibrary.map(normalizeCharacterAsset);
+ return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary};
+}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function renameLayer(f,id,name){const l=f.layers.find(x=>x.id===id);if(!l)throw Error("الطبقة غير موجودة");const next=String(name??"").trim();if(!next)throw Error("اسم الطبقة لا يمكن أن يكون فارغاً");if(next.length>80)throw Error("اسم الطبقة يتجاوز 80 حرفاً");l.name=next;return l}
 export function removeLayer(f,id){if(f.layers.length<=1)throw Error("يجب إبقاء طبقة واحدة على الأقل");const i=f.layers.findIndex(l=>l.id===id);if(i<0)throw Error("الطبقة غير موجودة");f.layers.splice(i,1)}
