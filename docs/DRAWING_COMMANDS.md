@@ -48,7 +48,13 @@ The loader accepts v1 project files with \`frames[].paths\` and migrates each fr
 
 The workspace exports a dependency-free ZIP32 archive containing `project.zero`, `manifest.json`, and one editable SVG per frame under `frames/`. Entries use UTF-8 names and are stored without compression for compatibility; ZIP32 size limits apply. Unsafe and duplicate archive paths are rejected.
 
-## Pressure brush and in-between generation\n\nThe optional pressure brush uses stylus Pointer Event pressure samples to construct a closed variable-width SVG outline. It is enabled for pointer type `pen` when the pressure toggle is on; finger and mouse input use the normal smooth freehand path. This algorithm is an outline approximation, not a full brush engine with tilt, rotation, or texture. It must be reviewed on a real pressure-capable Android stylus.\n\nThe in-between tool interpolates corresponding numeric path tokens only when start/end frames have the same layer order and names, visibility/lock flags, operation counts and kinds, stroke/fill colors, and SVG command topology. It generates 1–24 independent editable frames. It rejects mismatched structures rather than guessing. This is not bone-based rigging or a general animation solver.\n\n## Automated tests
+## Pressure brush and in-between generation
+
+The optional pressure brush uses stylus Pointer Event pressure samples to construct a closed variable-width SVG outline. It is enabled for pointer type `pen` when the pressure toggle is on; finger and mouse input use the normal smooth freehand path. This algorithm is an outline approximation, not a full brush engine with tilt, rotation, or texture. It must be reviewed on a real pressure-capable Android stylus.
+
+The in-between tool interpolates corresponding numeric path tokens only when start/end frames have the same layer order and names, visibility/lock flags, operation counts and kinds, stroke/fill colors, and SVG command topology. It generates 1–24 independent editable frames. It rejects mismatched structures rather than guessing. This is not bone-based rigging or a general animation solver.
+
+## Automated tests
 
 Run with Node.js 22 or newer:
 
@@ -64,11 +70,15 @@ The optional Gemini text-only adapter produces a JSON proposal of editable SVG p
 
 ## Character model packages
 
-A model can be exported as a standalone `.zchar` JSON file and imported later. Imported packages are size-limited and validated before insertion; every part is rechecked through the SVG path validator, duplicate IDs are rejected, and optional visibility flags control which parts are inserted. A character is copied into the current frame as ordinary editable path layers. The app does not upload the character package to a server.
+A model can be exported as a standalone `.zchar` JSON file and imported later. Imported packages are size-limited and validated before insertion; every part is rechecked through the SVG path validator, duplicate IDs are rejected, and optional visibility flags control which parts are inserted. A character is copied into the current frame as ordinary editable path layers. The app does not upload the character package to a server. A separate model-sheet SVG export composes 11 editable vector cells: three viewing directions, four expressions, and four poses.
 
 ## Geometric drawing tools
 
-The mobile drawing palette provides a freehand pen, vector eraser, straight line, rectangle, and ellipse. Rectangles and ellipses are closed SVG paths and can optionally be filled with the current color. Every completed shape is stored as an ordinary editable stroke operation and is included in undo/redo, project save, and SVG/ZIP export.\n\n## Item editing and viewport\n\nEach vector operation receives a stable ID. The selection tool can select visible drawn paths, drag them to translate their geometry, and delete them. Locked layers reject transforms and deletion. The pan tool drags the SVG viewport; zoom-in, zoom-out, and reset controls change the viewBox without changing stored drawing coordinates. Selection currently operates on visible rendered paths; masked eraser operations are not directly hit-tested as visible objects.
+The mobile drawing palette provides a freehand pen, vector eraser, straight line, rectangle, and ellipse. Rectangles and ellipses are closed SVG paths and can optionally be filled with the current color. Every completed shape is stored as an ordinary editable stroke operation and is included in undo/redo, project save, and SVG/ZIP export.
+
+## Item editing and viewport
+
+Each vector operation receives a stable ID. The selection tool can select visible drawn paths, drag them to translate their geometry, update line/fill color and width, duplicate them with a new ID, and delete them. Locked layers reject transforms, style changes, duplication, and deletion. The pan tool drags the SVG viewport; zoom-in, zoom-out, and reset controls change the viewBox without changing stored drawing coordinates. Selection currently operates on visible rendered paths; masked eraser operations are not directly hit-tested as visible objects.
 
 ## Current limitations
 
