@@ -67,7 +67,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - Repository was confirmed visible to the connected GitHub integration on 2026-11-17.
 - This initial documentation baseline is being committed directly to main because the repository was empty at the time of setup.
 
-## Current implementation status
+## Reusable character model milestone — feature/mobile-drawing-workspace\n\n- [x] Added versioned Nori character model data with 11 individually identified editable vector parts.\n- [x] Added model validation for version, identity, unique part IDs, canvas dimensions, and safe SVG path data.\n- [x] Added frame insertion that groups the parts into four normal editable layers; no image generation or raster assets.\n- [x] Added a mobile workspace control to insert the starter character model.\n- [ ] Full turnaround/model sheet, expression library, pose library, articulated rig/deformation, and keyframe interpolation remain future work.\n- [ ] Visual quality and ergonomics require human review on the Android device.\n\n## Current implementation status
 
 - [x] Repository access confirmed.
 - [x] Durable project README created.
@@ -157,7 +157,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 1. [x] Publish the app-only test build at https://zero-studio-three.vercel.app/ while keeping the GitHub repository private; current snapshot includes smooth cubic drawing and service-worker cache v5. Manual upload is required after future source changes because GitHub Login Connection is not linked.
 2. Run the app on the physical Android phone: touch/stylus drawing, layer rename/visibility/locking, undo/redo, project save/open, ZIP download/open, and 24-frame playback.
 3. Test the Gemini adapter with a real user-owned API key entered directly into the password field; verify response quality and quotas without sharing the key in chat.
-4. Improve the drawing agent with a persistent character model sheet, shape construction, frame-to-frame continuity checks, and staged keyframe/in-between workflows.
+4. Extend the character foundation into front/side/back model sheets, expression and pose libraries, then articulated rigging and keyframe/in-between tools.\n5. Improve the drawing agent with a persistent character model sheet, shape construction, frame-to-frame continuity checks, and drawing review.ks, and staged keyframe/in-between workflows.
 5. Evaluate the 24-frame sample for line quality and motion; then prototype a short character action with 24 genuinely distinct drawings each second before scaling toward episode production.
 
 ## Change log
