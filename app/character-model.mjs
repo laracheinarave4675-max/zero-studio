@@ -26,9 +26,9 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
    part("mouth","الفم","الوجه","M 930 485 Q 960 510 990 485","#9c5360",6,"none"),
    part("arm-left","الذراع اليسرى","الأطراف","M 820 610 Q 735 690 760 790","#263449",24,"none"),
    part("arm-right","الذراع اليمنى","الأطراف","M 1100 610 Q 1185 690 1160 790","#263449",24,"none"),
-   part("leg-left","الساق اليسرى","الأطراف","M 865 850 L 850 1010","#263449",30,"none"),
-   part("leg-right","الساق اليمنى","الأطراف","M 1055 850 L 1070 1010","#263449",30,"none"),
-   part("hand-right","اليد اليمنى","الأطراف","M 1130 405 C 1100 390 1095 365 1110 350 C 1120 335 1135 345 1140 360 C 1145 335 1165 340 1165 360 C 1180 340 1195 355 1180 375 C 1200 370 1205 390 1185 405 Z","#263449",7,"#f4c7a1",false)
+   part("leg-left","الساق اليسرى","الأطراف","M 865 850 Q 855 930 850 1010","#263449",30,"none"),
+   part("leg-right","الساق اليمنى","الأطراف","M 1055 850 Q 1065 930 1070 1010","#263449",30,"none"),
+   part("hand-right","اليد اليمنى","الأطراف","M 1160 790 C 1135 785 1128 765 1140 752 C 1152 740 1168 748 1172 765 C 1182 745 1200 752 1193 770 C 1210 770 1208 790 1190 798 Z","#263449",7,"#f4c7a1",true)
   ]
  };
  const face={
@@ -53,21 +53,24 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
   model.parts.find(p=>p.id==="arm-right").visible=false;
   model.parts.find(p=>p.id==="leg-left").path.d="M 930 850 Q 900 920 900 1010";
   model.parts.find(p=>p.id==="leg-right").visible=false;
+  model.parts.find(p=>p.id==="hand-right").visible=false;
  }else if(view==="back"){
   model.parts.find(p=>p.id==="hair").path.d="M 780 390 C 735 245 840 155 960 170 C 1090 145 1185 250 1140 405 L 1125 560 Q 960 635 795 560 Z";
-  for(const id of ["eye-left","eye-right","mouth"])model.parts.find(p=>p.id===id).visible=false;
+  for(const id of ["eye-left","eye-right","mouth","hand-right"])model.parts.find(p=>p.id===id).visible=false;
   model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 735 690 760 790";
   model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1185 690 1160 790";
  }
- if(pose==="wave"&&view!=="back"){
-  const hand=model.parts.find(p=>p.id==="hand-right");hand.visible=true;
+ if(pose==="wave"&&view==="front"){
+  const hand=model.parts.find(p=>p.id==="hand-right");hand.path.d="M 1130 430 C 1105 425 1098 405 1110 392 C 1122 380 1138 388 1142 405 C 1152 385 1170 392 1163 410 C 1180 410 1178 430 1160 438 Z";
   model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1160 555 1130 430";
  }else if(pose==="walk"){
+  model.parts.find(p=>p.id==="hand-right").path.d="M 1220 730 C 1195 725 1188 705 1200 692 C 1212 680 1228 688 1232 705 C 1242 685 1260 692 1253 710 C 1270 710 1268 730 1250 738 Z";
   model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 735 655 700 735";
   model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1185 665 1220 730";
   model.parts.find(p=>p.id==="leg-left").path.d="M 865 850 Q 825 900 780 965";
   model.parts.find(p=>p.id==="leg-right").path.d="M 1055 850 Q 1100 910 1150 970";
  }else if(pose==="sit"){
+  model.parts.find(p=>p.id==="hand-right").path.d="M 1045 755 C 1020 750 1013 730 1025 717 C 1037 705 1053 713 1057 730 C 1067 710 1085 717 1078 735 C 1095 735 1093 755 1075 763 Z";
   model.parts.find(p=>p.id==="body").path.d="M 825 565 Q 960 520 1095 565 L 1125 805 Q 960 865 795 805 Z";
   model.parts.find(p=>p.id==="arm-left").path.d="M 820 610 Q 780 700 875 755";
   model.parts.find(p=>p.id==="arm-right").path.d="M 1100 610 Q 1140 700 1045 755";
