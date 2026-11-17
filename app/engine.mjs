@@ -51,7 +51,13 @@ export function pathGeometryBounds(d){
  return{minX,minY,maxX,maxY,width:maxX-minX,height:maxY-minY};
 }
 
-export function validatePath(p){if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000||!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\-\s]+$/.test(p.d))throw Error("بيانات مسار SVG غير صالحة");const n=p.d.match(/[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)||[];if(n.some(x=>!Number.isFinite(+x)||Math.abs(+x)>1000000))throw Error("إحداثيات المسار خارج الحدود");return{d:p.d,stroke:safeColor(p.stroke),width:Math.max(.2,Math.min(100,+p.width||5)),fill:p.fill==="none"?"none":safeColor(p.fill,"none")}}
+export function validatePath(p){
+ if(!p||typeof p.d!=="string"||!p.d.length||p.d.length>100000||!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\\-\\s]+$/.test(p.d))throw Error("بيانات مسار SVG غير صالحة");
+ const numbers=p.d.match(/[-+]?(?:\\d*\\.\\d+|\\d+\\.?\\d*)(?:[eE][-+]?\\d+)?/g)||[];
+ if(numbers.some(x=>!Number.isFinite(+x)||Math.abs(+x)>1000000))throw Error("إحداثيات المسار خارج الحدود");
+ pathGeometryBounds(p.d);
+ return{d:p.d,stroke:safeColor(p.stroke),width:Math.max(.2,Math.min(100,+p.width||5)),fill:p.fill==="none"?"none":safeColor(p.fill,"none")};
+}
 export function pointsToPath(points){
  if(!Array.isArray(points)||!points.length)return"";
  const clean=points.map(p=>({x:Number(p?.x),y:Number(p?.y)}));
