@@ -91,7 +91,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Bone-based character rigging, joint constraints, deformation, reusable character instances and general pose interpolation remain future work.
 
 ### Validation and current limitations
-- [x] GitHub Actions run #297 passed on commit `4841a5b7f23a2eee8ba6b1ae9effeaad87392b8e`: 55 tests passed, 0 failed; JavaScript syntax checks passed.
+- [x] GitHub Actions run #322 passed on commit `2bb1224fa99b7ce5141a115eed49dcfc18f385dc`: 58 tests passed, 0 failed; JavaScript syntax checks passed.
 - [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
 - [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
 - The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
@@ -221,4 +221,4 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Added operation IDs, path selection/move/delete, and translation support.
 - Added touch pan/zoom controls and inline Android-friendly layer rename.
 - Added Nori palette customization, with validated line/skin/hair/clothing/accent overrides.
-- Expanded CI coverage to 55 passing tests. See GitHub Actions run #297.
+- Expanded CI coverage to 58 passing tests. See GitHub Actions run #322.
