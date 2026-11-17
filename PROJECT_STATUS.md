@@ -56,7 +56,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - ToonPix on Android was identified as a possible free/offline frame-by-frame animation companion; verify current availability and behavior before depending on it.
 - KinetiFrame was identified as an open-source experimental option, but its development-build status makes it unsuitable as a production dependency without testing.
 - OpenPhoneUse was identified as an Android phone-control agent, but precise continuous drawing capability was not established.
-- Gemini API free-tier availability and data-use caveats were previously researched; re-check current terms before integrating. Never send secrets or confidential project material to a third-party model without explicit review.
+- Gemini API free-tier availability and data-use caveats were previously researched and are now documented in docs/AI_VECTOR_DRAWING.md. Re-check provider terms and quotas regularly. Never send secrets or confidential project material to a third-party model without explicit review.
 
 ## Repository status at baseline
 
@@ -82,7 +82,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Production departments/agents orchestration.
 - [ ] Sound, editing, and export pipeline integration.
 
-## First implementation — feature/mobile-drawing-workspace
+## Initial implementation baseline — historical, superseded by later milestones
 
 Review pull request: https://github.com/laracheinarave4675-max/zero-studio/pull/1 (draft; not merged into `main`).
 
@@ -105,7 +105,7 @@ Committed an initial browser-based drawing workspace under `app/`:
 - [ ] Project save/open round-trip in a real browser.
 - [ ] SVG export opened in a separate Android drawing/animation app.
 
-Known prototype limitations: eraser paints white rather than removing vector geometry; no layer system, no semantic character drawing, no automatic keyframes/in-betweens, no AI model/provider, and no ZIP exporter. The 24 FPS playback selector does not produce 24 new drawings per second; the explicit 24-independent-drawings/sec goal remains unchanged and unproven.
+At this initial baseline, the eraser was a white stroke and layers, ZIP export, and AI drawing were absent. Later milestones below add a true SVG-mask eraser, editable layers, ZIP export, and an optional text-only Gemini vector proposal adapter. The initial 24 FPS preview did not prove the 24-independent-drawings/sec target.
 
 ## Layer and vector eraser milestone — feature/mobile-drawing-workspace
 
@@ -144,11 +144,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Next actions
 
-1. Inspect the repository after the initial documentation commits.
-2. Recover/import the previous v0.1 prototype if the exact files are still available in the active work environment; otherwise reconstruct only after checking the prior implementation details.
-3. Establish a clean app structure and a repeatable Android test procedure.
-4. Build the drawing-command interface with validation, undo/redo, layers, frame management, and deterministic SVG export.
-5. Prototype one character action at very small scale and assess line quality, continuity, and actual unique drawings per second before expanding.
+1. Deploy a test copy so the user can open the workspace on Android; the private repository has not been published, and the user must connect a hosting provider or explicitly authorize a public app-only mirror.
+2. Run the app on the physical Android phone: touch/stylus drawing, layer rename/visibility/locking, undo/redo, project save/open, ZIP download/open, and 24-frame playback.
+3. Test the Gemini adapter with a real user-owned API key entered directly into the password field; verify response quality and quotas without sharing the key in chat.
+4. Improve the drawing agent with a persistent character model sheet, shape construction, frame-to-frame continuity checks, and staged keyframe/in-between workflows.
+5. Evaluate the 24-frame sample for line quality and motion; then prototype a short character action with 24 genuinely distinct drawings each second before scaling toward episode production.
 
 ## Change log
 
