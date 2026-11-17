@@ -30,3 +30,11 @@ test("adding a model does not mutate the reusable source model",()=>{
  addCharacterModelToFrame(frame,model);
  assert.equal(JSON.stringify(model),before);
 });
+
+test("Nori expression presets produce distinct validated facial vector paths",()=>{
+ const neutral=createNoriModel("neutral"),happy=createNoriModel("happy"),sad=createNoriModel("sad"),surprised=createNoriModel("surprised");
+ const face=model=>model.parts.filter(p=>["eye-left","eye-right","mouth"].includes(p.id)).map(p=>p.path.d).join("|");
+ assert.equal(new Set([face(neutral),face(happy),face(sad),face(surprised)]).size,4);
+ for(const model of [neutral,happy,sad,surprised])assert.equal(validateCharacterModel(model).parts.length,11);
+ assert.throws(()=>createNoriModel("angry"),/غير مدعوم/);
+});
