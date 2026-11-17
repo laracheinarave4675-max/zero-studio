@@ -72,7 +72,7 @@ test("pressure-sensitive strokes create filled outlines whose width follows styl
  const firm=pressureOutlinePath([{x:10,y:10,pressure:1},{x:50,y:10,pressure:1}],20);
  assert.match(light,/^M /);assert.match(light,/ Z$/);
  assert.notEqual(light,firm);
- assert.ok(Math.abs((+firm.match(/M ([0-9.]+)/)[1])-(+light.match(/M ([0-9.]+)/)[1]))>5);
+ assert.ok(Math.abs((+firm.match(/M [0-9.]+ ([0-9.]+)/)[1])-(+light.match(/M [0-9.]+ ([0-9.]+)/)[1]))>5);
 });
 test("pressure outline handles taps and rejects invalid samples",()=>{
  assert.match(pressureOutlinePath([{x:5,y:8,pressure:.5}],12),/^M .* Z$/);
