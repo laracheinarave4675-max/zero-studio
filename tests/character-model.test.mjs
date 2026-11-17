@@ -138,7 +138,7 @@ test("Nori skeleton contains validated joints and four connected limb chains",()
  assert.deepEqual(model.rig.bones.map(b=>b.partId),["arm-left","arm-right","leg-left","leg-right"]);
 });
 test("dragging Nori rig joints deforms matching vector parts and preserves other features",()=>{
- const base=createNoriModel(),moved=applyNoriRigPose(base,{"elbow-left":{x:700,y:650},"wrist-left":{x:680,y:760}});
+ const base=applyNoriRigPose(createNoriModel(),{}),moved=applyNoriRigPose(base,{"elbow-left":{x:700,y:650},"wrist-left":{x:680,y:760}});
  const part=(model,id)=>model.parts.find(p=>p.id===id).path.d;
  assert.notEqual(part(base,"arm-left"),part(moved,"arm-left"));
  assert.equal(part(base,"arm-right"),part(moved,"arm-right"));
