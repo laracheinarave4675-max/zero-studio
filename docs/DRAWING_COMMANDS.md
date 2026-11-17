@@ -51,7 +51,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite contains 13 engine tests and 3 ZIP tests (16 total), covering layer/project behavior, CRC32, ZIP local and central directory records, UTF-8 filenames, and rejection of unsafe or duplicate paths. GitHub Actions runs all suites.
+The suite contains 22 tests: 13 engine, 4 Gemini adapter, 2 workspace DOM, and 3 ZIP tests. GitHub Actions run #91 passed all 22 tests and the JavaScript syntax checks.
 
 ## AI proposal path
 
