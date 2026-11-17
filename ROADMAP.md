@@ -27,8 +27,8 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 
 ## Phase 3 — Animation proof of concept
 - [ ] Create one simple character with reusable construction guides.
-- [ ] Produce a short, measurable action sequence.
-- [ ] Count unique drawings separately from playback FPS.
+- [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
+- [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
 - [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
 
