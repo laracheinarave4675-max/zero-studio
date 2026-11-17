@@ -117,16 +117,16 @@ Implemented on the existing development branch:
 - SVG sequence export includes layer visibility and eraser masks.
 - ZIP export creates a standalone archive containing the editable project, a manifest, and one SVG file per frame.
 - Service-worker cache updated to include the ES module engine and use a new cache version.
-- Added 13 engine tests plus 3 ZIP tests (16 total), including CRC32 and archive directory/path validation.
+- Added 13 engine, 4 Gemini-adapter, 2 workspace DOM, and 3 ZIP tests (22 total).
 - Drawing input consumes coalesced pointer samples where supported; pointer cancellation discards the incomplete gesture.
 - Added GitHub Actions workflow for Node test execution across all `tests/*.test.mjs` files, including ZIP archive tests.
 
 ### Validation record
 - Initial GitHub Actions attempt exposed one incorrect test fixture (it attempted to draw after locking the layer); the fixture was corrected.
-- Earlier GitHub Actions run #23 passed the original engine suite (12/12). The layer-rename revision then passed 13/13 tests in run #42. The new ZIP test suite is now included in CI and awaits its run.
+- GitHub Actions run #91 completed successfully: 22 tests passed, 0 failed. Syntax checks passed for the app controller, engine, ZIP module, Gemini adapter, and service worker.
 - Independently executed 12 equivalent engine behavior assertions in the connected JavaScript runtime; all passed.
 - JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
-- Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
+- Automated DOM checks confirm all controller IDs exist and the AI proposal controls/preview layer are present. Browser rendering and actual Android touch interaction remain untested.
 
 Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; full SVG path parser and pressure-sensitive stylus width are not implemented. The Gemini text-to-vector adapter is implemented but has not been tested with a real API key. No image-generation endpoint is connected.
 
