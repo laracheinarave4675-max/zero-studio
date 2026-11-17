@@ -5,7 +5,7 @@ import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIE
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
- assert.equal(model.parts.length,11);
+ assert.equal(model.parts.length,12);
  assert.equal(new Set(model.parts.map(p=>p.id)).size,model.parts.length);
  assert.ok(model.parts.every(p=>typeof p.path.d==="string"&&p.path.d.length>0));
 });
@@ -35,7 +35,7 @@ test("Nori expression presets produce distinct validated facial vector paths",()
  const neutral=createNoriModel("neutral"),happy=createNoriModel("happy"),sad=createNoriModel("sad"),surprised=createNoriModel("surprised");
  const face=model=>model.parts.filter(p=>["eye-left","eye-right","mouth"].includes(p.id)).map(p=>p.path.d).join("|");
  assert.equal(new Set([face(neutral),face(happy),face(sad),face(surprised)]).size,4);
- for(const model of [neutral,happy,sad,surprised])assert.equal(validateCharacterModel(model).parts.length,11);
+ for(const model of [neutral,happy,sad,surprised])assert.equal(validateCharacterModel(model).parts.length,12);
  assert.throws(()=>createNoriModel("angry"),/غير مدعوم/);
 });
 
