@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -37,4 +37,28 @@ test("Nori expression presets produce distinct validated facial vector paths",()
  assert.equal(new Set([face(neutral),face(happy),face(sad),face(surprised)]).size,4);
  for(const model of [neutral,happy,sad,surprised])assert.equal(validateCharacterModel(model).parts.length,11);
  assert.throws(()=>createNoriModel("angry"),/غير مدعوم/);
+});
+
+test("all Nori views, poses and expressions produce safe editable character variants",()=>{
+ const models=[];
+ for(const view of NORI_VIEWS)for(const pose of NORI_POSES)for(const expression of NORI_EXPRESSIONS){
+  const model=validateCharacterModel(createNoriModel(expression,view,pose));
+  assert.equal(model.view,view);assert.equal(model.pose,pose);assert.equal(model.expression,expression);
+  models.push(model);
+ }
+ assert.equal(models.length,48);
+ assert.equal(new Set(models.map(m=>m.id)).size,48);
+});
+test("side and back views hide the facial parts that should not be visible",()=>{
+ const side=createNoriModel("neutral","side","neutral"),back=createNoriModel("neutral","back","neutral");
+ assert.equal(side.parts.find(p=>p.id==="eye-right").visible,false);
+ for(const id of ["eye-left","eye-right","mouth"])assert.equal(back.parts.find(p=>p.id===id).visible,false);
+});
+test("wave, walk and sit pose presets change limb geometry",()=>{
+ const neutral=createNoriModel(),wave=createNoriModel("neutral","front","wave"),walk=createNoriModel("neutral","front","walk"),sit=createNoriModel("neutral","front","sit");
+ const path=(m,id)=>m.parts.find(p=>p.id===id).path.d;
+ assert.notEqual(path(neutral,"arm-right"),path(wave,"arm-right"));
+ assert.equal(wave.parts.find(p=>p.id==="hand-right").visible,true);
+ assert.notEqual(path(neutral,"leg-left"),path(walk,"leg-left"));
+ assert.notEqual(path(neutral,"leg-right"),path(sit,"leg-right"));
 });
