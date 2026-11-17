@@ -18,3 +18,14 @@ test("project v2 round trip preserves layer flags and ordered eraser operations"
 test("consecutive eraser strokes are combined before later artwork",()=>{const l=createLayer();appendOperation(l,"stroke",line());appendOperation(l,"erase",line(2));appendOperation(l,"erase",line(4));appendOperation(l,"stroke",line(6));const svg=layerSvg(l);assert.equal((svg.match(/<mask /g)||[]).length,1);assert.equal((svg.match(/stroke="black"/g)||[]).length,2);assert.ok(svg.indexOf("<g mask=")<svg.lastIndexOf('d="M 6 10'))});
 
 test("mask ids are unique between separate layers in one exported frame",()=>{const f=createFrame();const second=addLayer(f,"تفاصيل");appendOperation(f.layers[0],"stroke",line());appendOperation(f.layers[0],"erase",line(2));appendOperation(second,"stroke",line(3));appendOperation(second,"erase",line(4));const svg=frameSvg(f,"check-frame");const ids=[...svg.matchAll(/id="(erase-mask-[^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,2);assert.notEqual(ids[0],ids[1])});
+
+test("smooth freehand paths use cubic curves while preserving the sampled endpoints",()=>{
+ const d=pointsToPath([{x:0,y:0},{x:10,y:20},{x:20,y:0},{x:30,y:20}]);
+ assert.match(d,/^M 0 0 C /);assert.equal((d.match(/ C /g)||[]).length,3);assert.ok(d.endsWith("30 20"));
+});
+test("freehand path conversion handles taps, straight gestures and invalid points",()=>{
+ assert.equal(pointsToPath([]),"");
+ assert.match(pointsToPath([{x:4,y:5}]),/^M 4 5 l 0.1 0$/);
+ assert.equal(pointsToPath([{x:1,y:2},{x:3,y:4}]),"M 1 2 L 3 4");
+ assert.throws(()=>pointsToPath([{x:0,y:0},{x:Infinity,y:2}]),/غير صالحة/);
+});
