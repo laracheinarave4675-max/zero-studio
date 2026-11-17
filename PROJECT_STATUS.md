@@ -120,8 +120,10 @@ Implemented on the existing development branch:
 - Added GitHub Actions workflow for Node test execution.
 
 ### Validation record
-- Initial GitHub Actions run: 9/10 tests passed. One test fixture attempted to add operations after setting the layer locked; this was a test setup error, not an engine failure.
-- Corrected that fixture and added consecutive-eraser and cross-layer mask-ID regression tests. Executed 12 equivalent engine behavior assertions directly in the connected JavaScript runtime; all 12 passed. A fresh passing GitHub Actions run has not yet been confirmed.
+- Initial GitHub Actions attempt exposed one incorrect test fixture (it attempted to draw after locking the layer); the fixture was corrected.
+- Final GitHub Actions run #23 completed successfully: `node --test tests/engine.test.mjs` — 12 tests passed, 0 failed.
+- Independently executed 12 equivalent engine behavior assertions in the connected JavaScript runtime; all passed.
+- JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
 - Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
 
 Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; no layer rename UI; full SVG path parser and pressure-sensitive stylus support are not implemented. No AI provider or raster image generation is connected.
