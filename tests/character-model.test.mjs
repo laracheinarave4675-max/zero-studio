@@ -78,3 +78,8 @@ test("custom character models reject non-boolean visibility and invalid dimensio
  assert.throws(()=>validateCharacterModel({...model,parts:model.parts.map((p,i)=>i? p:{...p,visible:"yes"})}),/ظهور/);
  assert.throws(()=>validateCharacterModel({...model,canvas:{width:100,height:100}}),/1920/);
 });
+
+test("character model requires at least one visible part for insertion",()=>{
+ const model=createNoriModel();
+ assert.throws(()=>validateCharacterModel({...model,parts:model.parts.map(p=>({...p,visible:false}))}),/ظاهر/);
+});
