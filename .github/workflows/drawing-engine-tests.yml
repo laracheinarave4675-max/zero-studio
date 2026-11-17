@@ -12,5 +12,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --check app/app.js && node --check app/engine.mjs && node --check app/zip.mjs && node --check app/gemini-drawing.mjs && node --check app/sw.js
+      - run: node --check app/app.js && node --check app/character-model.mjs && node --check app/engine.mjs && node --check app/zip.mjs && node --check app/gemini-drawing.mjs && node --check app/sw.js
       - run: node --test tests/*.test.mjs
