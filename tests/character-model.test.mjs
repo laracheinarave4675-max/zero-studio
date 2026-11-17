@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -118,4 +118,15 @@ test("Nori palette overrides reject invalid color inputs safely",()=>{
  const variant=applyNoriPalette(createNoriModel(),{skin:"url(javascript:alert(1))",line:"#123"});
  assert.equal(variant.palette.skin,"#f4c7a1");
  assert.equal(variant.palette.line,"#123");
+});
+
+test("Nori model sheet exports 11 editable vector cells for views, expressions and poses",()=>{
+ const sheet=createNoriModelSheetSvg({skin:"#eeccaa",cloth:"#55aa99"});
+ assert.match(sheet,/^<svg xmlns=/);
+ assert.equal((sheet.match(/data-character-cell=/g)||[]).length,11);
+ assert.match(sheet,/Turnaround/);
+ assert.match(sheet,/Expression/);
+ assert.match(sheet,/Pose/);
+ assert.match(sheet,/<path /);
+ assert.doesNotMatch(sheet,/<image/);
 });
