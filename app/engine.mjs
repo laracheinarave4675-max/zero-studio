@@ -125,7 +125,7 @@ export function createInbetweenFrames(startFrame,endFrame,count=1){
   const t=(index+1)/(count+1);
   const layers=startFrame.layers.map((source,i)=>({
    id:uid("layer"),name:source.name,visible:source.visible,locked:source.locked,
-   operations:pairs[i].map(op=>({kind:op.kind,path:validatePath({...op.from,d:interpolatePathData(op.from.d,op.to.d,t),width:op.from.width+(op.to.width-op.from.width)*t})}))
+   operations:pairs[i].map(op=>({id:uid("op"),kind:op.kind,path:validatePath({...op.from,d:interpolatePathData(op.from.d,op.to.d,t),width:op.from.width+(op.to.width-op.from.width)*t})}))
   }));
   return{id:uid("frame"),layers};
  });
