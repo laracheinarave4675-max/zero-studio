@@ -27,7 +27,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] No raster image-generation fallback.
 
 ## Phase 3 — Animation proof of concept
-- [ ] Create one simple character with reusable construction guides.
+- [x] Add an initial reusable character construction model (Nori: 11 vector parts, 4 editable layers, validated schema).\n- [ ] Complete front/side/back model sheets, proportions, expression library, and pose library.\n- [ ] Add articulated rig/deformation and reusable character instances across frames.
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
@@ -35,7 +35,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 
 ## Phase 4 — Production departments
 - [ ] Story/script and storyboard.
-- [ ] Character model sheets and expression/pose libraries.
+- [ ] Complete character model sheets and expression/pose libraries (initial Nori construction model only).
 - [ ] Background/layout department.
 - [ ] Keyframe and in-between workflow.
 - [ ] Cleanup, coloring, and continuity checks.
