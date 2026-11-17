@@ -39,10 +39,10 @@ export function shapePath(kind,start,end){
 
 
 function tokenizePathData(d){
- const tokens=[],re=/[AaCcHhLlMmQqSsTtVvZz]|[-+]?(?:\\d*\\.\\d+|\\d+\\.?\\d*)(?:[eE][-+]?\\d+)?/y;
+ const tokens=[],re=/[AaCcHhLlMmQqSsTtVvZz]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/y;
  let i=0;
  while(i<d.length){
-  if(/[\\s,]/.test(d[i])){i++;continue}
+  if(/[\s,]/.test(d[i])){i++;continue}
   re.lastIndex=i;const m=re.exec(d);
   if(!m)throw Error("تعذر تحليل بنية مسار SVG");
   tokens.push(/[A-Za-z]/.test(m[0])?{command:m[0]}:{number:Number(m[0])});
