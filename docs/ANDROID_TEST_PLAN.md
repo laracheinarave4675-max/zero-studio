@@ -18,6 +18,7 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Preview at 6, 12, and 24 playback FPS.
 - [ ] Save a .zero project, reload it, and compare frame contents.
 - [ ] Export SVG sequence JSON and inspect SVG output in another viewer.
+- [ ] Export the ZIP bundle, open it with Android Files/archive manager, and verify `project.zero`, `manifest.json`, and frame SVG files are present.
 - [ ] Test airplane/offline mode after first successful load.
 - [ ] Rotate device and verify drawing surface usability.
 - [ ] Test larger project and note memory/performance limits.
