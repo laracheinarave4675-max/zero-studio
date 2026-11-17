@@ -1,4 +1,4 @@
-import {createLayer,appendOperation,validatePath,safeColor} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
@@ -134,4 +134,26 @@ export function addCharacterModelToFrame(frame,model){
  const added=[...groups.values()];
  frame.layers.push(...added);
  return added;
+}
+
+const escapeXml=value=>String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+export function createNoriModelSheetSvg(paletteOverrides={}){
+ const views=[
+  {title:"Turnaround · Front",model:createNoriModel("neutral","front","neutral")},
+  {title:"Turnaround · Side",model:createNoriModel("neutral","side","neutral")},
+  {title:"Turnaround · Back",model:createNoriModel("neutral","back","neutral")}
+ ];
+ const expressions=NORI_EXPRESSIONS.map(expression=>({title:"Expression · "+expression,model:createNoriModel(expression,"front","neutral")}));
+ const poses=NORI_POSES.map(pose=>({title:"Pose · "+pose,model:createNoriModel("neutral","front",pose)}));
+ const entries=[...views,...expressions,...poses].map(item=>({...item,model:applyNoriPalette(item.model,paletteOverrides)}));
+ const cellW=600,cellH=560,width=cellW*4,height=cellH*3;
+ const cells=entries.map((entry,index)=>{
+  const row=index<3?0:index<7?1:2,col=index<3?index:index<7?index-3:index-7;
+  const x=col*cellW,y=row*cellH;
+  const frame=createFrame();addCharacterModelToFrame(frame,entry.model);
+  const svg=frameSvg(frame,"nori-sheet-"+index),inner=svg.slice(svg.indexOf(">")+1,svg.lastIndexOf("</svg>"));
+  const label=escapeXml(entry.title);
+  return '<g data-character-cell="'+index+'"><rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(cellW-16)+'" height="'+(cellH-16)+'" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/><text x="'+(x+26)+'" y="'+(y+42)+'" font-size="24" font-family="sans-serif" fill="#172033">'+label+'</text><g transform="translate('+(x+cellW/2)+' '+(y+cellH/2+12)+') scale(.48) translate(-960 -540)">'+inner+'</g></g>';
+ }).join("");
+ return '<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'"><rect width="100%" height="100%" fill="#e2e8f0"/>'+cells+'</svg>';
 }
