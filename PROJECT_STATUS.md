@@ -128,7 +128,7 @@ Implemented on the existing development branch:
 - JavaScript syntax checks passed for the engine module, app controller, and service worker; all referenced controller DOM IDs exist in the HTML.
 - Static source inspection found all app DOM IDs referenced by the controller are present. Browser rendering and actual Android touch interaction remain untested.
 
-Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; full SVG path parser and pressure-sensitive stylus width are not implemented. No AI provider or raster image generation is connected.
+Known limitations: the eraser is a non-destructive SVG mask, not geometric path splitting; full SVG path parser and pressure-sensitive stylus width are not implemented. The Gemini text-to-vector adapter is implemented but has not been tested with a real API key. No image-generation endpoint is connected.
 
 ## Drawing input and layer usability update — feature/mobile-drawing-workspace
 
