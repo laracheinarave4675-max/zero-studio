@@ -11,23 +11,29 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 ## Phase 1 — Reliable drawing workspace
 - [x] Mobile-first Arabic RTL workspace (initial prototype committed; Android testing pending).
 - [x] SVG/vector drawing surface with pointer/touch support (physical-device test pending).
-- [x] Layer management: add/remove/select, rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.
+- [x] Layer management: add/remove/select, inline rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.\n- [x] Vector item selection, drag-to-move, and delete with stable operation IDs.\n- [x] Mobile canvas pan and zoom controls.\n- [x] Line, rectangle, ellipse, and optional closed-shape fill.
 - [x] Undo/redo and JSON project save/load implementation (browser round-trip test pending).
 - [x] SVG sequence JSON export; [x] ZIP archive export (automated archive structure tests; Android download/open test pending).
-- [ ] Offline/PWA behavior where supported (service worker now caches the drawing engine module; device test pending).
+- [ ] Offline/PWA behavior where supported (service worker caches the drawing and character modules; device test pending).
 - [ ] Test on the user's Android browser/device.
 
 ## Phase 2 — Drawing brain interface
 - [x] Initial versioned drawing-command schema documented in docs/DRAWING_COMMANDS.md.
-- [x] Initial path syntax, numeric bounds, stroke width, and color validation; [ ] full SVG parser and geometric bounds validation.
+- [x] SVG path command grammar/arity validation for M/L/H/V/C/S/Q/T/A/Z plus conservative coordinate bounds; exact Bézier extrema/geometry remain out of scope.
 - [x] Initial validated path operations convert to editable SVG elements.
 - [x] Consume coalesced Pointer Event samples where available; discard cancelled gestures.
-- [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.\n- [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
+- [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.\n- [x] Optional stylus-pressure variable-width outline path; physical stylus behavior pending.
+- [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
 - [x] AI-proposed vector operations can be previewed and explicitly approved/rejected (Gemini text-only adapter; live API key test pending).
 - [ ] No raster image-generation fallback.
 
-## Phase 3 — Animation proof of concept
-- [x] Add an initial reusable character construction model (Nori: 11 vector parts, 4 editable layers, validated schema).\n- [x] Add front/side/back starter model views.\n- [x] Add four starter poses and four expressions (48 pre-authored Nori variants).\n- [ ] Create artist-refinable professional model sheets with proportions/turnarounds and customizable anatomy.\n- [x] Add four starter facial expression presets to the Nori vector model.\n- [ ] Add articulated rig/deformation and reusable character instances across frames.
+## Phase 3 — Character construction and animation proof of concept
+- [x] Add reusable Nori vector construction model (12 parts, semantic editable layers, versioned/validated schema).
+- [x] Add front/side/back starter model views.\n- [x] Add import/export of portable validated .zchar character models.\n- [x] Add editable Nori palette controls.
+- [x] Add four starter poses and four expressions (48 pre-authored Nori variants).
+- [ ] Create artist-refinable professional model sheets with proportions/turnarounds and customizable anatomy.
+- [x] Add four starter facial expression presets to the Nori vector model.
+- [ ] Add articulated rig/deformation and reusable character instances across frames.
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
@@ -37,7 +43,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Story/script and storyboard.
 - [ ] Complete character model sheets and expression/pose libraries (initial Nori construction model only).
 - [ ] Background/layout department.
-- [ ] Keyframe and in-between workflow.
+- [x] Basic topology-matched SVG keyframe in-between generation.\n- [ ] General keyframe editor, character rig animation, cleanup and frame-aware interpolation.
 - [ ] Cleanup, coloring, and continuity checks.
 - [ ] Production tracking and human approval gates.
 
