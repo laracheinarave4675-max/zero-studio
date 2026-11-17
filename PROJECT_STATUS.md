@@ -67,12 +67,35 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - Repository was confirmed visible to the connected GitHub integration on 2026-11-17.
 - This initial documentation baseline is being committed directly to main because the repository was empty at the time of setup.
 
-## Reusable character model milestone — feature/mobile-drawing-workspace\n\n- [x] Added versioned Nori character model data with 11 individually identified editable vector parts.\n- [x] Added model validation for version, identity, unique part IDs, canvas dimensions, and safe SVG path data.\n- [x] Added frame insertion that groups the parts into four normal editable layers; no image generation or raster assets.\n- [x] Added a mobile workspace control to insert the starter character model.\n- [x] CI run #144 passed on commit `ddc963d3f26ae2f6629be7d7f1fe9fb2e7626890`; character model syntax validation and the complete 30-test suite passed.\n- [x] Published the updated static workspace to Vercel deployment `dpl_4Nrvzhkn3ckGgSyL9sFwvLLPaE89` (`READY`) and reassigned the stable alias https://zero-studio-three.vercel.app/.\n- [x] Added four editable facial expression presets (neutral, happy, sad, surprised) selectable before inserting Nori.\n- [x] Added front, side, and back model views plus neutral, wave, walk, and sit pose presets. The 3 × 4 × 4 = 48 variants are covered by model validation tests.\n- [x] Added geometric line, rectangle, and ellipse tools; shapes are saved as editable SVG path operations and support optional fill.\n- [ ] Freeform bone-based rigging, automatic in-betweens, custom character editor, and true production model sheets remain future work.\n- [x] GitHub Actions run #161 passed on commit `2cbc8296b73cd2116ae8e2a6611208b77c228dc9`; all 31 tests and syntax checks passed.\n- [x] Published the expression-enabled build as Vercel deployment `dpl_14fak31cuQP18rV81LpxxdPn7qGZ` (`READY`) and assigned https://zero-studio-three.vercel.app/.\n- [ ] Full turnaround/model sheet, pose library, articulated rig/deformation, and keyframe interpolation remain future work.\n- [ ] Visual quality and ergonomics require human review on the Android device.\n\n## Drawing tools milestone — feature/mobile-drawing-workspace
+## Drawing and character system milestone — feature/mobile-drawing-workspace
 
-- [x] Added straight-line, rectangle, and ellipse vector tools.
-- [x] Rectangle and ellipse support optional fill using the selected drawing color.
-- [x] Shapes are stored as editable SVG path operations, compatible with undo/redo, save/load, and export.
-- [ ] Android pointer behavior and shape-fill interaction need physical device validation.
+### Vector drawing tools
+- [x] Freehand vector pen with sampled pointer input and smooth cubic Bézier interpolation.
+- [x] Optional pressure-outline brush for pointer devices reporting stylus pressure; finger/mouse input keeps the normal brush path.
+- [x] Vector eraser using editable, non-destructive SVG masks.
+- [x] Straight line, rectangle, and ellipse tools; closed shapes support optional fill.
+- [x] Select a visible vector path, drag to move it, and delete it. Each operation has a stable ID preserved by project normalization and SVG export.
+- [x] Drawing-canvas zoom controls and a pan tool for the mobile viewport.
+- [x] Inline layer rename, visibility, lock, reorder, add, and delete controls.
+- [x] SVG path command grammar/arity checks and cumulative-coordinate limits for M/L/H/V/C/S/Q/T/A/Z paths. Bounds are conservative control-point/radius bounds, not exact Bézier-extrema geometry.
+- [x] Topology-matched in-between generation for path-compatible keyframes. It rejects different path commands, layer/operation order, visibility/lock structure, and colors.
+- [x] Save/open project v2, v1 migration, SVG sequence export, and ZIP32 bundle export.
+
+### Character tools
+- [x] Reusable Nori vector construction template with 12 identified parts grouped into semantic layers.
+- [x] Three authored views (front, side, back), four pose presets (neutral, wave, walk, sit), and four expressions (neutral, happy, sad, surprised): 48 validated preset combinations.
+- [x] Editable Nori palette controls for line, skin, hair, clothing, and accent colors.
+- [x] Import/export standalone `.zchar` character-model files with size and path validation.
+- [x] Insert selected character variants into the current frame as editable layer operations.
+- [ ] Professional custom model-sheet editor, proportion guides and turnarounds need artist review and extension.
+- [ ] Bone-based character rigging, joint constraints, deformation, reusable character instances and general pose interpolation remain future work.
+
+### Validation and current limitations
+- [x] GitHub Actions run #297 passed on commit `4841a5b7f23a2eee8ba6b1ae9effeaad87392b8e`: 55 tests passed, 0 failed; JavaScript syntax checks passed.
+- [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
+- [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
+- The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
+- The 24-distinct-drawings-per-second production target remains unproven; the one-second sample is a simple pipeline proof, not 24 completely redrawn full-body poses.
 
 ## Current implementation status
 
@@ -83,7 +106,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] First mobile vector drawing workspace source committed on `feature/mobile-drawing-workspace`.
 - [ ] Android browser/device smoke test (public test URL is live; physical interaction remains pending).
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
-- [ ] Full SVG parser and geometric bounds validation.
+- [x] SVG path command grammar/arity and conservative coordinate-bound validation.
 - [x] First AI vector drawing adapter implemented with preview and explicit approval; [ ] live API-key test.
 - [x] First one-second animation proof created: 24 distinct vector frame documents at 24 FPS, with automated uniqueness test; [ ] human quality review and Android playback.
 - [ ] Production departments/agents orchestration.
@@ -161,11 +184,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Next actions
 
-1. [x] Publish the app-only test build at https://zero-studio-three.vercel.app/ while keeping the GitHub repository private; current snapshot includes smooth cubic drawing and service-worker cache v5. Manual upload is required after future source changes because GitHub Login Connection is not linked.
-2. Run the app on the physical Android phone: touch/stylus drawing, layer rename/visibility/locking, undo/redo, project save/open, ZIP download/open, and 24-frame playback.
-3. Test the Gemini adapter with a real user-owned API key entered directly into the password field; verify response quality and quotas without sharing the key in chat.
-4. Extend the character foundation into front/side/back model sheets, expression and pose libraries, then articulated rigging and keyframe/in-between tools.\n5. Improve the drawing agent with a persistent character model sheet, shape construction, frame-to-frame continuity checks, and drawing review.ks, and staged keyframe/in-between workflows.
-6. Evaluate the 24-frame sample for line quality and motion; then prototype a short character action with 24 genuinely distinct drawings each second before scaling toward episode production.
+1. Validate the current drawing and character UI on the physical Android phone: zoom/pan, freehand/stylus pressure, selection/move/delete, shape fills, layer management, and character presets.
+2. Test .zero and .zchar save/open round trips, SVG/ZIP export, offline PWA behavior, and a longer multi-frame project on Android.
+3. Refine character construction into professional editable model sheets and customizable proportions.
+4. Implement a real articulated character rig with joint constraints and reusable character instances; then build keyframe/cleanup workflows beyond topology-matched path tweening.
+5. Test whether a short action can achieve 24 genuinely independent drawings per second at acceptable quality and review effort. Do not treat 24 FPS playback as success.
+6. Test Gemini with a user-owned API key entered directly in the app; never share the key in chat.
 
 ## Change log
 
@@ -190,3 +214,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [x] Added engine tests for curve generation, endpoint preservation, tap/straight-line handling, and invalid point rejection.
 - [ ] Physical Android feel/latency and curve quality review remains pending; smoothing is mathematical interpolation, not stylus pressure or a brush engine.
 - [x] Published the smooth-curve update to the existing public Vercel test URL; the deployment returned READY and the deployed app/engine files were checked for the new converter. GitHub Actions run #124 passed all 26 tests.
+
+
+## 2026-11-17 — Expanded drawing and character editing
+
+- Added operation IDs, path selection/move/delete, and translation support.
+- Added touch pan/zoom controls and inline Android-friendly layer rename.
+- Added Nori palette customization, with validated line/skin/hair/clothing/accent overrides.
+- Expanded CI coverage to 55 passing tests. See GitHub Actions run #297.
