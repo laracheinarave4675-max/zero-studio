@@ -169,7 +169,7 @@ function normalizeLayer(l,i){
  if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");
  return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations};
 }
-export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
+export function normalizeProject(p){if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");const frames=p.frames.map(f=>{if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({id:uid("op"),kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)}});return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames}}
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function renameLayer(f,id,name){const l=f.layers.find(x=>x.id===id);if(!l)throw Error("الطبقة غير موجودة");const next=String(name??"").trim();if(!next)throw Error("اسم الطبقة لا يمكن أن يكون فارغاً");if(next.length>80)throw Error("اسم الطبقة يتجاوز 80 حرفاً");l.name=next;return l}
 export function removeLayer(f,id){if(f.layers.length<=1)throw Error("يجب إبقاء طبقة واحدة على الأقل");const i=f.layers.findIndex(l=>l.id===id);if(i<0)throw Error("الطبقة غير موجودة");f.layers.splice(i,1)}
@@ -178,10 +178,10 @@ export function appendOperation(l,kind,path){if(l.locked)throw Error("الطبق
 export function removeOperation(l,id){if(l.locked)throw Error("الطبقة مقفلة");const index=l.operations.findIndex(op=>op.id===id);if(index<0)throw Error("العنصر المحدد غير موجود");return l.operations.splice(index,1)[0]}
 export function translatePathData(d,dx,dy){
  if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.abs(dx)>1000000||Math.abs(dy)>1000000)throw Error("إزاحة العنصر غير صالحة");
- const tokens=tokenizePathData(d),out=[];let i=0;
+ const tokens=tokenizePathData(d),out=[];let i=0,firstCommand=true;
  while(i<tokens.length){
   if(!("command"in tokens[i]))throw Error("بنية مسار غير متوقعة");
-  const command=tokens[i++].command,upper=command.toUpperCase(),relative=command!==upper,arity=PATH_ARITY[upper];
+  const command=tokens[i++].command,upper=command.toUpperCase(),relative=command!==upper,arity=PATH_ARITY[upper],isFirst=firstCommand;firstCommand=false;
   out.push(command);
   if(arity===0)continue;
   const values=[];
@@ -195,7 +195,7 @@ export function translatePathData(d,dx,dy){
     else if(upper==="V")shift=dy;
     else if(upper==="C"||upper==="S"||upper==="Q")shift=index%2===0?dx:dy;
     else if(upper==="A")shift=index%7===5?dx:index%7===6?dy:0;
-   }else if(upper==="M"&&index<2){shift=index===0?dx:dy}
+   }else if(upper==="M"&&isFirst&&index<2){shift=index===0?dx:dy}
    out.push(String(+(values[index]+shift).toFixed(3)));
   }
  }
