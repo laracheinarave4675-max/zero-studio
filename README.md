@@ -10,6 +10,10 @@
 - Animation target: the creative goal is **24 independently drawn images per second**. This is not the same as displaying a smaller number of drawings at 24 FPS. Keep this requirement explicit in planning and explain its production cost.
 - Build honestly in testable stages. Do not describe prototypes as a finished professional studio.
 
+## Public Android test copy
+
+Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. Physical Android testing is still pending.
+
 ## Start here
 
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md) before continuing work.
