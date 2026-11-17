@@ -90,7 +90,7 @@ test("front-view Nori pose keyframes can generate editable in-between frames",()
  for(const pose of ["wave","walk","sit"]){
   const between=createInbetweenFrames(neutral,make(pose),2);
   assert.equal(between.length,2);
-  assert.equal(between[0].layers.length,4);
+  assert.equal(between[0].layers.length,5);
   assert.ok(between.every(frame=>frame.layers.every(layer=>layer.operations.length>0)));
  }
 });
@@ -100,6 +100,6 @@ test("Nori facial expression keyframes interpolate without changing path topolog
  for(const expression of ["happy","sad","surprised"]){
   const between=createInbetweenFrames(neutral,make(expression),1);
   assert.equal(between.length,1);
-  assert.equal(between[0].layers[2].operations.length,3);
+  assert.equal(between[0].layers[3].operations.length,3);
  }
 });
