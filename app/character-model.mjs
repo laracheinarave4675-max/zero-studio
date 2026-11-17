@@ -32,10 +32,10 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
   ]
  };
  const face={
-  neutral:{left:"M 855 405 Q 885 375 915 405 Q 885 435 855 405 Z",right:"M 1005 405 Q 1035 375 1065 405 Q 1035 435 1005 405 Z",mouth:"M 930 485 Q 960 510 990 485"},
-  happy:{left:"M 855 420 Q 885 380 915 420",right:"M 1005 420 Q 1035 380 1065 420",mouth:"M 920 475 Q 960 545 1000 475"},
-  sad:{left:"M 855 405 Q 885 435 915 405",right:"M 1005 405 Q 1035 435 1065 405",mouth:"M 925 510 Q 960 470 995 510"},
-  surprised:{left:"M 870 405 A 15 25 0 1 0 900 405 A 15 25 0 1 0 870 405 Z",right:"M 1020 405 A 15 25 0 1 0 1050 405 A 15 25 0 1 0 1020 405 Z",mouth:"M 945 480 A 15 22 0 1 0 975 480 A 15 22 0 1 0 945 480 Z"}
+  neutral:{left:"M 855 405 Q 885 375 915 405 Q 885 435 855 405 Z",right:"M 1005 405 Q 1035 375 1065 405 Q 1035 435 1005 405 Z",mouth:"M 930 485 Q 960 510 990 485 Q 960 535 930 485"},
+  happy:{left:"M 855 420 Q 885 380 915 420 Q 885 455 855 420 Z",right:"M 1005 420 Q 1035 380 1065 420 Q 1035 455 1005 420 Z",mouth:"M 920 475 Q 960 545 1000 475 Q 960 570 920 475"},
+  sad:{left:"M 855 405 Q 885 435 915 405 Q 885 390 855 405 Z",right:"M 1005 405 Q 1035 435 1065 405 Q 1035 390 1005 405 Z",mouth:"M 925 510 Q 960 470 995 510 Q 960 490 925 510"},
+  surprised:{left:"M 855 405 Q 885 375 915 405 Q 885 450 855 405 Z",right:"M 1005 405 Q 1035 375 1065 405 Q 1035 450 1005 405 Z",mouth:"M 945 480 Q 960 460 975 480 Q 960 530 945 480"}
  };
  for(const item of model.parts){
   if(item.id==="eye-left")item.path.d=face[expression].left;
