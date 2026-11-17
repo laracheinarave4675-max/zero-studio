@@ -176,6 +176,19 @@ export function removeLayer(f,id){if(f.layers.length<=1)throw Error("يجب إب
 export function reorderLayer(f,id,delta){const i=f.layers.findIndex(l=>l.id===id),j=i+delta;if(i<0||j<0||j>=f.layers.length)return false;[f.layers[i],f.layers[j]]=[f.layers[j],f.layers[i]];return true}
 export function appendOperation(l,kind,path){if(l.locked)throw Error("الطبقة مقفلة");if(!["stroke","erase"].includes(kind))throw Error("نوع العملية غير مدعوم");if(l.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");const id=uid("op");l.operations.push({id,kind,path:validatePath(path)});return id}
 export function removeOperation(l,id){if(l.locked)throw Error("الطبقة مقفلة");const index=l.operations.findIndex(op=>op.id===id);if(index<0)throw Error("العنصر المحدد غير موجود");return l.operations.splice(index,1)[0]}
+export function updateOperation(l,id,patch={}){
+ if(l.locked)throw Error("الطبقة مقفلة");
+ const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");
+ const allowed={stroke:patch.stroke===undefined?op.path.stroke:safeColor(patch.stroke),fill:patch.fill===undefined?op.path.fill:safeColor(patch.fill,"none"),width:patch.width===undefined?op.path.width:Math.max(.2,Math.min(100,+patch.width||5))};
+ op.path=validatePath({...op.path,...allowed});return op;
+}
+export function duplicateOperation(l,id){
+ if(l.locked)throw Error("الطبقة مقفلة");
+ if(l.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");
+ const index=l.operations.findIndex(item=>item.id===id);if(index<0)throw Error("العنصر المحدد غير موجود");
+ const original=l.operations[index],copy={id:uid("op"),kind:original.kind,path:{...original.path}};
+ l.operations.splice(index+1,0,copy);return copy;
+}
 export function translatePathData(d,dx,dy){
  if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.abs(dx)>1000000||Math.abs(dy)>1000000)throw Error("إزاحة العنصر غير صالحة");
  const tokens=tokenizePathData(d),out=[];let i=0,firstCommand=true;
