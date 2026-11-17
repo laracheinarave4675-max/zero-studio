@@ -22,6 +22,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Initial path syntax, numeric bounds, stroke width, and color validation; [ ] full SVG parser and geometric bounds validation.
 - [x] Initial validated path operations convert to editable SVG elements.
 - [x] Consume coalesced Pointer Event samples where available; discard cancelled gestures.
+- [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.
 - [x] AI-proposed vector operations can be previewed and explicitly approved/rejected (Gemini text-only adapter; live API key test pending).
 - [ ] No raster image-generation fallback.
 
