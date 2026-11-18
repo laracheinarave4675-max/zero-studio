@@ -38,6 +38,9 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Move long-sequence storage to paged IndexedDB/database-backed storage and tune memory-aware export for Android.
 - [ ] Run and artist-review the complete 240-frame street test; measure actual time, quality, size, and memory.
 - [ ] Connect a live provider adapter and test real-provider scene quality, iterative correction, and continuity; provider choice deferred.
+- [ ] Test a hosted native-SVG model (OmniSVG) for editable illustration quality and conversion into ZERO STUDIO paths.
+- [ ] Compare current free general-purpose model endpoints for structured scene/vector-plan output; record request, token, and output-size limits before integration.
+- [ ] Prototype an AI-authored, scene-specific vector drawing program that emits a complete separate SVG document for every frame; retain the 24-unique-drawings/second acceptance test and reject static-image/tween shortcuts.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
 ## Phase 3 — Character construction and animation proof of concept
