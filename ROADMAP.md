@@ -31,6 +31,12 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
 - [x] AI-proposed vector operations can be previewed and explicitly approved/rejected.
 - [x] AI scene artist can return 2–12 named editable SVG layers (up to 300 paths), preview the complete scene, and commit it as separate layers after approval.
+- [x] Raise project frame capacity to 30,000 and paginate the timeline at 24 thumbnails per page.
+- [x] Add a 24-unique-drawings/second production plan with ordered, validated .zbatch imports and saved progress.
+- [x] Add frame-scoped undo/redo for large projects without copying the entire project per edit.
+- [ ] Connect a provider-independent worker that generates, validates, retries, and resumes batches automatically; provider choice deferred.
+- [ ] Move long-sequence storage to paged IndexedDB/database-backed storage and tune memory-aware export for Android.
+- [ ] Run and artist-review the complete 240-frame street test; measure actual time, quality, size, and memory.
 - [ ] Test real-provider scene quality and improve iterative correction/continuity.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
