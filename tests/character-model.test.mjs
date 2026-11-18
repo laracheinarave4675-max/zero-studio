@@ -262,3 +262,28 @@ test("character instance replacement rejects missing identities and invalid mode
  const source=createFrame(),layers=addCharacterModelToFrame(source,createNoriModel());
  assert.throws(()=>replaceCharacterInstanceInFrame(source,layers[0].characterInstance.id,{format:"bad"}),/غير مدعومة/);
 });
+
+test("head anchor moves the head and facial features without moving the torso",()=>{
+ const base=applyNoriRigPose(createNoriModel(),{}),moved=solveNoriRigJoint(base,"head-center",{x:1010,y:350});
+ const path=(model,id)=>model.parts.find(part=>part.id===id).path.d;
+ for(const id of ["head","hair","eye-left","eye-right","mouth"])assert.notEqual(path(base,id),path(moved,id));
+ assert.equal(path(base,"body"),path(moved,"body"));
+ assert.equal(path(base,"arm-left"),path(moved,"arm-left"));
+});
+test("torso anchor carries the head and limb joints while preserving limb segment lengths",()=>{
+ const base=applyNoriRigPose(createNoriModel(),{}),moved=solveNoriRigJoint(base,"torso-center",{x:1000,y:740});
+ for(const bone of NORI_RIG_BONES){
+  const before=segmentLengths(base,bone),after=segmentLengths(moved,bone);
+  assert.ok(Math.abs(before[0]-after[0])<1e-6);
+  assert.ok(Math.abs(before[1]-after[1])<1e-6);
+ }
+ assert.notEqual(base.parts.find(part=>part.id==="body").path.d,moved.parts.find(part=>part.id==="body").path.d);
+ assert.notEqual(base.parts.find(part=>part.id==="head").path.d,moved.parts.find(part=>part.id==="head").path.d);
+});
+test("legacy character rigs receive default head and torso anchors during validation",()=>{
+ const legacy=createNoriModel();delete legacy.rig.joints["head-center"];delete legacy.rig.joints["torso-center"];
+ const upgraded=validateCharacterModel(legacy);
+ assert.deepEqual(upgraded.rig.joints["head-center"],{x:960,y:390,visible:true});
+ assert.deepEqual(upgraded.rig.joints["torso-center"],{x:960,y:700,visible:true});
+ assert.equal(legacy.rig.joints["head-center"],undefined);
+});
