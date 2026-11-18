@@ -77,6 +77,7 @@ test("vector path node editor controls and overlay are present and wired",()=>{
  assert.match(html,/id="nodeEditBtn"/);
  assert.match(html,/id="nodeEditLayer"/);
  assert.match(app,/getPathEditHandles/);
- assert.match(app,/movePathAnchor/);\n assert.match(app,/movePathControlPoint/);
+ assert.match(app,/movePathAnchor/);
+ assert.match(app,/movePathControlPoint/);
  assert.match(app,/nodeDrag/);
 });
