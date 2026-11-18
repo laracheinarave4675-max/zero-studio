@@ -37,3 +37,11 @@ test("large frame history is isolated from frame and project IDs",()=>{
  applyFrameHistory(p,before);assert.equal(p.frames[600].id,600);
  applyFrameHistory(p,after);assert.equal(p.frames[600].id,3);
 });
+
+test("large-project character library history is captured only when requested",()=>{
+ const p=project();p.characterLibrary=[{id:"old"}];const before=captureFrameHistory(p,10,{includeCharacterLibrary:true});
+ p.characterLibrary.push({id:"new"});
+ const after=captureFrameHistoryAfter(p,before);
+ applyFrameHistory(p,before);assert.deepEqual(p.characterLibrary,[{id:"old"}]);
+ applyFrameHistory(p,after);assert.deepEqual(p.characterLibrary,[{id:"old"},{id:"new"}]);
+});
