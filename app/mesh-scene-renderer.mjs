@@ -41,7 +41,7 @@ export function renderMeshEnvironment(plan){
  quad(3,[-40,.04,5],[40,.04,5],[40,.04,65],[-40,.04,65],"#626c68","#4c5752");
  for(let z=9;z<58;z+=9)quad(3,[-.22,.055,z],[.22,.055,z],[.22,.055,z+2.8],[-.22,.055,z+2.8],"#e9e0c8","none");
  // Building walls and shaded planes.
- const x=-b.width/2,z=-b.depth/2,w=b.width,h=b.height,d=b.depth,front=z+d;
+ const x=-b.width/2,z=-b.depth/2,w=b.width,h=b.height,d=b.depth,front=z+d,back=z;
  box(2,x,0,z,w,h,d,b.wall||"#d8c6a8","#594e43");
  // Front facade warm light plane, recessed shadow below roof and side trim.
  quad(2,[x+.08,h-.55,front+.025],[x+w-.08,h-.55,front+.025],[x+w-.08,h-.08,front+.025],[x+.08,h-.08,front+.025],"#b39d80","#6b594a");
