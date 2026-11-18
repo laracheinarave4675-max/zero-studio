@@ -31,7 +31,7 @@ export function renderEnvironmentScene(plan){
  if(!plan||plan.version!==1||!plan.building||!Array.isArray(plan.trees)||plan.trees.length<2||plan.trees.length>18)throw Error("مخطط البيئة غير مكتمل: يلزم مبنى وأشجار موزعة على العمق.");
  const source=plan.building,scaledHeight=Math.min(source.height,Math.max(220,790-source.y)),scale=Math.min(1,scaledHeight/source.height),buildingY=Math.min(source.y,790-scaledHeight);
  const scaled=item=>item?{...item,x:item.x*scale,y:item.y*scale,width:item.width*scale,height:item.height*scale}:item;
- const b={...source,x:source.x+source.width*(1-scale)/2,y:buildingY,width:source.width*scale,height:source.height*scale,roofHeight:source.roofHeight*scale,windows:(source.windows||[]).map(scaled),door:scaled(source.door),sign:scaled(source.sign)};
+ const b={...source,x:source.x+source.width*(1-scale)/2,y:buildingY,width:source.width*scale,height:source.height*scale,roofHeight:source.roofHeight*scale,windows:(source.windows||[]).map(scaled),door:scaled(source.door),sign:scaled(source.sign),awning:scaled(source.awning),balcony:scaled(source.balcony)};
  const x=b.x,y=b.y,w=b.width,h=b.height,rh=b.roofHeight;
  if([x,y,w,h,rh].some(v=>!Number.isFinite(v))||w<300||h<180||x<0||y<0||x+w>1920||y+h>1080||rh<80||rh>h)throw Error("أبعاد المبنى أو السقف خارج نطاق التكوين.");
  const layers=[];
