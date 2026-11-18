@@ -356,6 +356,7 @@ function drawForestHouse(ops){
  ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
  ops.push(line("M "+pt(x-82,y+30)+" L "+pt(x+345,y-208)+" L "+pt(x+860,y+38),"#dbc49c",8,.92));
  ops.push(line("M "+pt(x-70,y+41)+" L "+pt(x+345,y-194)+" L "+pt(x+848,y+51),"#3d4240",3,.72));
+ const leftBase=[x-88,y+30],ridge=[x+345,y-208],rightBase=[x+860,y+38];
  // Horizontal tile courses recede toward the apex while staying inside the two roof edges.
  for(let row=1;row<11;row++){
   const t=row/11,yCourse=leftBase[1]+(ridge[1]-leftBase[1])*t;
