@@ -45,7 +45,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
-- [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
+- [x] Add a unique-drawing cadence audit that reports actual unique drawings per second separately from playback FPS.\n- [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
 
 ## Phase 4 — Production departments
 - [ ] Story/script and storyboard.
