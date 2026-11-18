@@ -214,7 +214,7 @@ function normalizeCharacterAsset(asset,index){
 function normalizeAnimationProduction(raw){
  if(raw===undefined||raw===null)return null;
  if(!raw||raw.format!=="zero-studio-animation-job"||raw.version!==1||typeof raw.id!=="string"||!raw.id)throw Error("بيانات إنتاج الحركة غير صالحة");
- const description=String(raw.description??"");
+ const description=String(raw.description??"");\n const continuityNote=String(raw.continuityNote??"").trim();\n if(continuityNote.length>2000)throw Error("ملاحظة استمرارية المشهد تتجاوز 2000 حرف");
  const fps=+raw.fps,durationSeconds=+raw.durationSeconds,totalFrames=+raw.totalFrames,batchSize=+raw.batchSize,batchCount=+raw.batchCount,completedFrames=+raw.completedFrames,nextBatchIndex=+raw.nextBatchIndex,baseFrameCount=+raw.baseFrameCount;
  if(!description.trim()||description.length>10000||fps!==24||!Number.isInteger(durationSeconds)||durationSeconds<1||totalFrames!==durationSeconds*fps||totalFrames>MAX_FRAMES)throw Error("وصف أو مدة إنتاج الحركة غير صالحين");
  if(![1,2,3,4,6,8,12,24].includes(batchSize)||batchCount!==Math.ceil(totalFrames/batchSize))throw Error("تقسيم دفعات الإنتاج غير صالح");
@@ -224,7 +224,7 @@ function normalizeAnimationProduction(raw){
  if(raw.layerNames!==null&&layerNames===null)throw Error("أسماء طبقات إنتاج الحركة غير صالحة");
  const frameSignatures=Array.isArray(raw.frameSignatures)?raw.frameSignatures:[];
  if(frameSignatures.length!==completedFrames||frameSignatures.some(value=>typeof value!=="string"||!/^[0-9a-f]{16}$/i.test(value)))throw Error("سجل الرسومات المنجزة غير صالح");
- return{format:"zero-studio-animation-job",version:1,id:raw.id.slice(0,120),description,fps,durationSeconds,totalFrames,batchSize,batchCount,completedFrames,nextBatchIndex,baseFrameCount,layerNames,frameSignatures};
+ return{format:"zero-studio-animation-job",version:1,id:raw.id.slice(0,120),description,continuityNote,fps,durationSeconds,totalFrames,batchSize,batchCount,completedFrames,nextBatchIndex,baseFrameCount,layerNames,frameSignatures};
 }
 export function normalizeProject(p){
  if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");
