@@ -2,7 +2,7 @@
 
 ## What it does
 
-The scene artist sends a text-only scene description to Google's Gemini Developer API and asks for a structured JSON scene with 2–12 named art layers and editable SVG path operations (up to 300 paths total). The older single-layer vector proposal function remains available for compatibility. It does **not** call an image or video generation model and does not upload artwork or reference images. Every layer name and every path is validated locally. The complete multi-layer scene is previewed on the canvas and added as separate editable project layers only after the user explicitly approves it.
+The scene artist sends a text-only scene description to Google's Gemini Developer API and asks for a structured JSON scene with 2–12 named art layers and editable SVG path operations (up to 300 paths total). The environment-art prompt now explicitly directs cinematic 2.5D depth: camera/horizon/vanishing points, five depth zones, atmospheric perspective, consistent sun direction, cast/contact shadows, ambient occlusion, reflections, material-specific surface treatment, roof/window construction, irregular foliage, and selective rather than heavy outlines. The older single-layer vector proposal function remains available for compatibility. It does **not** call an image or video generation model and does not upload artwork or reference images. Every layer name and every path is validated locally. The complete multi-layer scene is previewed on the canvas and added as separate editable project layers only after the user explicitly approves it.
 
 ## Provider and cost
 
@@ -28,4 +28,4 @@ References:
 
 ## Current limits
 
-This is a first text-to-vector integration, not a trained anime artist. Model output may be crude, incomplete, or inconsistent. It has not yet been tested with a real API key or on the user's Android browser. It does not yet guarantee professional anatomy, character consistency across shots, automatic continuity, or the 24-unique-drawings-per-second target. The provider response has not yet been tested with a real API key.
+This is still a prompt-directed text-to-vector integration, not a trained anime painter or a true 3D renderer. The revised prompt is an art-direction improvement, not proof that Gemini can obey it. Model output may remain crude, incomplete, or inconsistent; the 300-path ceiling and text-only path generation limit fine painterly detail. SVG layers can simulate 2.5D depth but do not provide real 3D meshes, physically based materials, or a 3D lighting pipeline. It has not yet been tested with a real API key or on the user's Android browser. It does not yet guarantee professional anatomy, character consistency across shots, automatic continuity, or the 24-unique-drawings-per-second target. The provider response has not yet been tested with a real API key.
