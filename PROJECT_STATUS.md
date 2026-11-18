@@ -93,7 +93,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
-- [x] GitHub Actions run #322 passed on commit `2bb1224fa99b7ce5141a115eed49dcfc18f385dc`: 58 tests passed, 0 failed; JavaScript syntax checks passed.
+- [x] GitHub Actions run #405 passed on commit `a18b0977ea0a54c8a0e851915366d463e11e8d96`: 77 tests passed, 0 failed; JavaScript syntax checks passed. The latest branch head also includes documentation-only updates after that tested source commit.
 - [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
 - [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
 - The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
@@ -195,7 +195,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Change log
 
-### 2026-11-17 — GitHub access recheck and continuity confirmation
+### 2026-11-18 — Drawing and character system expansion\n- Added constrained two-bone IK for the four Nori limb chains; endpoint movement solves the elbow/knee while preserving segment lengths and bend range.\n- Added a project-local character library with validated save/load/remove, undo support, and `.zero` round-trip persistence.\n- Added unique-drawing cadence measurement that ignores frame/operation IDs, reports distinct artwork per second, and is embedded in ZIP manifests.\n- Added editable proportion-guide overlays to the 11-cell SVG model sheet.\n- Added regression tests for IK, rigged pose in-betweens, character-library persistence, cadence analysis, and guide layers.\n- GitHub Actions run #405 passed all 77 tests and syntax checks.\n\n### 2026-11-17 — GitHub access recheck and continuity confirmation
 - Rechecked the private repository using the connected GitHub integration; `laracheinarave4675-max/zero-studio` is now discoverable.
 - GitHub reports `admin`, `maintain`, and `push` permissions for the connected identity.
 - Verified that README.md, PROJECT_STATUS.md, DECISIONS.md, and ROADMAP.md exist on the main branch and contain the project constraints and staged plan.
