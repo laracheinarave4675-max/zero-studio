@@ -66,7 +66,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite includes the engine, Gemini adapter, workspace DOM, ZIP, animation-proof, character-model, and character-library tests. GitHub Actions is the source of truth for the current exact passing count.
+The suite contains 77 tests: 32 engine, 4 Gemini adapter, 6 workspace DOM, 3 ZIP, 2 animation-proof, 25 character-model, and 5 character-library tests. GitHub Actions validates the complete suite and syntax of all runtime modules.
 
 ## Unique-drawing cadence audit\n\n`analyzeDrawingCadence(frames,fps)` compares visible vector artwork signatures while ignoring frame and operation IDs. It reports frame count, unique drawing count, duplicates, duration, and average unique drawings per second against the unchanged 24-drawings/second target. The workspace exposes this report in the timeline and includes it in ZIP manifests. This measures uniqueness of saved vector content; it does not certify professional drawing quality or that each frame was freshly hand-drawn.\n\n## AI proposal path
 
@@ -74,7 +74,7 @@ The optional Gemini text-only adapter produces a JSON proposal of editable SVG p
 
 ## Character model packages
 
-A model can be exported as a standalone `.zchar` JSON file and imported later. Imported packages are size-limited and validated before insertion; every part is rechecked through the SVG path validator, duplicate IDs are rejected, and optional visibility flags control which parts are inserted. A character is copied into the current frame as ordinary editable path layers. The app does not upload the character package to a server. A separate model-sheet SVG export composes 11 editable vector cells: three viewing directions, four expressions, and four poses.
+A model can be exported as a standalone `.zchar` JSON file and imported later. Imported packages are size-limited and validated before insertion; every part is rechecked through the SVG path validator, duplicate IDs are rejected, and optional visibility flags control which parts are inserted. A character is copied into the current frame as ordinary editable path layers. The app does not upload the character package to a server. A separate model-sheet SVG export composes 11 editable vector cells: three viewing directions, four expressions, and four poses. Each cell includes editable proportion-guide lines for center, eye, shoulder, hip, and ground reference levels.
 
 ## Geometric drawing tools
 
