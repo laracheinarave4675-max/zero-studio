@@ -107,7 +107,7 @@ WORLD AND CAMERA: world axes x=left/right, y=height, z=depth. The street-facing 
 
 BUILDING: a distinctive Japanese countryside ramen shop, two-story or strongly articulated facade, gabled tiled roof with deep eaves, thick roof ridge, visible side wall, 3-6 windows, a clear entrance, signboard and red fabric awning/noren. Width 7..12, height 4..6, depth 3.5..7. Place all windows/door/sign inside the front facade. Roof and facade must not intersect the road. Use warm plaster/wood with a dark tile roof.
 
-ENVIRONMENT: 3-6 trees, distributed in depth and at varied sizes, never all in one row. Add 3-8 low shrubs or potted plants near the entrance and foreground. Add 1-2 utility poles with overhead wire. Include a small parked van only if it improves composition. A foreground road and sidewalk are generated automatically. Sun direction should create clear dimensional tonal differences across roof, wall and side surfaces. Palette should feel like a premium anime film background at late-afternoon golden hour.
+ENVIRONMENT: 3-4 trees, distributed in depth and at varied sizes, never all in one row. Add 3-5 low shrubs or potted plants near the entrance and foreground. Add 1-2 utility poles with overhead wire. Include a small parked van only if it improves composition. A foreground road and sidewalk are generated automatically. Sun direction should create clear dimensional tonal differences across roof, wall and side surfaces. Palette should feel like a premium anime film background at late-afternoon golden hour.
 
 All 3D positions and dimensions must be finite and plausible. Use only hex colors. No prose or markdown. Scene request: ${description}`;
  const plan=await request(key,instruction,fetcher,model);
