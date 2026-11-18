@@ -1,11 +1,11 @@
-import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData,uid} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData,translatePathData,uid} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
 export const NORI_VIEWS=["front","side","back"];
 export const NORI_POSES=["neutral","wave","walk","sit"];
 
-export const NORI_JOINT_KEYS=["shoulder-left","elbow-left","wrist-left","shoulder-right","elbow-right","wrist-right","hip-left","knee-left","ankle-left","hip-right","knee-right","ankle-right"];
+export const NORI_JOINT_KEYS=["torso-center","head-center","shoulder-left","elbow-left","wrist-left","shoulder-right","elbow-right","wrist-right","hip-left","knee-left","ankle-left","hip-right","knee-right","ankle-right"];
 export const NORI_RIG_BONES=[
  {id:"arm-left",from:"shoulder-left",through:"elbow-left",to:"wrist-left",partId:"arm-left"},
  {id:"arm-right",from:"shoulder-right",through:"elbow-right",to:"wrist-right",partId:"arm-right"},
@@ -87,6 +87,7 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
   model.parts.find(p=>p.id==="leg-right").path.d="M 1070 805 Q 1160 850 1200 930";
  }
  const joints={
+  "torso-center":{x:960,y:700,visible:true},"head-center":{x:960,y:390,visible:true},
   "shoulder-left":{x:820,y:610,visible:true},"elbow-left":{x:735,y:690,visible:true},"wrist-left":{x:760,y:790,visible:true},
   "shoulder-right":{x:1100,y:610,visible:view!=="side"},"elbow-right":{x:1185,y:690,visible:view!=="side"},"wrist-right":{x:1160,y:790,visible:view!=="side"},
   "hip-left":{x:865,y:850,visible:true},"knee-left":{x:855,y:930,visible:true},"ankle-left":{x:850,y:1010,visible:true},
@@ -142,31 +143,48 @@ export function validateCharacterModel(model){
   return {...p,path:validatePath(p.path)};
  });
 
+ let rig;
  if(model.rig!==undefined){
   if(!model.rig||model.rig.version!==1||!model.rig.joints||typeof model.rig.joints!=="object")throw Error("هيكل مفاصل الشخصية غير صالح");
+  rig={...model.rig,joints:{...model.rig.joints}};
+  const legacyDefaults={"torso-center":{x:960,y:700,visible:true},"head-center":{x:960,y:390,visible:true}};
   for(const key of NORI_JOINT_KEYS){
-   const joint=model.rig.joints[key];
+   if(!rig.joints[key]&&legacyDefaults[key])rig.joints[key]={...legacyDefaults[key]};
+   const joint=rig.joints[key];
    if(!joint||!Number.isFinite(joint.x)||!Number.isFinite(joint.y)||joint.x<0||joint.x>1920||joint.y<0||joint.y>1080||typeof joint.visible!=="boolean")throw Error("بيانات مفصل الشخصية غير صالحة: "+key);
   }
-  if(!Array.isArray(model.rig.bones)||model.rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
+  if(!Array.isArray(rig.bones)||rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
   for(let i=0;i<NORI_RIG_BONES.length;i++){
-   const actual=model.rig.bones[i],expected=NORI_RIG_BONES[i];
+   const actual=rig.bones[i],expected=NORI_RIG_BONES[i];
    if(!actual||actual.id!==expected.id||actual.from!==expected.from||actual.through!==expected.through||actual.to!==expected.to||actual.partId!==expected.partId)throw Error("توصيل عظام الشخصية غير صالح");
   }
  }
  const canvas=model.canvas||{};
  if(canvas.width!==1920||canvas.height!==1080)throw Error("أبعاد نموذج الشخصية يجب أن تكون 1920×1080");
- return {...model,parts};
+ return {...model,parts,...(rig?{rig}:{})};
 }
 
 
 export function applyNoriRigPose(model,jointUpdates={}){
  const safe=validateCharacterModel(model);
  if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
- const next=JSON.parse(JSON.stringify(safe));
+ const next=JSON.parse(JSON.stringify(safe)),previous=safe.rig.joints;
  for(const [key,value] of Object.entries(jointUpdates)){
   if(!NORI_JOINT_KEYS.includes(key)||!value||!Number.isFinite(value.x)||!Number.isFinite(value.y))throw Error("تعديل مفصل غير صالح");
   next.rig.joints[key]={...next.rig.joints[key],x:Math.max(0,Math.min(1920,value.x)),y:Math.max(0,Math.min(1080,value.y))};
+ }
+ const torsoDelta={x:next.rig.joints["torso-center"].x-previous["torso-center"].x,y:next.rig.joints["torso-center"].y-previous["torso-center"].y};
+ const moved=(torsoDelta.x!==0||torsoDelta.y!==0);
+ if(moved){
+  for(const key of NORI_JOINT_KEYS){
+   if(key==="torso-center"||Object.prototype.hasOwnProperty.call(jointUpdates,key))continue;
+   next.rig.joints[key]={...next.rig.joints[key],x:Math.max(0,Math.min(1920,next.rig.joints[key].x+torsoDelta.x)),y:Math.max(0,Math.min(1080,next.rig.joints[key].y+torsoDelta.y))};
+  }
+  for(const id of ["body","neck"]){const item=next.parts.find(part=>part.id===id);if(item)item.path.d=translatePathData(item.path.d,torsoDelta.x,torsoDelta.y)}
+ }
+ const headDelta={x:next.rig.joints["head-center"].x-previous["head-center"].x,y:next.rig.joints["head-center"].y-previous["head-center"].y};
+ if(headDelta.x!==0||headDelta.y!==0){
+  for(const id of ["head","hair","eye-left","eye-right","mouth"]){const item=next.parts.find(part=>part.id===id);if(item)item.path.d=translatePathData(item.path.d,headDelta.x,headDelta.y)}
  }
  const fmt=n=>Number(n.toFixed(1)).toString();
  for(const bone of NORI_RIG_BONES){
@@ -189,6 +207,8 @@ export function solveNoriRigJoint(model,jointKey,target){
  const safe=validateCharacterModel(model);
  if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
  if(!NORI_JOINT_KEYS.includes(jointKey)||!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))throw Error("هدف المفصل غير صالح");
+ const bounded={x:Math.max(0,Math.min(1920,target.x)),y:Math.max(0,Math.min(1080,target.y))};
+ if(jointKey==="torso-center"||jointKey==="head-center")return applyNoriRigPose(safe,{[jointKey]:bounded});
  const bone=NORI_RIG_BONES.find(item=>[item.from,item.through,item.to].includes(jointKey));
  if(!bone)throw Error("المفصل غير مرتبط بعظمة");
  const next=JSON.parse(JSON.stringify(safe)),joints=next.rig.joints;
@@ -196,7 +216,6 @@ export function solveNoriRigJoint(model,jointKey,target){
  const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
  const unit=(a,b,fallback)=>{const d=distance(a,b);return d<1e-6?fallback:{x:(b.x-a.x)/d,y:(b.y-a.y)/d}};
  const updates={};
- const bounded={x:Math.max(0,Math.min(1920,target.x)),y:Math.max(0,Math.min(1080,target.y))};
  if(jointKey===bone.from){
   const dx=bounded.x-start.x,dy=bounded.y-start.y;
   updates[bone.from]=bounded;
