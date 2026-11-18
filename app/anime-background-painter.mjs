@@ -14,12 +14,12 @@ function poly(points,fill,stroke="none",width=1,opacity=1,filter=""){
  return makePath("M "+points.map(q=>pt(q[0],q[1])).join(" L ")+" Z",fill,stroke,width,opacity,filter);
 }
 function line(d,stroke,width=2,opacity=1,filter=""){return makePath(d,"none",stroke,width,opacity,filter)}
-function rect(x,y,w,h,fill,stroke="none",width=1,opacity=1){
- return poly([[x,y],[x+w,y],[x+w,y+h],[x,y+h]],fill,stroke,width,opacity);
+function rect(x,y,w,h,fill,stroke="none",width=1,opacity=1,filter=""){
+ return poly([[x,y],[x+w,y],[x+w,y+h],[x,y+h]],fill,stroke,width,opacity,filter);
 }
-function ellipse(cx,cy,rx,ry,fill,stroke="none",width=1,opacity=1){
+function ellipse(cx,cy,rx,ry,fill,stroke="none",width=1,opacity=1,filter=""){
  const k=.55228475;
- return makePath("M "+pt(cx,cy-ry)+" C "+pt(cx+k*rx,cy-ry)+" "+pt(cx+rx,cy-k*ry)+" "+pt(cx+rx,cy)+" C "+pt(cx+rx,cy+k*ry)+" "+pt(cx+k*rx,cy+ry)+" "+pt(cx,cy+ry)+" C "+pt(cx-k*rx,cy+ry)+" "+pt(cx-rx,cy+k*ry)+" "+pt(cx-rx,cy)+" C "+pt(cx-rx,cy-k*ry)+" "+pt(cx-k*rx,cy-ry)+" "+pt(cx,cy-ry)+" Z",fill,stroke,width,opacity);
+ return makePath("M "+pt(cx,cy-ry)+" C "+pt(cx+k*rx,cy-ry)+" "+pt(cx+rx,cy-k*ry)+" "+pt(cx+rx,cy)+" C "+pt(cx+rx,cy+k*ry)+" "+pt(cx+k*rx,cy+ry)+" "+pt(cx,cy+ry)+" C "+pt(cx-k*rx,cy+ry)+" "+pt(cx-rx,cy+k*ry)+" "+pt(cx-rx,cy)+" C "+pt(cx-rx,cy-k*ry)+" "+pt(cx-k*rx,cy-ry)+" "+pt(cx,cy-ry)+" Z",fill,stroke,width,opacity,filter);
 }
 function organicLeaf(cx,cy,rx,ry,angle,fill,opacity=1){
  const co=Math.cos(angle),si=Math.sin(angle);
@@ -222,8 +222,8 @@ function drawFacadeUrban(ops){
  ops.push(rect(x+650,y+179,92,170,"url(#zero-anime-timber)","#3d4e49",5));
  ops.push(rect(x+661,y+191,69,138,"url(#zero-anime-glass)","#b1c7b5",3));
  ops.push(ellipse(x+718,y+268,4,4,"#e2c38f"));
- drawBench(ops,x+150,y+600,.82);drawBench(ops,x+345,y+600,.82);
- drawVendingMachine(ops,x+790,y+442,78,190);
+ drawBench(ops,x+150,y+395,.82);drawBench(ops,x+345,y+395,.82);
+ drawVendingMachine(ops,x+790,y+175,78,190);
  ops.push(rect(x+20,y+432,54,68,"#c35a49","#654e42",3));
  ops.push(line("M "+pt(x+29,y+446)+" L "+pt(x+65,y+446)+" M "+pt(x+29,y+461)+" L "+pt(x+61,y+461),"#f1d9b5",2));
  ops.push(rect(x-20,y+596,w+38,26,"#79684e","#655844",2));
