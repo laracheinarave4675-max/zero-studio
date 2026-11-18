@@ -12,7 +12,8 @@ await mkdir("artifacts/gemini-2d-anime-scenes",{recursive:true});
 const summary=[];
 for(const scene of scenes){
  console.log("Generating "+scene.slug+" with "+model);
- const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,model);
+ const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,model,{fallbackModels:["gemini-3.1-flash-lite","gemini-3-flash"]});
+ model=result.model;
  const project=createProject("ZERO STUDIO — "+scene.name);
  const frame=project.frames[0];
  frame.layers=result.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
