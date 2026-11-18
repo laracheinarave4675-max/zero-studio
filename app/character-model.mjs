@@ -260,7 +260,8 @@ export function createNoriModelSheetSvg(paletteOverrides={}){
   const frame=createFrame();addCharacterModelToFrame(frame,entry.model);
   const svg=frameSvg(frame,"nori-sheet-"+index),inner=svg.slice(svg.indexOf(">")+1,svg.lastIndexOf("</svg>"));
   const label=escapeXml(entry.title);
-  return '<g data-character-cell="'+index+'"><rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(cellW-16)+'" height="'+(cellH-16)+'" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/><text x="'+(x+26)+'" y="'+(y+42)+'" font-size="24" font-family="sans-serif" fill="#172033">'+label+'</text><g transform="translate('+(x+cellW/2)+' '+(y+cellH/2+12)+') scale(.48) translate(-960 -540)">'+inner+'</g></g>';
+  const guide='<g data-proportion-guides="'+index+'" fill="none" stroke="#93c5fd" stroke-width="2" stroke-dasharray="7 7" opacity=".75"><line x1="'+(x+cellW/2)+'" y1="'+(y+64)+'" x2="'+(x+cellW/2)+'" y2="'+(y+cellH-24)+'"/><line x1="'+(x+28)+'" y1="'+(y+227)+'" x2="'+(x+cellW-28)+'" y2="'+(y+227)+'"/><line x1="'+(x+28)+'" y1="'+(y+326)+'" x2="'+(x+cellW-28)+'" y2="'+(y+326)+'"/><line x1="'+(x+28)+'" y1="'+(y+441)+'" x2="'+(x+cellW-28)+'" y2="'+(y+441)+'"/><line x1="'+(x+28)+'" y1="'+(y+518)+'" x2="'+(x+cellW-28)+'" y2="'+(y+518)+'"/></g>';
+  return '<g data-character-cell="'+index+'"><rect x="'+(x+8)+'" y="'+(y+8)+'" width="'+(cellW-16)+'" height="'+(cellH-16)+'" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/><text x="'+(x+26)+'" y="'+(y+42)+'" font-size="24" font-family="sans-serif" fill="#172033">'+label+'</text>'+guide+'<g transform="translate('+(x+cellW/2)+' '+(y+cellH/2+12)+') scale(.48) translate(-960 -540)">'+inner+'</g></g>';
  }).join("");
  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'"><rect width="100%" height="100%" fill="#e2e8f0"/>'+cells+'</svg>';
 }
