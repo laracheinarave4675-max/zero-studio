@@ -269,19 +269,44 @@ function drawRamenBuilding(ops){
  ops.push(line("M "+pt(leftEave+12,eaveY+46)+" Q "+pt(ridgeX+8,ridgeY+36)+" "+pt(rightEave-12,eaveY+54),"#d1bc98",5,.88));
  ops.push(line("M "+pt(leftEave+22,eaveY+51)+" Q "+pt(ridgeX+10,ridgeY+43)+" "+pt(rightEave-22,eaveY+59),"#3b4140",3,.7));
  ops.push(poly([[x+20,y+42],[x+w-20,y+48],[x+w-20,y+74],[x+20,y+67]],"url(#zero-anime-shadow)","none",1,.28));
+ // Directional shadow under the deep eave and warm plaster tonal planes.
+ ops.push(poly([[x+10,y+72],[x+w-12,y+80],[x+w-12,y+112],[x+10,y+105]],"url(#zero-anime-shadow)","none",1,.68));
+ ops.push(poly([[x+8,y+114],[x+w-8,y+114],[x+w-8,y+148],[x+8,y+148]],"#bda889","none",1,.42));
+ ops.push(line("M "+pt(x+14,y+112)+" L "+pt(x+w-14,y+118),"#7f674f",5,.8));
+ // Timber posts and recessed wall bays.
+ for(let i=0;i<7;i++){
+  const xx=x+22+i*88;
+  ops.push(rect(xx,y+112,7,235,"url(#zero-anime-timber)","none"));
+  ops.push(line("M "+pt(xx+10,y+130)+" L "+pt(xx+10,y+330),"#f0dfbe",1.4,.34));
+ }
+ for(let row=0;row<4;row++){
+  const yy=y+122+row*52;
+  ops.push(line("M "+pt(x+12,yy)+" L "+pt(x+w-12,yy+2),"#967b5b",1.8,.32));
+ }
+ // Sill and lintel depth around each window, with shutters and wood grain.
  for(let i=0;i<4;i++){
   const wx=x+45+i*132;
   drawWindow(ops,wx,y+168,104,115,500+i);
  }
  ops.push(rect(x+477,y+155,82,202,"url(#zero-anime-timber)","#514238",5));
  ops.push(rect(x+488,y+167,59,178,"url(#zero-anime-glass)","#e8ddc4",2));
+ ops.push(rect(x+467,y+146,102,12,"#8d7354","#574739",2));
+ ops.push(line("M "+pt(x+482,y+161)+" L "+pt(x+482,y+350),"#d8c4a4",2,.6));
+ ops.push(poly([[x+492,y+170],[x+540,y+170],[x+540,y+250],[x+492,y+250]],"#d0e0d2","none",1,.28));
+ ops.push(ellipse(x+546,y+265,4,4,C.gold));
+ ops.push(poly([[x+92,y+133],[x+434,y+133],[x+434,y+143],[x+92,y+143]],"#4c4840","none",1,.62));
  ops.push(rect(x+100,y+145,315,55,"#384747","#2f3b3a",4));
  drawSign(ops,x+112,y+150,290,43,false);
+ ops.push(line("M "+pt(x+112,y+198)+" Q "+pt(x+255,y+212)+" "+pt(x+404,y+198),"#e7d7b8",2,.6));
+ ops.push(line("M "+pt(x+130,y+205)+" L "+pt(x+385,y+205),"#392f2c",3,.55));
  ops.push(poly([[x+70,y+286],[x+425,y+286],[x+425,y+302],[x+70,y+302]],"#6f5541","#4c4238",2));
  for(let i=0;i<6;i++){
   const xx=x+74+i*58;
   ops.push(makePath("M "+pt(xx,y+301)+" L "+pt(xx+56,y+301)+" L "+pt(xx+54,y+337)+" Q "+pt(xx+28,y+365)+" "+pt(xx+2,y+337)+" Z",i%2?"#ad5749":"#c26a58","#6a463c",2));
  }
+ ops.push(line("M "+pt(x+70,y+286)+" L "+pt(x+425,y+286),"#d7bf9a",5,.82));
+ for(let i=0;i<9;i++)ops.push(line("M "+pt(x+75+i*42,y+302)+" L "+pt(x+75+i*42,y+333),"#f0c7a8",1.4,.38));
+ ops.push(poly([[x+67,y+284],[x+428,y+284],[x+424,y+295],[x+72,y+295]],"#3e4542","none",1,.82));
  drawSign(ops,x-125,y+20,72,250,true);
  for(let i=0;i<4;i++)drawPlanter(ops,x+35+i*118,y+371,1.0,71+i);
 }
@@ -315,6 +340,16 @@ function drawForestHouse(ops){
   const xx=x+24+i*61;
   ops.push(line("M "+pt(xx,y+8)+" Q "+pt(xx+10,y-50)+" "+pt(xx+26,y-90),"#88735b",2,.5));
  }
+ // A strong shadow band, timber posts and layered veranda establish facade depth.
+ ops.push(poly([[x-5,y+145],[x+700,y+150],[x+700,y+192],[x-5,y+188]],"url(#zero-anime-shadow)","none",1,.55));
+ ops.push(rect(x+8,y+162,690,14,"url(#zero-anime-timber)","#514238",2));
+ for(let i=0;i<12;i++){
+  const xx=x+18+i*57;
+  ops.push(rect(xx,y+176,6,155,"url(#zero-anime-timber)","none"));
+  ops.push(line("M "+pt(xx+11,y+190)+" L "+pt(xx+11,y+325),"#ead7b6",1.1,.34));
+ }
+ ops.push(poly([[x-28,y+335],[x+712,y+335],[x+738,y+366],[x-45,y+366]],"#705940","#453a32",3));
+ ops.push(poly([[x-28,y+335],[x+712,y+335],[x+710,y+345],[x-24,y+345]],"#c8ac83","none",1,.75));
  for(let i=0;i<6;i++){
   const wx=x+36+i*128;
   drawWindow(ops,wx,y+210,86,120,95+i);
@@ -328,6 +363,16 @@ function drawForestHouse(ops){
  for(let i=0;i<14;i++){
   const xx=x-70+i*67;
   ops.push(line("M "+pt(xx,y+355)+" L "+pt(xx+4,y+426),"#5b4939",5,.85));
+ }
+ // Stone path joints, moss and broken highlights.
+ for(let i=0;i<20;i++){
+  const xx=x-135+i*49,yy=y+390+Math.sin(i*.55)*12;
+  ops.push(line("M "+pt(xx,yy)+" L "+pt(xx+27,yy-4),"#e0d3b5",2,.48));
+  if(i%3===0)ops.push(ellipse(xx+18,yy+7,8,3,C.leaf2,"none",1,.6));
+ }
+ for(let i=0;i<9;i++){
+  const xx=x+18+i*76;
+  ops.push(line("M "+pt(xx,y+175)+" L "+pt(xx+2,y+320),"#433c35",1.5,.54));
  }
 }
 function addRoadsidePole(ops,x,y,height,seed=5){
