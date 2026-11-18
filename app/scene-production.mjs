@@ -137,9 +137,12 @@ function validateAnimeLayoutPlan(plan){
 }
 export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL,options={}){
  const{key,description}=credentials(apiKey,prompt);
+ let activeModel=model;
+ const fallbackModels=[model,...(Array.isArray(options.fallbackModels)?options.fallbackModels:[])].filter((value,index,array)=>ALLOWED_MODELS.has(value)&&array.indexOf(value)===index);
+ async function requestWithFallback(instruction,settings){let lastError;for(const candidate of fallbackModels){try{const result=await request(key,instruction,fetcher,candidate,settings);activeModel=candidate;return result}catch(error){lastError=error;const message=String(error?.message||error);if(!/high demand|503|502|504|temporarily unavailable/i.test(message))throw error;}}throw lastError||Error("تعذر الاتصال بنماذج الرسم المتاحة.");}
  const artDirection="Cinematic 2D anime background painting, semi-realistic Japanese environment art. The final surface must read as carefully painted 2D artwork, never low-poly 3D, never flat icon art, never children's clip-art. Strong wide cinematic perspective, layered foreground/midground/background, richly observed architecture, natural irregular foliage, believable materials, selective delicate linework, warm/cool color separation, soft bounced sunlight, ambient occlusion, reflections and atmospheric depth. Avoid generic rectangles, repeated circles, identical leaves, thick black outlines, empty silhouette gaps and oversimplified roof triangles.";
  const layoutPrompt="You are the lead art director and background layout designer for a high-end 2D anime film. Produce a precise scene blueprint that a separate vector background painting department will draw. Do not output SVG paths yet. Canvas 1920x1080. "+artDirection+"\nReturn ONLY JSON:\n{\"version\":1,\"title\":\"...\",\"camera\":\"precise camera height, lens feel, three-quarter/wide view, framing\",\"horizonY\":520,\"vanishingPoint\":[980,540],\"sunPosition\":[280,150],\"lighting\":\"sun direction, warmth, cast shadow direction, bounce light\",\"architecture\":\"detailed building form, proportions, position, roof structure, facade, depth and materials\",\"vegetation\":\"tree shape variation, branch/canopy layering, foliage placement, density\",\"road\":\"ground plane, street/sidewalk geometry and perspective\",\"layerNotes\":{\"sky\":\"...\",\"distance\":\"...\",\"architecture\":\"...\",\"architectureDetails\":\"...\",\"road\":\"...\",\"foreground\":\"...\",\"lighting\":\"...\"}}\nUse the scene request below. Keep all coordinates tied to a 1920x1080 wide frame. Buildings, road, poles, vegetation and props must share one coherent perspective. Use a visible focal hierarchy. LayerNotes must explain exact object placement and detail rather than generic style words. Avoid placing the whole building dead centre unless composition warrants it. Request: "+description;
- const plan=validateAnimeLayoutPlan(await request(key,layoutPrompt,fetcher,model,{temperature:.42,maxOutputTokens:5000}));
+ const plan=validateAnimeLayoutPlan(await requestWithFallback(layoutPrompt,{temperature:.42,maxOutputTokens:5000}));
  if(typeof options.onProgress==="function")options.onProgress({stage:"layout",completed:0,total:ANIME_2D_LAYERS.length,message:"اكتمل تخطيط الكاميرا والمنظور؛ يبدأ الآن رسم الطبقات الفنية."});
  const layers=[],allPaths=new Set();let totalOperations=0;
  for(let i=0;i<ANIME_2D_LAYERS.length;i++){
@@ -154,7 +157,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   let parsed=null,lastError=null;
   for(let attempt=0;attempt<2;attempt++){
    try{
-    parsed=await request(key,layerPrompt,fetcher,model,{temperature:.52,maxOutputTokens:8192});
+    parsed=await requestWithFallback(layerPrompt,{temperature:.52,maxOutputTokens:8192});
     if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
     if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
     if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
@@ -184,5 +187,5 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   if(i<ANIME_2D_LAYERS.length-1){const delay=Number.isFinite(options.interRequestDelayMs)?Math.max(0,Math.min(10000,options.interRequestDelayMs)):4200;if(delay)await new Promise(resolve=>setTimeout(resolve,delay));}
  }
  if(totalOperations<220||totalOperations>1100)throw Error("عدد المسارات الكلي لا يحقق حد جودة المشهد: "+totalOperations);
- return{version:1,kind:"gemini-2d-vector-scene",plan,layers,totalOperations,style:"cinematic-2d-anime-background",model};
+ return{version:1,kind:"gemini-2d-vector-scene",plan,layers,totalOperations,style:"cinematic-2d-anime-background",model:activeModel};
 }
