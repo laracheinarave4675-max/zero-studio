@@ -63,3 +63,11 @@ This file records decisions that must not be changed silently. Add dated entries
 **Decision:** Long animation must be planned and ingested in small, ordered, resumable batches. Each accepted frame is a complete editable vector drawing; 24 unique drawings per second remains the target.
 
 **Implication:** The engine may enforce a structural ceiling and batch size for mobile safety, but a structural capacity limit does not prove device performance or artistic quality. Validate batch identity, timing, layer continuity, SVG paths, and duplicate frames before appending. Save progress in the project. Do not replace the requirement with still-image motion or keyframe tweening. Provider selection and API quotas are separate decisions and remain deferred until the user requests that discussion.
+
+
+## D-016 — Free SVG provider choice must not become a per-frame quota trap (2026-11-18)
+**Decision:** Keep provider choice separate from the vector drawing engine. Prefer native SVG/path output and provider-neutral structured drawing data; never rely on raster output plus vector tracing. A free tier is not assumed to be unlimited.
+
+**Implication:** Evaluate services using actual request, token, output-size, privacy, and reset limits. Explore having the AI author a scene-specific vector drawing specification which the local renderer can execute into a complete, independently stored SVG drawing for every frame, but only accept that approach after a 240-frame prototype passes the unique-drawing cadence audit, full-scene completeness, continuity, and artistic review. Do not replace the 24 independent drawings/second target with a static image, SVG animation element, or simple keyframe tween.
+
+**Provider status:** OmniSVG, OpenRouter, Groq, Cerebras, local llama.cpp, and other options are research candidates only. No live provider has been selected or connected as of this decision.
