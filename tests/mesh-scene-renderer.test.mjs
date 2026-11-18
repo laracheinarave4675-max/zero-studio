@@ -1,5 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
+import{readFile}from"node:fs/promises";
 import{renderMeshEnvironment}from"../app/mesh-scene-renderer.mjs";
 import{generateMeshEnvironmentProposal}from"../app/scene-production.mjs";
 const plan={version:1,camera:{position:[9,8,19],target:[0,2.4,0]},sky:"#c9ded9",sun:"#f3d39a",sunDirection:[-.55,.9,.35],building:{width:9,height:4.5,depth:4.5,wall:"#d8c6a8",roof:"#514b48",windows:[{x:-3.5,y:1.4,width:1.3,height:1.5},{x:-1.5,y:1.4,width:1.3,height:1.5},{x:.5,y:1.4,width:1.3,height:1.5}],door:{x:2.5,y:0,width:1.2,height:2.7},sign:{x:-1.5,y:3.6,width:3.2,height:.6},awning:{x:-3.8,y:2.9,width:4.6,height:.6,color:"#a64c43"}},trees:[{x:-8,z:-3,scale:1.2,color:"#477255"},{x:8,z:-4,scale:1.1,color:"#6d916a"},{x:11,z:4,scale:1.3,color:"#477255"}],poles:[{x:9,z:0,height:8},{x:13,z:-3,height:7}],van:{x:-9,z:5,width:2.8,depth:1.6}};
@@ -12,3 +13,5 @@ test("AI 3D environment artist returns a semantic blueprint for local mesh rende
 test("AI 3D environment prompt specifies real perspective geometry and lighting",async()=>{let prompt="";const fetcher=async(url,options)=>{prompt=JSON.parse(options.body).contents[0].parts[0].text;return{ok:true,status:200,json:async()=>({candidates:[{content:{parts:[{text:JSON.stringify(plan)}]}}]})}};await generateMeshEnvironmentProposal("key","Japanese village restaurant",fetcher);for(const term of ["real 3D scene graph blueprint","three-quarter camera","directional sun","street-facing building facade","gabled tiled roof"])assert.ok(prompt.includes(term),term);});
 
 test("3D renderer rejects malformed camera vectors and unsafe palette values",()=>{assert.throws(()=>renderMeshEnvironment({...plan,camera:{position:[NaN,8,19],target:[0,2,0]}}),/الكاميرا/);assert.throws(()=>renderMeshEnvironment({...plan,sky:"url(javascript:alert(1))"}),/ألوان/);});
+
+test("mobile workspace exposes and wires the 3D environment artist",async()=>{const html=await readFile(new URL("../app/index.html",import.meta.url),"utf8");const app=await readFile(new URL("../app/app.js",import.meta.url),"utf8");assert.ok(html.includes('id="ai3dGenerateBtn"'));assert.ok(app.includes('import{generateSceneProposal,generateMeshEnvironmentProposal}'));assert.ok(app.includes('$("ai3dGenerateBtn").onclick'));assert.ok(app.includes('appendOperation(target,"stroke",path)'));});
