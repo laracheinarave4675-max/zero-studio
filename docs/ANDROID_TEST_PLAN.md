@@ -23,7 +23,7 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Save a .zero project, reload it, and compare frame contents.
 - [ ] Export SVG sequence JSON and inspect SVG output in another viewer.
 - [ ] Export the ZIP bundle, open it with Android Files/archive manager, and verify `project.zero`, `manifest.json`, and frame SVG files are present.
-- [ ] Insert Nori in all three views and its four pose/facial expression presets; check editable parts and recolor its palette.\n- [ ] Export the 11-cell SVG model sheet and open it in a separate Android SVG viewer/editor.
+- [ ] Insert Nori in all three views and its four pose/facial expression presets; check editable parts and recolor its palette.\n- [ ] Export the 11-cell SVG model sheet, confirm proportion guides are present/editable, and open it in a separate Android SVG viewer/editor.
 - [ ] Export a .zchar character model, import it into a fresh project, and compare its editable layer parts.
 - [ ] Save multiple models in the project-local character library, load/remove them, save the .zero project, reopen it, and verify the library persists.
 - [ ] Drag each wrist/ankle end-effector in the rig editor and confirm the elbow/knee moves smoothly without visible limb stretching; drag elbow/knee and verify segment lengths remain stable.
