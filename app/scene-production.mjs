@@ -1,4 +1,5 @@
 import{validatePath}from"./engine.mjs";
+import{renderEnvironmentScene}from"./environment-art.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
 const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
@@ -78,4 +79,19 @@ SCENE REQUEST: `+description;
   return{name,operations:entry.operations.map((operation,pathIndex)=>{try{return validatePath(operation)}catch(error){throw Error("الطبقة "+name+"، المسار "+(pathIndex+1)+": "+error.message)}})};
  });
  return{version:1,layers,totalOperations:total};
+}
+
+export async function generateEnvironmentProposal(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL){
+ const{key,description}=credentials(apiKey,prompt);
+ const instruction=`You are the senior environment concept designer for ZERO STUDIO. Return a precise spatial scene blueprint for a premium cinematic anime film background. Do NOT return SVG paths for the building or trees; the local deterministic art renderer will construct detailed editable vector geometry from your spatial design. Your task is composition, perspective, scale, lighting, depth, and coherent placement. Canvas 1920x1080. The desired look is painterly semi-realistic anime background art with a convincing 2.5D illusion, not flat 2D icons.
+
+Return ONLY JSON with this shape: {"version":1,"sky":"#d9e8df","sun":"#f5d69b","mountains":["SVG path 1","SVG path 2","SVG path 3"],"trees":[{"x":100,"y":700,"scale":1,"depth":"far"},{"x":300,"y":780,"scale":1.2,"depth":"mid"},{"x":1600,"y":900,"scale":1.4,"depth":"near"}],"building":{"x":500,"y":250,"width":900,"height":650,"roofHeight":300,"wall":"#d5c4a5","roof":"#514b48","windows":[{"x":100,"y":390,"width":150,"height":160},{"x":300,"y":390,"width":150,"height":160}],"door":{"x":680,"y":440,"width":120,"height":210},"sign":{"x":350,"y":300,"width":360,"height":90}},"shrubs":[{"x":300,"y":950,"scale":1}],"road":{"edge":"SVG path","surface":"SVG path","centerLine":"SVG path"},"van":{"x":180,"y":820,"width":180,"height":100}}
+
+COMPOSITION: three-quarter camera view, coherent vanishing point and ground plane, asymmetric cinematic framing, foreground framing foliage, distant hills, a readable hero building, believable roof thickness and eaves, layered windows, material variation, cast shadows. Keep all coordinates in 0..1920 x 0..1080. Building x 200..1200, width 450..1200, height 350..760, roofHeight 120..380. Use 3-8 windows with varied sizes and positions. Trees 4-12, distributed across far/mid/near depth. Add 2-6 shrubs. Include a road with a perspective-tapered surface and a curb edge. Include one small vehicle only if suitable. Use 2-3 mountain silhouette paths with valid SVG M/L/C/Q/Z commands. Make architecture and objects spatially consistent; objects must rest on ground, not float.
+
+Output must be valid JSON, no markdown. SVG path strings may contain only M L H V C S Q T A Z commands and numeric coordinates. Request: ${description}`;
+ const plan=await request(key,instruction,fetcher,model);
+ if(plan?.version!==1||!plan.building||!Array.isArray(plan.trees)||!Array.isArray(plan.mountains)||!plan.road)throw Error("لم يُرجع مصمم البيئة مخططاً مكانياً مكتملاً.");
+ const scene=renderEnvironmentScene(plan);
+ return{plan, ...scene};
 }
