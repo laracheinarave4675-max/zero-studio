@@ -1,4 +1,4 @@
-import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData,translatePathData,uid} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData,translatePathData,rotatePathData,uid} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
@@ -153,7 +153,7 @@ export function validateCharacterModel(model){
    const joint=rig.joints[key];
    if(!joint||!Number.isFinite(joint.x)||!Number.isFinite(joint.y)||joint.x<0||joint.x>1920||joint.y<0||joint.y>1080||typeof joint.visible!=="boolean")throw Error("بيانات مفصل الشخصية غير صالحة: "+key);
   }
-  if(!Array.isArray(rig.bones)||rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
+  if(rig.headRotation===undefined)rig.headRotation=0;\n  if(!Number.isFinite(rig.headRotation)||rig.headRotation< -60||rig.headRotation>60)throw Error("زاوية دوران الرأس غير صالحة");\n  if(!Array.isArray(rig.bones)||rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
   for(let i=0;i<NORI_RIG_BONES.length;i++){
    const actual=rig.bones[i],expected=NORI_RIG_BONES[i];
    if(!actual||actual.id!==expected.id||actual.from!==expected.from||actual.through!==expected.through||actual.to!==expected.to||actual.partId!==expected.partId)throw Error("توصيل عظام الشخصية غير صالح");
@@ -202,6 +202,22 @@ export function applyNoriRigPose(model,jointUpdates={}){
  return validateCharacterModel(next);
 }
 
+
+
+export function rotateNoriHead(model,angleDegrees){
+ const safe=validateCharacterModel(model);
+ if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
+ if(!Number.isFinite(angleDegrees)||angleDegrees< -60||angleDegrees>60)throw Error("زاوية الرأس يجب أن تكون بين -60 و60 درجة");
+ const next=JSON.parse(JSON.stringify(safe)),delta=angleDegrees-safe.rig.headRotation,pivot=next.rig.joints["head-center"];
+ if(delta!==0){
+  for(const id of ["head","hair","eye-left","eye-right","mouth"]){
+   const item=next.parts.find(part=>part.id===id);
+   if(item)item.path.d=rotatePathData(item.path.d,delta,pivot.x,pivot.y);
+  }
+ }
+ next.rig.headRotation=angleDegrees;
+ return validateCharacterModel(next);
+}
 
 export function solveNoriRigJoint(model,jointKey,target){
  const safe=validateCharacterModel(model);
