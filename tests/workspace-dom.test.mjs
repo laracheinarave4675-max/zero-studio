@@ -26,3 +26,11 @@ test("character rig editor has a touch-sized viewport and draggable joints",()=>
  assert.match(app,/rigCanvas\.addEventListener\("pointermove"/);
  assert.match(app,/data-joint/);
 });
+
+test("character library and unique-drawing audit controls are present and wired",()=>{
+ for(const id of ["characterLibrarySelect","saveCharacterLibraryBtn","loadCharacterLibraryBtn","deleteCharacterLibraryBtn","analyzeCadenceBtn","cadenceStatus"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(app,/saveCharacterToLibrary/);
+ assert.match(app,/loadCharacterFromLibrary/);
+ assert.match(app,/removeCharacterFromLibrary/);
+ assert.match(app,/analyzeDrawingCadence/);
+});
