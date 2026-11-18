@@ -17,7 +17,7 @@ export function applyFrameHistory(project,entry){
  if(entry.mode==="before"){
   const delta=project.frames.length-entry.frameCount;
   if(delta>0){project.frames.splice(index+1,delta);project.frames[index]=clone(entry.frame)}
-  else if(delta<0){project.frames.splice(index,-delta,clone(entry.frame))}
+  else if(delta<0){project.frames.splice(index,0,clone(entry.frame))}
   else project.frames[index]=clone(entry.frame);
  }else if(entry.mode==="after-insert"){
   if(!Array.isArray(entry.insertedFrames)||entry.insertedFrames.length!==entry.frameCount-(project.frames.length))throw Error("سجل الإطارات المضافة غير متطابق.");
