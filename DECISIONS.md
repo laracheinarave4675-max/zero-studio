@@ -40,3 +40,9 @@ This file records decisions that must not be changed silently. Add dated entries
 
 ## D-011 — Preserve character instance identity across animation frames
 **Decision:** Inserted character parts carry a shared instance ID and per-layer part membership. Copying or updating a character in another frame preserves that identity while assigning fresh drawing-operation IDs. In-between frames retain the instance metadata. This provides a foundation for later synchronized multi-frame edits without flattening the artwork.
+
+
+## D-012 — Background artwork is editable vector geometry
+**Decision:** Background presets and final background artwork must be authored as validated editable SVG path operations and remain layered project assets; do not replace them with generated raster imagery.
+
+**Implication:** Starter scenes may be inserted as editable layer groups, but they are not considered a complete background department until perspective/layout, reusable props, depth/parallax, and continuity workflows are implemented and reviewed.
