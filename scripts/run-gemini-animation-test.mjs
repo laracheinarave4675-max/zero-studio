@@ -20,7 +20,7 @@ for(const model of fallbacks){
  }catch(error){
   lastError=error;
   console.error("Model attempt failed:",model,String(error?.message||error));
-  if(error?.status!==503&&error?.status!==429)throw error;
+  if(!/Gemini (503|429):/.test(String(error?.message||error)))throw error;
  }
 }
 if(!result)throw lastError||Error("All configured Gemini models were unavailable.");
