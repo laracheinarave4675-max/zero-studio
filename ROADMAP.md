@@ -34,10 +34,10 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Raise project frame capacity to 30,000 and paginate the timeline at 24 thumbnails per page.
 - [x] Add a 24-unique-drawings/second production plan with ordered, validated .zbatch imports and saved progress.
 - [x] Add frame-scoped undo/redo for large projects without copying the entire project per edit.
-- [ ] Connect a provider-independent worker that generates, validates, retries, and resumes batches automatically; provider choice deferred.
+- [x] Add a provider-neutral sequential worker that validates, retries, cancels, commits, and checkpoints batches; live provider callback remains deferred.
 - [ ] Move long-sequence storage to paged IndexedDB/database-backed storage and tune memory-aware export for Android.
 - [ ] Run and artist-review the complete 240-frame street test; measure actual time, quality, size, and memory.
-- [ ] Test real-provider scene quality and improve iterative correction/continuity.
+- [ ] Connect a live provider adapter and test real-provider scene quality, iterative correction, and continuity; provider choice deferred.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
 ## Phase 3 — Character construction and animation proof of concept
