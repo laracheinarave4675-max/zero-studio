@@ -46,3 +46,14 @@ This file records decisions that must not be changed silently. Add dated entries
 **Decision:** Background presets and final background artwork must be authored as validated editable SVG path operations and remain layered project assets; do not replace them with generated raster imagery.
 
 **Implication:** Starter scenes may be inserted as editable layer groups, but they are not considered a complete background department until perspective/layout, reusable props, depth/parallax, and continuity workflows are implemented and reviewed.
+
+
+## D-013 — AI is the scene artist, not a preset selector (2026-11-18)
+**Decision:** The production workflow must let the AI interpret a scene brief and create the requested artwork as multiple named, editable vector layers. Starter presets are optional references, never a ceiling on what the artist can draw.
+
+**Implication:** The AI may plan composition and layer breakdown, then produce validated SVG path operations for each layer. The studio previews the full proposal and commits it only after approval. Do not use raster image/video generation as a substitute. The user should not need to understand implementation details or manually coordinate technical departments.
+
+## D-014 — User-facing collaboration style (2026-11-18)
+**Decision:** Explain progress in simple Arabic, avoid jargon and unnecessary technical questions, and work directly in the repository wherever possible. Treat short instructions such as “continue” as authorization to continue the agreed project work, not as a request for a status-only reply.
+
+**Implication:** Keep detailed technical notes, tests, limitations, and continuation state in repository documents. Report only meaningful outcomes, clearly distinguish complete from pending work, and never imply that a project is finished until all acceptance checks are met.
