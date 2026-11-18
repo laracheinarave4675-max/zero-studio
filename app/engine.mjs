@@ -300,7 +300,7 @@ export function rotatePathData(d,angleDegrees,cx=0,cy=0){
     out.push(op,fmt(p.x),fmt(p.y));current={x:relative?base.x+values[offset]:values[offset],y:relative?base.y+values[offset+1]:values[offset+1]};
     if(upper==="M"&&first)subpath={...current};
    }else if(upper==="H"||upper==="V"){
-    const p=upper==="H"?point(values[offset],0):point(0,values[offset]);
+    const p=upper==="H"?rotate(relative?base.x+values[offset]:values[offset],base.y):rotate(base.x,relative?base.y+values[offset]:values[offset]);
     out.push("L",fmt(p.x),fmt(p.y));
     current=upper==="H"?{x:relative?base.x+values[offset]:values[offset],y:base.y}:{x:base.x,y:relative?base.y+values[offset]:values[offset]};
    }else if(upper==="C"){
