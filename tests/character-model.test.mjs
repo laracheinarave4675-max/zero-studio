@@ -187,3 +187,16 @@ test("joint solver rejects unknown joints and malformed targets",()=>{
  assert.throws(()=>solveNoriRigJoint(base,"tail",{x:1,y:1}),/مفصل/);
  assert.throws(()=>solveNoriRigJoint(base,"wrist-left",{x:NaN,y:1}),/هدف/);
 });
+
+test("constrained rig poses can be inserted as keyframes and interpolated",()=>{
+ const make=target=>{
+  const model=solveNoriRigJoint(createNoriModel(),"wrist-right",target);
+  const frame=createFrame();addCharacterModelToFrame(frame,model);return frame;
+ };
+ const start=make({x:1160,y:790}),end=make({x:1250,y:430});
+ const between=createInbetweenFrames(start,end,4);
+ assert.equal(between.length,4);
+ const armAt=frame=>frame.layers.find(layer=>layer.name==="الأطراف").operations.find((op,index)=>index===1).path.d;
+ const signatures=[start,...between,end].map(armAt);
+ assert.equal(new Set(signatures).size,6);
+});
