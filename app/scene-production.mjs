@@ -28,6 +28,7 @@ async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL){
   await new Promise(resolve=>setTimeout(resolve,1200*(attempt+1)));
  }
  if(!response?.ok)throw lastError||Error("تعذر الاتصال بخدمة Gemini.");
+ try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
  return parseResponse(payload);
 }
 function credentials(apiKey,prompt){
