@@ -136,3 +136,27 @@ test("restyle and duplicate reject unsafe styles and locked layers",()=>{
  assert.throws(()=>updateOperation(layer,id,{width:20}),/مقفلة/);
  assert.throws(()=>duplicateOperation(layer,id),/مقفلة/);
 });
+
+test("drawing cadence audit counts distinct artwork rather than frame IDs or playback rate",()=>{
+ const first=createFrame(),copy=JSON.parse(JSON.stringify(first));copy.id="different-frame-id";
+ const third=createFrame();appendOperation(third.layers[0],"stroke",line(100));
+ const audit=analyzeDrawingCadence([first,copy,third],24);
+ assert.equal(audit.frameCount,3);
+ assert.equal(audit.uniqueDrawingCount,2);
+ assert.equal(audit.duplicateDrawingCount,1);
+ assert.equal(audit.playbackFps,24);
+ assert.equal(audit.uniqueDrawingsPerSecond,16);
+ assert.equal(audit.meets24UniqueDrawingsPerSecond,false);
+});
+test("drawing cadence audit recognizes a full second of 24 independent drawings",()=>{
+ const frames=Array.from({length:24},(_,i)=>{const f=createFrame();appendOperation(f.layers[0],"stroke",line(20+i*20));return f});
+ const audit=analyzeDrawingCadence(frames,24);
+ assert.equal(audit.uniqueDrawingCount,24);
+ assert.equal(audit.uniqueDrawingsPerSecond,24);
+ assert.equal(audit.meets24UniqueDrawingsPerSecond,true);
+});
+test("drawing cadence audit rejects unsupported frame rates and malformed frames",()=>{
+ assert.throws(()=>analyzeDrawingCadence([createFrame()],30),/معدل العرض/);
+ assert.throws(()=>analyzeDrawingCadence([]),/قائمة الإطارات/);
+ assert.throws(()=>analyzeDrawingCadence([{}]),/بنية أحد الإطارات/);
+});
