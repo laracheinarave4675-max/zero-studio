@@ -243,7 +243,7 @@ test("a character instance can be updated in one frame without changing its link
  const other=createLayer("خلفية");frame.layers.unshift(other);
  const updated=replaceCharacterInstanceInFrame(frame,instanceId,createNoriModel("happy","front","wave"));
  assert.equal(updated.length,4);
- assert.equal(frame.layers[frame.layers.length-1].id,other.id);
+ assert.equal(frame.layers[0].id,other.id);
  assert.ok(updated.every(layer=>layer.characterInstance.id===instanceId));
  assert.equal(updated[2].operations.length,3);
 });
