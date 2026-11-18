@@ -24,7 +24,7 @@ export function renderMeshEnvironment(plan){
  const buckets=Array.from({length:5},()=>[]);
  const light=norm(plan.sunDirection||[-.55,.9,.35]);
  let count=0;
- const face=(bucket,vertices,color,outline="#34434a",stroke=1.1)=>{if(count>=1500)return;const n=norm(cross(sub(vertices[1],vertices[0]),sub(vertices[2],vertices[0]))),lambert=Math.abs(dot(n,light)),factor=.62+lambert*.5;const pts=vertices.map(project);if(pts.some(p=>!p))return;const d=path(pts.map(p=>[p[0],p[1]]));const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:shade(color,factor),stroke:outline,width:stroke})});count++;};
+ const face=(bucket,vertices,color,outline="#34434a",stroke=1.1)=>{if(count>=1790)return;const n=norm(cross(sub(vertices[1],vertices[0]),sub(vertices[2],vertices[0]))),lambert=Math.abs(dot(n,light)),factor=.62+lambert*.5;const pts=vertices.map(project);if(pts.some(p=>!p))return;const d=path(pts.map(p=>[p[0],p[1]]));const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:shade(color,factor),stroke:outline,width:stroke})});count++;};
  const line=(bucket,points,color="#514b43",width=1.5)=>{if(count>=285)return;const pts=points.map(project);if(pts.some(p=>!p))return;const d="M "+pts.map(p=>p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" L ");const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:"none",stroke:color,width})});count++;};
  const quad=(bucket,a,b,c,d,color,outline)=>face(bucket,[a,b,c,d],color,outline);
  const box=(bucket,x,y,z,w,h,d,color,outline)=>{const a=[x,y,z],A=[x+w,y,z],B=[x+w,y+h,z],C=[x,y+h,z],e=[x,y,z+d],f=[x+w,y,z+d],g=[x+w,y+h,z+d],q=[x,y+h,z+d];quad(bucket,a,A,B,C,color,outline);quad(bucket,e,q,g,f,shade(color,.8),outline);quad(bucket,a,e,f,A,shade(color,.72),outline);quad(bucket,A,f,g,B,shade(color,1.12),outline);quad(bucket,B,g,q,C,shade(color,.9),outline);quad(bucket,C,q,e,a,shade(color,.82),outline);};
@@ -103,6 +103,6 @@ export function renderMeshEnvironment(plan){
  const names=["01 — السماء والآفاق","02 — الأرض والأشجار الخلفية","03 — المبنى والعمارة","04 — الطريق والأرصفة","05 — أعمدة الشارع والعناصر الأمامية"];
  const layers=buckets.map((items,i)=>({name:names[i],operations:items.sort((a,b)=>b.depth-a.depth).map(x=>x.op)})).filter(x=>x.operations.length);
  const total=layers.reduce((s,l)=>s+l.operations.length,0);
- if(total>1500)throw Error("تجاوز مشهد الشبكات ثلاثية الأبعاد حد 1500 مسار متجهي.");
+ if(total>1800)throw Error("تجاوز مشهد الشبكات ثلاثية الأبعاد حد 1800 مسار متجهي.");
  return{version:1,layers,totalOperations:total,camera:{position:pos,target}};
 }
