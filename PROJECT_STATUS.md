@@ -4,8 +4,8 @@ Last updated: 2026-11-18 (UTC)
 
 ## High-volume frame production infrastructure — 2026-11-18
 
-- Development branch head for the new milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`.
-- GitHub Actions runs #809 and #808 passed; the suite reports 134 tests passed and 0 failures, including syntax checks for the production and frame-history modules. Run #809: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44306239089.
+- Application source commit deployed for this milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`; current branch head `5de795eeae1f388e396250e4b042956ad9a1197e` adds the final release documentation.
+- GitHub Actions runs #813 and #812 passed on the current branch head; the suite reports 134 tests passed and 0 failures, including syntax checks for the production and frame-history modules. Run #813: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44306830947.
 - Raised the structural project ceiling from 600 to 30,000 frames (20 minutes 50 seconds at 24 drawings/second).
 - Reworked the timeline to render only 24 thumbnails at a time, with page navigation and direct frame-number jumping.
 - Added a provider-independent animation plan. A 10-second shot is exactly 240 independently drawn frames; default six-frame batches produce 40 ordered batches.
