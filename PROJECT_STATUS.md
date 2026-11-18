@@ -54,6 +54,16 @@ The AI is intended to act as the scene artist: interpret a natural-language scen
 - Regression validation passed: GitHub Actions run #? completed the full Node suite with 145 tests passed, 0 failed, including the scene prompt checks. The separate real scene-generation workflow was executed repeatedly but Gemini returned temporary 503 high-demand responses on the supported Flash Lite model; no new scene artifact was produced. Do not mark visual quality as solved until a real generated SVG is available and reviewed against the user's references.
 - Known limitation: Gemini receives text instructions only; the uploaded reference images are not supplied to the provider. True 3D meshes, physically based materials, and a 3D lighting pipeline are not implemented.
 
+## Semantic 3D environment artist milestone — 2026-11-18
+
+- Added `app/mesh-scene-renderer.mjs`: a pure JavaScript 3D mesh builder/projector that creates architecture, gabled roof planes, windows, road, trees, utility poles and vehicles, computes per-face directional lighting, and exports the visible faces as editable SVG path operations. No raster image/video model is used.
+- Added `generateMeshEnvironmentProposal` in `app/scene-production.mjs`: Gemini now designs a compact semantic 3D scene blueprint (camera, world dimensions, materials, windows, trees, poles, vehicle, sun) instead of trying to write hundreds of SVG paths itself. The local renderer materializes the blueprint.
+- The successful real Gemini run #44339821992 used Gemini 3.5 Flash Lite and produced a 5-layer editable scene with 632 vector paths. Artifact: `zero-studio-cinematic-scene-artist-test`, artifact ID `14441559866`, expires 2026-12-02. It contains `cinematic-ramen-shop.svg` and `cinematic-ramen-shop.zero`.
+- A separate deterministic 3D mesh showcase is also included in that artifact. The AI scene and the hand-authored showcase are clearly distinguished in their reports.
+- The current mesh renderer has a 900-path still-scene limit. The older 2.5D renderer remains available for comparison. The 3D renderer is still a low-poly/stylized prototype, not reference-quality anime background art.
+- The latest successful full test run at this milestone passed 156 tests, 0 failures (run #44339822025). Subsequent renderer detail updates are under re-validation.
+- **Not yet complete:** the 3D renderer is not integrated into the 24-unique-drawings/sec animation worker. Animation batches still have the earlier 300-path limit. Texture maps, physically based lighting, shadow maps, detailed assets, and mobile performance validation are pending. Do not claim production-quality 3D or the user's reference-image quality yet.
+
 ## Mission
 
 Build a practical, mobile-first anime production studio, usable from an Android phone and free or nearly free, with a coordinated workflow for story, character design, backgrounds, animation, cleanup, coloring, sound, editing, and quality review.
