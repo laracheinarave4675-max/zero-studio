@@ -28,3 +28,9 @@ This file records decisions that must not be changed silently. Add dated entries
 
 ## D-007 — Specialized departments are workflow roles until implemented
 **Decision:** Departments such as writing, character design, keyframes, in-betweens, cleanup, coloring, continuity review, sound, editing, and production management describe the intended organization. Do not claim autonomous agents exist until their orchestration and outputs are implemented and tested.
+
+## D-008 — Character assets stay portable and project-local
+**Decision:** Character models must remain editable and portable. Standalone character files use validated `.zchar` packages; a project may store up to 100 validated character models in `project.characterLibrary`, persisted inside `.zero` files. Do not upload character art to an external service by default.
+
+## D-009 — Measure unique drawings separately from playback
+**Decision:** Report the count of distinct visible vector-art signatures and average unique drawings per second separately from playback FPS. Ignore frame and operation IDs when comparing signatures. A cadence report is a structural measurement only; it does not certify artistic quality or prove that every frame was freshly hand-drawn.
