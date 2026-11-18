@@ -35,17 +35,26 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Add reusable Nori vector construction model (12 parts, semantic editable layers, versioned/validated schema).
 - [x] Add front/side/back starter model views.
 - [x] Add import/export of portable validated .zchar character models.
-- [x] Add editable Nori palette controls.\n- [x] Export an 11-cell editable SVG model sheet for views, expressions, and poses.
+- [x] Add editable Nori palette controls.
+- [x] Export an 11-cell editable SVG model sheet for views, expressions, and poses.
 - [x] Add four starter poses and four expressions (48 pre-authored Nori variants).
-- [x] Add editable proportion-guide overlays to the 11-cell Nori model-sheet SVG export.\n- [x] Allow users to convert their own visible vector drawings in a frame into reusable custom character models, preserving layers.\n- [ ] Create an interactive artist-refinable model-sheet editor with customizable anatomy and reviewed turnarounds.
+- [x] Add editable proportion-guide overlays to the 11-cell Nori model-sheet SVG export.
+- [x] Allow users to convert their own visible vector drawings in a frame into reusable custom character models, preserving layers.
+- [ ] Create an interactive artist-refinable model-sheet editor with customizable anatomy and reviewed turnarounds.
 - [x] Add four starter facial expression presets to the Nori vector model.
 - [x] Add basic two-bone inverse kinematics for four limb chains with segment-length preservation.
 - [x] Add a project-local reusable character library that survives `.zero` save/open.
-- [x] Add rig-aware interpolation between compatible saved Nori limb-rig poses.\n- [x] Add linked character instance identity across layers and frames, with copy-to-next-frame and per-frame pose replacement.\n- [x] Add head-center and torso-center translation anchors with legacy rig migration.\n- [x] Add editable head rotation around the head anchor with SVG path transformation.\n- [x] Add whole-character lean around the torso anchor while preserving rig joint geometry.\n- [ ] Extend rigging to rotational spine/neck articulation, finger/toe controls, collision/ground constraints, and synchronized multi-frame instance editing.
+- [x] Add rig-aware interpolation between compatible saved Nori limb-rig poses.
+- [x] Add linked character instance identity across layers and frames, with copy-to-next-frame and per-frame pose replacement.
+- [x] Add head-center and torso-center translation anchors with legacy rig migration.
+- [x] Add editable head rotation around the head anchor with SVG path transformation.
+- [x] Add whole-character lean around the torso anchor while preserving rig joint geometry.
+- [ ] Extend rigging to rotational spine/neck articulation, finger/toe controls, collision/ground constraints, and synchronized multi-frame instance editing.
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
-- [x] Add a unique-drawing cadence audit that reports actual unique drawings per second separately from playback FPS.\n- [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
+- [x] Add a unique-drawing cadence audit that reports actual unique drawings per second separately from playback FPS.
+- [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
 
 ## Phase 4 — Production departments
 - [ ] Story/script and storyboard.
