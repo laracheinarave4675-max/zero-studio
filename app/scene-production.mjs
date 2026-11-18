@@ -1,4 +1,4 @@
-import{validatePath}from"./engine.mjs";
+import{validatePath,pathGeometryBounds}from"./engine.mjs";
 import{renderEnvironmentScene}from"./environment-art.mjs";
 import{renderMeshEnvironment}from"./mesh-scene-renderer.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
