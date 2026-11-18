@@ -93,7 +93,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
-- [x] GitHub Actions run #433 passed all 79 tests, 0 failed, and JavaScript syntax checks succeeded on commit `4d9b2b0526bba9fcdd07c766adcf83b6e1bf6666`. Subsequent commits update documentation only.
+- [x] GitHub Actions run #433 passed all 79 tests, 0 failed, and JavaScript syntax checks succeeded on commit `4d9b2b0526bba9fcdd07c766adcf83b6e1bf6666`. The latest branch head includes subsequent documentation/decision updates only.
 - [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
 - [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
 - The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
@@ -184,7 +184,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - GitHub Login Connection was not available to Vercel, so this is a manual static snapshot upload, not an automatic Git-linked deployment. Future code changes do not appear at this URL until a new deployment is uploaded.
 - The deployment is a test copy, not evidence of physical Android validation. Touch/stylus behavior, PWA installation/offline behavior, project round-trip, ZIP download/open, and real Gemini API calls remain to be tested on the user's phone/network.
 
-## Latest drawing/character test deployment — 2026-11-18\n\n- [x] Published the current drawing/character build to Vercel deployment `dpl_dNbjiJuGybBBszN1QQYJfx22EirV` (`READY`).\n- [x] Reassigned stable public test alias https://zero-studio-three.vercel.app/.\n- [x] Confirmed deployment file manifest includes `character-library.mjs`, updated `character-model.mjs`, `engine.mjs`, `app.js`, and service worker cache v14.\n- [ ] Physical Android testing remains pending; publication is not device validation.\n\n## Next actions
+## Latest drawing/character test deployment — 2026-11-18\n\n- [x] Published the current drawing/character build, including rig-aware pose blending, to Vercel deployment `dpl_99Sqjak5VrTc2c6yKnpKcYY12eHB` (`READY`).\n- [x] Reassigned stable public test alias https://zero-studio-three.vercel.app/.\n- [x] Confirmed deployment file manifest includes `character-library.mjs`, updated `character-model.mjs`, `engine.mjs`, `app.js`, and service worker cache v15.\n- [ ] Physical Android testing remains pending; publication is not device validation.\n\n## Next actions
 
 1. Validate the current drawing and character UI on the physical Android phone: zoom/pan, freehand/stylus pressure, selection/move/delete, shape fills, layer management, and character presets.
 2. Test .zero and .zchar save/open round trips, SVG/ZIP export, offline PWA behavior, and a longer multi-frame project on Android.
