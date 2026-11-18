@@ -15,7 +15,7 @@ async function request(apiKey,instruction,fetcher){
 function credentials(apiKey,prompt){
  const key=String(apiKey??"").trim(),description=String(prompt??"").trim();
  if(!key||key.length>200)throw Error("مفتاح API غير صالح.");
- if(!description||description.length>1000)throw Error("الوصف مطلوب ويجب ألا يتجاوز 1000 حرف.");
+ if(!description||description.length>2000)throw Error("الوصف مطلوب ويجب ألا يتجاوز 2000 حرف.");
  return{key,description};
 }
 export async function generateVectorProposal(apiKey,prompt,fetcher=fetch){
