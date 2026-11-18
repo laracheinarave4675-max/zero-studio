@@ -10,7 +10,7 @@ on:
           - gemini-3.5-flash-lite
           - gemini-3.1-flash-lite
           - gemini-3-flash
-        default: gemini-3-flash
+        default: gemini-3.1-flash-lite
   push:
     branches: ["feature/mobile-drawing-workspace"]
     paths:
@@ -31,7 +31,7 @@ jobs:
       - name: Run one real six-frame Gemini batch
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ inputs.model || 'gemini-3-flash' }}
+          GEMINI_MODEL: ${{ inputs.model || 'gemini-3.1-flash-lite' }}
         run: node scripts/run-gemini-animation-test.mjs
       - name: Upload editable vector project and SVG preview
         if: always()
