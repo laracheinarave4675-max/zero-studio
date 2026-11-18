@@ -259,6 +259,8 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [x] Each preset is split into named editable layers; insertion places those layers behind existing character/ink artwork and checks layer/operation limits before mutation.
 - [x] Added Arabic mobile workspace controls to select and insert a background; scenes remain ordinary validated vector operations and are included in project save/open and SVG/ZIP export.
 - [x] Added `docs/BACKGROUND_LIBRARY.md` and automated tests for preset structure, stacking order, invalid presets/capacity, and project round-trip.
+- [x] Uploaded the background-enabled static snapshot to Vercel deployment `dpl_bqibHVJ4qU7daU2jgWA6fYmuLGes` (`READY`) and reassigned the stable alias https://zero-studio-three.vercel.app/.
+- [x] Confirmed deployment manifest contains `src/backgrounds.mjs` and all 11 app files.
 - [ ] Visual/art review of all four scenes and physical Android interaction remain pending.
 - [ ] This is a starter background library, not yet a complete layout department: perspective grid, parallax/depth editing, prop library, reusable location sheets, and scene continuity tools remain planned.
 
@@ -268,3 +270,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - [ ] Full keyframe/dope-sheet editor, timing/holds, exposure-sheet workflow, cleanup and frame-aware interpolation beyond topology-matched path tweening.
 - [ ] Background perspective/layout editor, depth/parallax planes, reusable props and scene continuity.
 - [ ] Android device validation, human art review, and a measured action test against the unchanged 24 independent drawings/second target.
+
+
+## Background-enabled deployment and CI verification — 2026-11-18
+
+- GitHub Actions run #692 passed 112 tests, 0 failures, including the background UI/Service Worker test and all existing engine/character tests. Syntax checks include `app/backgrounds.mjs`.
+- Latest public static snapshot: Vercel `dpl_bqibHVJ4qU7daU2jgWA6fYmuLGes`, state `READY`, stable alias `https://zero-studio-three.vercel.app/`.
+- Source remains private and deployment remains manual; future commits require a new static upload.
+- Latest code/test milestone is committed on `feature/mobile-drawing-workspace`; PR #1 remains draft and unmerged.
