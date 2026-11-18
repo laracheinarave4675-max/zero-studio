@@ -81,3 +81,11 @@ test("vector path node editor controls and overlay are present and wired",()=>{
  assert.match(app,/movePathControlPoint/);
  assert.match(app,/nodeDrag/);
 });
+
+test("editable background library controls are present and connected to the drawing engine",()=>{
+ for(const id of ["backgroundPreset","addBackgroundBtn","backgroundStatus"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(app,/addBackgroundToFrame/);
+ assert.match(app,/BACKGROUND_PRESETS/);
+ const sw=readFileSync(new URL("../app/sw.js",import.meta.url),"utf8");
+ assert.match(sw,/backgrounds\.mjs/);
+});
