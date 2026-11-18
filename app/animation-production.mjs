@@ -7,6 +7,7 @@ function fail(message){throw Error(message)}
 function validJob(job){
  if(!job||job.format!=="zero-studio-animation-job"||job.version!==1||typeof job.id!=="string"||!job.id)fail("خطة إنتاج الحركة غير صالحة.");
  if(typeof job.description!=="string"||!job.description.trim()||job.description.length>MAX_DESCRIPTION)fail("وصف المشهد في الخطة غير صالح.");
+ if(typeof job.continuityNote!=="string"||job.continuityNote.length>2000)fail("ملاحظة استمرارية المشهد غير صالحة.");
  if(job.fps!==24||!Number.isInteger(job.durationSeconds)||job.durationSeconds<1||job.totalFrames!==job.durationSeconds*24||job.totalFrames>MAX_FRAMES)fail("عدد إطارات خطة الحركة غير صالح.");
  if(!ANIMATION_BATCH_SIZE_OPTIONS.includes(job.batchSize))fail("حجم دفعة الرسم غير مدعوم.");
  if(!Number.isInteger(job.completedFrames)||job.completedFrames<0||job.completedFrames>job.totalFrames)fail("تقدم إنتاج الحركة غير صالح.");
