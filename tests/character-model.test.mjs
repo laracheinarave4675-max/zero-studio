@@ -124,6 +124,8 @@ test("Nori model sheet exports 11 editable vector cells for views, expressions a
  const sheet=createNoriModelSheetSvg({skin:"#eeccaa",cloth:"#55aa99"});
  assert.match(sheet,/^<svg xmlns=/);
  assert.equal((sheet.match(/data-character-cell=/g)||[]).length,11);
+ assert.equal((sheet.match(/data-proportion-guides=/g)||[]).length,11);
+ assert.match(sheet,/stroke-dasharray="7 7"/);
  assert.match(sheet,/Turnaround/);
  assert.match(sheet,/Expression/);
  assert.match(sheet,/Pose/);
