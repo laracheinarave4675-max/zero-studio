@@ -108,6 +108,37 @@ export function interpolatePathData(from,to,t){
  if(a.length!==b.length||a.some((v,i)=>("command"in v)!==("command"in b[i])||("command"in v&&v.command!==b[i].command)))throw Error("بنية المسارين غير متطابقة؛ لا يمكن توليد إطار وسيط آمن");
  return a.map((v,i)=>"command"in v?v.command:String(+(v.number+(b[i].number-v.number)*t).toFixed(3))).join(" ");
 }
+
+export function analyzeDrawingCadence(frames,fps=24){
+ if(!Array.isArray(frames)||!frames.length||frames.length>MAX_FRAMES)throw Error("قائمة الإطارات غير صالحة");
+ if(![6,12,24].includes(+fps))throw Error("معدل العرض يجب أن يكون 6 أو 12 أو 24 FPS");
+ const signatures=frames.map(frame=>{
+  if(!frame||!Array.isArray(frame.layers))throw Error("بنية أحد الإطارات غير صالحة");
+  return JSON.stringify(frame.layers.filter(layer=>layer.visible!==false).map(layer=>({
+   operations:(layer.operations||[]).map(operation=>({
+    kind:operation.kind,
+    d:operation.path?.d,
+    stroke:operation.path?.stroke,
+    width:operation.path?.width,
+    fill:operation.path?.fill
+   }))
+  })));
+ });
+ const uniqueDrawingCount=new Set(signatures).size;
+ const durationSeconds=frames.length/+fps;
+ const uniqueDrawingsPerSecond=uniqueDrawingCount/durationSeconds;
+ return{
+  frameCount:frames.length,
+  playbackFps:+fps,
+  uniqueDrawingCount,
+  duplicateDrawingCount:frames.length-uniqueDrawingCount,
+  durationSeconds,
+  uniqueDrawingsPerSecond:Number(uniqueDrawingsPerSecond.toFixed(3)),
+  targetUniqueDrawingsPerSecond:24,
+  meets24UniqueDrawingsPerSecond:uniqueDrawingsPerSecond>=24
+ };
+}
+
 export function createInbetweenFrames(startFrame,endFrame,count=1){
  if(!Number.isInteger(count)||count<1||count>24)throw Error("عدد الإطارات الوسيطة يجب أن يكون من 1 إلى 24");
  if(!startFrame||!endFrame||!Array.isArray(startFrame.layers)||!Array.isArray(endFrame.layers)||startFrame.layers.length!==endFrame.layers.length)throw Error("لا تتطابق طبقات الإطارين");
