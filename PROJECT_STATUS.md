@@ -89,7 +89,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Insert selected character variants into the current frame as editable layer operations.
 - [ ] Professional custom model-sheet editor, proportion guides and turnarounds need artist review and extension.
 - [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.
-- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).
+- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).\n- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.
 - [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
@@ -190,7 +190,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 2. Test .zero and .zchar save/open round trips, SVG/ZIP export, offline PWA behavior, and a longer multi-frame project on Android.
 3. Refine character construction into professional editable model sheets and customizable proportions.
 4. Implement a real articulated character rig with joint constraints and reusable character instances; then build keyframe/cleanup workflows beyond topology-matched path tweening.
-5. Test whether a short action can achieve 24 genuinely independent drawings per second at acceptable quality and review effort. Do not treat 24 FPS playback as success.
+5. Use the cadence audit on a genuinely hand-drawn short action and evaluate whether 24 independent drawings/second can be achieved at acceptable quality and review effort. Do not treat 24 FPS playback as success.
 6. Test Gemini with a user-owned API key entered directly in the app; never share the key in chat.
 
 ## Change log
