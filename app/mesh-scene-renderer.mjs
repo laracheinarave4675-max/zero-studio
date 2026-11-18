@@ -39,17 +39,19 @@ export function renderMeshEnvironment(plan){
  // Ground, sidewalk and road.
  quad(1,[-40,0,-24],[40,0,-24],[40,0,65],[-40,0,65],"#78876f","#596c5d");
  quad(1,[-40,.025,2],[40,.025,2],[40,.025,5],[-40,.025,5],"#d0c4aa","#a89b83");
- quad(3,[-40,.04,5],[40,.04,5],[40,.04,65],[-40,.04,65],"#626c68","#4c5752");
+ quad(3,[-40,.04,5],[40,.04,5],[40,.04,65],[-40,.04,65],"url(#zero-road)","#4c5752");
  for(let z=9;z<58;z+=9)quad(3,[-.22,.055,z],[.22,.055,z],[.22,.055,z+2.8],[-.22,.055,z+2.8],"#e9e0c8","none");
  // Building walls and shaded planes.
  const x=-b.width/2,z=-b.depth/2,w=b.width,h=b.height,d=b.depth,front=z+d,back=z;
  box(2,x,0,z,w,h,d,b.wall||"#d8c6a8","#594e43");
+ rectPlane(2,x+.04,.04,front+.025,w-.08,h-.08,"url(#zero-wall)");
+ quad(2,[x+w-.025,0,z+.02],[x+w-.025,0,front-.02],[x+w-.025,h,front-.02],[x+w-.025,h,z+.02],"url(#zero-wall)","#6c5b49");
  // Front facade warm light plane, recessed shadow below roof and side trim.
  quad(2,[x+.08,h-.55,front+.025],[x+w-.08,h-.55,front+.025],[x+w-.08,h-.08,front+.025],[x+.08,h-.08,front+.025],"#b39d80","#6b594a");
  // Gabled roof: two real 3D sloped planes with thickness and tile seams.
  const ridgeY=h+2.25,ridgeX=0,over=.55,frontZ=front+.42,backZ=z-.42;
- quad(2,[x-over,h,frontZ],[ridgeX,ridgeY,frontZ],[ridgeX,ridgeY,backZ],[x-over,h,backZ],b.roof||"#514b48","#383b3a");
- quad(2,[ridgeX,ridgeY,frontZ],[x+w+over,h,frontZ],[x+w+over,h,backZ],[ridgeX,ridgeY,backZ],shade(b.roof||"#514b48",1.12),"#383b3a");
+ quad(2,[x-over,h,frontZ],[ridgeX,ridgeY,frontZ],[ridgeX,ridgeY,backZ],[x-over,h,backZ],"url(#zero-roof)","#383b3a");
+ quad(2,[ridgeX,ridgeY,frontZ],[x+w+over,h,frontZ],[x+w+over,h,backZ],[ridgeX,ridgeY,backZ],"url(#zero-roof)","#383b3a");
  face(2,[[x,h,front+.035],[0,ridgeY,front+.035],[x+w,h,front+.035]],"#d7c5a5","#594c40",1.5);
  face(2,[[x,h,back-.035],[0,ridgeY,back-.035],[x+w,h,back-.035]],"#bca98e","#594c40",1.2);
  line(2,[[x+.35,h+.12,front+.06],[0,ridgeY-.25,front+.06],[x+w-.35,h+.12,front+.06]],"#735f4c",.06);
@@ -74,10 +76,10 @@ export function renderMeshEnvironment(plan){
  line(2,[[x-over,h,frontZ+.05],[x+w+over,h,frontZ+.05]],"#d4bd9c",7);
  // Front windows with deep frames, glass, mullions and reflections.
  const windows=b.windows||[{x:-3.4,y:1.5,width:1.55,height:1.65},{x:-1.1,y:1.5,width:1.55,height:1.65},{x:1.2,y:1.5,width:1.55,height:1.65}];
- for(const win of windows.slice(0,6)){const wx=win.x,wy=win.y,ww=win.width,wh=win.height;box(2,wx-.08,wy-.08,front+.06,ww+.16,wh+.16,.12,"#665447","#3e4140");rectPlane(2,wx,wy,front+.19,ww,wh,"#79a6a3");rectPlane(2,wx+.08,wy+wh*.58,front+.205,ww*.36,wh*.33,"#b7d1c6");line(2,[[wx+ww*.5,wy,front+.23],[wx+ww*.5,wy+wh,front+.23]],"#574f45",.055);line(2,[[wx,wy+wh*.53,front+.23],[wx+ww,wy+wh*.53,front+.23]],"#574f45",.055);line(2,[[wx+ww*.25,wy+wh*.55,front+.24],[wx+ww*.25,wy+wh,front+.24]],"#806b55",.025);line(2,[[wx+ww*.75,wy+wh*.55,front+.24],[wx+ww*.75,wy+wh,front+.24]],"#806b55",.025);line(2,[[wx+.12,wy+wh*.88,front+.24],[wx+ww*.38,wy+wh*.88,front+.24]],"#edf0dd",.035);}
- if(b.door){const v=b.door;box(2,v.x,v.y,front+.07,v.width,v.height,.14,"#705442","#3e4140");rectPlane(2,v.x+.12,v.y+.1,front+.25,v.width-.24,v.height-.2,"#7da6a0");rectPlane(2,v.x+.2,v.y+v.height*.62,front+.27,v.width-.4,v.height*.28,"#9bbab2");line(2,[[v.x+v.width*.5,v.y+.1,front+.27],[v.x+v.width*.5,v.y+v.height-.1,front+.27]],"#574d42",.06);sphere(2,v.x+v.width*.82,v.y+v.height*.48,front+.32,.055,.055,.04,"#d7b36f",7);}
+ for(const win of windows.slice(0,6)){const wx=win.x,wy=win.y,ww=win.width,wh=win.height;box(2,wx-.08,wy-.08,front+.06,ww+.16,wh+.16,.12,"#665447","#3e4140");rectPlane(2,wx,wy,front+.19,ww,wh,"url(#zero-glass)");rectPlane(2,wx+.08,wy+wh*.58,front+.205,ww*.36,wh*.33,"#b7d1c6");line(2,[[wx+ww*.5,wy,front+.23],[wx+ww*.5,wy+wh,front+.23]],"#574f45",.055);line(2,[[wx,wy+wh*.53,front+.23],[wx+ww,wy+wh*.53,front+.23]],"#574f45",.055);line(2,[[wx+ww*.25,wy+wh*.55,front+.24],[wx+ww*.25,wy+wh,front+.24]],"#806b55",.025);line(2,[[wx+ww*.75,wy+wh*.55,front+.24],[wx+ww*.75,wy+wh,front+.24]],"#806b55",.025);line(2,[[wx+.12,wy+wh*.88,front+.24],[wx+ww*.38,wy+wh*.88,front+.24]],"#edf0dd",.035);}
+ if(b.door){const v=b.door;box(2,v.x,v.y,front+.07,v.width,v.height,.14,"#705442","#3e4140");rectPlane(2,v.x+.12,v.y+.1,front+.25,v.width-.24,v.height-.2,"url(#zero-glass)");rectPlane(2,v.x+.2,v.y+v.height*.62,front+.27,v.width-.4,v.height*.28,"#9bbab2");line(2,[[v.x+v.width*.5,v.y+.1,front+.27],[v.x+v.width*.5,v.y+v.height-.1,front+.27]],"#574d42",.06);sphere(2,v.x+v.width*.82,v.y+v.height*.48,front+.32,.055,.055,.04,"#d7b36f",7);}
  // Shop sign and red noren curtain.
- if(b.sign){const s=b.sign;box(2,s.x,s.y,front+.11,s.width,s.height,.18,"#303b3c","#343b3a");rectPlane(2,s.x+.08,s.y+.08,front+.32,s.width-.16,s.height-.16,"#9c6c59");const vertical=s.height>s.width;for(let i=0;i<(vertical?4:2);i++){const cx=s.x+s.width*(vertical?.5:(.25+i*.5)),cy=s.y+s.height*(vertical?(i+.5)/4:.5);line(2,[[cx-s.width*.12,cy-s.height*.09,front+.35],[cx+s.width*.1,cy-s.height*.02,front+.35],[cx-s.width*.04,cy+s.height*.1,front+.35]],"#f0d6b0",.035);line(2,[[cx-s.width*.1,cy,front+.36],[cx+s.width*.12,cy,front+.36]],"#e8cba5",.028);}}
+ if(b.sign){const s=b.sign;box(2,s.x,s.y,front+.11,s.width,s.height,.18,"#303b3c","#343b3a");rectPlane(2,s.x+.08,s.y+.08,front+.32,s.width-.16,s.height-.16,"url(#zero-wood)");const vertical=s.height>s.width;for(let i=0;i<(vertical?4:2);i++){const cx=s.x+s.width*(vertical?.5:(.25+i*.5)),cy=s.y+s.height*(vertical?(i+.5)/4:.5);line(2,[[cx-s.width*.12,cy-s.height*.09,front+.35],[cx+s.width*.1,cy-s.height*.02,front+.35],[cx-s.width*.04,cy+s.height*.1,front+.35]],"#f0d6b0",.035);line(2,[[cx-s.width*.1,cy,front+.36],[cx+s.width*.12,cy,front+.36]],"#e8cba5",.028);}}
  if(b.awning){const a=b.awning;for(let i=0;i<6;i++){const x0=a.x+a.width*i/6,x1=a.x+a.width*(i+1)/6;quad(2,[x0,a.y,front+.25],[x1,a.y,front+.25],[x1,a.y-.58,front+.95],[x0,a.y-.58,front+.95],i%2?shade(a.color||"#a64c43",.88):(a.color||"#a64c43"),"#553e37");line(2,[[x0,a.y-.58,front+.96],[x1,a.y-.58,front+.96]],"#e8c6a7",.025);}}
  if(b.balcony){const v=b.balcony;box(2,v.x,v.y,front+.22,v.width,.12,.5,"#705744","#443c34");for(let i=0;i<9;i++)box(2,v.x+i*v.width/8,v.y+.12,front+.55,.045,v.height||.55,.05,"#705744","#443c34");line(2,[[v.x,v.y+(v.height||.55)+.12,front+.55],[v.x+v.width,v.y+(v.height||.55)+.12,front+.55]],"#473e36",.06);}
  // Entry porch, posts and timber brackets create a second architectural plane.
