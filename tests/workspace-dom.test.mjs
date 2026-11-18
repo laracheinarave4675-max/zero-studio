@@ -72,3 +72,11 @@ test("whole-body lean slider is present and wired to the character rig",()=>{
  assert.match(html,/id="bodyRotationValue"/);
  assert.match(app,/rotateNoriBody/);
 });
+
+test("vector path node editor controls and overlay are present and wired",()=>{
+ assert.match(html,/id="nodeEditBtn"/);
+ assert.match(html,/id="nodeEditLayer"/);
+ assert.match(app,/getPathAnchors/);
+ assert.match(app,/movePathAnchor/);
+ assert.match(app,/nodeDrag/);
+});
