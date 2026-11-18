@@ -247,18 +247,27 @@ function drawRamenBuilding(ops){
  ops.push(makePath("M "+pt(x-95,y+250)+" L "+pt(x+65,y-64)+" L "+pt(x+w+115,y-8)+" L "+pt(x+w+72,y+295)+" L "+pt(x+w+40,y+365)+" L "+pt(x-98,y+360)+" Z","#6a5848","#473e37",4,1,""));
  ops.push(poly([[x,y],[x+w,y+10],[x+w,y+350],[x,y+350]],"url(#zero-anime-plaster)","#51463b",5));
  ops.push(poly([[x+w,y+9],[x+w+100,y-18],[x+w+87,y+320],[x+w,y+350]],"#b79e80","#574b40",4));
- ops.push(makePath("M "+pt(x-105,y+26)+" Q "+pt(x+160,y-210)+" "+pt(x+380,y-195)+" Q "+pt(x+610,y-166)+" "+pt(x+w+112,y+28)+" L "+pt(x+w+70,y+63)+" Q "+pt(x+320,y-98)+" "+pt(x-68,y+67)+" Z","url(#zero-anime-tile)","#3a4140",5));
- const roofLeft=x-100,roofRight=x+w+112;
- for(let row=1;row<9;row++){
-  const yy=y-10-row*18;
-  const half=(row/9)*260;
-  ops.push(line("M "+pt(x+185-half,yy)+" Q "+pt(x+320,yy+8)+" "+pt(x+440+half*.6,yy+3),"#b0a38c",2,.56));
+ const ridgeX=x+285,ridgeY=y-176,leftEave=x-108,rightEave=x+w+118,eaveY=y+28;
+ ops.push(poly([[leftEave,eaveY],[ridgeX,ridgeY],[ridgeX+18,ridgeY+30],[leftEave+16,eaveY+53]],"url(#zero-anime-tile)","#3a4140",5));
+ ops.push(poly([[ridgeX,ridgeY],[rightEave,eaveY],[rightEave-15,eaveY+48],[ridgeX+18,ridgeY+30]],"#454d4d","#343c3c",5));
+ ops.push(poly([[leftEave+5,eaveY+38],[ridgeX+18,ridgeY+30],[rightEave-15,eaveY+48],[rightEave-8,eaveY+69],[ridgeX+10,ridgeY+50],[leftEave+12,eaveY+60]],"#574f46","#3f413c",3));
+ for(let row=1;row<=9;row++){
+  const t=row/10,ly=eaveY+(ridgeY-eaveY)*t,rx=leftEave+(ridgeX-leftEave)*t;
+  const ry=eaveY+(ridgeY-eaveY)*t;
+  ops.push(line("M "+pt(leftEave+8+(ridgeX-leftEave)*t,ry+4)+" Q "+pt((leftEave+ridgeX)/2,ry+8)+" "+pt(ridgeX-4,ry+4),"#c0b297",2,.7));
+  const rrx=ridgeX+(rightEave-ridgeX)*t,rry=ridgeY+(eaveY-ridgeY)*t;
+  ops.push(line("M "+pt(ridgeX+4,rry+5)+" Q "+pt((ridgeX+rightEave)/2,rry+9)+" "+pt(rightEave-5,rry+4),"#b8ad97",2,.66));
  }
- for(let i=0;i<12;i++){
-  const xx=roofLeft+32+i*58;
-  ops.push(line("M "+pt(xx,y+18-(i<6?i*9:(11-i)*9))+" L "+pt(xx+42,y-82+(i<6?i*3:(11-i)*4)),"#393f3e",2,.6));
+ for(let col=1;col<12;col++){
+  const t=col/12,lx=leftEave+(ridgeX-leftEave)*t,ly=eaveY+(ridgeY-eaveY)*t;
+  ops.push(line("M "+pt(lx-7,ly+3)+" L "+pt(lx+5,ly+23),"#303d3d",1.7,.72));
+  const rx=ridgeX+(rightEave-ridgeX)*t,ry=ridgeY+(eaveY-ridgeY)*t;
+  ops.push(line("M "+pt(rx+5,ry+3)+" L "+pt(rx-7,ry+24),"#303d3d",1.7,.72));
  }
- ops.push(line("M "+pt(x-82,y+53)+" Q "+pt(x+300,y-107)+" "+pt(x+w+93,y+53),"#ddc39a",12,.95));
+ ops.push(line("M "+pt(leftEave,eaveY+38)+" Q "+pt(ridgeX+6,ridgeY+31)+" "+pt(rightEave,eaveY+48),"#e0c9a0",8,.94));
+ ops.push(line("M "+pt(ridgeX-18,ridgeY-5)+" Q "+pt(ridgeX,ridgeY-18)+" "+pt(ridgeX+22,ridgeY+1),"#d4bd9e",7,.94));
+ ops.push(poly([[x+90,y+12],[x+285,y-128],[x+480,y+14]],"#d8c5a3","#695846",2,.95));
+ ops.push(line("M "+pt(x+125,y+12)+" Q "+pt(x+290,y-102)+" "+pt(x+450,y+15),"#927b60",4,.8));
  for(let i=0;i<4;i++){
   const wx=x+45+i*132;
   drawWindow(ops,wx,y+168,104,115,500+i);
@@ -280,8 +289,23 @@ function drawForestHouse(ops){
  ops.push(poly([[x-80,y+310],[x+50,y-12],[x+460,y-115],[x+w+100,y+90],[x+w+52,y+370],[x+825,y+410]],"#5c5348","#3e423e",4));
  ops.push(poly([[x,y],[x+610,y+14],[x+700,y+370],[x-36,y+365]],"url(#zero-anime-plaster)","#5c5145",5));
  ops.push(poly([[x+610,y+14],[x+w,y+92],[x+w-5,y+378],[x+700,y+370]],"#c0ad8f","#54493e",4));
- ops.push(makePath("M "+pt(x-85,y+28)+" Q "+pt(x+100,y-165)+" "+pt(x+346,y-188)+" L "+pt(x+565,y-131)+" L "+pt(x+850,y+46)+" L "+pt(x+785,y+81)+" L "+pt(x+553,y-76)+" L "+pt(x+336,y-126)+" L "+pt(x-32,y+85)+" Z","url(#zero-anime-tile)","#39413f",5));
- ops.push(makePath("M "+pt(x+360,y-185)+" L "+pt(x+630,y-280)+" L "+pt(x+980,y-70)+" L "+pt(x+852,y+20)+" L "+pt(x+564,y-131)+" Z","#495654","#333d3c",5));
+ ops.push(poly([[x-88,y+30],[x+345,y-208],[x+585,y-122],[x+860,y+38],[x+820,y+88],[x+570,y-75],[x+343,y-142],[x-35,y+86]],"url(#zero-anime-tile)","#39413f",5));
+ ops.push(poly([[x+345,y-208],[x+665,y-305],[x+1040,y-78],[x+860,y+38],[x+585,y-122]],"#4d5955","#343f3d",5));
+ ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
+ ops.push(line("M "+pt(x-75,y+33)+" Q "+pt(x+355,y-217)+" "+pt(x+865,y+41),"#dbc49c",9,.9));
+ ops.push(line("M "+pt(x+350,y-208)+" Q "+pt(x+685,y-317)+" "+pt(x+1040,y-78),"#c4b18f",7,.84));
+ for(let row=1;row<10;row++){
+  const t=row/10;
+  const lx=x-85+(430*t),ly=y+27-235*t,rx=x+345+(515*t),ry=y-208+246*t;
+  ops.push(line("M "+pt(lx,ly)+" Q "+pt((lx+ x+345)/2,ly+(ry-ly)*.25)+" "+pt(x+345,y-208+(235*t)),"#b9ab91",2,.68));
+  ops.push(line("M "+pt(x+345,y-208+235*t)+" Q "+pt((x+345+rx)/2,ry-10)+" "+pt(rx,ry),"#a99d88",2,.62));
+ }
+ for(let col=1;col<12;col++){
+  const t=col/12,xx=x-85+430*t,yy=y+27-235*t;
+  ops.push(line("M "+pt(xx,yy)+" L "+pt(xx+16,y+85-20*t),"#353f3d",1.4,.62));
+  const rxx=x+345+515*t,ryy=y-208+246*t;
+  ops.push(line("M "+pt(rxx,ryy)+" L "+pt(rxx-14,y+95-16*t),"#353f3d",1.4,.58));
+ }
  for(let row=0;row<8;row++){
   const yy=y-142+row*20;
   ops.push(line("M "+pt(x-25+row*12,yy)+" Q "+pt(x+305,yy-22)+" "+pt(x+545-row*6,yy+13),"#c4b59b",2,.66));
