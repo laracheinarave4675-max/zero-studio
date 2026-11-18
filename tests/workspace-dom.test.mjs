@@ -60,3 +60,9 @@ test("custom character creation from the current vector frame is exposed",()=>{
  assert.match(app,/createCharacterModelFromFrame/);
  assert.match(app,/saveCharacterToLibrary/);
 });
+
+test("head rotation slider is exposed and wired to the vector rig",()=>{
+ assert.match(html,/id="headRotationRange"/);
+ assert.match(html,/id="headRotationValue"/);
+ assert.match(app,/rotateNoriHead/);
+});
