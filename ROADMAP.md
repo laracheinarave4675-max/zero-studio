@@ -37,7 +37,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Add import/export of portable validated .zchar character models.
 - [x] Add editable Nori palette controls.\n- [x] Export an 11-cell editable SVG model sheet for views, expressions, and poses.
 - [x] Add four starter poses and four expressions (48 pre-authored Nori variants).
-- [ ] Create artist-refinable professional model sheets with proportions/turnarounds and customizable anatomy.
+- [x] Add editable proportion-guide overlays to the 11-cell Nori model-sheet SVG export.\n- [ ] Create an interactive artist-refinable model-sheet editor with customizable anatomy and reviewed turnarounds.
 - [x] Add four starter facial expression presets to the Nori vector model.
 - [x] Add basic two-bone inverse kinematics for four limb chains with segment-length preservation.
 - [x] Add a project-local reusable character library that survives `.zero` save/open.
