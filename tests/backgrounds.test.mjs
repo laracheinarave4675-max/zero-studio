@@ -14,5 +14,5 @@ test("background insertion rejects unknown presets and capacity overflow without
  const full=createFrame();full.layers=Array.from({length:99},(_,i)=>({id:"l"+i,name:"l",visible:true,locked:false,operations:[]}));assert.throws(()=>addBackgroundToFrame(full,"room"),/مساحة/);assert.equal(full.layers.length,99);
 });
 test("background vectors survive project save/open normalization",()=>{
- const project=createProject();addBackgroundToFrame(project.frames[0],"night-city");const loaded=normalizeProject(JSON.parse(JSON.stringify(project)));assert.equal(loaded.frames[0].layers.length,6);assert.ok(loaded.frames[0].layers[0].operations.length>0);
+ const project=createProject();addBackgroundToFrame(project.frames[0],"night-city");const loaded=normalizeProject(JSON.parse(JSON.stringify(project)));assert.equal(loaded.frames[0].layers.length,7);assert.ok(loaded.frames[0].layers[0].operations.length>0);
 });
