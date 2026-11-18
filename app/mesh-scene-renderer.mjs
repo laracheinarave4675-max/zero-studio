@@ -23,7 +23,7 @@ export function renderMeshEnvironment(plan){
  const buckets=Array.from({length:5},()=>[]);
  const light=norm(plan.sunDirection||[-.55,.9,.35]);
  let count=0;
- const face=(bucket,vertices,color,outline="#34434a",stroke=1.1)=>{if(count>=900)return;const n=norm(cross(sub(vertices[1],vertices[0]),sub(vertices[2],vertices[0]))),lambert=Math.max(0,dot(n,light)),factor=.48+lambert*.62;const pts=vertices.map(project);if(pts.some(p=>!p))return;const d=path(pts.map(p=>[p[0],p[1]]));const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:shade(color,factor),stroke:outline,width:stroke})});count++;};
+ const face=(bucket,vertices,color,outline="#34434a",stroke=1.1)=>{if(count>=900)return;const n=norm(cross(sub(vertices[1],vertices[0]),sub(vertices[2],vertices[0]))),lambert=Math.abs(dot(n,light)),factor=.62+lambert*.5;const pts=vertices.map(project);if(pts.some(p=>!p))return;const d=path(pts.map(p=>[p[0],p[1]]));const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:shade(color,factor),stroke:outline,width:stroke})});count++;};
  const line=(bucket,points,color="#514b43",width=1.5)=>{if(count>=285)return;const pts=points.map(project);if(pts.some(p=>!p))return;const d="M "+pts.map(p=>p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" L ");const depth=pts.reduce((s,p)=>s+p[2],0)/pts.length;buckets[bucket].push({depth,op:validatePath({d,fill:"none",stroke:color,width})});count++;};
  const quad=(bucket,a,b,c,d,color,outline)=>face(bucket,[a,b,c,d],color,outline);
  const box=(bucket,x,y,z,w,h,d,color,outline)=>{const a=[x,y,z],A=[x+w,y,z],B=[x+w,y+h,z],C=[x,y+h,z],e=[x,y,z+d],f=[x+w,y,z+d],g=[x+w,y+h,z+d],q=[x,y+h,z+d];quad(bucket,a,A,B,C,color,outline);quad(bucket,e,q,g,f,shade(color,.8),outline);quad(bucket,a,e,f,A,shade(color,.72),outline);quad(bucket,A,f,g,B,shade(color,1.12),outline);quad(bucket,B,g,q,C,shade(color,.9),outline);quad(bucket,C,q,e,a,shade(color,.82),outline);};
@@ -82,7 +82,7 @@ export function renderMeshEnvironment(plan){
  // Small parked van.
  if(plan.van){const v=plan.van;box(4,v.x,.35,v.z,v.width,1.25,v.depth,"#e2dfd2","#464b48");box(4,v.x+.25,1.05,v.z+v.depth-.04,v.width*.55,.55,.08,"#83aaa6","#414846");box(4,v.x+v.width*.66,.55,v.z+v.depth-.04,v.width*.22,.65,.08,"#9bbab2","#414846");box(4,v.x+.05,.28,v.z+v.depth+.03,.22,.2,.1,"#d9c8a4","#414846");box(4,v.x+v.width-.28,.28,v.z+v.depth+.03,.22,.2,.1,"#d9c8a4","#414846");line(4,[[v.x+v.width*.62,.42,v.z+v.depth+.06],[v.x+v.width*.62,1.55,v.z+v.depth+.06]],"#51554f",.025);cylinder(4,v.x+.65,0,v.z+v.depth,.34,.18,"#263437",9);cylinder(4,v.x+v.width-.65,0,v.z+v.depth,.34,.18,"#263437",9);}
  // Soft stylized cast-shadow polygons on the ground plane.
- quad(1,[-7,.035,1],[3.8,.035,1],[6.8,.035,7],[-9,.035,7],"#59685d","none");
+ quad(1,[-7,.035,1],[3.8,.035,1],[6.8,.035,7],[-9,.035,7],"#7d8774","none");
  const names=["01 — السماء والآفاق","02 — الأرض والأشجار الخلفية","03 — المبنى والعمارة","04 — الطريق والأرصفة","05 — أعمدة الشارع والعناصر الأمامية"];
  const layers=buckets.map((items,i)=>({name:names[i],operations:items.sort((a,b)=>b.depth-a.depth).map(x=>x.op)})).filter(x=>x.operations.length);
  const total=layers.reduce((s,l)=>s+l.operations.length,0);
