@@ -5,7 +5,7 @@ export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
 export const NORI_VIEWS=["front","side","back"];
 export const NORI_POSES=["neutral","wave","walk","sit"];
 
-export const NORI_JOINT_KEYS=["torso-center","head-center","shoulder-left","elbow-left","wrist-left","shoulder-right","elbow-right","wrist-right","hip-left","knee-left","ankle-left","hip-right","knee-right","ankle-right"];
+export const NORI_JOINT_KEYS=["torso-center","neck-center","head-center","shoulder-left","elbow-left","wrist-left","shoulder-right","elbow-right","wrist-right","hip-left","knee-left","ankle-left","hip-right","knee-right","ankle-right"];
 export const NORI_RIG_BONES=[
  {id:"arm-left",from:"shoulder-left",through:"elbow-left",to:"wrist-left",partId:"arm-left"},
  {id:"arm-right",from:"shoulder-right",through:"elbow-right",to:"wrist-right",partId:"arm-right"},
@@ -87,7 +87,7 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
   model.parts.find(p=>p.id==="leg-right").path.d="M 1070 805 Q 1160 850 1200 930";
  }
  const joints={
-  "torso-center":{x:960,y:700,visible:true},"head-center":{x:960,y:390,visible:true},
+  "torso-center":{x:960,y:700,visible:true},"neck-center":{x:960,y:560,visible:true},"head-center":{x:960,y:390,visible:true},
   "shoulder-left":{x:820,y:610,visible:true},"elbow-left":{x:735,y:690,visible:true},"wrist-left":{x:760,y:790,visible:true},
   "shoulder-right":{x:1100,y:610,visible:view!=="side"},"elbow-right":{x:1185,y:690,visible:view!=="side"},"wrist-right":{x:1160,y:790,visible:view!=="side"},
   "hip-left":{x:865,y:850,visible:true},"knee-left":{x:855,y:930,visible:true},"ankle-left":{x:850,y:1010,visible:true},
@@ -99,7 +99,7 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
  if(pose==="wave"&&view==="front")Object.assign(joints,{"elbow-right":{x:1160,y:555,visible:true},"wrist-right":{x:1130,y:430,visible:true}});
  if(pose==="walk")Object.assign(joints,{"elbow-left":{x:735,y:655,visible:true},"wrist-left":{x:700,y:735,visible:true},"elbow-right":{x:1185,y:665,visible:view!=="side"},"wrist-right":{x:1220,y:730,visible:view!=="side"},"knee-left":{x:825,y:900,visible:true},"ankle-left":{x:780,y:965,visible:true},"knee-right":{x:1100,y:910,visible:view!=="side"},"ankle-right":{x:1150,y:970,visible:view!=="side"}});
  if(pose==="sit")Object.assign(joints,{"elbow-left":{x:780,y:700,visible:true},"wrist-left":{x:875,y:755,visible:true},"elbow-right":{x:1140,y:700,visible:view!=="side"},"wrist-right":{x:1045,y:755,visible:view!=="side"},"hip-left":{x:850,y:805,visible:true},"knee-left":{x:760,y:850,visible:true},"ankle-left":{x:720,y:930,visible:true},"hip-right":{x:1070,y:805,visible:view!=="side"},"knee-right":{x:1160,y:850,visible:view!=="side"},"ankle-right":{x:1200,y:930,visible:view!=="side"}});
- model.rig={version:1,headRotation:0,bodyRotation:0,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
+ model.rig={version:1,headRotation:0,neckRotation:0,bodyRotation:0,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
  model.id="nori-"+view+"-"+pose+"-"+expression;
  model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
@@ -147,7 +147,7 @@ export function validateCharacterModel(model){
  if(model.rig!==undefined){
   if(!model.rig||model.rig.version!==1||!model.rig.joints||typeof model.rig.joints!=="object")throw Error("هيكل مفاصل الشخصية غير صالح");
   rig={...model.rig,joints:{...model.rig.joints}};
-  const legacyDefaults={"torso-center":{x:960,y:700,visible:true},"head-center":{x:960,y:390,visible:true}};
+  const legacyDefaults={"torso-center":{x:960,y:700,visible:true},"neck-center":{x:960,y:560,visible:true},"head-center":{x:960,y:390,visible:true}};
   for(const key of NORI_JOINT_KEYS){
    if(!rig.joints[key]&&legacyDefaults[key])rig.joints[key]={...legacyDefaults[key]};
    const joint=rig.joints[key];
@@ -155,6 +155,8 @@ export function validateCharacterModel(model){
   }
   if(rig.headRotation===undefined)rig.headRotation=0;
   if(!Number.isFinite(rig.headRotation)||rig.headRotation< -60||rig.headRotation>60)throw Error("زاوية دوران الرأس غير صالحة");
+  if(rig.neckRotation===undefined)rig.neckRotation=0;
+  if(!Number.isFinite(rig.neckRotation)||rig.neckRotation< -35||rig.neckRotation>35)throw Error("زاوية دوران الرقبة غير صالحة");
   if(rig.bodyRotation===undefined)rig.bodyRotation=0;
   if(!Number.isFinite(rig.bodyRotation)||rig.bodyRotation< -45||rig.bodyRotation>45)throw Error("زاوية ميل الجسم غير صالحة");
   if(!Array.isArray(rig.bones)||rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
