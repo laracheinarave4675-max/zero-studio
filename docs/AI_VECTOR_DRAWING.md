@@ -2,7 +2,19 @@
 
 ## What it does
 
-The scene artist sends a text-only scene description to Google's Gemini Developer API and asks for a structured JSON scene with 2–12 named art layers and editable SVG path operations (up to 300 paths total). The environment-art prompt now explicitly directs cinematic 2.5D depth: camera/horizon/vanishing points, five depth zones, atmospheric perspective, consistent sun direction, cast/contact shadows, ambient occlusion, reflections, material-specific surface treatment, roof/window construction, irregular foliage, and selective rather than heavy outlines. The older single-layer vector proposal function remains available for compatibility. It does **not** call an image or video generation model and does not upload artwork or reference images. Every layer name and every path is validated locally. The complete multi-layer scene is previewed on the canvas and added as separate editable project layers only after the user explicitly approves it.
+The earlier vector artist sends a text-only scene description to Google's Gemini Developer API and asks for structured JSON scene paths. The newer semantic 3D artist sends a text-only scene description and asks for a compact 3D blueprint, then locally constructs and projects the geometry to SVG. The environment-art prompt now explicitly directs cinematic 2.5D depth: camera/horizon/vanishing points, five depth zones, atmospheric perspective, consistent sun direction, cast/contact shadows, ambient occlusion, reflections, material-specific surface treatment, roof/window construction, irregular foliage, and selective rather than heavy outlines. The older single-layer vector proposal function remains available for compatibility. It does **not** call an image or video generation model and does not upload artwork or reference images. Every layer name and every path is validated locally. The complete multi-layer scene is previewed on the canvas and added as separate editable project layers only after the user explicitly approves it.
+
+## Semantic 3D environment artist (new experimental pipeline)
+
+The new environment pipeline separates art direction from geometry production:
+
+1. Gemini returns a compact semantic 3D scene blueprint: perspective camera, building dimensions, facade/window/door/sign placement, roof material, trees, utility poles, vehicle, palette, and sun direction.
+2. `app/mesh-scene-renderer.mjs` builds actual 3D mesh faces for the architecture, roof, windows, trees, road, poles, and vehicle.
+3. A local perspective camera projects the geometry into SVG paths. A directional-light calculation assigns a distinct shaded color to each face. The result is saved as editable paths in five semantic layers and can be opened as a normal ZERO project.
+
+The current still-scene renderer allows up to 900 vector paths. The successful Gemini 3.5 Flash Lite trial returned a five-layer editable scene with 632 paths. The three-dimensional geometry and perspective are real; the final deliverable remains SVG vector artwork, not a raster image.
+
+**Important limits:** this is an early stylized mesh renderer, not a professional 3D package or a painterly anime renderer. It does not yet have texture maps, physically based materials, advanced global illumination, soft shadow maps, character rigs, or detailed foliage/architecture assets. Face shading is a simple directional-light approximation. The current animation production contract still caps each generated frame at 300 paths and has not yet been integrated with this 900-path still-scene renderer. Therefore this milestone proves that ZERO can generate a true 3D geometric environment and export it as SVG; it does not yet prove reference-quality art or 24 unique high-detail 3D drawings per second.
 
 ## Provider and cost
 
