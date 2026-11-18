@@ -66,7 +66,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite contains 105 tests: 37 engine, 4 Gemini adapter, 13 workspace DOM, 3 ZIP, 2 animation-proof, 41 character-model, and 5 character-library tests. GitHub Actions validates the complete suite and syntax of all runtime modules.
+The suite contains 107 tests: 39 engine, 4 Gemini adapter, 13 workspace DOM, 3 ZIP, 2 animation-proof, 41 character-model, and 5 character-library tests. GitHub Actions validates the complete suite and syntax of all runtime modules.
 
 ## Unique-drawing cadence audit\n\n`analyzeDrawingCadence(frames,fps)` compares visible vector artwork signatures while ignoring frame and operation IDs. It reports frame count, unique drawing count, duplicates, duration, and average unique drawings per second against the unchanged 24-drawings/second target. The workspace exposes this report in the timeline and includes it in ZIP manifests. This measures uniqueness of saved vector content; it does not certify professional drawing quality or that each frame was freshly hand-drawn.\n\n## AI proposal path
 
