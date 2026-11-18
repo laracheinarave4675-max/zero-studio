@@ -2,6 +2,14 @@
 
 Last updated: 2026-11-18 (UTC)
 
+## Latest AI scene-artist implementation and validation
+
+- Development branch head: `48fa33310424161e86cd236356f57fd25dfa9243`.
+- GitHub Actions run #724 passed 117 tests, 0 failures, including syntax checks for `app/scene-production.mjs` and `app/sw.js`.
+- The AI scene artist now requests 2–12 named editable layers and at most 300 vector paths, validates the response, previews the complete proposal, and inserts separate project layers only after approval.
+- Service-worker cache version: `zero-studio-shell-v24`.
+- Not yet verified: real Gemini API response, Android browser/touch behavior, artistic quality, and scene-to-scene character continuity.
+
 ## Updated production direction — 2026-11-18
 
 The AI is intended to act as the scene artist: interpret a natural-language scene brief, plan the composition, divide the artwork into meaningful editable layers, and draw those layers as validated SVG paths. Starter background/character presets are aids only, not the creative boundary. The user should not need to understand technical implementation or coordinate separate tools. Continue autonomously on the agreed goals, explain in plain Arabic, and record progress/limitations here. This direction does not relax the no-raster-generation rule or the target of 24 independent drawings per second.
