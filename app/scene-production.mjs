@@ -28,7 +28,7 @@ export async function generateVectorProposal(apiKey,prompt,fetcher=fetch){
 }
 export async function generateSceneProposal(apiKey,prompt,fetcher=fetch){
  const{key,description}=credentials(apiKey,prompt);
- const instruction='You are ZERO STUDIO\'s senior cinematic anime environment art director and production background painter. Do not make flat icons, clip-art, a logo, or a geometric diagram. Create a richly observed cinematic anime environment with convincing spatial depth and painterly 2.5D dimensionality using ONLY editable SVG vector paths. Canvas 1920x1080.
+ const instruction=`You are ZERO STUDIO\'s senior cinematic anime environment art director and production background painter. Do not make flat icons, clip-art, a logo, or a geometric diagram. Create a richly observed cinematic anime environment with convincing spatial depth and painterly 2.5D dimensionality using ONLY editable SVG vector paths. Canvas 1920x1080.
 
 VISUAL TARGET: premium theatrical anime background art: believable real-world architecture, atmospheric perspective, carefully designed composition, nuanced natural color, warm directional sunlight, soft bounced light, contact shadows, ambient occlusion, reflected light, layered foliage, rich surface detail, and a hand-painted finish translated into deliberate vector shapes. It must feel like a carefully painted film background, not flat 2D clip-art. Do not claim true 3D geometry; create the strongest 2.5D depth illusion possible with overlapping planes, perspective, shading, and material detail.
 
@@ -46,7 +46,7 @@ DETAIL BUDGET: use 2–12 semantic layers in back-to-front order, 1–100 paths 
 
 OUTPUT: Return ONLY JSON with exact shape {"version":1,"layers":[{"name":"Distant atmosphere","operations":[{"d":"M ...","stroke":"none","width":1,"fill":"#..."}]}]}. Each layer has 1–100 operations; total <=300. Use only SVG path commands M L H V C S Q T A Z and numeric coordinates. Keep x=0..1920, y=0..1080. Use intentional tonal relationships; stroke may be none or a restrained material-specific color. No XML/SVG markup, scripts, data URLs, raster images, base64, markdown, or prose. Never output a single flat silhouette scene. If unable, return {"version":1,"layers":[]}.
 
-SCENE REQUEST: '+description;
+SCENE REQUEST: `+description;
  const parsed=await request(key,instruction,fetcher);
  if(parsed?.version!==1||!Array.isArray(parsed.layers)||parsed.layers.length<2||parsed.layers.length>12)throw Error("لم يُرجع الفنان مشهداً صالحاً مقسماً إلى طبقتين على الأقل و12 طبقة كحد أقصى.");
  let total=0;const names=new Set();
