@@ -27,7 +27,7 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Export a .zchar character model, import it into a fresh project, and compare its editable layer parts.
 - [ ] Save multiple models in the project-local character library, load/remove them, save the .zero project, reopen it, and verify the library persists.
 - [ ] Drag each wrist/ankle end-effector in the rig editor and confirm the elbow/knee moves smoothly without visible limb stretching; drag elbow/knee and verify segment lengths remain stable.
-- [ ] Try reaching beyond the joint range and confirm the IK solver clamps the pose safely.
+- [ ] Try reaching beyond the joint range and confirm the IK solver clamps the pose safely.\n- [ ] Save two compatible Nori poses to the project library, blend them at 0%, 50%, and 100%, add the resulting editable vector pose to frames, and verify the transition visually.
 - [ ] Enter a Gemini API key and generate a text-only vector proposal; verify no key is written to project or ZIP files.
 - [ ] Approve and reject proposals; confirm rejected proposals do not modify the project and approved paths are undoable.
 - [ ] Test airplane/offline mode after first successful load.
