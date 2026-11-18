@@ -1,6 +1,6 @@
 import{validatePath}from"./engine.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash"]);
+const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash","gemini-2.5-flash-lite"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
 function parseResponse(payload){
  const text=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
