@@ -6,13 +6,13 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Establish private GitHub repository.
 - [x] Record mission, hard constraints, decisions, and current status.
 - [ ] Import/rebuild the previous v0.1 prototype in the repository.
-- [ ] Add a concise test and release process.
+- [x] Add a concise test and release process (GitHub Actions syntax checks and Node test suite; manual Vercel static release).
 
 ## Phase 1 — Reliable drawing workspace
 - [x] Mobile-first Arabic RTL workspace (initial prototype committed; Android testing pending).
 - [x] SVG/vector drawing surface with pointer/touch support (physical-device test pending).
 - [x] Layer management: add/remove/select, inline rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.
-- [x] Vector item selection, drag-to-move, style update, duplication, and delete with stable operation IDs.
+- [x] Vector item selection, drag-to-move, style update, duplication, and delete with stable operation IDs.\n- [x] Direct SVG path anchor and cubic/quadratic Bézier control-handle editing (up to 240 handles per path).
 - [x] Mobile canvas pan and zoom controls.
 - [x] Line, rectangle, ellipse, and optional closed-shape fill.
 - [x] Undo/redo and JSON project save/load implementation (browser round-trip test pending).
@@ -29,7 +29,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Optional stylus-pressure variable-width outline path; physical stylus behavior pending.
 - [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
 - [x] AI-proposed vector operations can be previewed and explicitly approved/rejected (Gemini text-only adapter; live API key test pending).
-- [ ] No raster image-generation fallback.
+- [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
 ## Phase 3 — Character construction and animation proof of concept
 - [x] Add reusable Nori vector construction model (12 parts, semantic editable layers, versioned/validated schema).
