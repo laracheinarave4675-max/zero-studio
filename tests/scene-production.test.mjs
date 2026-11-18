@@ -1,6 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
-import{generateSceneProposal}from"../app/gemini-drawing.mjs";
+import{generateSceneProposal}from"../app/scene-production.mjs";
 function fakeFetch(body,status=200){return async(url,options)=>({ok:status>=200&&status<300,status,json:async()=>status>=400?{error:{message:"bad request"}}:{candidates:[{content:{parts:[{text:JSON.stringify(body)}]}}]}})}
 const scene={version:1,layers:[{name:"خلفية",operations:[{d:"M 0 900 L 1920 900 L 1920 1080 L 0 1080 Z",stroke:"#172033",width:2,fill:"#88aa88"}]},{name:"شخصية - وجه",operations:[{d:"M 800 300 C 900 200 1050 200 1120 300",stroke:"#172033",width:5,fill:"none"}]}]};
 test("scene proposal validates and preserves editable named layers",async()=>{const result=await generateSceneProposal("key","draw a character",fakeFetch(scene));assert.equal(result.layers.length,2);assert.equal(result.totalOperations,2);assert.equal(result.layers[1].name,"شخصية - وجه");assert.equal(result.layers[0].operations[0].fill,"#88aa88")});
