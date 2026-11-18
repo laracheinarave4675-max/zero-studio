@@ -12,7 +12,11 @@
 
 ## Public Android test copy
 
-Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 build includes constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
+Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The latest public deployment may lag this branch until manually redeployed. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
+
+## Drawing, character, and background toolset
+
+The development branch includes four original SVG-path background presets, inserted as editable layers behind existing artwork. See [background library notes](docs/BACKGROUND_LIBRARY.md). These are starter scenes, not a finished perspective/layout department.
 
 ## Drawing and character toolset
 
