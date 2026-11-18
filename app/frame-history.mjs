@@ -1,13 +1,13 @@
 const clone=value=>JSON.parse(JSON.stringify(value));
-function metadata(project){return{animationProduction:project.animationProduction?clone(project.animationProduction):null,fps:project.fps}}
-export function captureFrameHistory(project,index){
+function metadata(project,includeCharacterLibrary=false){return{animationProduction:project.animationProduction?clone(project.animationProduction):null,fps:project.fps,includeCharacterLibrary, ...(includeCharacterLibrary?{characterLibrary:clone(project.characterLibrary||[])}:{})}}
+export function captureFrameHistory(project,index,{includeCharacterLibrary=false}={}){
  if(!project||!Array.isArray(project.frames)||!Number.isInteger(index)||index<0||index>=project.frames.length)throw Error("موضع سجل الإطار غير صالح.");
- return{kind:"zero-frame-history",mode:"before",index,frameCount:project.frames.length,frame:clone(project.frames[index]),...metadata(project)};
+ return{kind:"zero-frame-history",mode:"before",index,frameCount:project.frames.length,frame:clone(project.frames[index]),...metadata(project,includeCharacterLibrary)};
 }
 export function captureFrameHistoryAfter(project,before){
  if(!before||before.kind!=="zero-frame-history"||before.mode!=="before")throw Error("لقطة التراجع غير صالحة.");
  const delta=project.frames.length-before.frameCount,index=before.index;
- if(delta>0)return{kind:"zero-frame-history",mode:"after-insert",index,frameCount:project.frames.length,frameAtIndex:clone(project.frames[index]),insertedFrames:clone(project.frames.slice(index+1,index+1+delta)),...metadata(project)};
+ if(delta>0)return{kind:"zero-frame-history",mode:"after-insert",index,frameCount:project.frames.length,frameAtIndex:clone(project.frames[index]),insertedFrames:clone(project.frames.slice(index+1,index+1+delta)),...metadata(project,before.includeCharacterLibrary)};
  if(delta<0)return{kind:"zero-frame-history",mode:"after-delete",index,frameCount:project.frames.length,deletedCount:-delta,...metadata(project)};
  return{kind:"zero-frame-history",mode:"after-replace",index,frameCount:project.frames.length,frameAtIndex:clone(project.frames[index]),...metadata(project)};
 }
@@ -31,5 +31,6 @@ export function applyFrameHistory(project,entry){
  }else throw Error("نوع عملية التراجع غير معروف.");
  project.animationProduction=entry.animationProduction?clone(entry.animationProduction):null;
  project.fps=entry.fps;
+ if(entry.includeCharacterLibrary)project.characterLibrary=clone(entry.characterLibrary||[]);
  return project;
 }
