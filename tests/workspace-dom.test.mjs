@@ -40,3 +40,10 @@ test("rig-aware character pose interpolation controls are present and wired",()=
  assert.match(app,/interpolateNoriRigModels/);
  assert.match(app,/rigBlendProgress/);
 });
+
+test("linked character instance frame controls are present and connected",()=>{
+ for(const id of ["characterInstanceSelect","copyCharacterToNextFrameBtn","updateCharacterInstanceBtn"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(app,/copyCharacterInstanceToFrame/);
+ assert.match(app,/replaceCharacterInstanceInFrame/);
+ assert.match(app,/renderCharacterInstances/);
+});
