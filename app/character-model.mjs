@@ -234,8 +234,9 @@ export function solveNoriRigJoint(model,jointKey,target){
 
 export function interpolateNoriRigModels(startModel,endModel,t){
  if(!Number.isFinite(t)||t<0||t>1)throw Error("نسبة انتقال الوضعية يجب أن تكون بين صفر وواحد");
- const start=validateCharacterModel(startModel),end=validateCharacterModel(endModel);
- if(!start.rig||!end.rig)throw Error("يجب أن يحتوي نموذجا البداية والنهاية على هيكل مفاصل");
+ const rawStart=validateCharacterModel(startModel),rawEnd=validateCharacterModel(endModel);
+ if(!rawStart.rig||!rawEnd.rig)throw Error("يجب أن يحتوي نموذجا البداية والنهاية على هيكل مفاصل");
+ const start=applyNoriRigPose(rawStart,rawStart.rig.joints),end=applyNoriRigPose(rawEnd,rawEnd.rig.joints);
  if(start.view!==end.view)throw Error("يجب أن تتطابق زاوية العرض بين الوضعيتين");
  if(start.parts.length!==end.parts.length)throw Error("عدد أجزاء الشخصيتين غير متطابق");
  const next=JSON.parse(JSON.stringify(start)),lerp=(a,b)=>Number((a+(b-a)*t).toFixed(3));
