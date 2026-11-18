@@ -54,3 +54,9 @@ test("head and torso anchor handles are exposed by the character rig editor",()=
  assert.match(app,/const anchor=key==="torso-center"/);
  assert.match(html,/المقابض الذهبية/);
 });
+
+test("custom character creation from the current vector frame is exposed",()=>{
+ for(const id of ["characterDraftName","createCharacterFromFrameBtn"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(app,/createCharacterModelFromFrame/);
+ assert.match(app,/saveCharacterToLibrary/);
+});
