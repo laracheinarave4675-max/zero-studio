@@ -31,7 +31,7 @@ export function beginAnimationProduction(project,plan){
  const blank=project.frames.length===1&&project.frames[0].layers.every(layer=>layer.operations.length===0);
  const baseFrameCount=blank?0:project.frames.length;
  if(baseFrameCount+plan.totalFrames>MAX_FRAMES)fail("لا توجد سعة كافية لإضافة هذه الحركة إلى المشروع.");
- project.animationProduction={format:"zero-studio-animation-job",version:1,id:plan.id,description:plan.description,fps:plan.fps,durationSeconds:plan.durationSeconds,totalFrames:plan.totalFrames,batchSize:plan.batchSize,batchCount:plan.batchCount,completedFrames:0,nextBatchIndex:0,baseFrameCount,layerNames:null,frameSignatures:[]};
+ project.animationProduction={format:"zero-studio-animation-job",version:1,id:plan.id,description:plan.description,fps:plan.fps,durationSeconds:plan.durationSeconds,totalFrames:plan.totalFrames,batchSize:plan.batchSize,batchCount:plan.batchCount,completedFrames:0,nextBatchIndex:0,baseFrameCount,layerNames:null,continuityNote:"",frameSignatures:[]};
  return project.animationProduction;
 }
 export function getAnimationBatchRange(job,batchIndex=job?.nextBatchIndex){
@@ -40,7 +40,7 @@ export function getAnimationBatchRange(job,batchIndex=job?.nextBatchIndex){
  const startFrame=batchIndex*job.batchSize;
  return{batchIndex,startFrame,frameCount:Math.min(job.batchSize,job.totalFrames-startFrame),startTimeSeconds:startFrame/job.fps,endTimeSeconds:(startFrame+Math.min(job.batchSize,job.totalFrames-startFrame)-1)/job.fps};
 }
-export function createAnimationBatchPrompt(job,batchIndex=job?.nextBatchIndex,continuityNote=""){
+export function createAnimationBatchPrompt(job,batchIndex=job?.nextBatchIndex,continuityNote=job?.continuityNote??""){
  const range=getAnimationBatchRange(job,batchIndex);
  const previous=String(continuityNote??"").trim().slice(0,2000);
  const frameList=Array.from({length:range.frameCount},(_,i)=>{const index=range.startFrame+i;return index+" @ "+(index/job.fps).toFixed(4)+"s"}).join(", ");
@@ -51,7 +51,7 @@ export function createAnimationBatchPrompt(job,batchIndex=job?.nextBatchIndex,co
  job.description,
  "BATCH "+(range.batchIndex+1)+" OF "+job.batchCount+". Zero-based global frame indexes and timestamps: "+frameList+".",
  "Draw every frame as a complete image with all visible scene elements represented by editable SVG paths. Do not reference, reuse, embed, or depend on a raster image, video, external asset, or another frame. Do not return keyframes, tween instructions, transforms that merely move a still image, or a single image to be reused.",
- "Maintain one consistent camera, perspective, lighting, color language, object identity, and stable ordered layer names across every frame and across batches. Motion must advance naturally at the exact frame timestamps. Give moving objects genuinely updated vector geometry in each frame. Keep silhouettes, proportions, and scene continuity coherent.",
+ "Maintain one consistent camera, perspective, lighting, color language, object identity, and stable ordered layer names across every frame and across batches. Motion must advance naturally at the exact frame timestamps. Give moving objects genuinely updated vector geometry in each frame. Keep silhouettes, proportions, and scene continuity coherent.",\n job.layerNames?"REQUIRED LAYER NAMES AND BACK-TO-FRONT ORDER (match exactly): "+job.layerNames.join(" > "):"For the first batch, establish concise layer names that remain unchanged for the whole shot.",
  "Use 2 to 12 named layers in back-to-front order. Each frame must contain the complete scene. Each layer may contain 0 to 100 paths; each frame may contain 1 to 300 paths total. Every frame in this batch must be visually distinct from all other frames; never duplicate a frame.",
  "Allowed SVG path commands only: M L H V C S Q T A Z. Coordinates should remain within x=0..1920 and y=0..1080. Each operation has {d,stroke,width,fill}. No SVG/XML markup, scripts, style blocks, URLs, base64, raster data, markdown fences, or prose.",
  "Return ONLY valid JSON with exactly this structure: {\"version\":1,\"jobId\":\""+job.id+"\",\"batchIndex\":"+range.batchIndex+",\"startFrame\":"+range.startFrame+",\"frames\":[{\"index\":0,\"timeSeconds\":0,\"layers\":[{\"name\":\"Background\",\"operations\":[{\"d\":\"M 0 0 L 1 1\",\"stroke\":\"#172033\",\"width\":2,\"fill\":\"none\"}]}]}]}. The frames array must contain exactly "+range.frameCount+" entries, in the specified order, with the exact zero-based index and timeSeconds for each entry.",
@@ -72,7 +72,7 @@ function signature(layers){
 export function validateAnimationBatch(job,payload){
  validJob(job);
  if(!payload||payload.version!==1||payload.jobId!==job.id)fail("هذه الدفعة لا تنتمي إلى خطة الإنتاج الحالية.");
- const batchIndex=payload.batchIndex;
+ const batchIndex=payload.batchIndex;\n const continuityNote=String(payload.continuityNote??"").trim();\n if(!continuityNote||continuityNote.length>2000)fail("يجب أن تتضمن الدفعة ملاحظة استمرارية موجزة لا تتجاوز 2000 حرف.");
  if(batchIndex!==job.nextBatchIndex)fail("هذه ليست الدفعة التالية المطلوبة. لا يمكن تخطي دفعة أو استيرادها مرتين.");
  const range=getAnimationBatchRange(job,batchIndex);
  if(payload.startFrame!==range.startFrame||!Array.isArray(payload.frames)||payload.frames.length!==range.frameCount)fail("عدد الإطارات أو موضع بداية الدفعة غير مطابق للخطة.");
@@ -104,7 +104,7 @@ export function validateAnimationBatch(job,payload){
   signatures.add(frameSignature);
   return{id:uid("frame"),layers,signature:frameSignature};
  });
- return{batchIndex,startFrame:range.startFrame,frameCount:frames.length,layerNames:expectedNames,frames:frames.map(({signature,...frame})=>frame),signatures:frames.map(frame=>frame.signature)};
+ return{batchIndex,startFrame:range.startFrame,frameCount:frames.length,layerNames:expectedNames,continuityNote,frames:frames.map(({signature,...frame})=>frame),signatures:frames.map(frame=>frame.signature)};
 }
 export function appendAnimationBatch(project,payload){
  const job=project?.animationProduction;
