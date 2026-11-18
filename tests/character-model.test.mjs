@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,solveNoriRigJoint,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -150,4 +150,40 @@ test("Nori rig rejects unknown joints and validates all coordinates",()=>{
  assert.throws(()=>applyNoriRigPose(base,{"wing":{x:10,y:10}}),/مفصل/);
  const invalid={...base,rig:{...base.rig,joints:{...base.rig.joints,"wrist-left":{x:NaN,y:2,visible:true}}}};
  assert.throws(()=>validateCharacterModel(invalid),/بيانات مفصل/);
+});
+
+const segmentLengths=(model,bone)=>{
+ const j=model.rig.joints,dist=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
+ return [dist(j[bone.from],j[bone.through]),dist(j[bone.through],j[bone.to])];
+};
+test("two-bone IK keeps upper and lower limb lengths while dragging a hand or foot",()=>{
+ const base=createNoriModel();
+ for(const bone of NORI_RIG_BONES){
+  const before=segmentLengths(base,bone);
+  const target=bone.to.includes("wrist")?{x:bone.id==="arm-left"?610:1310,y:bone.id==="arm-left"?470:460}:{x:bone.id==="leg-left"?620:1320,y:bone.id==="leg-left"?930:940};
+  const solved=solveNoriRigJoint(base,bone.to,target);
+  const after=segmentLengths(solved,bone);
+  assert.ok(Math.abs(before[0]-after[0])<1e-6, bone.id+" upper length");
+  assert.ok(Math.abs(before[1]-after[1])<1e-6, bone.id+" lower length");
+  assert.notDeepEqual(solved.rig.joints[bone.to],base.rig.joints[bone.to]);
+  assert.ok(solved.parts.find(p=>p.id===bone.partId).path.d!==base.parts.find(p=>p.id===bone.partId).path.d);
+ }
+});
+test("dragging an elbow preserves both bone lengths and carries the wrist",()=>{
+ const base=createNoriModel(),bone=NORI_RIG_BONES[0],before=segmentLengths(base,bone);
+ const moved=solveNoriRigJoint(base,bone.through,{x:700,y:640}),after=segmentLengths(moved,bone);
+ assert.ok(Math.abs(before[0]-after[0])<1e-6);
+ assert.ok(Math.abs(before[1]-after[1])<1e-6);
+ assert.notDeepEqual(moved.rig.joints[bone.to],base.rig.joints[bone.to]);
+});
+test("dragging a shoulder translates its limb chain without stretching segments",()=>{
+ const base=createNoriModel(),bone=NORI_RIG_BONES[1],before=segmentLengths(base,bone);
+ const moved=solveNoriRigJoint(base,bone.from,{x:1120,y:590}),after=segmentLengths(moved,bone);
+ assert.ok(Math.abs(before[0]-after[0])<1e-6);
+ assert.ok(Math.abs(before[1]-after[1])<1e-6);
+});
+test("joint solver rejects unknown joints and malformed targets",()=>{
+ const base=createNoriModel();
+ assert.throws(()=>solveNoriRigJoint(base,"tail",{x:1,y:1}),/مفصل/);
+ assert.throws(()=>solveNoriRigJoint(base,"wrist-left",{x:NaN,y:1}),/هدف/);
 });
