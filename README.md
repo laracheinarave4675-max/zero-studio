@@ -20,7 +20,9 @@ The development branch now supports a structural ceiling of 30,000 editable fram
 
 This is production infrastructure, not yet an autonomous animation generator: the provider-neutral worker needs a live provider callback before it can draw. Live provider integration and service-specific quotas, IndexedDB-backed paged storage, real 240-frame art review, and physical Android stress tests remain incomplete. The current public test deployment was manually refreshed on 2026-11-18 to include this large-animation workspace; it is not auto-synced with GitHub. The 30,000-frame ceiling is structural and not a guarantee that every phone can keep a complex 30,000-frame project in memory.
 
-## Free SVG generation research\n\nCurrent provider findings and the next prototype steps are recorded in [docs/SVG_PROVIDER_RESEARCH.md](docs/SVG_PROVIDER_RESEARCH.md). No provider has been selected or connected; the 24-independent-drawings/second requirement remains unchanged.\n\n## Drawing, character, and background toolset
+## Free SVG generation research
+
+Current provider findings and the next prototype steps are recorded in [docs/SVG_PROVIDER_RESEARCH.md](docs/SVG_PROVIDER_RESEARCH.md). No provider has been selected or connected; the 24-independent-drawings/second requirement remains unchanged.\n\n## Drawing, character, and background toolset
 
 The development branch includes four original SVG-path background presets, inserted as editable layers behind existing artwork. See [background library notes](docs/BACKGROUND_LIBRARY.md). These are starter scenes, not a finished perspective/layout department.
 
