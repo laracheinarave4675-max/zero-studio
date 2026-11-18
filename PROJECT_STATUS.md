@@ -87,9 +87,21 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Editable Nori palette controls for line, skin, hair, clothing, and accent colors.
 - [x] Import/export standalone `.zchar` character-model files with size and path validation.
 - [x] Insert selected character variants into the current frame as editable layer operations.
-- [x] Exported model-sheet proportion guide layers for center, eye, shoulder, hip, and ground references.\n- [ ] Professional custom model-sheet editor, artist-adjustable proportion guides, and artist-reviewed turnarounds still need extension.
-- [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.\n- [x] Added torso-center and head-center translation anchors; torso movement carries head/limb joints and head movement translates the head/face/hair group. Legacy rig models receive default anchor positions.\n- [x] Added editable head rotation from −60° to +60° around the head-center anchor, using validated SVG path rotation for head, hair, and facial features.\n- [x] Added whole-character lean from −45° to +45° around the torso-center anchor; every editable path and rig joint rotates together, preserving limb lengths.\n- [x] Added interactive vector path editing: select an operation, enable node mode, and drag anchors plus cubic/quadratic Bézier control handles (up to 240 total handles) while preserving editable path topology.\n- [x] Rig-aware pose blending between compatible saved Nori models, with validation of view/part topology and IK reconstruction of intermediate limb paths.\n- [x] Added an in-workspace pose-blend panel to select two saved character models and generate an editable midpoint at a chosen 0–100% progress value.
-- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).\n- [x] Character layers carry validated instance identity and part membership; copy to next frame and update one frame while retaining instance identity. In-between frames preserve the metadata.\n- [x] Added custom character creation from visible hand-drawn frame paths, preserving semantic layer grouping and storing the resulting model in the project library; unsafe/unmerged eraser operations are rejected.\n- [x] CI confirms 107 passing tests and 0 failures after Bézier control-handle editing was added.\n- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.\n- [x] Nori's 11-cell SVG model sheet now includes editable proportion-guide lines in every view/expression/pose cell.
+- [x] Exported model-sheet proportion guide layers for center, eye, shoulder, hip, and ground references.
+- [ ] Professional custom model-sheet editor, artist-adjustable proportion guides, and artist-reviewed turnarounds still need extension.
+- [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.
+- [x] Added torso-center and head-center translation anchors; torso movement carries head/limb joints and head movement translates the head/face/hair group. Legacy rig models receive default anchor positions.
+- [x] Added editable head rotation from −60° to +60° around the head-center anchor, using validated SVG path rotation for head, hair, and facial features.
+- [x] Added whole-character lean from −45° to +45° around the torso-center anchor; every editable path and rig joint rotates together, preserving limb lengths.
+- [x] Added interactive vector path editing: select an operation, enable node mode, and drag anchors plus cubic/quadratic Bézier control handles (up to 240 total handles) while preserving editable path topology.
+- [x] Rig-aware pose blending between compatible saved Nori models, with validation of view/part topology and IK reconstruction of intermediate limb paths.
+- [x] Added an in-workspace pose-blend panel to select two saved character models and generate an editable midpoint at a chosen 0–100% progress value.
+- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).
+- [x] Character layers carry validated instance identity and part membership; copy to next frame and update one frame while retaining instance identity. In-between frames preserve the metadata.
+- [x] Added custom character creation from visible hand-drawn frame paths, preserving semantic layer grouping and storing the resulting model in the project library; unsafe/unmerged eraser operations are rejected.
+- [x] CI confirms 107 passing tests and 0 failures after Bézier control-handle editing was added.
+- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.
+- [x] Nori's 11-cell SVG model sheet now includes editable proportion-guide lines in every view/expression/pose cell.
 - [ ] Full-body rigging still needs rotational spine/neck/head joints, finger/toe articulation, collision/ground constraints, and synchronized linked-instance editing across arbitrary frame ranges.
 
 ### Validation and current limitations
@@ -184,7 +196,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - GitHub Login Connection was not available to Vercel, so this is a manual static snapshot upload, not an automatic Git-linked deployment. Future code changes do not appear at this URL until a new deployment is uploaded.
 - The deployment is a test copy, not evidence of physical Android validation. Touch/stylus behavior, PWA installation/offline behavior, project round-trip, ZIP download/open, and real Gemini API calls remain to be tested on the user's phone/network.
 
-## Latest drawing/character test deployment — 2026-11-18\n\n- [x] Published the current drawing/character build, including rig-aware pose blending, to Vercel deployment `dpl_G5BboMmASTqRZ5x1nBionsAoBvgP` (`READY`).\n- [x] Reassigned stable public test alias https://zero-studio-three.vercel.app/.\n- [x] Confirmed deployment file manifest includes `character-library.mjs`, updated `character-model.mjs`, `engine.mjs`, `app.js`, and service worker cache v22.\n- [ ] Physical Android testing remains pending; publication is not device validation.\n\n## Next actions
+## Latest drawing/character test deployment — 2026-11-18
+
+- [x] Published the current drawing/character build, including rig-aware pose blending, to Vercel deployment `dpl_G5BboMmASTqRZ5x1nBionsAoBvgP` (`READY`).
+- [x] Reassigned stable public test alias https://zero-studio-three.vercel.app/.
+- [x] Confirmed deployment file manifest includes `character-library.mjs`, updated `character-model.mjs`, `engine.mjs`, `app.js`, and service worker cache v22.
+- [ ] Physical Android testing remains pending; publication is not device validation.
+
+## Next actions
 
 1. Validate the current drawing and character UI on the physical Android phone: zoom/pan, freehand/stylus pressure, selection/move/delete, shape fills, layer management, and character presets.
 2. Test .zero and .zchar save/open round trips, SVG/ZIP export, offline PWA behavior, and a longer multi-frame project on Android.
@@ -195,7 +214,15 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Change log
 
-### 2026-11-18 — Drawing and character system expansion\n- Added constrained two-bone IK for the four Nori limb chains; endpoint movement solves the elbow/knee while preserving segment lengths and bend range.\n- Added a project-local character library with validated save/load/remove, undo support, and `.zero` round-trip persistence.\n- Added unique-drawing cadence measurement that ignores frame/operation IDs, reports distinct artwork per second, and is embedded in ZIP manifests.\n- Added editable proportion-guide overlays to the 11-cell SVG model sheet.\n- Added regression tests for IK, rigged pose in-betweens, character-library persistence, cadence analysis, and guide layers.\n- GitHub Actions run #411 passed all 77 tests and syntax checks.\n\n### 2026-11-17 — GitHub access recheck and continuity confirmation
+### 2026-11-18 — Drawing and character system expansion
+- Added constrained two-bone IK for the four Nori limb chains; endpoint movement solves the elbow/knee while preserving segment lengths and bend range.
+- Added a project-local character library with validated save/load/remove, undo support, and `.zero` round-trip persistence.
+- Added unique-drawing cadence measurement that ignores frame/operation IDs, reports distinct artwork per second, and is embedded in ZIP manifests.
+- Added editable proportion-guide overlays to the 11-cell SVG model sheet.
+- Added regression tests for IK, rigged pose in-betweens, character-library persistence, cadence analysis, and guide layers.
+- GitHub Actions run #411 passed all 77 tests and syntax checks.
+
+### 2026-11-17 — GitHub access recheck and continuity confirmation
 - Rechecked the private repository using the connected GitHub integration; `laracheinarave4675-max/zero-studio` is now discoverable.
 - GitHub reports `admin`, `maintain`, and `push` permissions for the connected identity.
 - Verified that README.md, PROJECT_STATUS.md, DECISIONS.md, and ROADMAP.md exist on the main branch and contain the project constraints and staged plan.
