@@ -295,7 +295,8 @@ export function interpolateNoriRigModels(startModel,endModel,t){
   const endpoint=result.rig.joints[bone.to];
   result=solveNoriRigJoint(result,bone.to,{x:endpoint.x,y:endpoint.y});
  }
- result.rig.headRotation=lerp(start.rig.headRotation,end.rig.headRotation);\n result.id="nori-interpolated-"+start.id+"-"+end.id+"-"+String(t);
+ result.rig.headRotation=lerp(start.rig.headRotation,end.rig.headRotation);
+ result.id="nori-interpolated-"+start.id+"-"+end.id+"-"+String(t);
  result.name="وضعية وسيطة: "+start.name+" → "+end.name;
  result.pose="interpolated";
  result.expression="interpolated";
