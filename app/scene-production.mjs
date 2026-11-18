@@ -135,7 +135,7 @@ function validateAnimeLayoutPlan(plan){
  if(typeof plan.architecture!=="string"||typeof plan.camera!=="string"||typeof plan.lighting!=="string"||typeof plan.vegetation!=="string"||typeof plan.road!=="string")throw Error("وصف الكاميرا أو البيئة أو الإضاءة ناقص.");
  return plan;
 }
-export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL){
+export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL,options={}){
  const{key,description}=credentials(apiKey,prompt);
  const artDirection="Cinematic 2D anime background painting, semi-realistic Japanese environment art. The final surface must read as carefully painted 2D artwork, never low-poly 3D, never flat icon art, never children's clip-art. Strong wide cinematic perspective, layered foreground/midground/background, richly observed architecture, natural irregular foliage, believable materials, selective delicate linework, warm/cool color separation, soft bounced sunlight, ambient occlusion, reflections and atmospheric depth. Avoid generic rectangles, repeated circles, identical leaves, thick black outlines, empty silhouette gaps and oversimplified roof triangles.";
  const layoutPrompt="You are the lead art director and background layout designer for a high-end 2D anime film. Produce a precise scene blueprint that a separate vector background painting department will draw. Do not output SVG paths yet. Canvas 1920x1080. "+artDirection+"\nReturn ONLY JSON:\n{\"version\":1,\"title\":\"...\",\"camera\":\"precise camera height, lens feel, three-quarter/wide view, framing\",\"horizonY\":520,\"vanishingPoint\":[980,540],\"sunPosition\":[280,150],\"lighting\":\"sun direction, warmth, cast shadow direction, bounce light\",\"architecture\":\"detailed building form, proportions, position, roof structure, facade, depth and materials\",\"vegetation\":\"tree shape variation, branch/canopy layering, foliage placement, density\",\"road\":\"ground plane, street/sidewalk geometry and perspective\",\"layerNotes\":{\"sky\":\"...\",\"distance\":\"...\",\"architecture\":\"...\",\"architectureDetails\":\"...\",\"road\":\"...\",\"foreground\":\"...\",\"lighting\":\"...\"}}\nUse the scene request below. Keep all coordinates tied to a 1920x1080 wide frame. Buildings, road, poles, vegetation and props must share one coherent perspective. Use a visible focal hierarchy. LayerNotes must explain exact object placement and detail rather than generic style words. Avoid placing the whole building dead centre unless composition warrants it. Request: "+description;
@@ -179,7 +179,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   if(operations.length<12)throw lastError||Error("طبقة غير كافية بعد إزالة المسارات المكررة: "+spec.name);
   totalOperations+=operations.length;
   layers.push({name:spec.name,operations});
-  if(i<ANIME_2D_LAYERS.length-1)await new Promise(resolve=>setTimeout(resolve,4200));
+  if(i<ANIME_2D_LAYERS.length-1){const delay=Number.isFinite(options.interRequestDelayMs)?Math.max(0,Math.min(10000,options.interRequestDelayMs)):4200;if(delay)await new Promise(resolve=>setTimeout(resolve,delay));}
  }
  if(totalOperations<220||totalOperations>1100)throw Error("عدد المسارات الكلي لا يحقق حد جودة المشهد: "+totalOperations);
  return{version:1,kind:"gemini-2d-vector-scene",plan,layers,totalOperations,style:"cinematic-2d-anime-background",model};
