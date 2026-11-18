@@ -1,7 +1,7 @@
 import{validatePath}from"./engine.mjs";
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{const n=Math.hypot(...a)||1;return a.map(v=>v/n)};
 const hexRGB=h=>{const s=String(h||"#888888").replace("#","");const v=s.length===3?s.split("").map(c=>c+c).join(""):s;return[0,2,4].map(i=>parseInt(v.slice(i,i+2),16)||0)};
-const shade=(color,k)=>"#"+hexRGB(color).map(v=>Math.max(0,Math.min(255,Math.round(v*k))).toString(16).padStart(2,"0")).join("");
+const shade=(color,k)=>String(color).startsWith("url(")?color:"#"+hexRGB(color).map(v=>Math.max(0,Math.min(255,Math.round(v*k))).toString(16).padStart(2,"0")).join("");
 const path=(points)=>"M "+points.map(p=>p.map(v=>Number(v.toFixed(2))).join(" ")).join(" L ")+" Z";
 const circlePath=(cx,cy,r)=>{const k=.55228475;return`M ${cx} ${cy-r} C ${cx+k*r} ${cy-r} ${cx+r} ${cy-k*r} ${cx+r} ${cy} C ${cx+r} ${cy+k*r} ${cx+k*r} ${cy+r} ${cx} ${cy+r} C ${cx-k*r} ${cy+r} ${cx-r} ${cy+k*r} ${cx-r} ${cy} C ${cx-r} ${cy-k*r} ${cx-k*r} ${cy-r} ${cx} ${cy-r} Z`};
 export function renderMeshEnvironment(plan){
@@ -90,7 +90,7 @@ export function renderMeshEnvironment(plan){
  for(let i=0;i<4;i++){const yy=.55+i*.92;line(2,[[x+.08,yy,front+.055],[x+w-.08,yy,front+.055]],"#6d5948",.055);}
  for(const win of windows.slice(0,6)){const wx=win.x,wy=win.y,ww=win.width,wh=win.height;line(2,[[wx-.12,wy-.14,front+.28],[wx+ww+.12,wy-.14,front+.28]],"#e4d2b4",.05);line(2,[[wx-.12,wy+wh+.14,front+.28],[wx+ww+.12,wy+wh+.14,front+.28]],"#55483d",.06);}
  // Grounded trees: faceted trunks and multi-volume foliage.
- for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1,bucket=tz>2?4:1;cylinder(bucket,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(bucket,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(bucket,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,t.color||"#477255",11);sphere(bucket,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",11);sphere(bucket,tx+.66*scale,2.92*scale,tz-.1,.7*scale,.78*scale,.7*scale,"#62865d",11);sphere(bucket,tx+.05*scale,3.85*scale,tz-.04,.58*scale,.62*scale,.55*scale,"#73956a",11);sphere(bucket,tx-.15*scale,2.45*scale,tz+.38,.55*scale,.5*scale,.48*scale,"#789b6b",11);}
+ for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1,bucket=tz>2?4:1;cylinder(bucket,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(bucket,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(bucket,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,"url(#zero-leaf)",11);sphere(bucket,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",11);sphere(bucket,tx+.66*scale,2.92*scale,tz-.1,.7*scale,.78*scale,.7*scale,"#62865d",11);sphere(bucket,tx+.05*scale,3.85*scale,tz-.04,.58*scale,.62*scale,.55*scale,"#73956a",11);sphere(bucket,tx-.15*scale,2.45*scale,tz+.38,.55*scale,.5*scale,.48*scale,"#789b6b",11);}
  // Low shrubs and potted greenery at different depths.
  for(const s of (plan.shrubs||[]).slice(0,5)){const bucket=s.z>2?4:1,scale=s.scale||1;sphere(bucket,s.x,.42*scale,s.z,.62*scale,.48*scale,.52*scale,s.color||"#6f925d",8);sphere(bucket,s.x-.38*scale,.34*scale,s.z+.08,.42*scale,.36*scale,.4*scale,"#8aa66f",8);cylinder(bucket,s.x,.02,s.z,.28*scale,.38*scale,"#9b7152",8);}
  // Utility poles, cross-arms and overhead cables.
