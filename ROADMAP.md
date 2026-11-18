@@ -41,7 +41,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Add four starter facial expression presets to the Nori vector model.
 - [x] Add basic two-bone inverse kinematics for four limb chains with segment-length preservation.
 - [x] Add a project-local reusable character library that survives `.zero` save/open.
-- [x] Add rig-aware interpolation between compatible saved Nori limb-rig poses.\n- [ ] Extend rigging to spine, neck, head, hands/feet, collision/ground constraints, and linked character instances across frames.
+- [x] Add rig-aware interpolation between compatible saved Nori limb-rig poses.\n- [x] Add linked character instance identity across layers and frames, with copy-to-next-frame and per-frame pose replacement.\n- [ ] Extend rigging to spine, neck, head, finger/toe articulation, collision/ground constraints, and synchronized multi-frame instance editing.
 - [x] Produce a one-second, measurable 24-frame vector wave/blink sequence (`examples/24-drawings-one-second.zero`).
 - [x] Count unique drawings separately from playback FPS: automated test confirms 24 distinct frame documents at 24 FPS.
 - [ ] Evaluate anatomy, line consistency, motion continuity, and correction effort.
