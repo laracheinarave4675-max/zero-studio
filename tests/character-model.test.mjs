@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createFrame,createLayer,createInbetweenFrames,normalizeProject} from "../app/engine.mjs";
+import {createFrame,createLayer,appendOperation,createInbetweenFrames,normalizeProject} from "../app/engine.mjs";
 import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
