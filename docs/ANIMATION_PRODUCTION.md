@@ -31,7 +31,7 @@ The 30,000-frame number is a structural ceiling, not a promise that every phone 
 6. Import that file. Only a batch with the correct job ID, next batch number, exact frame count, exact global frame indexes/timestamps, consistent layer names/order, valid paths, and no duplicate full-frame drawing is accepted.
 7. Save the .zero project to preserve the approved frames and progress; continue with the next batch.
 
-The plan/prompt and batch contract are available before choosing a provider. The provider adapter that automatically calls a model, manages quotas/retries, and produces .zbatch files is **not yet connected**. Exporting batch instructions is not itself a claim that any drawings have been generated.
+The plan/prompt and batch contract are available before choosing a provider. The provider-neutral worker is implemented in app/animation-worker.mjs. It accepts a provider callback, requests ordered batches, validates and commits each batch, supports bounded retries and cancellation, and invokes a checkpoint callback after each accepted batch. No live provider callback is connected yet, and the app UI still offers the manual prompt/import path. Exporting batch instructions is not itself a claim that any drawings have been generated.
 
 ## .zbatch structure
 
@@ -86,8 +86,21 @@ For each frame, index is the zero-based global frame number and timeSeconds is i
 - The application currently allows opening .zero files up to 128 MiB. This does not guarantee that a project close to that size will run smoothly on every Android phone.
 - On projects above 600 frames, undo/redo keeps up to 40 frame-scoped actions and stores the affected frame plus animation-progress metadata instead of serializing the complete timeline for every pencil stroke. Project-wide metadata edits are not yet handled by this lightweight history mode.
 - Existing ZIP32 export remains subject to ZIP32's 4 GiB archive limit and device memory.
-- No real provider has been connected or tested for this batch contract yet. No artistic quality claim is made from contract tests alone.
+- The worker contract is exercised with deterministic test providers. No real remote provider has been connected or tested for this batch contract yet. No artistic quality claim is made from contract tests alone.
 
 ## Automated coverage
 
 tests/animation-production.test.mjs covers 10-second planning, 24 drawings/second enforcement, batch prompts, exact frame timing, stable layers, duplicate rejection, path validation, ordered imports, persistence through .zero normalization, final partial batches, and the 30,000-frame ceiling.
+
+
+## Provider-neutral worker contract
+
+`runAnimationProduction(project, provider, options)` in `app/animation-worker.mjs` accepts an asynchronous provider function. For each requested batch it supplies:
+
+- `prompt`: the complete next-batch vector drawing instructions, including frame indexes, timestamps and previous continuity note.
+- `jobId`, `batchIndex`, `startFrame`, `frameCount`, and `fps`: the exact production coordinates.
+- `responseFormat: "json"`, `attempt`, and optional `signal`.
+
+The provider returns either a JSON string or an object with a `text` property containing the .zbatch JSON. The worker validates and appends each approved batch, performs bounded retry after invalid output, supports cancellation, and calls `onBatch` after each successful commit so an integration can save a checkpoint. If checkpoint saving fails, it reports that the batch was already accepted and does not call the provider again for the same batch.
+
+This is an adapter seam, not a live model integration. API keys, provider-specific response parsing, rate limits, billing, and model choice remain deliberately outside the engine until the user chooses a service.
