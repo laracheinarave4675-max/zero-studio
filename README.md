@@ -14,6 +14,12 @@
 
 Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The public test deployment was refreshed on 2026-11-18 and now includes the four vector background presets; it remains a manually uploaded snapshot, not an automatic Git-linked deployment. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
 
+## High-volume frame-by-frame animation
+
+The development branch now supports a structural ceiling of 30,000 editable frames, paginated timeline thumbnails (24 per page), direct frame navigation, and frame-level undo/redo on long timelines. The provider-independent animation pipeline plans exact 24-drawing/second sequences: a 10-second shot is 240 full-scene drawings, divided by default into 40 batches of six. Each imported `.zbatch` is checked for sequence/job identity, timing, stable layer order, validated editable SVG paths, and duplicate full-frame artwork; approved progress is saved in the `.zero` project. See [high-volume animation production](docs/ANIMATION_PRODUCTION.md).
+
+This is production infrastructure, not yet an autonomous animation generator: live provider integration, automatic retries/orchestration, IndexedDB-backed paged storage, real 240-frame art review, and physical Android stress tests remain incomplete. The 30,000-frame ceiling is structural and not a guarantee that every phone can keep a complex 30,000-frame project in memory.
+
 ## Drawing, character, and background toolset
 
 The development branch includes four original SVG-path background presets, inserted as editable layers behind existing artwork. See [background library notes](docs/BACKGROUND_LIBRARY.md). These are starter scenes, not a finished perspective/layout department.
