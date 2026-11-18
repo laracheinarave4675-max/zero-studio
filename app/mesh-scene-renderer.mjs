@@ -29,8 +29,8 @@ export function renderMeshEnvironment(plan){
  // Ground, sidewalk and road.
  quad(1,[-24,0,-16],[24,0,-16],[24,0,35],[-24,0,35],"#78876f","#596c5d");
  quad(1,[-24,.025,2],[24,.025,2],[24,.025,5],[-24,.025,5],"#d0c4aa","#a89b83");
- quad(4,[-24,.04,5],[24,.04,5],[24,.04,35],[-24,.04,35],"#626c68","#4c5752");
- for(let z=8;z<30;z+=5)quad(4,[-.25,.055,z],[.25,.055,z],[.25,.055,z+1.8],[-.25,.055,z+1.8],"#e9e0c8","none");
+ quad(3,[-24,.04,5],[24,.04,5],[24,.04,35],[-24,.04,35],"#626c68","#4c5752");
+ for(let z=8;z<30;z+=5)quad(3,[-.25,.055,z],[.25,.055,z],[.25,.055,z+1.8],[-.25,.055,z+1.8],"#e9e0c8","none");
  // Building walls and shaded planes.
  const x=-b.width/2,z=-b.depth/2,w=b.width,h=b.height,d=b.depth,front=z+d;
  box(2,x,0,z,w,h,d,b.wall||"#d8c6a8","#594e43");
@@ -56,15 +56,15 @@ export function renderMeshEnvironment(plan){
  for(let i=0;i<5;i++){const yy=1.0+i*.72;line(2,[[x+.05,yy,front+.035],[x+w-.05,yy,front+.035]],"#a88f72",.025);}
  for(let i=0;i<5;i++){const xx=x+.2+i*(w-.4)/5;line(2,[[xx,.08,front+.04],[xx,h-.08,front+.04]],"#b09a7d",.035);}
  // Grounded trees: faceted trunks and multi-volume foliage.
- for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1;cylinder(1,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(1,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(1,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,t.color||"#477255",5);sphere(1,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",5);}
+ for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1,bucket=tz>2?4:1;cylinder(bucket,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(bucket,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(bucket,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,t.color||"#477255",5);sphere(bucket,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",5);}
  // Utility poles, cross-arms and overhead cables.
- for(const pole of (plan.poles||[]).slice(0,2)){cylinder(3,pole.x,0,pole.z,.11,pole.height||8,"#655b4a",7);box(3,pole.x-.85,(pole.height||8)-.35,pole.z-.08,1.7,.12,.16,"#655b4a");}
- if(plan.poles?.length>1){const a=plan.poles[0],b=plan.poles[1];line(3,[[a.x,a.height||8,a.z],[b.x,b.height||8,b.z]],"#414b48",.025);}
+ for(const pole of (plan.poles||[]).slice(0,2)){cylinder(4,pole.x,0,pole.z,.11,pole.height||8,"#655b4a",7);box(4,pole.x-.85,(pole.height||8)-.35,pole.z-.08,1.7,.12,.16,"#655b4a");}
+ if(plan.poles?.length>1){const a=plan.poles[0],b=plan.poles[1];line(4,[[a.x,a.height||8,a.z],[b.x,b.height||8,b.z]],"#414b48",.025);}
  // Small parked van.
- if(plan.van){const v=plan.van;box(3,v.x,.35,v.z,v.width,1.25,v.depth,"#e2dfd2","#464b48");box(3,v.x+.25,1.05,v.z+v.depth-.04,v.width*.55,.55,.08,"#83aaa6","#414846");cylinder(3,v.x+.65,0,v.z+v.depth,.34,.18,"#263437",7);cylinder(3,v.x+v.width-.65,0,v.z+v.depth,.34,.18,"#263437",7);}
+ if(plan.van){const v=plan.van;box(4,v.x,.35,v.z,v.width,1.25,v.depth,"#e2dfd2","#464b48");box(4,v.x+.25,1.05,v.z+v.depth-.04,v.width*.55,.55,.08,"#83aaa6","#414846");cylinder(4,v.x+.65,0,v.z+v.depth,.34,.18,"#263437",7);cylinder(4,v.x+v.width-.65,0,v.z+v.depth,.34,.18,"#263437",7);}
  // Soft stylized cast-shadow polygons on the ground plane.
  quad(1,[-5.8,.035,1],[2.8,.035,1],[4.8,.035,5],[-7,.035,5],"#59685d","none");
- const names=["01 — السماء والآفاق","02 — الأرض والأشجار","03 — المبنى والعمارة","04 — أعمدة الشارع والمركبات","05 — الطريق والمقدمة"];
+ const names=["01 — السماء والآفاق","02 — الأرض والأشجار الخلفية","03 — المبنى والعمارة","04 — الطريق والأرصفة","05 — أعمدة الشارع والعناصر الأمامية"];
  const layers=buckets.map((items,i)=>({name:names[i],operations:items.sort((a,b)=>b.depth-a.depth).map(x=>x.op)})).filter(x=>x.operations.length);
  const total=layers.reduce((s,l)=>s+l.operations.length,0);
  if(total>300)throw Error("تجاوز مشهد الشبكات ثلاثية الأبعاد حد 300 مسار متجهي.");
