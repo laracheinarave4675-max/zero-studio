@@ -1,5 +1,5 @@
 import{writeFile,mkdir}from"node:fs/promises";
-import{createProject,uid,validatePath}from"../app/engine.mjs";
+import{createProject,uid,validatePath,SVG_DEFS}from"../app/engine.mjs";
 import{generateMeshEnvironmentProposal}from"../app/scene-production.mjs";
 const key=process.env.GEMINI_API_KEY;
 if(!key)throw Error("GEMINI_API_KEY is not configured.");
@@ -16,7 +16,7 @@ const escape=value=>String(value).replaceAll("&","&amp;").replaceAll('"',"&quot;
 const body=frame.layers.map(layer=>'<g data-layer="'+escape(layer.name)+'">'+layer.operations.map(op=>'<path d="'+escape(op.path.d)+'" stroke="'+escape(op.path.stroke)+'" stroke-width="'+op.path.width+'" fill="'+escape(op.path.fill)+'" stroke-linecap="round" stroke-linejoin="round"/>').join("")+'</g>').join("");
 await mkdir("artifacts",{recursive:true});
 await writeFile("artifacts/cinematic-ramen-shop.zero",JSON.stringify(project));
-await writeFile("artifacts/cinematic-ramen-shop.svg",'<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+body+'</svg>');
+await writeFile("artifacts/cinematic-ramen-shop.svg",'<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+SVG_DEFS+body+'</svg>');
 const counts=frame.layers.map(layer=>({name:layer.name,paths:layer.operations.length}));
 const report={model,layers:counts.length,totalPaths:proposal.totalOperations,layerBreakdown:counts,editable:true,referenceImagesSent:false,renderer:"3D mesh projection with per-face directional shading to editable SVG",visualQualityStatus:"awaiting-human-review",sceneDescription:description,blueprint:proposal.plan,camera:proposal.camera};
 await writeFile("artifacts/report.json",JSON.stringify(report,null,2));
