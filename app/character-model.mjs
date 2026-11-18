@@ -215,6 +215,24 @@ export function applyNoriRigPose(model,jointUpdates={}){
 
 
 
+
+export function rotateNoriNeck(model,angleDegrees){
+ const safe=validateCharacterModel(model);
+ if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
+ if(!Number.isFinite(angleDegrees)||angleDegrees< -35||angleDegrees>35)throw Error("زاوية الرقبة يجب أن تكون بين -35 و35 درجة");
+ const next=JSON.parse(JSON.stringify(safe)),delta=angleDegrees-safe.rig.neckRotation,pivot=next.rig.joints["neck-center"];
+ if(delta!==0){
+  for(const id of ["neck","head","hair","eye-left","eye-right","mouth"]){
+   const item=next.parts.find(part=>part.id===id);
+   if(item)item.path.d=rotatePathData(item.path.d,delta,pivot.x,pivot.y);
+  }
+  const head=next.rig.joints["head-center"],radians=delta*Math.PI/180,cos=Math.cos(radians),sin=Math.sin(radians),dx=head.x-pivot.x,dy=head.y-pivot.y;
+  next.rig.joints["head-center"]={...head,x:Number((pivot.x+dx*cos-dy*sin).toFixed(3)),y:Number((pivot.y+dx*sin+dy*cos).toFixed(3))};
+ }
+ next.rig.neckRotation=angleDegrees;
+ return validateCharacterModel(next);
+}
+
 export function rotateNoriHead(model,angleDegrees){
  const safe=validateCharacterModel(model);
  if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
@@ -254,7 +272,7 @@ export function solveNoriRigJoint(model,jointKey,target){
  if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
  if(!NORI_JOINT_KEYS.includes(jointKey)||!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))throw Error("هدف المفصل غير صالح");
  const bounded={x:Math.max(0,Math.min(1920,target.x)),y:Math.max(0,Math.min(1080,target.y))};
- if(jointKey==="torso-center"||jointKey==="head-center")return applyNoriRigPose(safe,{[jointKey]:bounded});
+ if(jointKey==="torso-center"||jointKey==="neck-center"||jointKey==="head-center")return applyNoriRigPose(safe,{[jointKey]:bounded});
  const bone=NORI_RIG_BONES.find(item=>[item.from,item.through,item.to].includes(jointKey));
  if(!bone)throw Error("المفصل غير مرتبط بعظمة");
  const next=JSON.parse(JSON.stringify(safe)),joints=next.rig.joints;
@@ -324,6 +342,7 @@ export function interpolateNoriRigModels(startModel,endModel,t){
   result=solveNoriRigJoint(result,bone.to,{x:endpoint.x,y:endpoint.y});
  }
  result.rig.headRotation=lerp(start.rig.headRotation,end.rig.headRotation);
+ result.rig.neckRotation=lerp(start.rig.neckRotation,end.rig.neckRotation);
  result.rig.bodyRotation=lerp(start.rig.bodyRotation,end.rig.bodyRotation);
  result.id="nori-interpolated-"+start.id+"-"+end.id+"-"+String(t);
  result.name="وضعية وسيطة: "+start.name+" → "+end.name;
