@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-18 (UTC)
 
+## Updated production direction — 2026-11-18
+
+The AI is intended to act as the scene artist: interpret a natural-language scene brief, plan the composition, divide the artwork into meaningful editable layers, and draw those layers as validated SVG paths. Starter background/character presets are aids only, not the creative boundary. The user should not need to understand technical implementation or coordinate separate tools. Continue autonomously on the agreed goals, explain in plain Arabic, and record progress/limitations here. This direction does not relax the no-raster-generation rule or the target of 24 independent drawings per second.
+
 ## Mission
 
 Build a practical, mobile-first anime production studio, usable from an Android phone and free or nearly free, with a coordinated workflow for story, character design, backgrounds, animation, cleanup, coloring, sound, editing, and quality review.
@@ -121,9 +125,11 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Android browser/device smoke test (public test URL is live; physical interaction remains pending).
 - [x] Initial SVG drawing-command contract documented (`docs/DRAWING_COMMANDS.md`).
 - [x] SVG path command grammar/arity and conservative coordinate-bound validation.
-- [x] First AI vector drawing adapter implemented with preview and explicit approval; [ ] live API-key test.
+- [x] Initial single-layer AI vector proposal adapter implemented.
+- [x] Multi-layer AI scene artist: requests a complete scene as named editable layers, validates each path, previews the whole scene, and commits only on approval.
+- [ ] Live provider test with a real API key; [ ] Android browser test; [ ] professional art/continuity review.
 - [x] First one-second animation proof created: 24 distinct vector frame documents at 24 FPS, with automated uniqueness test; [ ] human quality review and Android playback.
-- [ ] Production departments/agents orchestration.
+- [ ] Production departments/agents orchestration and central scene planner.
 - [ ] Sound, editing, and export pipeline integration.
 
 ## Initial implementation baseline — historical, superseded by later milestones
