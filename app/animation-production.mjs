@@ -54,7 +54,7 @@ export function createAnimationBatchPrompt(job,batchIndex=job?.nextBatchIndex,co
  "Maintain one consistent camera, perspective, lighting, color language, object identity, and stable ordered layer names across every frame and across batches. Motion must advance naturally at the exact frame timestamps. Give moving objects genuinely updated vector geometry in each frame. Keep silhouettes, proportions, and scene continuity coherent.",\n job.layerNames?"REQUIRED LAYER NAMES AND BACK-TO-FRONT ORDER (match exactly): "+job.layerNames.join(" > "):"For the first batch, establish concise layer names that remain unchanged for the whole shot.",
  "Use 2 to 12 named layers in back-to-front order. Each frame must contain the complete scene. Each layer may contain 0 to 100 paths; each frame may contain 1 to 300 paths total. Every frame in this batch must be visually distinct from all other frames; never duplicate a frame.",
  "Allowed SVG path commands only: M L H V C S Q T A Z. Coordinates should remain within x=0..1920 and y=0..1080. Each operation has {d,stroke,width,fill}. No SVG/XML markup, scripts, style blocks, URLs, base64, raster data, markdown fences, or prose.",
- "Return ONLY valid JSON with exactly this structure: {\"version\":1,\"jobId\":\""+job.id+"\",\"batchIndex\":"+range.batchIndex+",\"startFrame\":"+range.startFrame+",\"frames\":[{\"index\":0,\"timeSeconds\":0,\"layers\":[{\"name\":\"Background\",\"operations\":[{\"d\":\"M 0 0 L 1 1\",\"stroke\":\"#172033\",\"width\":2,\"fill\":\"none\"}]}]}]}. The frames array must contain exactly "+range.frameCount+" entries, in the specified order, with the exact zero-based index and timeSeconds for each entry.",
+ "Return ONLY valid JSON with exactly this structure: {\"version\":1,\"jobId\":\""+job.id+"\",\"batchIndex\":"+range.batchIndex+",\"startFrame\":"+range.startFrame+",\"continuityNote\":\"Summarize fixed scene layout, object identity, visual style, movement direction and end-of-batch state for the next batch (max 2000 characters).\",\"frames\":[{\"index\":0,\"timeSeconds\":0,\"layers\":[{\"name\":\"Background\",\"operations\":[{\"d\":\"M 0 0 L 1 1\",\"stroke\":\"#172033\",\"width\":2,\"fill\":\"none\"}]}]}]}. The frames array must contain exactly "+range.frameCount+" entries, in the specified order, with the exact zero-based index and timeSeconds for each entry.",
  previous?"CONTINUITY NOTE FROM THE PREVIOUS APPROVED BATCH: "+previous:"For this first batch, establish the definitive scene design, camera, depth, and visual style.",
  "Only output the JSON object. If the request cannot be fulfilled safely or within the limits, return {\"version\":1,\"jobId\":\""+job.id+"\",\"batchIndex\":"+range.batchIndex+",\"startFrame\":"+range.startFrame+",\"frames\":[]}. Do not silently reduce the number of frames."
  ].join("\n\n");
@@ -72,7 +72,9 @@ function signature(layers){
 export function validateAnimationBatch(job,payload){
  validJob(job);
  if(!payload||payload.version!==1||payload.jobId!==job.id)fail("هذه الدفعة لا تنتمي إلى خطة الإنتاج الحالية.");
- const batchIndex=payload.batchIndex;\n const continuityNote=String(payload.continuityNote??"").trim();\n if(!continuityNote||continuityNote.length>2000)fail("يجب أن تتضمن الدفعة ملاحظة استمرارية موجزة لا تتجاوز 2000 حرف.");
+ const batchIndex=payload.batchIndex;
+ const continuityNote=String(payload.continuityNote??"").trim();
+ if(!continuityNote||continuityNote.length>2000)fail("يجب أن تتضمن الدفعة ملاحظة استمرارية موجزة لا تتجاوز 2000 حرف.");
  if(batchIndex!==job.nextBatchIndex)fail("هذه ليست الدفعة التالية المطلوبة. لا يمكن تخطي دفعة أو استيرادها مرتين.");
  const range=getAnimationBatchRange(job,batchIndex);
  if(payload.startFrame!==range.startFrame||!Array.isArray(payload.frames)||payload.frames.length!==range.frameCount)fail("عدد الإطارات أو موضع بداية الدفعة غير مطابق للخطة.");
@@ -117,6 +119,7 @@ export function appendAnimationBatch(project,payload){
  if(project.frames.length!==job.baseFrameCount+job.completedFrames)fail("تغير عدد إطارات المشروع بعد بدء الإنتاج؛ أوقف التغييرات ثم استعد آخر نسخة متوافقة.");
  project.frames.push(...batch.frames);
  job.layerNames=job.layerNames||batch.layerNames;
+ job.continuityNote=batch.continuityNote;
  job.frameSignatures.push(...batch.signatures);
  job.completedFrames+=batch.frameCount;
  job.nextBatchIndex++;
