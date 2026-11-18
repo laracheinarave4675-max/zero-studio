@@ -34,3 +34,6 @@ This file records decisions that must not be changed silently. Add dated entries
 
 ## D-009 — Measure unique drawings separately from playback
 **Decision:** Report the count of distinct visible vector-art signatures and average unique drawings per second separately from playback FPS. Ignore frame and operation IDs when comparing signatures. A cadence report is a structural measurement only; it does not certify artistic quality or prove that every frame was freshly hand-drawn.
+
+## D-010 — Rig pose interpolation requires compatible editable models
+**Decision:** Character pose blending may only run when both validated models have compatible rig versions, the same view, part order/visibility, SVG path topology, and per-part colors. Rebuild intermediate limb geometry with the constrained IK solver; reject incompatible models instead of guessing or rasterizing.
