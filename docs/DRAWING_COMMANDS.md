@@ -66,9 +66,9 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite now includes 38 tests: 20 engine tests, 4 Gemini adapter tests, 2 workspace DOM tests, 3 ZIP tests, 2 animation-proof tests, and 7 character-model tests. The new shape and 48-variant checks run in GitHub Actions.
+The suite includes the engine, Gemini adapter, workspace DOM, ZIP, animation-proof, character-model, and character-library tests. GitHub Actions is the source of truth for the current exact passing count.
 
-## AI proposal path
+## Unique-drawing cadence audit\n\n`analyzeDrawingCadence(frames,fps)` compares visible vector artwork signatures while ignoring frame and operation IDs. It reports frame count, unique drawing count, duplicates, duration, and average unique drawings per second against the unchanged 24-drawings/second target. The workspace exposes this report in the timeline and includes it in ZIP manifests. This measures uniqueness of saved vector content; it does not certify professional drawing quality or that each frame was freshly hand-drawn.\n\n## AI proposal path
 
 The optional Gemini text-only adapter produces a JSON proposal of editable SVG paths. The paths are validated locally, displayed on a temporary preview layer, and only appended to the selected project layer after explicit approval. The API key is not saved in project data, local storage, or ZIP exports. See [AI vector drawing adapter](AI_VECTOR_DRAWING.md) for provider, privacy, and quota details.
 
