@@ -61,7 +61,12 @@ The AI is intended to act as the scene artist: interpret a natural-language scen
 - The successful real Gemini run #44339821992 used Gemini 3.5 Flash Lite and produced a 5-layer editable scene with 632 vector paths. Artifact: `zero-studio-cinematic-scene-artist-test`, artifact ID `14441559866`, expires 2026-12-02. It contains `cinematic-ramen-shop.svg` and `cinematic-ramen-shop.zero`.
 - A separate deterministic 3D mesh showcase is also included in that artifact. The AI scene and the hand-authored showcase are clearly distinguished in their reports.
 - The current mesh renderer has a 1,800-path still-scene limit. The older 2.5D renderer remains available for comparison. The 3D renderer is still a low-poly/stylized prototype, not reference-quality anime background art.
-- The latest successful full test run at this milestone passed 156 tests, 0 failures (run #44339822025). Subsequent renderer detail updates are under re-validation.
+- Added safe reusable SVG gradients for sky, sun, plaster, wood, roof, glass, road, foliage, and shadows. The mobile SVG canvas and exported frame SVGs include the definitions; arbitrary external paint URLs are rejected.
+- Added the 3D environment artist button to the Android/mobile workspace and precached both new renderer modules in the PWA service worker.
+- A Vercel preview deployment is READY at https://zero-studio-fqyvx0jru-studio-37a2.vercel.app/ (deployment `dpl_6Lu7Vjt2ygAiLMrKydb7UyAdy5yA`, 17 files). It is a preview only; the production alias `zero-studio-three.vercel.app` was not changed.
+- Full automated suite passed 160 tests with 0 failures on run #44342195095. The scene-generation workflow's most recent model response exceeded the old 1,500-path cap; the cap is now 1,800 and the runner has bounded fallback across supported Gemini Flash models on temporary overload.
+
+- The earlier successful 3D milestone passed 156 tests; the later full suite now passes 160 tests, 0 failures (run #44342195095).
 - **Not yet complete:** the 3D renderer is not integrated into the 24-unique-drawings/sec animation worker. Animation batches still have the earlier 300-path limit. Texture maps, physically based lighting, shadow maps, detailed assets, and mobile performance validation are pending. Do not claim production-quality 3D or the user's reference-image quality yet.
 
 ## Mission
