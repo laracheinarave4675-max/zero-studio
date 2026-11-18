@@ -87,9 +87,9 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Editable Nori palette controls for line, skin, hair, clothing, and accent colors.
 - [x] Import/export standalone `.zchar` character-model files with size and path validation.
 - [x] Insert selected character variants into the current frame as editable layer operations.
-- [ ] Professional custom model-sheet editor, proportion guides and turnarounds need artist review and extension.
+- [x] Exported model-sheet proportion guide layers for center, eye, shoulder, hip, and ground references.\n- [ ] Professional custom model-sheet editor, artist-adjustable proportion guides, and artist-reviewed turnarounds still need extension.
 - [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.
-- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).\n- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.
+- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).\n- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.\n- [x] Nori's 11-cell SVG model sheet now includes editable proportion-guide lines in every view/expression/pose cell.
 - [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
