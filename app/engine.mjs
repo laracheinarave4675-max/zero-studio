@@ -320,6 +320,41 @@ export function rotatePathData(d,angleDegrees,cx=0,cy=0){
  return out.join(" ");
 }
 
+
+function pathAnchorTokenMap(d){
+ const tokens=tokenizePathData(rotatePathData(d,0)),anchors=[];
+ let index=0;
+ for(let i=0;i<tokens.length;){
+  if(!("command"in tokens[i]))throw Error("بنية مسار غير متوقعة");
+  const command=tokens[i++].command;
+  if(command==="Z")continue;
+  const arity=PATH_ARITY[command],start=i,values=[];
+  while(i<tokens.length&&!("command"in tokens[i]))values.push(tokens[i++].number);
+  if(!arity||!values.length||values.length%arity!==0)throw Error("معاملات المسار غير مكتملة");
+  for(let offset=0;offset<values.length;offset+=arity){
+   let endpoint=0;
+   if(command==="C")endpoint=4;
+   else if(command==="S"||command==="Q")endpoint=2;
+   else if(command==="A")endpoint=5;
+   else if(!["M","L","T"].includes(command))throw Error("نوع نقطة المسار غير مدعوم للتحرير");
+   const xIndex=start+offset+endpoint,yIndex=xIndex+1;
+   anchors.push({index:index++,x:tokens[xIndex].number,y:tokens[yIndex].number,xIndex,yIndex,command:command==="M"&&offset>0?"L":command});
+  }
+ }
+ return{tokens,anchors};
+}
+export function getPathAnchors(d){
+ return pathAnchorTokenMap(d).anchors.map(({index,x,y,command})=>({index,x,y,command}));
+}
+export function movePathAnchor(d,anchorIndex,x,y){
+ if(!Number.isInteger(anchorIndex)||anchorIndex<0||!Number.isFinite(x)||!Number.isFinite(y)||Math.abs(x)>1000000||Math.abs(y)>1000000)throw Error("موضع نقطة المسار غير صالح");
+ const parsed=pathAnchorTokenMap(d),anchor=parsed.anchors[anchorIndex];
+ if(!anchor)throw Error("نقطة المسار المحددة غير موجودة");
+ parsed.tokens[anchor.xIndex]={number:+x.toFixed(3)};
+ parsed.tokens[anchor.yIndex]={number:+y.toFixed(3)};
+ return parsed.tokens.map(token=>"command"in token?token.command:String(token.number)).join(" ");
+}
+
 export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" stroke-linecap="round" stroke-linejoin="round"/>';
