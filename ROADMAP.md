@@ -29,7 +29,9 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Convert multi-point freehand gestures to smooth cubic Bézier curves; physical-device feel review pending.
 - [x] Optional stylus-pressure variable-width outline path; physical stylus behavior pending.
 - [x] Add line, rectangle, and ellipse drawing tools with optional shape fill.
-- [x] AI-proposed vector operations can be previewed and explicitly approved/rejected (Gemini text-only adapter; live API key test pending).
+- [x] AI-proposed vector operations can be previewed and explicitly approved/rejected.
+- [x] AI scene artist can return 2–12 named editable SVG layers (up to 300 paths), preview the complete scene, and commit it as separate layers after approval.
+- [ ] Test real-provider scene quality and improve iterative correction/continuity.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
 ## Phase 3 — Character construction and animation proof of concept
@@ -75,7 +77,8 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Final quality-control checklist.
 
 ## Phase 6 — Orchestration
-- [ ] Central production planner.
+- [ ] Central production planner that interprets episode/storyboard instructions and delegates scene drawing.
+- [x] First scene-artist execution step: natural-language scene brief → multi-layer vector artwork proposal → validation → human approval.
 - [ ] Specialized task agents with explicit inputs/outputs.
 - [ ] Shared project state and asset/version tracking.
 - [ ] Retry, review, and approval workflow.
