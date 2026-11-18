@@ -5,6 +5,7 @@ on:
     branches: ["feature/mobile-drawing-workspace"]
     paths:
       - "scripts/run-gemini-scene-artist-test.mjs"
+      - "scripts/render-environment-showcase.mjs"
       - "app/scene-production.mjs"
       - "app/environment-art.mjs"
       - "tests/environment-art.test.mjs"
@@ -22,6 +23,8 @@ jobs:
         run: node --check app/environment-art.mjs
       - name: Validate semantic art direction and procedural renderer
         run: node --test tests/environment-art.test.mjs tests/scene-production.test.mjs
+      - name: Render reproducible local 2.5D showcase
+        run: node scripts/render-environment-showcase.mjs
       - name: Generate one real editable cinematic scene with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
