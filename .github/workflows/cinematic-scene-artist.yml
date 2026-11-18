@@ -6,6 +6,8 @@ on:
     paths:
       - "scripts/run-gemini-scene-artist-test.mjs"
       - "app/scene-production.mjs"
+      - "app/environment-art.mjs"
+      - "tests/environment-art.test.mjs"
       - ".github/workflows/cinematic-scene-artist.yml"
 jobs:
   scene-artist:
@@ -16,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate semantic art direction and procedural renderer
+        run: node --test tests/environment-art.test.mjs tests/scene-production.test.mjs
       - name: Generate one real editable cinematic scene with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
