@@ -115,3 +115,72 @@ All 3D positions and dimensions must be finite and plausible. Use only hex color
  const scene=renderMeshEnvironment(plan);
  return{plan,...scene};
 }
+
+const ANIME_2D_LAYERS=[
+ {name:"01 — السماء والجو البعيد",role:"Sky, distant atmosphere, clouds, sun glow, far mountains and silhouettes",budget:110},
+ {name:"02 — الكتل النباتية البعيدة",role:"Distant tree lines, varied canopy silhouettes, distant shrubs and landscape masses",budget:140},
+ {name:"03 — العمارة الأساسية",role:"Hero building silhouette, roof masses, side walls, porch, large structural surfaces",budget:150},
+ {name:"04 — تفاصيل العمارة والخامات",role:"Roof tiles, eaves, beams, windows, shutters, reflections, doors, signs, noren fabric, material grain",budget:170},
+ {name:"05 — الطريق والبنية الحضرية",role:"Road perspective, sidewalk, curb, utility poles, wires, vehicles, benches, street props and planters",budget:140},
+ {name:"06 — النباتات والعناصر الأمامية",role:"Foreground trees, shrubs, individual leaf clusters, branches, garden plants and foreground objects",budget:150},
+ {name:"07 — الضوء والظلال والتركيب",role:"Cast shadows, contact shadows, reflected light, dappled sunlight, rays, atmospheric haze and finishing accents",budget:100}
+];
+function validateAnimeLayoutPlan(plan){
+ if(!plan||plan.version!==1||!plan.layerNotes||typeof plan.layerNotes!=="object")throw Error("لم يرجع مخرج الفن مخططاً ثنائي الأبعاد صالحاً.");
+ const point=v=>Array.isArray(v)&&v.length===2&&v.every(n=>Number.isFinite(n)&&n>=0&&n<=1920);
+ if(!Number.isFinite(plan.horizonY)||plan.horizonY<100||plan.horizonY>950)throw Error("خط الأفق في المخطط خارج حدود الكادر.");
+ if(!point(plan.vanishingPoint)||!point(plan.sunPosition))throw Error("موضع نقطة التلاشي أو الشمس غير صالح.");
+ const required=["sky","distance","architecture","architectureDetails","road","foreground","lighting"];
+ for(const key of required)if(typeof plan.layerNotes[key]!=="string"||plan.layerNotes[key].trim().length<12)throw Error("الوصف الفني للطبقة "+key+" مفقود.");
+ if(typeof plan.architecture!=="string"||typeof plan.camera!=="string"||typeof plan.lighting!=="string"||typeof plan.vegetation!=="string"||typeof plan.road!=="string")throw Error("وصف الكاميرا أو البيئة أو الإضاءة ناقص.");
+ return plan;
+}
+export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL){
+ const{key,description}=credentials(apiKey,prompt);
+ const artDirection="Cinematic 2D anime background painting, semi-realistic Japanese environment art. The final surface must read as carefully painted 2D artwork, never low-poly 3D, never flat icon art, never children's clip-art. Strong wide cinematic perspective, layered foreground/midground/background, richly observed architecture, natural irregular foliage, believable materials, selective delicate linework, warm/cool color separation, soft bounced sunlight, ambient occlusion, reflections and atmospheric depth. Avoid generic rectangles, repeated circles, identical leaves, thick black outlines, empty silhouette gaps and oversimplified roof triangles.";
+ const layoutPrompt="You are the lead art director and background layout designer for a high-end 2D anime film. Produce a precise scene blueprint that a separate vector background painting department will draw. Do not output SVG paths yet. Canvas 1920x1080. "+artDirection+"\nReturn ONLY JSON:\n{\"version\":1,\"title\":\"...\",\"camera\":\"precise camera height, lens feel, three-quarter/wide view, framing\",\"horizonY\":520,\"vanishingPoint\":[980,540],\"sunPosition\":[280,150],\"lighting\":\"sun direction, warmth, cast shadow direction, bounce light\",\"architecture\":\"detailed building form, proportions, position, roof structure, facade, depth and materials\",\"vegetation\":\"tree shape variation, branch/canopy layering, foliage placement, density\",\"road\":\"ground plane, street/sidewalk geometry and perspective\",\"layerNotes\":{\"sky\":\"...\",\"distance\":\"...\",\"architecture\":\"...\",\"architectureDetails\":\"...\",\"road\":\"...\",\"foreground\":\"...\",\"lighting\":\"...\"}}\nUse the scene request below. Keep all coordinates tied to a 1920x1080 wide frame. Buildings, road, poles, vegetation and props must share one coherent perspective. Use a visible focal hierarchy. LayerNotes must explain exact object placement and detail rather than generic style words. Avoid placing the whole building dead centre unless composition warrants it. Request: "+description;
+ const plan=validateAnimeLayoutPlan(await request(key,layoutPrompt,fetcher,model,{temperature:.42,maxOutputTokens:5000}));
+ const layers=[],allPaths=new Set();let totalOperations=0;
+ for(let i=0;i<ANIME_2D_LAYERS.length;i++){
+  const spec=ANIME_2D_LAYERS[i],keys=["sky","distance","architecture","architectureDetails","road","foreground","lighting"],note=plan.layerNotes[keys[i]];
+  const globalPlan=JSON.stringify({title:plan.title,camera:plan.camera,horizonY:plan.horizonY,vanishingPoint:plan.vanishingPoint,sunPosition:plan.sunPosition,lighting:plan.lighting,architecture:plan.architecture,vegetation:plan.vegetation,road:plan.road,layerNotes:plan.layerNotes});
+  const layerPrompt="You are the principal 2D anime background painter, not a 3D modeller. Draw ONE layer of a finished cinematic anime environment as editable SVG path operations. Canvas 1920x1080. "+artDirection+
+  "\nGLOBAL LAYOUT PLAN:\n"+globalPlan+
+  "\nYOUR LAYER: "+spec.name+
+  "\nLAYER ROLE: "+spec.role+
+  "\nEXACT ART DIRECTION FOR THIS LAYER: "+note+
+  "\nQUALITY REQUIREMENTS:\n- Produce about "+Math.floor(spec.budget*.65)+" to "+spec.budget+" meaningful paths. Minimum 28 paths unless this layer truly has fewer visible objects.\n- Use complex organic cubic/quadratic Bezier contours and varied path scale. Do not assemble the whole scene from rectangles, ellipses or triangles.\n- Every object must follow the shared perspective, overlap correctly and rest on a supporting surface.\n- Distinguish material identity with shapes for light planes, half-tones, seams, grains, fine edges, highlights and shadows. Glass requires recess, frames, reflection streaks and interior value. Roof tiles require overlapping courses, ridge caps and eave thickness. Wood requires grain direction and joinery. Foliage requires branch structure, irregular overlapping leaf masses and varied individual leaf silhouettes. Asphalt/concrete requires surface patches, joints, cracks and tapered perspective.\n- Use selective fine outlines in material colors, not thick uniform black. Preserve warm sunlit surfaces and cooler blue/green shadow planes.\n- Do NOT draw elements assigned to other layers, except small overlaps needed for clean occlusion.\n- Use fill colours as hex values or approved material references: url(#zero-anime-sky), url(#zero-anime-plaster), url(#zero-anime-timber), url(#zero-anime-tile), url(#zero-anime-glass), url(#zero-anime-asphalt), url(#zero-anime-leaf), url(#zero-anime-leaf-sun), url(#zero-anime-shadow), url(#zero-anime-sun), url(#zero-anime-woodgrain), url(#zero-anime-asphalt-grain). Filter only url(#zero-anime-soft-shadow), url(#zero-anime-small-blur), url(#zero-anime-glow), url(#zero-anime-paper-grain).\nReturn ONLY JSON: {\"version\":1,\"operations\":[{\"d\":\"M ... C ... Z\",\"fill\":\"#...\",\"stroke\":\"none\",\"width\":1,\"opacity\":1}]}\nUse SVG path commands M L H V C S Q T A Z, numeric coordinates only. Use explicit closed paths for filled areas. Keep x=-100..2020 and y=-100..1180. No SVG markup, no text outside JSON, no scripts, no data URLs, no raster images/base64, no markdown. Maximum "+spec.budget+" paths. Scene description: "+description;
+  let parsed=null,lastError=null;
+  for(let attempt=0;attempt<2;attempt++){
+   try{
+    parsed=await request(key,layerPrompt,fetcher,model,{temperature:.52,maxOutputTokens:8192});
+    if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
+    if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
+    if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
+    break;
+   }catch(error){
+    lastError=error;
+    const msg=String(error?.message||error);
+    if(attempt===1||/الحصة المجانية|حد الطلبات|رفضت Google|موقع الاتصال/.test(msg))throw error;
+    await new Promise(resolve=>setTimeout(resolve,1600));
+   }
+  }
+  const operations=[];
+  for(let j=0;j<parsed.operations.length;j++){
+   let operation;
+   try{operation=validatePath(parsed.operations[j]);}
+   catch(error){throw Error("مسار غير صالح في "+spec.name+"، رقم "+(j+1)+": "+error.message);}
+   const bounds=pathGeometryBounds(operation.d);
+   if(bounds.minX< -120||bounds.minY< -120||bounds.maxX>2040||bounds.maxY>1200)throw Error("مسار خارج حدود الكادر في "+spec.name+".");
+   const keyPath=operation.d+"|"+operation.fill+"|"+operation.stroke;
+   if(allPaths.has(keyPath))continue;
+   allPaths.add(keyPath);operations.push(operation);
+  }
+  if(operations.length<12)throw lastError||Error("طبقة غير كافية بعد إزالة المسارات المكررة: "+spec.name);
+  totalOperations+=operations.length;
+  layers.push({name:spec.name,operations});
+  if(i<ANIME_2D_LAYERS.length-1)await new Promise(resolve=>setTimeout(resolve,4200));
+ }
+ if(totalOperations<220||totalOperations>1100)throw Error("عدد المسارات الكلي لا يحقق حد جودة المشهد: "+totalOperations);
+ return{version:1,kind:"gemini-2d-vector-scene",plan,layers,totalOperations,style:"cinematic-2d-anime-background",model};
+}
