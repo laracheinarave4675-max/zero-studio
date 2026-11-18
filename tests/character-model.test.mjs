@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createLayer,appendOperation,createInbetweenFrames,normalizeProject} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,rotateNoriHead,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,rotateNoriHead,rotateNoriBody,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -327,4 +327,23 @@ test("head rotation validates limits and interpolates between saved poses",()=>{
  assert.equal(mid.rig.headRotation,0);
  assert.throws(()=>rotateNoriHead(a,61),/بين -60 و60/);
  assert.throws(()=>rotateNoriHead(a,NaN),/بين -60 و60/);
+});
+
+test("body lean rotates the complete editable character around the torso anchor",()=>{
+ const base=createNoriModel(),leaned=rotateNoriBody(base,25);
+ assert.equal(leaned.rig.bodyRotation,25);
+ assert.equal(leaned.rig.joints["torso-center"].x,base.rig.joints["torso-center"].x);
+ assert.equal(leaned.rig.joints["torso-center"].y,base.rig.joints["torso-center"].y);
+ for(const id of ["body","neck","head","hair","arm-left","leg-right"])assert.notEqual(leaned.parts.find(part=>part.id===id).path.d,base.parts.find(part=>part.id===id).path.d);
+ for(const bone of NORI_RIG_BONES){
+  const before=segmentLengths(base,bone),after=segmentLengths(leaned,bone);
+  assert.ok(Math.abs(before[0]-after[0])<.01);
+  assert.ok(Math.abs(before[1]-after[1])<.01);
+ }
+});
+test("body lean validates limits and blends between saved poses",()=>{
+ const a=rotateNoriBody(createNoriModel(),30),b=rotateNoriBody(createNoriModel("happy"),-30);
+ const mid=interpolateNoriRigModels(a,b,.5);
+ assert.equal(mid.rig.bodyRotation,0);
+ assert.throws(()=>rotateNoriBody(a,46),/بين -45 و45/);
 });
