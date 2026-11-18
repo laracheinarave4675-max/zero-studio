@@ -99,7 +99,7 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
  if(pose==="wave"&&view==="front")Object.assign(joints,{"elbow-right":{x:1160,y:555,visible:true},"wrist-right":{x:1130,y:430,visible:true}});
  if(pose==="walk")Object.assign(joints,{"elbow-left":{x:735,y:655,visible:true},"wrist-left":{x:700,y:735,visible:true},"elbow-right":{x:1185,y:665,visible:view!=="side"},"wrist-right":{x:1220,y:730,visible:view!=="side"},"knee-left":{x:825,y:900,visible:true},"ankle-left":{x:780,y:965,visible:true},"knee-right":{x:1100,y:910,visible:view!=="side"},"ankle-right":{x:1150,y:970,visible:view!=="side"}});
  if(pose==="sit")Object.assign(joints,{"elbow-left":{x:780,y:700,visible:true},"wrist-left":{x:875,y:755,visible:true},"elbow-right":{x:1140,y:700,visible:view!=="side"},"wrist-right":{x:1045,y:755,visible:view!=="side"},"hip-left":{x:850,y:805,visible:true},"knee-left":{x:760,y:850,visible:true},"ankle-left":{x:720,y:930,visible:true},"hip-right":{x:1070,y:805,visible:view!=="side"},"knee-right":{x:1160,y:850,visible:view!=="side"},"ankle-right":{x:1200,y:930,visible:view!=="side"}});
- model.rig={version:1,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
+ model.rig={version:1,headRotation:0,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
  model.id="nori-"+view+"-"+pose+"-"+expression;
  model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
