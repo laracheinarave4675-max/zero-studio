@@ -2,7 +2,7 @@
 
 ## What it does
 
-The optional drawing assistant sends a text-only drawing description to Google's Gemini Developer API and asks for a JSON list of editable SVG path operations. It does **not** call an image or video generation model and does not upload artwork or reference images. The response is validated by the local drawing engine, previewed as a temporary SVG layer, and added to the project only after the user explicitly approves it.
+The scene artist sends a text-only scene description to Google's Gemini Developer API and asks for a structured JSON scene with 2–12 named art layers and editable SVG path operations (up to 300 paths total). The older single-layer vector proposal function remains available for compatibility. It does **not** call an image or video generation model and does not upload artwork or reference images. Every layer name and every path is validated locally. The complete multi-layer scene is previewed on the canvas and added as separate editable project layers only after the user explicitly approves it.
 
 ## Provider and cost
 
@@ -28,4 +28,4 @@ References:
 
 ## Current limits
 
-This is a first text-to-vector integration, not a trained anime artist. Model output may be crude, incomplete, or inconsistent. It has not yet been tested with a real API key or on the user's Android browser. It does not create in-betweens, maintain a character model sheet, or achieve the 24-unique-drawings-per-second target.
+This is a first text-to-vector integration, not a trained anime artist. Model output may be crude, incomplete, or inconsistent. It has not yet been tested with a real API key or on the user's Android browser. It does not yet guarantee professional anatomy, character consistency across shots, automatic continuity, or the 24-unique-drawings-per-second target. The provider response has not yet been tested with a real API key.
