@@ -43,6 +43,7 @@ A batch is UTF-8 JSON with this shape (paths shortened for illustration):
   "jobId": "the-active-animation-job-id",
   "batchIndex": 0,
   "startFrame": 0,
+  "continuityNote": "Keep the street layout, camera, car identities and travel directions consistent in the next batch.",
   "frames": [
     {
       "index": 0,
@@ -76,7 +77,7 @@ A batch is UTF-8 JSON with this shape (paths shortened for illustration):
 }
 \`\`\`
 
-For each frame, index is the zero-based global frame number and timeSeconds is index / 24. Every frame contains the entire scene, not only a moving-object delta. Layer names and back-to-front order remain identical throughout a job. Frame artwork must be distinct; repeated holds are rejected. Accepted operations become ordinary editable project layers and paths.
+For each frame, index is the zero-based global frame number and timeSeconds is index / 24. Every frame contains the entire scene, not only a moving-object delta. Layer names and back-to-front order remain identical throughout a job. Each batch must return a short continuity note which is saved and injected into the next batch prompt. Frame artwork must be distinct; repeated holds are rejected. Accepted operations become ordinary editable project layers and paths.
 
 ## Safety and current limitations
 
