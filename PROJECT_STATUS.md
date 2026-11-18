@@ -88,12 +88,12 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Import/export standalone `.zchar` character-model files with size and path validation.
 - [x] Insert selected character variants into the current frame as editable layer operations.
 - [x] Exported model-sheet proportion guide layers for center, eye, shoulder, hip, and ground references.\n- [ ] Professional custom model-sheet editor, artist-adjustable proportion guides, and artist-reviewed turnarounds still need extension.
-- [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.
+- [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.\n- [x] Rig-aware pose blending between compatible saved Nori models, with validation of view/part topology and IK reconstruction of intermediate limb paths.
 - [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).\n- [x] Unique-drawing cadence audit distinguishes unique vector artwork from repeated frames, reports the average unique drawings/second, and is included in ZIP manifests.\n- [x] Nori's 11-cell SVG model sheet now includes editable proportion-guide lines in every view/expression/pose cell.
 - [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
-- [x] GitHub Actions run #411 passed on commit `9edfcaf449f4bf4fb3e8f31bc4ce07ea4e0d4a33`: 77 tests passed, 0 failed; JavaScript syntax checks passed. The current branch head includes a subsequent documentation/decision update only.
+- [x] GitHub Actions run #411 passed the previous milestone's 77 tests. Rig-aware pose blending is now added; its new CI run is pending.
 - [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
 - [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
 - The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
