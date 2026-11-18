@@ -221,14 +221,15 @@ $("nextAnimationBatchBtn").onclick=()=>{
 $("importAnimationBatchBtn").onclick=()=>$("animationBatchFile").click();
 $("animationBatchFile").onchange=async event=>{
  const file=event.target.files?.[0];if(!file)return;
+ const previousCurrent=current;let tookSnapshot=false;
  try{
   if(file.size>32*1024*1024)throw Error("ملف الدفعة أكبر من 32 ميغابايت.");
-  const payload=JSON.parse(await file.text());snapshot();
+  const payload=JSON.parse(await file.text());current=project.frames.length-1;snapshot();tookSnapshot=true;
   const result=appendAnimationBatch(project,payload);
   current=project.frames.length-1;activeLayerId=frame().layers[0].id;selection=null;render();
   $("animationProductionStatus").textContent="تم قبول "+result.addedFrames+" رسومات متجهية مستقلة. التقدم "+result.completedFrames+" / "+result.totalFrames+".";
   $("saveState").textContent="احفظ نسخة .zero لاستكمال العمل لاحقاً";
- }catch(error){if(history.length)history.pop();$("animationProductionStatus").textContent="رُفضت الدفعة دون إضافتها: "+error.message}
+ }catch(error){if(tookSnapshot){history.pop();current=previousCurrent;buttons()}$("animationProductionStatus").textContent="رُفضت الدفعة دون إضافتها: "+error.message}
  finally{event.target.value=""}
 };
 $("aiGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصفاً للرسم أولاً.",false);return}const button=$("aiGenerateBtn");button.disabled=true;aiStatus("يرسم الاقتراح المتجهي الآن…");clearProposal();try{const result=await generateSceneProposal(key,promptText);proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-proposal-"+index)});$("aiReview").hidden=false;aiStatus("اكتمل اقتراح المشهد: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً. راجعه ثم اعتمده أو ارفضه.")}catch(error){aiStatus(error.message||"تعذر إنشاء الاقتراح.",false)}finally{button.disabled=false}};
