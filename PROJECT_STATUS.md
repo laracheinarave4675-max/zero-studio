@@ -93,7 +93,7 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [ ] Full-body rigging still needs rotational spine/neck/head joints, finger/toe articulation, collision/ground constraints, and synchronized linked-instance editing across arbitrary frame ranges.
 
 ### Validation and current limitations
-- [x] GitHub Actions run #506 passed the prior 91-test suite. Custom character-from-frame creation and its UI tests are now added; the latest CI run is pending.
+- [x] GitHub Actions run #525 passed all 94 tests, 0 failed, and JavaScript syntax checks succeeded on commit `9a4e356347efe21de7e8bc2ed1f859038d0495c9`. Subsequent commits update documentation only.
 - [ ] Physical Android browser/touch/stylus tests remain unperformed. The pressure brush is implemented but pressure fidelity depends on device/browser stylus events.
 - [ ] Visual quality of Nori's authored geometry and all pose transitions still needs human/artist review.
 - The in-between engine only interpolates matching SVG command topology. It is not a general skeletal or drawing-aware animation system.
