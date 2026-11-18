@@ -4,7 +4,7 @@ import{generateSceneProposal}from"../app/scene-production.mjs";
 const key=process.env.GEMINI_API_KEY;
 if(!key)throw Error("GEMINI_API_KEY is not configured.");
 const description="Premium cinematic anime background painting of a small Japanese countryside ramen restaurant at golden hour, seen from a three-quarter street-side camera. A detailed two-storey timber-and-plaster building with a complex tiled roof, deep eaves, wooden lattice windows, glass reflections, fabric entrance curtain, painted vertical signboards, potted plants and a small parked kei van. The building stands beside a gently curving rural road and sidewalk receding toward distant green hills. Include utility poles and overhead wires, layered trees and shrubs in foreground, middle distance and background, atmospheric hills, warm low sun from frame-left, long cast shadows, soft bounce light and subtle reflections. Coherent architectural perspective and grounded objects. Rich material variation, irregular foliage, natural proportions, selective fine linework, warm cinematic grading, painterly anime film-background finish. No people. Avoid flat front elevation, cartoon icons, repeated circles, thick black outlines, empty black gaps and geometric placeholders.";
-const model=process.env.GEMINI_MODEL||"gemini-3-flash";
+const model=process.env.GEMINI_MODEL||"gemini-2.5-flash-lite";
 const proposal=await generateSceneProposal(key,description,fetch,model);
 const project=createProject("ZERO STUDIO — Cinematic anime environment artist test");
 const frame=project.frames[0];frame.layers=[];
