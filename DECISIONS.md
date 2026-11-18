@@ -37,3 +37,6 @@ This file records decisions that must not be changed silently. Add dated entries
 
 ## D-010 — Rig pose interpolation requires compatible editable models
 **Decision:** Character pose blending may only run when both validated models have compatible rig versions, the same view, part order/visibility, SVG path topology, and per-part colors. Rebuild intermediate limb geometry with the constrained IK solver; reject incompatible models instead of guessing or rasterizing.
+
+## D-011 — Preserve character instance identity across animation frames
+**Decision:** Inserted character parts carry a shared instance ID and per-layer part membership. Copying or updating a character in another frame preserves that identity while assigning fresh drawing-operation IDs. In-between frames retain the instance metadata. This provides a foundation for later synchronized multi-frame edits without flattening the artwork.
