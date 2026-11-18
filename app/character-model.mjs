@@ -1,4 +1,4 @@
-import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData,uid} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
@@ -265,16 +265,55 @@ export function interpolateNoriRigModels(startModel,endModel,t){
  return validateCharacterModel(result);
 }
 
-export function addCharacterModelToFrame(frame,model){
+export function addCharacterModelToFrame(frame,model,options={}){
  const safe=validateCharacterModel(model),groups=new Map();
+ if(!frame||!Array.isArray(frame.layers))throw Error("إطار الشخصية غير صالح");
+ const instanceId=options.instanceId===undefined?uid("character-instance"):String(options.instanceId);
+ if(!instanceId.trim()||instanceId.length>120)throw Error("معرّف مثيل الشخصية غير صالح");
  for(const item of safe.parts){
   if(item.visible===false)continue;
-  if(!groups.has(item.layer))groups.set(item.layer,createLayer(item.layer));
-  appendOperation(groups.get(item.layer),"stroke",item.path);
+  if(!groups.has(item.layer))groups.set(item.layer,{layer:createLayer(item.layer),partIds:[]});
+  const group=groups.get(item.layer);
+  appendOperation(group.layer,"stroke",item.path);
+  group.partIds.push(item.id);
  }
- const added=[...groups.values()];
+ if(frame.layers.length+groups.size>100)throw Error("تجاوزت طبقات الإطار الحد الأقصى بعد إضافة الشخصية");
+ const added=[...groups.values()].map(group=>{
+  group.layer.characterInstance={id:instanceId,modelId:safe.id,name:safe.name,partIds:group.partIds};
+  return group.layer;
+ });
  frame.layers.push(...added);
  return added;
+}
+
+export function copyCharacterInstanceToFrame(sourceFrame,targetFrame,instanceId){
+ if(!sourceFrame||!targetFrame||sourceFrame===targetFrame||!Array.isArray(sourceFrame.layers)||!Array.isArray(targetFrame.layers))throw Error("إطارات نسخ الشخصية غير صالحة");
+ const source=sourceFrame.layers.filter(layer=>layer.characterInstance?.id===instanceId);
+ if(!source.length)throw Error("مثيل الشخصية غير موجود في إطار المصدر");
+ if(targetFrame.layers.some(layer=>layer.characterInstance?.id===instanceId))throw Error("هذا المثيل موجود بالفعل في الإطار الهدف");
+ if(targetFrame.layers.length+source.length>100)throw Error("لا توجد مساحة كافية لنسخ طبقات الشخصية");
+ const copies=source.map(layer=>{
+  const copy=JSON.parse(JSON.stringify(layer));copy.id=uid("layer");
+  copy.operations=copy.operations.map(operation=>({...operation,id:uid("op"),path:{...operation.path}}));
+  return copy;
+ });
+ targetFrame.layers.push(...copies);
+ return copies;
+}
+
+export function replaceCharacterInstanceInFrame(frame,instanceId,model){
+ if(!frame||!Array.isArray(frame.layers))throw Error("إطار الشخصية غير صالح");
+ const indices=frame.layers.map((layer,index)=>layer.characterInstance?.id===instanceId?index:-1).filter(index=>index>=0);
+ if(!indices.length)throw Error("مثيل الشخصية غير موجود في الإطار");
+ const first=indices[0],safe=validateCharacterModel(model),existing=new Set(indices);
+ const retained=frame.layers.filter((layer,index)=>!existing.has(index));
+ const needed=new Set(safe.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;
+ if(retained.length+needed>100)throw Error("لا توجد مساحة كافية لتحديث الشخصية");
+ frame.layers=retained;
+ const appended=addCharacterModelToFrame(frame,safe,{instanceId});
+ const replacement=frame.layers.splice(frame.layers.length-appended.length,appended.length);
+ frame.layers.splice(Math.min(first,frame.layers.length),0,...replacement);
+ return replacement;
 }
 
 const escapeXml=value=>String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
