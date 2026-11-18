@@ -5,9 +5,10 @@ Last updated: 2026-11-18 (UTC)
 ## Latest AI scene-artist implementation and validation
 
 - Development branch head: `48fa33310424161e86cd236356f57fd25dfa9243`.
-- GitHub Actions run #724 passed 117 tests, 0 failures, including syntax checks for `app/scene-production.mjs` and `app/sw.js`.
+- GitHub Actions run #726 passed 117 tests, 0 failures, including syntax checks for `app/scene-production.mjs` and `app/sw.js`: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44261298247.
 - The AI scene artist now requests 2–12 named editable layers and at most 300 vector paths, validates the response, previews the complete proposal, and inserts separate project layers only after approval.
 - Service-worker cache version: `zero-studio-shell-v24`.
+- Public test deployment: `dpl_BeE23C3rLzr9r72VVhaf32BQkmy3` reached READY; stable alias `https://zero-studio-three.vercel.app/`. Deployment manifest includes `src/scene-production.mjs`, updated `src/app.js`, `src/index.html`, and `src/sw.js`. This remains a manual static snapshot, not automatic Git synchronization.
 - Not yet verified: real Gemini API response, Android browser/touch behavior, artistic quality, and scene-to-scene character continuity.
 
 ## Updated production direction — 2026-11-18
