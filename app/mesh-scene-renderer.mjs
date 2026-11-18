@@ -8,7 +8,16 @@ export function renderMeshEnvironment(plan){
  if(!plan||plan.version!==1||!plan.building||!Array.isArray(plan.trees)||plan.trees.length<2||plan.trees.length>8)throw Error("مخطط المشهد ثلاثي الأبعاد غير مكتمل.");
  const b=plan.building;
  for(const k of ["width","height","depth"])if(!Number.isFinite(b[k])||b[k]<=0||b[k]>20)throw Error("أبعاد المبنى ثلاثي الأبعاد غير صالحة.");
+ const colorOK=v=>typeof v==="string"&&/^#[0-9a-f]{6}$/i.test(v);
+ const vectorOK=v=>Array.isArray(v)&&v.length===3&&v.every(n=>Number.isFinite(n)&&Math.abs(n)<=100);
  const camera=plan.camera||{position:[9,8,19],target:[0,2.4,0]};
+ if(!vectorOK(camera.position)||!vectorOK(camera.target)||!vectorOK(plan.sunDirection||[-.55,.9,.35]))throw Error("مواضع الكاميرا أو اتجاه الإضاءة غير صالحة.");
+ if(!colorOK(plan.sky||"#c9ded9")||!colorOK(plan.sun||"#f3d39a")||!colorOK(b.wall||"#d8c6a8")||!colorOK(b.roof||"#514b48"))throw Error("ألوان مخطط البيئة يجب أن تكون HEX صالحة.");
+ if(plan.trees.some(t=>![t.x,t.z,t.scale].every(Number.isFinite)||Math.abs(t.x)>30||Math.abs(t.z)>40||t.scale<.3||t.scale>2.5||(t.color&&!colorOK(t.color))))throw Error("إحداثيات أو ألوان الأشجار خارج الحدود.");
+ if((b.windows||[]).length>6||(b.windows||[]).some(v=>![v.x,v.y,v.width,v.height].every(Number.isFinite)||v.x< -b.width/2||v.x+v.width>b.width/2||v.y<0||v.y+v.height>b.height))throw Error("مواضع النوافذ أو أبعادها غير صالحة.");
+ for(const item of [b.door,b.sign,b.awning,b.balcony].filter(Boolean))if(![item.x,item.y,item.width].every(Number.isFinite)||item.width<=0||Math.abs(item.x)>b.width||item.y<0||item.y>b.height||("height"in item&&(!Number.isFinite(item.height)||item.height<=0)))throw Error("عنصر معماري خارج حدود المبنى.");
+ if((plan.poles||[]).length>2||(plan.poles||[]).some(v=>![v.x,v.z,v.height||8].every(Number.isFinite)||Math.abs(v.x)>30||Math.abs(v.z)>40||(v.height||8)<2||(v.height||8)>20))throw Error("مواضع أعمدة الكهرباء غير صالحة.");
+ if(plan.van&&![plan.van.x,plan.van.z,plan.van.width,plan.van.depth].every(Number.isFinite))throw Error("بيانات المركبة غير صالحة.");
  const pos=camera.position,target=camera.target,forward=norm(sub(target,pos)),right=norm(cross(forward,[0,1,0])),up=norm(cross(right,forward)),focal=1050;
  const project=v=>{const q=sub(v,pos),z=dot(q,forward);if(z<=.1)return null;const s=focal/z;return[960+dot(q,right)*s,540-dot(q,up)*s,z]};
  const buckets=Array.from({length:5},()=>[]);
