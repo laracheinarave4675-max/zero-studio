@@ -71,3 +71,17 @@ This file records decisions that must not be changed silently. Add dated entries
 **Implication:** Evaluate services using actual request, token, output-size, privacy, and reset limits. Explore having the AI author a scene-specific vector drawing specification which the local renderer can execute into a complete, independently stored SVG drawing for every frame, but only accept that approach after a 240-frame prototype passes the unique-drawing cadence audit, full-scene completeness, continuity, and artistic review. Do not replace the 24 independent drawings/second target with a static image, SVG animation element, or simple keyframe tween.
 
 **Provider status:** OmniSVG, OpenRouter, Groq, Cerebras, local llama.cpp, and other options are research candidates only. No live provider has been selected or connected as of this decision.
+
+## D-017 — 2D-first cinematic anime art direction (2026-11-18)
+
+**Decision:** ZERO STUDIO's visual target is cinematic 2D anime background painting with selective 3D assistance. The final artwork must read as 2D first. A full-scene low-poly 3D render is not an acceptable replacement.
+
+**2D responsibilities:** final environment surfaces, organic foliage, architectural/material detail, selective linework, color design, shadows/highlights, atmospheric perspective and final compositing are authored as editable 2D drawings/paths and bounded vector material effects.
+
+**3D responsibilities:** camera/perspective guides, rough layout/blockout, spatial/occlusion references, optional shadow/reflection guides and selected props only. 3D mesh output is advisory unless its final style is deliberately flattened and visually matched to the 2D artwork.
+
+**Production implication:** background painting and character animation use different art grammars. Backgrounds target the user's three cinematic environment references; characters require separate anime model sheets, clean line art, cel color keys, expressive drawings and frame-by-frame cleanup.
+
+**Acceptance gate:** create and visually review three editable scenes (urban store, rural ramen shop, forest house). Passing code tests or increasing path count does not count as artistic acceptance. The 24 unique full-scene drawings/second requirement remains unchanged for animation.
+
+**Durable art specification:** `docs/ANIME_ART_DIRECTION.md`.
