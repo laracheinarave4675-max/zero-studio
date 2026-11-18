@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject} from "../app/engine.mjs";
+import {createProject,normalizeProject} from "../app/engine.mjs";
 import {createNoriModel} from "../app/character-model.mjs";
 import {saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary,MAX_CHARACTER_LIBRARY} from "../app/character-library.mjs";
 
@@ -32,4 +32,14 @@ test("character library enforces the 100-model project limit",()=>{
  for(let i=0;i<MAX_CHARACTER_LIBRARY;i++)saveCharacterToLibrary(project,createNoriModel(),"Nori "+i);
  assert.equal(project.characterLibrary.length,MAX_CHARACTER_LIBRARY);
  assert.throws(()=>saveCharacterToLibrary(project,createNoriModel()),/ممتلئة/);
+});
+
+test("character library survives ZERO project serialization and normalization",()=>{
+ const project=createProject(),entry=saveCharacterToLibrary(project,createNoriModel("surprised","back","sit"));
+ const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
+ assert.equal(reopened.characterLibrary.length,1);
+ const loaded=loadCharacterFromLibrary(reopened,entry.id);
+ assert.equal(loaded.expression,"surprised");
+ assert.equal(loaded.view,"back");
+ assert.equal(loaded.pose,"sit");
 });
