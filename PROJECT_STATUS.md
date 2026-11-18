@@ -43,6 +43,15 @@ Last updated: 2026-11-18 (UTC)
 
 The AI is intended to act as the scene artist: interpret a natural-language scene brief, plan the composition, divide the artwork into meaningful editable layers, and draw those layers as validated SVG paths. Starter background/character presets are aids only, not the creative boundary. The user should not need to understand technical implementation or coordinate separate tools. Continue autonomously on the agreed goals, explain in plain Arabic, and record progress/limitations here. This direction does not relax the no-raster-generation rule or the target of 24 independent drawings per second.
 
+## Scene artist visual-quality upgrade — 2026-11-18
+
+- Updated `app/scene-production.mjs` with a new cinematic environment-art direction brief: camera/horizon/vanishing points, five depth zones, atmospheric perspective, grounded object placement, consistent sun direction, cast/contact shadows, ambient occlusion, bounce light, reflections, and material-specific treatment for plaster, wood, tile, glass, metal, asphalt, concrete, soil, foliage, and fabric.
+- Added explicit composition and style constraints to discourage flat clip-art, repeated oval foliage, primitive-only architecture, and uniform heavy outlines. The target is premium anime background painting with a strong vector-based 2.5D illusion.
+- Kept the no-raster rule and 2–12 editable layers / 300-path safety ceiling. This is a stronger prompt, not a true 3D renderer and not proof of professional-quality output.
+- Added a regression test that inspects the actual prompt sent to Gemini for required depth, lighting, and material instructions. GitHub Actions now runs this scene-artist test whenever the scene prompt or test changes.
+- **Pending validation:** the automated run must pass; then a real Gemini-generated scene must be visually reviewed against the user's three reference images. Do not mark visual quality as solved based on prompt changes alone.
+- Known limitation: Gemini receives text instructions only; the uploaded reference images are not supplied to the provider. True 3D meshes, physically based materials, and a 3D lighting pipeline are not implemented.
+
 ## Mission
 
 Build a practical, mobile-first anime production studio, usable from an Android phone and free or nearly free, with a coordinated workflow for story, character design, backgrounds, animation, cleanup, coloring, sound, editing, and quality review.
