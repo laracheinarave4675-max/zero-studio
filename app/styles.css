@@ -9,3 +9,4 @@
 #headRotationRange{width:100%;accent-color:var(--accent)}
 #bodyRotationRange{width:100%;accent-color:var(--accent)}
 #nodeEditLayer circle{cursor:grab;touch-action:none}#nodeEditLayer circle:active{cursor:grabbing}
+.timeline-nav{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;margin-top:6px;font-size:10px;color:var(--muted)}.timeline-nav button{padding:6px 8px;font-size:10px}.timeline-nav label{display:flex;align-items:center;gap:4px}.timeline-nav input{width:58px;padding:6px;border:1px solid var(--line);border-radius:7px;background:#0b1424;color:var(--text)}.production-progress{display:flex;flex-direction:column;gap:4px;padding:9px;margin-top:8px;border:1px solid var(--line);border-radius:9px;background:#0b1424}.production-progress strong{font-size:13px;color:var(--accent)}.production-progress .status{line-height:1.6}
