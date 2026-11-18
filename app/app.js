@@ -1,6 +1,6 @@
 import{WIDTH,HEIGHT,createProject,createFrame,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,analyzeDrawingCadence,getPathEditHandles,movePathAnchor,movePathControlPoint,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
-import{generateSceneProposal}from"./gemini-drawing.mjs";
+import{generateSceneProposal}from"./scene-production.mjs";
 import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg,createCharacterModelFromFrame,rotateNoriHead,rotateNoriBody,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame}from"./character-model.mjs";
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
