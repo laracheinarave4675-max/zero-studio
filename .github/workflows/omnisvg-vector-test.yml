@@ -4,6 +4,7 @@ on:
     branches: ["feature/mobile-drawing-workspace"]
     paths:
       - "scripts/run-omnisvg-vector-test.py"
+      - "scripts/run-omnisvg-simple-asset.py"
       - ".github/workflows/omnisvg-vector-test.yml"
   workflow_dispatch:
 jobs:
@@ -18,7 +19,7 @@ jobs:
       - name: Install Gradio client
         run: python -m pip install --upgrade pip gradio_client
       - name: Generate one native SVG anime environment study
-        run: python scripts/run-omnisvg-vector-test.py
+        run: python scripts/run-omnisvg-simple-asset.py
       - name: Upload native SVG and generation report
         if: always()
         uses: actions/upload-artifact@v4
