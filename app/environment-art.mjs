@@ -63,10 +63,10 @@ export function renderEnvironmentScene(plan){
  architecture.push(p(`M ${fmt(x+20)} ${fmt(y+h-2)} Q ${fmt(x+w*.5)} ${fmt(y+h+18)} ${fmt(x+w-20)} ${fmt(y+h-2)}`,"none","#554b42",8));
  layers.push(layer("04 — العمارة والخامات المعمارية",architecture));
  const near=[];
+ const roadY=Math.max(810,Math.min(880,y+h+35));
  plan.trees.filter(t=>t.depth==="near").forEach(t=>near.push(...tree(t.x,t.y,t.scale)));
  plan.shrubs?.forEach(s=>near.push(...shrub(s.x,s.y,s.scale,s.color||PALETTE.mid)));
  for(let i=0;i<4;i++){const px=130+i*510,py=roadY-10+(i%2)*16;near.push(p(`M ${px} ${py} Q ${px+24} ${py-16} ${px+50} ${py-2} Q ${px+75} ${py+8} ${px+98} ${py-4}`,"none","#8d927e",3));}
- const roadY=Math.max(810,Math.min(880,y+h+35));
  near.push(p(`M 0 ${roadY-26} C 420 ${roadY-58} 1150 ${roadY-38} 1920 ${roadY-82} L 1920 1080 L 0 1080 Z`,PALETTE.curb),p(`M 0 ${roadY} C 430 ${roadY-30} 1160 ${roadY-15} 1920 ${roadY-56} L 1920 1080 L 0 1080 Z`,PALETTE.road));
  for(let i=0;i<7;i++){const xx=100+i*285,yy=roadY+135-i*5;near.push(p(`M ${xx} ${yy} L ${xx+115} ${yy-4}`,"none","#e8e2cb",7));}
  near.push(p(`M 220 ${roadY+255} C 360 ${roadY+242} 410 ${roadY+248} 520 ${roadY+235}`,"none","#4c5752",3),p(`M 780 ${roadY+180} Q 860 ${roadY+165} 950 ${roadY+175}`,"none","#81857a",2));
