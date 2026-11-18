@@ -251,3 +251,20 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Added touch pan/zoom controls and inline Android-friendly layer rename.
 - Added Nori palette customization, with validated line/skin/hair/clothing/accent overrides.
 - Expanded CI coverage to 58 passing tests. See GitHub Actions run #322.
+
+
+## Editable vector background milestone — 2026-11-18
+
+- [x] Added `app/backgrounds.mjs` with four original SVG-path scene presets: daytime city, forest, interior room, and night city.
+- [x] Each preset is split into named editable layers; insertion places those layers behind existing character/ink artwork and checks layer/operation limits before mutation.
+- [x] Added Arabic mobile workspace controls to select and insert a background; scenes remain ordinary validated vector operations and are included in project save/open and SVG/ZIP export.
+- [x] Added `docs/BACKGROUND_LIBRARY.md` and automated tests for preset structure, stacking order, invalid presets/capacity, and project round-trip.
+- [ ] Visual/art review of all four scenes and physical Android interaction remain pending.
+- [ ] This is a starter background library, not yet a complete layout department: perspective grid, parallax/depth editing, prop library, reusable location sheets, and scene continuity tools remain planned.
+
+### Remaining drawing/character/animation acceptance gaps
+- [ ] Professional adjustable model-sheet editor and artist-reviewed turnarounds.
+- [ ] Finish spine/neck/finger/toe articulation, collision/ground constraints, and synchronized linked-character edits across arbitrary frame ranges.
+- [ ] Full keyframe/dope-sheet editor, timing/holds, exposure-sheet workflow, cleanup and frame-aware interpolation beyond topology-matched path tweening.
+- [ ] Background perspective/layout editor, depth/parallax planes, reusable props and scene continuity.
+- [ ] Android device validation, human art review, and a measured action test against the unchanged 24 independent drawings/second target.
