@@ -4,13 +4,13 @@ import{createAnimationPlan,beginAnimationProduction}from"../app/animation-produc
 import{runAnimationProduction}from"../app/animation-worker.mjs";
 import{createGeminiAnimationProvider}from"../app/gemini-animation.mjs";
 const apiKey=process.env.GEMINI_API_KEY;
-const requestedModel=process.env.GEMINI_MODEL||"gemini-3.5-flash-lite";
+const requestedModel=process.env.GEMINI_MODEL||"gemini-3-flash";
 if(!apiKey)throw Error("GEMINI_API_KEY is not configured in GitHub Actions repository secrets.");
 const description="Create a complete, coherent anime-style urban street scene in daylight. Use a wide cinematic camera view with clear perspective, sidewalks, storefronts, buildings, trees, streetlights and road markings. Several distinct cars must travel through the scene in both directions, with varied speeds and spacing. Animate wheel rotation, vehicle movement, natural shadows and subtle environmental motion. Preserve the exact street layout, perspective, lighting and visual style throughout all 240 frames. Draw every frame as editable vector artwork using separate named layers. No raster images, no video generation, no static-image animation tricks. Deliver a complete 10-second sequence.";
 const project=createProject("ZERO STUDIO — Gemini vector animation test");
 const plan=createAnimationPlan(description,{durationSeconds:10,fps:24,batchSize:6});
 beginAnimationProduction(project,plan);
-const fallbacks=[requestedModel,...["gemini-3.1-flash-lite","gemini-3-flash"].filter(model=>model!==requestedModel)];
+const fallbacks=[requestedModel,...["gemini-3.5-flash-lite","gemini-3.1-flash-lite"].filter(model=>model!==requestedModel)];
 let result,lastError,usedModel;
 for(const model of fallbacks){
  try{
@@ -24,6 +24,8 @@ for(const model of fallbacks){
  }
 }
 if(!result)throw lastError||Error("All configured Gemini models were unavailable.");
+const pathCounts=project.frames.map(frame=>frame.layers.reduce((sum,layer)=>sum+layer.operations.length,0));
+if(pathCounts.some(count=>count<24))throw Error("The sample is technically valid JSON but fails the visual-detail gate: every complete frame needs at least 24 editable paths. Received: "+pathCounts.join(", "));
 await mkdir("artifacts",{recursive:true});
 await writeFile("artifacts/gemini-test.zero",JSON.stringify(project));
 const escape=value=>String(value).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;");
