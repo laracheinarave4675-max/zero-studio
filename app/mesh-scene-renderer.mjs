@@ -57,6 +57,18 @@ export function renderMeshEnvironment(plan){
  line(2,[[x-over,h,frontZ+.02],[ridgeX,ridgeY,frontZ+.02],[x+w+over,h,frontZ+.02]],"#b39b7c",5);
  for(let i=1;i<13;i++){const t=i/13,xx=x-over+(w/2+over)*t,yy=h+(ridgeY-h)*t;line(2,[[xx,yy+.08,frontZ+.08],[xx,yy+.08,backZ-.08]],"#6f6257",2.4);const xr=w/2*t;line(2,[[ridgeX+xr,ridgeY-(ridgeY-h)*t,frontZ+.08],[ridgeX+xr,ridgeY-(ridgeY-h)*t,backZ-.08]],"#6f6257",2.4);}
  for(let i=1;i<10;i++){const t=i/10,xx=x+(w*.5)*t,yy=h+(ridgeY-h)*(1-t);line(2,[[xx,yy,frontZ+.06],[xx,yy,backZ-.06]],"#a18c76",1);const xr=w*(1-t);line(2,[[xr,yy,frontZ+.06],[xr,yy,backZ-.06]],"#a18c76",1);}
+ // Individually shaded tile plates add readable roof craftsmanship.
+ const roofBase=b.roof||"#514b48";
+ for(let row=1;row<=8;row++){
+  const t=row/9,step=(w/2+over)/9*.82;
+  for(let col=0;col<6;col++){
+   const z1=backZ+(frontZ-backZ)*col/6+.035,z2=backZ+(frontZ-backZ)*(col+1)/6-.035;
+   const lx=x-over+(w/2+over)*t,ly=h+(ridgeY-h)*t,lx2=lx+step,ly2=ly+(ridgeY-h)/9*.82;
+   const before=buckets[2].length;face(2,[[lx,ly+.035,z1],[lx2,ly2+.035,z1],[lx2,ly2+.035,z2],[lx,ly+.035,z2]],shade(roofBase,.84+((row+col)%4)*.075),"#62584d",.7);if(buckets[2].length>before)buckets[2][buckets[2].length-1].depth-=.12;
+   const rx=w/2*t,ry=ridgeY-(ridgeY-h)*t,rx2=rx+step,ry2=ry-(ridgeY-h)/9*.82;
+   const beforeRight=buckets[2].length;face(2,[[rx,ry+.035,z1],[rx2,ry2+.035,z1],[rx2,ry2+.035,z2],[rx,ry+.035,z2]],shade(roofBase,.88+((row+col+1)%4)*.065),"#62584d",.7);if(buckets[2].length>beforeRight)buckets[2][buckets[2].length-1].depth-=.12;
+  }
+ }
  // Ridge cap and layered eaves.
  line(2,[[0,ridgeY+.06,frontZ],[0,ridgeY+.06,backZ]],"#c1a98a",6);
  line(2,[[x-over,h,frontZ+.05],[x+w+over,h,frontZ+.05]],"#d4bd9c",7);
@@ -76,7 +88,7 @@ export function renderMeshEnvironment(plan){
  for(let i=0;i<4;i++){const yy=.55+i*.92;line(2,[[x+.08,yy,front+.055],[x+w-.08,yy,front+.055]],"#6d5948",.055);}
  for(const win of windows.slice(0,6)){const wx=win.x,wy=win.y,ww=win.width,wh=win.height;line(2,[[wx-.12,wy-.14,front+.28],[wx+ww+.12,wy-.14,front+.28]],"#e4d2b4",.05);line(2,[[wx-.12,wy+wh+.14,front+.28],[wx+ww+.12,wy+wh+.14,front+.28]],"#55483d",.06);}
  // Grounded trees: faceted trunks and multi-volume foliage.
- for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1,bucket=tz>2?4:1;cylinder(bucket,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(bucket,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(bucket,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,t.color||"#477255",11);sphere(bucket,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",11);sphere(bucket,tx+.66*scale,2.92*scale,tz-.1,.7*scale,.78*scale,.7*scale,"#62865d",11);sphere(bucket,tx+.05*scale,3.85*scale,tz-.04,.58*scale,.62*scale,.55*scale,"#73956a",11);}
+ for(const t of plan.trees){const tx=t.x,tz=t.z,scale=t.scale||1,bucket=tz>2?4:1;cylinder(bucket,tx,0,tz,.17*scale,2.5*scale,"#665542",7);cylinder(bucket,tx,1.4*scale,tz,.07*scale,1.2*scale,"#6b5844",5);sphere(bucket,tx,3.15*scale,tz,.95*scale,1.05*scale,.85*scale,t.color||"#477255",11);sphere(bucket,tx-.62*scale,2.85*scale,tz+.08,.68*scale,.72*scale,.68*scale,"#8aa66f",11);sphere(bucket,tx+.66*scale,2.92*scale,tz-.1,.7*scale,.78*scale,.7*scale,"#62865d",11);sphere(bucket,tx+.05*scale,3.85*scale,tz-.04,.58*scale,.62*scale,.55*scale,"#73956a",11);sphere(bucket,tx-.15*scale,2.45*scale,tz+.38,.55*scale,.5*scale,.48*scale,"#789b6b",11);}
  // Low shrubs and potted greenery at different depths.
  for(const s of (plan.shrubs||[]).slice(0,10)){const bucket=s.z>2?4:1,scale=s.scale||1;sphere(bucket,s.x,.42*scale,s.z,.62*scale,.48*scale,.52*scale,s.color||"#6f925d",8);sphere(bucket,s.x-.38*scale,.34*scale,s.z+.08,.42*scale,.36*scale,.4*scale,"#8aa66f",8);cylinder(bucket,s.x,.02,s.z,.28*scale,.38*scale,"#9b7152",8);}
  // Utility poles, cross-arms and overhead cables.
