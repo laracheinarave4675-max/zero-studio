@@ -1,6 +1,6 @@
 # ZERO STUDIO — Project Status
 
-Last updated: 2026-11-17 (UTC)
+Last updated: 2026-11-18 (UTC)
 
 ## Mission
 
@@ -88,7 +88,9 @@ These are historical reports, not a fresh test in this repository. Revalidate be
 - [x] Import/export standalone `.zchar` character-model files with size and path validation.
 - [x] Insert selected character variants into the current frame as editable layer operations.
 - [ ] Professional custom model-sheet editor, proportion guides and turnarounds need artist review and extension.
-- [ ] Bone-based character rigging, joint constraints, deformation, reusable character instances and general pose interpolation remain future work.
+- [x] Basic two-bone inverse kinematics for four limb chains: endpoint drag solves the elbow/knee while preserving segment lengths and a 20°–160° bend range; intermediate-joint drag preserves both segment lengths.
+- [x] Project-local reusable character library with validated save/load/remove and inclusion in `.zero` project save/open (100 models maximum).
+- [ ] Full-body rigging (spine, neck, head, hands/feet articulation), collision/ground constraints, reusable linked instances across frames, and general rig-pose interpolation remain future work.
 
 ### Validation and current limitations
 - [x] GitHub Actions run #322 passed on commit `2bb1224fa99b7ce5141a115eed49dcfc18f385dc`: 58 tests passed, 0 failed; JavaScript syntax checks passed.
