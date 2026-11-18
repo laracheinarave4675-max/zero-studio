@@ -1,7 +1,7 @@
 import{WIDTH,HEIGHT,createProject,createFrame,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,analyzeDrawingCadence,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
 import{generateVectorProposal}from"./gemini-drawing.mjs";
-import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg,createCharacterModelFromFrame,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame}from"./character-model.mjs";
+import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg,createCharacterModelFromFrame,rotateNoriHead,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame}from"./character-model.mjs";
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 (()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
@@ -43,9 +43,10 @@ function renderCharacterInstances(){
 }
 function renderRigEditor(){
  if(!rigCanvas)return;
- if(selectedCharacterModel&&!selectedCharacterModel.rig){$("characterRigPanel").hidden=true;return}
- $("characterRigPanel").hidden=false;
+ if(selectedCharacterModel&&!selectedCharacterModel.rig){$("characterRigPanel").hidden=true;$("headRotationRange").disabled=true;return}
+ $("characterRigPanel").hidden=false;$("headRotationRange").disabled=false;
  if(!rigModel)rigModel=applyNoriRigPose(createBaseNori(),{});
+ $("headRotationRange").value=String(rigModel.rig.headRotation||0);$("headRotationValue").textContent=(rigModel.rig.headRotation||0)+"°";
  rigArt.replaceChildren();rigBones.replaceChildren();rigHandles.replaceChildren();
  const previewFrame=createFrame();addCharacterModelToFrame(previewFrame,rigModel);
  previewFrame.layers.forEach((entry,index)=>renderLayerInto(rigArt,entry,index,"character-rig-preview"));
@@ -138,6 +139,7 @@ $("exportCharacterBtn").onclick=()=>{try{const model=characterModelSelection();d
 $("importCharacterBtn").onclick=()=>$("characterFile").click();
 $("characterFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>5*1024*1024)throw Error("ملف الشخصية أكبر من 5 ميغابايت");selectedCharacterModel=validateCharacterModel(JSON.parse(await file.text()));rigModel=selectedCharacterModel.rig?selectedCharacterModel:null;renderRigEditor();$("characterStatus").textContent="تم تحميل "+selectedCharacterModel.name+". سيُضاف هذا النموذج عند الضغط على زر الإضافة."}catch(error){selectedCharacterModel=null;resetRigModel();$("characterStatus").textContent="ملف شخصية غير صالح: "+error.message}finally{e.target.value=""}};
 $("useNoriBtn").onclick=()=>{resetRigModel();$("characterStatus").textContent="تم اختيار نموذج Nori المدمج."};
+$("headRotationRange").oninput=()=>{try{const model=rotateNoriHead(characterModelSelection(),+$("headRotationRange").value);selectedCharacterModel=model;rigModel=model;$("headRotationValue").textContent=model.rig.headRotation+"°";renderRigEditor()}catch(error){$("characterStatus").textContent="تعذر تدوير الرأس: "+error.message}};
 $("resetRigBtn").onclick=()=>{resetRigModel();$("characterStatus").textContent="أعيدت المفاصل إلى الوضعية المحددة."};
 for(const id of ["characterView","characterPose","characterExpression"]){$(id).onchange=()=>resetRigModel()}
 for(const id of ["characterLine","characterSkin","characterHair","characterCloth","characterAccent"]){$(id).onchange=()=>updateRigPalette()}
