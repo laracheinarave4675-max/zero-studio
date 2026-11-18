@@ -12,7 +12,8 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Mobile-first Arabic RTL workspace (initial prototype committed; Android testing pending).
 - [x] SVG/vector drawing surface with pointer/touch support (physical-device test pending).
 - [x] Layer management: add/remove/select, inline rename, visibility, locking, reorder (Android testing pending); [x] basic frame management.
-- [x] Vector item selection, drag-to-move, style update, duplication, and delete with stable operation IDs.\n- [x] Direct SVG path anchor and cubic/quadratic Bézier control-handle editing (up to 240 handles per path).
+- [x] Vector item selection, drag-to-move, style update, duplication, and delete with stable operation IDs.
+- [x] Direct SVG path anchor and cubic/quadratic Bézier control-handle editing (up to 240 handles per path).
 - [x] Mobile canvas pan and zoom controls.
 - [x] Line, rectangle, ellipse, and optional closed-shape fill.
 - [x] Undo/redo and JSON project save/load implementation (browser round-trip test pending).
