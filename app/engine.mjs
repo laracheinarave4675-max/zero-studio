@@ -155,7 +155,7 @@ export function createInbetweenFrames(startFrame,endFrame,count=1){
  return Array.from({length:count},(_,index)=>{
   const t=(index+1)/(count+1);
   const layers=startFrame.layers.map((source,i)=>({
-   id:uid("layer"),name:source.name,visible:source.visible,locked:source.locked,
+   id:uid("layer"),name:source.name,visible:source.visible,locked:source.locked,...(source.characterInstance?{characterInstance:JSON.parse(JSON.stringify(source.characterInstance))}:{}),
    operations:pairs[i].map(op=>({id:uid("op"),kind:op.kind,path:validatePath({...op.from,d:interpolatePathData(op.from.d,op.to.d,t),width:op.from.width+(op.to.width-op.from.width)*t})}))
   }));
   return{id:uid("frame"),layers};
@@ -198,7 +198,15 @@ function normalizeLayer(l,i){
   return{id,kind,path};
  });
  if(operations.length>MAX_OPERATIONS)throw Error("عدد عمليات الطبقة كبير");
- return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations};
+ let characterInstance;
+ if(l.characterInstance!==undefined){
+  const instance=l.characterInstance;
+  if(!instance||typeof instance.id!=="string"||!instance.id.trim()||typeof instance.modelId!=="string"||!instance.modelId.trim()||typeof instance.name!=="string"||!Array.isArray(instance.partIds)||!instance.partIds.length||instance.partIds.length>200)throw Error("بيانات مثيل الشخصية في الطبقة غير صالحة");
+  const partIds=instance.partIds.map(value=>String(value));
+  if(partIds.some(value=>!value.trim()||value.length>100)||new Set(partIds).size!==partIds.length)throw Error("معرّفات أجزاء مثيل الشخصية غير صالحة");
+  characterInstance={id:instance.id.slice(0,120),modelId:instance.modelId.slice(0,120),name:instance.name.slice(0,100),partIds};
+ }
+ return{id:typeof l.id==="string"?l.id:uid("layer"),name:String(l.name||("طبقة "+(i+1))).slice(0,80),visible:l.visible!==false,locked:l.locked===true,operations,...(characterInstance?{characterInstance}:{})};
 }
 function normalizeCharacterAsset(asset,index){
  if(!asset||typeof asset!=="object"||!asset.model||typeof asset.model!=="object")throw Error("عنصر مكتبة الشخصيات غير صالح");
