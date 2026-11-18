@@ -8,3 +8,4 @@
 .character-blend-panel{border:1px solid var(--line);border-radius:10px;padding:9px;margin-top:10px}.character-blend-panel summary{cursor:pointer;color:var(--accent);font-size:12px;font-weight:700}.character-blend-panel input[type=range]{width:100%;accent-color:var(--accent)}
 #headRotationRange{width:100%;accent-color:var(--accent)}
 #bodyRotationRange{width:100%;accent-color:var(--accent)}
+#nodeEditLayer circle{cursor:grab;touch-action:none}#nodeEditLayer circle:active{cursor:grabbing}
