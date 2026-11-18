@@ -46,7 +46,7 @@ The loader accepts v1 project files with \`frames[].paths\` and migrates each fr
 
 ## Project-local character library
 
-`app/character-library.mjs` saves validated `.zchar` model copies into `project.characterLibrary`, loads them as editable models, and removes selected entries. The project format already carries this library through `.zero` save/open. It is capped at 100 models and 5 MB per model; no server upload is used.
+`app/character-library.mjs` saves validated `.zchar` model copies into `project.characterLibrary`, loads them as editable models, and removes selected entries. The project format already carries this library through `.zero` save/open. It is capped at 100 models and 5 MB per model; no server upload is used. Inserted character layers carry a validated shared instance ID, model ID, name, and part membership. The workspace can copy an instance to the next frame or replace its pose in one frame while preserving identity; in-between generation carries that metadata forward.
 
 ## ZIP export bundle
 
@@ -66,7 +66,7 @@ Run with Node.js 22 or newer:
 node --test tests/*.test.mjs
 ```
 
-The suite contains 79 tests: 32 engine, 4 Gemini adapter, 7 workspace DOM, 3 ZIP, 2 animation-proof, 26 character-model, and 5 character-library tests. GitHub Actions validates the complete suite and syntax of all runtime modules.
+The suite contains 86 tests: 33 engine, 4 Gemini adapter, 8 workspace DOM, 3 ZIP, 2 animation-proof, 31 character-model, and 5 character-library tests. GitHub Actions validates the complete suite and syntax of all runtime modules.
 
 ## Unique-drawing cadence audit\n\n`analyzeDrawingCadence(frames,fps)` compares visible vector artwork signatures while ignoring frame and operation IDs. It reports frame count, unique drawing count, duplicates, duration, and average unique drawings per second against the unchanged 24-drawings/second target. The workspace exposes this report in the timeline and includes it in ZIP manifests. This measures uniqueness of saved vector content; it does not certify professional drawing quality or that each frame was freshly hand-drawn.\n\n## AI proposal path
 
