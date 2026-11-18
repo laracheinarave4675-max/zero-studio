@@ -266,8 +266,9 @@ function drawRamenBuilding(ops){
  }
  ops.push(line("M "+pt(leftEave,eaveY+38)+" Q "+pt(ridgeX+6,ridgeY+31)+" "+pt(rightEave,eaveY+48),"#e0c9a0",8,.94));
  ops.push(line("M "+pt(ridgeX-18,ridgeY-5)+" Q "+pt(ridgeX,ridgeY-18)+" "+pt(ridgeX+22,ridgeY+1),"#d4bd9e",7,.94));
- ops.push(poly([[x+90,y+12],[x+285,y-128],[x+480,y+14]],"#d8c5a3","#695846",2,.95));
- ops.push(line("M "+pt(x+125,y+12)+" Q "+pt(x+290,y-102)+" "+pt(x+450,y+15),"#927b60",4,.8));
+ ops.push(line("M "+pt(leftEave+12,eaveY+46)+" Q "+pt(ridgeX+8,ridgeY+36)+" "+pt(rightEave-12,eaveY+54),"#d1bc98",5,.88));
+ ops.push(line("M "+pt(leftEave+22,eaveY+51)+" Q "+pt(ridgeX+10,ridgeY+43)+" "+pt(rightEave-22,eaveY+59),"#3b4140",3,.7));
+ ops.push(poly([[x+20,y+42],[x+w-20,y+48],[x+w-20,y+74],[x+20,y+67]],"url(#zero-anime-shadow)","none",1,.28));
  for(let i=0;i<4;i++){
   const wx=x+45+i*132;
   drawWindow(ops,wx,y+168,104,115,500+i);
@@ -290,26 +291,25 @@ function drawForestHouse(ops){
  ops.push(poly([[x,y],[x+610,y+14],[x+700,y+370],[x-36,y+365]],"url(#zero-anime-plaster)","#5c5145",5));
  ops.push(poly([[x+610,y+14],[x+w,y+92],[x+w-5,y+378],[x+700,y+370]],"#c0ad8f","#54493e",4));
  ops.push(poly([[x-88,y+30],[x+345,y-208],[x+585,y-122],[x+860,y+38],[x+820,y+88],[x+570,y-75],[x+343,y-142],[x-35,y+86]],"url(#zero-anime-tile)","#39413f",5));
- ops.push(poly([[x+345,y-208],[x+665,y-305],[x+1040,y-78],[x+860,y+38],[x+585,y-122]],"#4d5955","#343f3d",5));
  ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
  ops.push(line("M "+pt(x-75,y+33)+" Q "+pt(x+355,y-217)+" "+pt(x+865,y+41),"#dbc49c",9,.9));
  ops.push(line("M "+pt(x+350,y-208)+" Q "+pt(x+685,y-317)+" "+pt(x+1040,y-78),"#c4b18f",7,.84));
  for(let row=1;row<10;row++){
   const t=row/10;
-  const lx=x-85+(430*t),ly=y+27-235*t,rx=x+345+(515*t),ry=y-208+246*t;
-  ops.push(line("M "+pt(lx,ly)+" Q "+pt((lx+ x+345)/2,ly+(ry-ly)*.25)+" "+pt(x+345,y-208+(235*t)),"#b9ab91",2,.68));
-  ops.push(line("M "+pt(x+345,y-208+235*t)+" Q "+pt((x+345+rx)/2,ry-10)+" "+pt(rx,ry),"#a99d88",2,.62));
+  const leftX=(x-82)*(1-t)+(x+345)*t;
+  const leftY=(y+27)*(1-t)+(y-208)*t;
+  const ridgeX=x+345,ridgeY=y-208;
+  const rightX=(x+345)*(1-t)+(x+860)*t;
+  const rightY=(y-208)*(1-t)+(y+38)*t;
+  ops.push(line("M "+pt(leftX,leftY)+" Q "+pt((leftX+ridgeX)/2,(leftY+ridgeY)/2+3)+" "+pt(ridgeX,ridgeY+t*18),"#c2b296",2.1,.7));
+  ops.push(line("M "+pt(ridgeX,ridgeY+t*18)+" Q "+pt((ridgeX+rightX)/2,(ridgeY+rightY)/2+5)+" "+pt(rightX,rightY),"#a99e88",2,.64));
  }
- for(let col=1;col<12;col++){
-  const t=col/12,xx=x-85+430*t,yy=y+27-235*t;
-  ops.push(line("M "+pt(xx,yy)+" L "+pt(xx+16,y+85-20*t),"#353f3d",1.4,.62));
-  const rxx=x+345+515*t,ryy=y-208+246*t;
-  ops.push(line("M "+pt(rxx,ryy)+" L "+pt(rxx-14,y+95-16*t),"#353f3d",1.4,.58));
- }
- for(let row=0;row<8;row++){
-  const yy=y-142+row*20;
-  ops.push(line("M "+pt(x-25+row*12,yy)+" Q "+pt(x+305,yy-22)+" "+pt(x+545-row*6,yy+13),"#c4b59b",2,.66));
-  ops.push(line("M "+pt(x+595,yy-75)+" Q "+pt(x+735,yy-10)+" "+pt(x+905,yy+32),"#a99e8a",2,.54));
+ for(let col=1;col<13;col++){
+  const t=col/13;
+  const xx=(x-82)*(1-t)+(x+345)*t,yy=(y+27)*(1-t)+(y-208)*t;
+  ops.push(line("M "+pt(xx,yy)+" L "+pt(xx+18,yy+22),"#343f3c",1.5,.66));
+  const rx=(x+345)*(1-t)+(x+860)*t,ry=(y-208)*(1-t)+(y+38)*t;
+  ops.push(line("M "+pt(rx,ry)+" L "+pt(rx-17,ry+23),"#343f3c",1.5,.62));
  }
  for(let i=0;i<13;i++){
   const xx=x+24+i*61;
