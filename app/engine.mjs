@@ -1,4 +1,4 @@
-export const WIDTH=1920,HEIGHT=1080,MAX_FRAMES=600,MAX_LAYERS=100,MAX_OPERATIONS=10000;
+export const WIDTH=1920,HEIGHT=1080,MAX_FRAMES=30000,MAX_LAYERS=100,MAX_OPERATIONS=10000;
 const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
 export const createLayer=(name="طبقة 1")=>({id:uid("layer"),name,visible:true,locked:false,operations:[]});
@@ -109,34 +109,22 @@ export function interpolatePathData(from,to,t){
  return a.map((v,i)=>"command"in v?v.command:String(+(v.number+(b[i].number-v.number)*t).toFixed(3))).join(" ");
 }
 
+function drawingSignature(frame){
+ if(!frame||!Array.isArray(frame.layers))throw Error("بنية أحد الإطارات غير صالحة");
+ const data=JSON.stringify(frame.layers.filter(layer=>layer.visible!==false).map(layer=>({operations:(layer.operations||[]).map(operation=>({kind:operation.kind,d:operation.path?.d,stroke:operation.path?.stroke,width:operation.path?.width,fill:operation.path?.fill}))})));
+ let a=2166136261,b=0x9e3779b9;
+ for(let i=0;i<data.length;i++){const c=data.charCodeAt(i);a=Math.imul(a^c,16777619)>>>0;b=Math.imul(b^(c+i),2246822519)>>>0}
+ return a.toString(16).padStart(8,"0")+b.toString(16).padStart(8,"0");
+}
 export function analyzeDrawingCadence(frames,fps=24){
- if(!Array.isArray(frames)||!frames.length||frames.length>MAX_FRAMES)throw Error("قائمة الإطارات غير صالحة");
+ if(!Array.isArray(frames)||!frames.length||frames.length>MAX_FRAMES)throw Error("قائمة الإطارات غير صالحة أو تتجاوز 30000 إطار");
  if(![6,12,24].includes(+fps))throw Error("معدل العرض يجب أن يكون 6 أو 12 أو 24 FPS");
- const signatures=frames.map(frame=>{
-  if(!frame||!Array.isArray(frame.layers))throw Error("بنية أحد الإطارات غير صالحة");
-  return JSON.stringify(frame.layers.filter(layer=>layer.visible!==false).map(layer=>({
-   operations:(layer.operations||[]).map(operation=>({
-    kind:operation.kind,
-    d:operation.path?.d,
-    stroke:operation.path?.stroke,
-    width:operation.path?.width,
-    fill:operation.path?.fill
-   }))
-  })));
- });
- const uniqueDrawingCount=new Set(signatures).size;
+ const signatures=new Set();
+ for(const frame of frames)signatures.add(drawingSignature(frame));
+ const uniqueDrawingCount=signatures.size;
  const durationSeconds=frames.length/+fps;
  const uniqueDrawingsPerSecond=uniqueDrawingCount/durationSeconds;
- return{
-  frameCount:frames.length,
-  playbackFps:+fps,
-  uniqueDrawingCount,
-  duplicateDrawingCount:frames.length-uniqueDrawingCount,
-  durationSeconds,
-  uniqueDrawingsPerSecond:Number(uniqueDrawingsPerSecond.toFixed(3)),
-  targetUniqueDrawingsPerSecond:24,
-  meets24UniqueDrawingsPerSecond:uniqueDrawingsPerSecond>=24
- };
+ return{frameCount:frames.length,playbackFps:+fps,uniqueDrawingCount,duplicateDrawingCount:frames.length-uniqueDrawingCount,durationSeconds,uniqueDrawingsPerSecond:Number(uniqueDrawingsPerSecond.toFixed(3)),targetUniqueDrawingsPerSecond:24,meets24UniqueDrawingsPerSecond:uniqueDrawingsPerSecond>=24};
 }
 
 export function createInbetweenFrames(startFrame,endFrame,count=1){
@@ -223,6 +211,21 @@ function normalizeCharacterAsset(asset,index){
  return{id:typeof asset.id==="string"&&asset.id?asset.id:uid("character"),name:String(asset.name||model.name).slice(0,100),model};
 }
 
+function normalizeAnimationProduction(raw){
+ if(raw===undefined||raw===null)return null;
+ if(!raw||raw.format!=="zero-studio-animation-job"||raw.version!==1||typeof raw.id!=="string"||!raw.id)throw Error("بيانات إنتاج الحركة غير صالحة");
+ const description=String(raw.description??"");
+ const fps=+raw.fps,durationSeconds=+raw.durationSeconds,totalFrames=+raw.totalFrames,batchSize=+raw.batchSize,batchCount=+raw.batchCount,completedFrames=+raw.completedFrames,nextBatchIndex=+raw.nextBatchIndex,baseFrameCount=+raw.baseFrameCount;
+ if(!description.trim()||description.length>10000||fps!==24||!Number.isInteger(durationSeconds)||durationSeconds<1||totalFrames!==durationSeconds*fps||totalFrames>MAX_FRAMES)throw Error("وصف أو مدة إنتاج الحركة غير صالحين");
+ if(![1,2,3,4,6,8,12,24].includes(batchSize)||batchCount!==Math.ceil(totalFrames/batchSize))throw Error("تقسيم دفعات الإنتاج غير صالح");
+ if(!Number.isInteger(completedFrames)||completedFrames<0||completedFrames>totalFrames||!Number.isInteger(nextBatchIndex)||nextBatchIndex!==Math.ceil(completedFrames/batchSize))throw Error("مؤشر تقدم الإنتاج غير صالح");
+ if(!Number.isInteger(baseFrameCount)||baseFrameCount<0||baseFrameCount+totalFrames>MAX_FRAMES)throw Error("سعة مشروع إنتاج الحركة غير صالحة");
+ const layerNames=raw.layerNames===null?null:Array.isArray(raw.layerNames)&&raw.layerNames.length>=2&&raw.layerNames.length<=12&&raw.layerNames.every(name=>typeof name==="string"&&name.length>0&&name.length<=60)?raw.layerNames.slice():null;
+ if(raw.layerNames!==null&&layerNames===null)throw Error("أسماء طبقات إنتاج الحركة غير صالحة");
+ const frameSignatures=Array.isArray(raw.frameSignatures)?raw.frameSignatures:[];
+ if(frameSignatures.length!==completedFrames||frameSignatures.some(value=>typeof value!=="string"||!/^[0-9a-f]{16}$/i.test(value)))throw Error("سجل الرسومات المنجزة غير صالح");
+ return{format:"zero-studio-animation-job",version:1,id:raw.id.slice(0,120),description,fps,durationSeconds,totalFrames,batchSize,batchCount,completedFrames,nextBatchIndex,baseFrameCount,layerNames,frameSignatures};
+}
 export function normalizeProject(p){
  if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");
  const frames=p.frames.map(f=>{
@@ -233,7 +236,9 @@ export function normalizeProject(p){
  const rawLibrary=Array.isArray(p.characterLibrary)?p.characterLibrary:[];
  if(rawLibrary.length>100)throw Error("تحتوي مكتبة الشخصيات على أكثر من 100 نموذج");
  const characterLibrary=rawLibrary.map(normalizeCharacterAsset);
- return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary};
+ const animationProduction=normalizeAnimationProduction(p.animationProduction);
+ if(animationProduction&&frames.length!==Math.max(1,animationProduction.baseFrameCount+animationProduction.completedFrames))throw Error("عدد إطارات المشروع لا يطابق سجل إنتاج الحركة.");
+ return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animationProduction};
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function renameLayer(f,id,name){const l=f.layers.find(x=>x.id===id);if(!l)throw Error("الطبقة غير موجودة");const next=String(name??"").trim();if(!next)throw Error("اسم الطبقة لا يمكن أن يكون فارغاً");if(next.length>80)throw Error("اسم الطبقة يتجاوز 80 حرفاً");l.name=next;return l}
