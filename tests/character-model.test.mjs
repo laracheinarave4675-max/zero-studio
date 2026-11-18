@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -219,4 +219,46 @@ test("rig-aware interpolation rejects incompatible views, missing rigs, and inva
  assert.throws(()=>interpolateNoriRigModels(front,side,.5),/زاوية العرض/);
  assert.throws(()=>interpolateNoriRigModels({...front,rig:undefined},front,.5),/هيكل مفاصل/);
  assert.throws(()=>interpolateNoriRigModels(front,front,1.5),/نسبة انتقال/);
+});
+
+test("character insertions create stable multi-layer instance identity and part membership",()=>{
+ const frame=createFrame(),layers=addCharacterModelToFrame(frame,createNoriModel());
+ const ids=new Set(layers.map(layer=>layer.characterInstance.id));
+ assert.equal(ids.size,1);
+ assert.ok(layers.every(layer=>layer.characterInstance.modelId.startsWith("nori-")));
+ assert.equal(layers.reduce((sum,layer)=>sum+layer.characterInstance.partIds.length,0),12);
+});
+test("character instances can be copied to another frame with new operation identities",()=>{
+ const source=createFrame(),target=createFrame(),layers=addCharacterModelToFrame(source,createNoriModel());
+ const instanceId=layers[0].characterInstance.id;
+ const copies=copyCharacterInstanceToFrame(source,target,instanceId);
+ assert.equal(copies.length,layers.length);
+ assert.ok(copies.every(layer=>layer.characterInstance.id===instanceId));
+ assert.notEqual(copies[0].id,layers[0].id);
+ assert.notEqual(copies[0].operations[0].id,layers[0].operations[0].id);
+ assert.throws(()=>copyCharacterInstanceToFrame(source,target,instanceId),/موجود بالفعل/);
+});
+test("a character instance can be updated in one frame without changing its linked identity",()=>{
+ const frame=createFrame(),layers=addCharacterModelToFrame(frame,createNoriModel()),instanceId=layers[0].characterInstance.id;
+ const other=createLayer("خلفية");frame.layers.unshift(other);
+ const updated=replaceCharacterInstanceInFrame(frame,instanceId,createNoriModel("happy","front","wave"));
+ assert.equal(updated.length,4);
+ assert.equal(frame.layers[0].id,other.id);
+ assert.ok(updated.every(layer=>layer.characterInstance.id===instanceId));
+ assert.equal(updated[2].operations.length,3);
+});
+test("character instance metadata survives frame in-betweens and project normalization",()=>{
+ const start=createFrame(),end=createFrame(),layers=addCharacterModelToFrame(start,createNoriModel());
+ const instanceId=layers[0].characterInstance.id;
+ copyCharacterInstanceToFrame(start,end,instanceId);
+ const between=createInbetweenFrames(start,end,1);
+ assert.ok(between[0].layers.slice(1).every(layer=>layer.characterInstance?.id===instanceId));
+ const project=normalizeProject({format:"zero-studio",version:2,name:"instances",fps:24,frames:[start,end]});
+ assert.equal(project.frames[0].layers[1].characterInstance.id,instanceId);
+});
+test("character instance replacement rejects missing identities and invalid models",()=>{
+ const frame=createFrame();
+ assert.throws(()=>replaceCharacterInstanceInFrame(frame,"missing",createNoriModel()),/غير موجود/);
+ const source=createFrame(),layers=addCharacterModelToFrame(source,createNoriModel());
+ assert.throws(()=>replaceCharacterInstanceInFrame(source,layers[0].characterInstance.id,{format:"bad"}),/غير مدعومة/);
 });
