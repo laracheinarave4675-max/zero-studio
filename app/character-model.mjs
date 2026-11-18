@@ -180,14 +180,19 @@ export function applyNoriRigPose(model,jointUpdates={}){
   next.rig.joints[key]={...next.rig.joints[key],x:Math.max(0,Math.min(1920,value.x)),y:Math.max(0,Math.min(1080,value.y))};
  }
  const torsoDelta={x:next.rig.joints["torso-center"].x-previous["torso-center"].x,y:next.rig.joints["torso-center"].y-previous["torso-center"].y};
- const moved=(torsoDelta.x!==0||torsoDelta.y!==0);
- if(moved){
+ if(torsoDelta.x!==0||torsoDelta.y!==0){
   for(const key of NORI_JOINT_KEYS){
    if(key==="torso-center"||Object.prototype.hasOwnProperty.call(jointUpdates,key))continue;
    next.rig.joints[key]={...next.rig.joints[key],x:Math.max(0,Math.min(1920,next.rig.joints[key].x+torsoDelta.x)),y:Math.max(0,Math.min(1080,next.rig.joints[key].y+torsoDelta.y))};
   }
-  for(const id of ["body","neck"]){const item=next.parts.find(part=>part.id===id);if(item)item.path.d=translatePathData(item.path.d,torsoDelta.x,torsoDelta.y)}
+  const body=next.parts.find(part=>part.id==="body");if(body)body.path.d=translatePathData(body.path.d,torsoDelta.x,torsoDelta.y);
  }
+ if(Object.prototype.hasOwnProperty.call(jointUpdates,"neck-center")&&!Object.prototype.hasOwnProperty.call(jointUpdates,"head-center")){
+  const neckExtra={x:next.rig.joints["neck-center"].x-previous["neck-center"].x-torsoDelta.x,y:next.rig.joints["neck-center"].y-previous["neck-center"].y-torsoDelta.y};
+  next.rig.joints["head-center"]={...next.rig.joints["head-center"],x:Math.max(0,Math.min(1920,next.rig.joints["head-center"].x+neckExtra.x)),y:Math.max(0,Math.min(1080,next.rig.joints["head-center"].y+neckExtra.y))};
+ }
+ const neckDelta={x:next.rig.joints["neck-center"].x-previous["neck-center"].x,y:next.rig.joints["neck-center"].y-previous["neck-center"].y};
+ if(neckDelta.x!==0||neckDelta.y!==0){const neck=next.parts.find(part=>part.id==="neck");if(neck)neck.path.d=translatePathData(neck.path.d,neckDelta.x,neckDelta.y)}
  const headDelta={x:next.rig.joints["head-center"].x-previous["head-center"].x,y:next.rig.joints["head-center"].y-previous["head-center"].y};
  if(headDelta.x!==0||headDelta.y!==0){
   for(const id of ["head","hair","eye-left","eye-right","mouth"]){const item=next.parts.find(part=>part.id===id);if(item)item.path.d=translatePathData(item.path.d,headDelta.x,headDelta.y)}
