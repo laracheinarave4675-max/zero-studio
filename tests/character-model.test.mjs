@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createInbetweenFrames} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,solveNoriRigJoint,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -201,4 +201,22 @@ test("constrained rig poses can be inserted as keyframes and interpolated",()=>{
  const armAt=frame=>frame.layers.find(layer=>layer.name==="الأطراف").operations.find((op,index)=>index===1).path.d;
  const signatures=[start,...between,end].map(armAt);
  assert.equal(new Set(signatures).size,6);
+});
+
+test("rig-aware character interpolation creates safe editable midpoint poses",()=>{
+ const start=createNoriModel("neutral","front","neutral");
+ const end=solveNoriRigJoint(createNoriModel("happy","front","wave"),"wrist-right",{x:1260,y:430});
+ const original=JSON.stringify(start),mid=interpolateNoriRigModels(start,end,.5);
+ assert.equal(validateCharacterModel(mid).parts.length,12);
+ assert.equal(mid.pose,"interpolated");
+ assert.equal(mid.expression,"interpolated");
+ assert.notEqual(mid.parts.find(p=>p.id==="arm-right").path.d,start.parts.find(p=>p.id==="arm-right").path.d);
+ assert.notEqual(mid.parts.find(p=>p.id==="mouth").path.d,start.parts.find(p=>p.id==="mouth").path.d);
+ assert.equal(JSON.stringify(start),original);
+});
+test("rig-aware interpolation rejects incompatible views, missing rigs, and invalid progress",()=>{
+ const front=createNoriModel(),side=createNoriModel("neutral","side","neutral");
+ assert.throws(()=>interpolateNoriRigModels(front,side,.5),/زاوية العرض/);
+ assert.throws(()=>interpolateNoriRigModels({...front,rig:undefined},front,.5),/هيكل مفاصل/);
+ assert.throws(()=>interpolateNoriRigModels(front,front,1.5),/نسبة انتقال/);
 });
