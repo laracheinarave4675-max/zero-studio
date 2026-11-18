@@ -86,6 +86,30 @@ function drawShrub(target,x,y,scale,seed){
   if(i%7===0)target.push(line("M "+pt(cx-rx*.48,cy)+" Q "+pt(cx,cy-ry*.18)+" "+pt(cx+rx*.47,cy+ry*.06),"#d1d18e",1.4,.56));
  }
 }
+function drawPlasterTexture(ops,x,y,w,h,seed=17,count=34){
+ const r=rng(seed);
+ for(let i=0;i<count;i++){
+  const px=x+r()*w,py=y+r()*h,len=9+r()*34,curve=(r()-.5)*7;
+  const col=i%4===0?"#fff2d3":"#806f59";
+  ops.push(line("M "+pt(px,py)+" Q "+pt(px+len*.48,py+curve)+" "+pt(px+len,py+curve*.25),col,.85+r()*.65,i%4===0?.3:.18));
+  if(i%6===0)ops.push(ellipse(px+len*.35,py+curve,1.1+r()*1.5,.7+r()*.8,col,"none",1,.22));
+ }
+}
+function drawTimberGrain(ops,x,y,w,h,seed=27,count=16){
+ const r=rng(seed);
+ for(let i=0;i<count;i++){
+  const px=x+r()*w,py=y+r()*h,len=12+r()*Math.min(w*.28,90),bend=(r()-.5)*4;
+  ops.push(line("M "+pt(px,py)+" C "+pt(px+len*.28,py+bend)+" "+pt(px+len*.68,py-bend)+" "+pt(px+len,py+bend*.2),i%3?"#382b24":"#e0bf91",.8+r()*.7,i%3?.22:.26));
+ }
+}
+function drawStoneDetail(ops,x,y,w,h,seed=71,count=24){
+ const r=rng(seed);
+ for(let i=0;i<count;i++){
+  const px=x+r()*w,py=y+r()*h,len=5+r()*20;
+  ops.push(line("M "+pt(px,py)+" l "+pt(len,-1-r()*3),i%3?"#e2d4b6":"#6c6856",1,.32));
+  if(i%4===0)ops.push(organicLeaf(px+len*.3,py+2,3+r()*5,1.5+r()*2,(r()-.5),"#66825d",.48));
+ }
+}
 function drawHill(target,d,fill,opacity=1){target.push(makePath(d,fill,"none",1,opacity))}
 function drawWindow(ops,x,y,w,h,seed=0){
  const r=rng(seed);
@@ -207,13 +231,14 @@ function drawRoad(ops,variant){
    ops.push(line("M "+pt(x,y)+" l "+pt(18+(i%3)*6,-2),"#aab1a7",1,.16));
   }
  }
- ops.push(makePath("M 0 0 L 1920 0 L 1920 1080 L 0 1080 Z","url(#zero-anime-asphalt-grain)","none",1,.13));
+ ops.push(makePath("M 0 0 L 1920 0 L 1920 1080 L 0 1080 Z","url(#zero-anime-asphalt-grain)","none",1,.32));
 }
 function drawFacadeUrban(ops){
  const x=260,y=330,w=1100,h=355;
  ops.push(poly([[x-50,y+18],[x+w+60,y+8],[x+w+36,y+150],[x-24,y+163]],"#687975","#3e4c49",4));
  ops.push(poly([[x,y+102],[x+w,y+92],[x+w,y+h],[x,y+h+12]],"url(#zero-anime-plaster)","#475550",5));
  ops.push(poly([[x-22,y+102],[x+w+35,y+91],[x+w+20,y+145],[x-17,y+156]],"#2f4e4b","#2b403e",4));
+ drawPlasterTexture(ops,x+8,y+340,w-16,210,35,62);
  for(let i=0;i<9;i++){
   const yy=y+113+i*8;
   ops.push(line("M "+pt(x-12,yy)+" L "+pt(x+w+20,yy-6),"#b7ad94",1,.28));
@@ -221,6 +246,7 @@ function drawFacadeUrban(ops){
  const bandY=y+4;
  ops.push(poly([[x-12,bandY+4],[x+w+24,bandY-3],[x+w+30,bandY+93],[x-12,bandY+101]],"#6b7770","#384744",4));
  const bands=[["#24778a",bandY+13,27],["#e0b44e",bandY+41,23],["#df6f42",bandY+65,24]];
+ drawPlasterTexture(ops,x+8,y+334,w-16,220,41,55);
  bands.forEach(([col,by,bh])=>ops.push(poly([[x+6,by],[x+w+12,by-4],[x+w+16,by+bh],[x+6,by+bh+5]],col,"none")));
  for(let i=0;i<8;i++){
   const wx=x+32+i*132,ww=118;
@@ -247,6 +273,9 @@ function drawRamenBuilding(ops){
  ops.push(makePath("M "+pt(x-95,y+250)+" L "+pt(x+65,y-64)+" L "+pt(x+w+115,y-8)+" L "+pt(x+w+72,y+295)+" L "+pt(x+w+40,y+365)+" L "+pt(x-98,y+360)+" Z","#6a5848","#473e37",4,1,""));
  ops.push(poly([[x,y],[x+w,y+10],[x+w,y+350],[x,y+350]],"url(#zero-anime-plaster)","#51463b",5));
  ops.push(poly([[x+w,y+9],[x+w+100,y-18],[x+w+87,y+320],[x+w,y+350]],"#b79e80","#574b40",4));
+ drawPlasterTexture(ops,x+22,y+82,w-44,265,88,78);
+ drawPlasterTexture(ops,x+w+12,y+28,72,280,90,30);
+ drawTimberGrain(ops,x+12,y+110,w-24,28,91,18);
  const ridgeX=x+285,ridgeY=y-176,leftEave=x-108,rightEave=x+w+118,eaveY=y+28;
  // The light gable wall sits behind the roof planes; it must not expose the sky through the roof.
  ops.push(poly([[leftEave+18,eaveY+45],[ridgeX+8,ridgeY+31],[rightEave-18,eaveY+55]],"url(#zero-anime-plaster)","#665643",3));
@@ -320,6 +349,9 @@ function drawForestHouse(ops){
  ops.push(poly([[x-80,y+310],[x+50,y-12],[x+460,y-115],[x+w+100,y+90],[x+w+52,y+370],[x+825,y+410]],"#5c5348","#3e423e",4));
  ops.push(poly([[x,y],[x+610,y+14],[x+700,y+370],[x-36,y+365]],"url(#zero-anime-plaster)","#5c5145",5));
  ops.push(poly([[x+610,y+14],[x+w,y+92],[x+w-5,y+378],[x+700,y+370]],"#c0ad8f","#54493e",4));
+ drawPlasterTexture(ops,x+22,y+25,600,330,132,88);
+ drawPlasterTexture(ops,x+715,y+105,w-735,250,133,45);
+ drawTimberGrain(ops,x+18,y+164,650,20,134,28);
  ops.push(poly([[x-88,y+30],[x+345,y-208],[x+585,y-122],[x+860,y+38],[x+820,y+88],[x+570,y-75],[x+343,y-142],[x-35,y+86]],"url(#zero-anime-tile)","#39413f",5));
  ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
  ops.push(line("M "+pt(x-82,y+30)+" L "+pt(x+345,y-208)+" L "+pt(x+860,y+38),"#dbc49c",8,.92));
@@ -353,6 +385,7 @@ function drawForestHouse(ops){
   ops.push(rect(xx,y+188,5,130,"url(#zero-anime-timber)","none"));
  }
  ops.push(poly([[x+5,y+318],[x+695,y+318],[x+726,y+354],[x-20,y+354]],"#6d5845","#453a32",3));
+ drawStoneDetail(ops,x-10,y+330,730,55,145,72);
  for(let i=0;i<14;i++){
   const xx=x-70+i*67;
   ops.push(line("M "+pt(xx,y+355)+" L "+pt(xx+4,y+426),"#5b4939",5,.85));
