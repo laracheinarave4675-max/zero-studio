@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -166,4 +166,17 @@ test("project normalization validates character instance layer metadata",()=>{
  l.characterInstance={id:"instance-1",modelId:"nori",name:"Nori",partIds:["head","body"]};
  assert.equal(normalizeProject(p).frames[0].layers[0].characterInstance.id,"instance-1");
  assert.throws(()=>normalizeProject({...p,frames:[{...p.frames[0],layers:[{...l,characterInstance:{id:"",modelId:"nori",name:"Nori",partIds:["head"]}}]}]}),/مثيل الشخصية/);
+});
+
+test("SVG path rotation preserves line, curve, arc and relative path geometry",()=>{
+ assert.equal(rotatePathData("M 10 0 L 20 0",90,0,0),"M 0 10 L 0 20");
+ assert.equal(rotatePathData("M 10 10 H 20 V 30",90,0,0),"M -10 10 L -10 20 L -30 20");
+ const rotated=rotatePathData("m 10 0 l 10 0",90,0,0);
+ assert.equal(rotated,"M 0 10 L 0 20");
+ const arc=rotatePathData("M 10 0 A 5 6 0 0 1 20 0",90,0,0);
+ assert.match(arc,/A 5 6 90 0 1 0 20/);
+});
+test("SVG path rotation rejects invalid angles and pivots",()=>{
+ assert.throws(()=>rotatePathData("M 0 0 L 1 1",NaN),/غير صالحة/);
+ assert.throws(()=>rotatePathData("M 0 0 L 1 1",0,Infinity,0),/غير صالحة/);
 });
