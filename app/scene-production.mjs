@@ -1,6 +1,6 @@
 import{validatePath}from"./engine.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash","gemini-2.5-flash-lite"]);
+const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
 function parseResponse(payload){
  const text=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
@@ -8,9 +8,26 @@ function parseResponse(payload){
  try{return JSON.parse(text)}catch{throw Error("رد النموذج ليس JSON صالحاً. أعد صياغة الوصف وحاول مجدداً.")}
 }
 async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL){
- const response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",temperature:.2,maxOutputTokens:8192}})});
- let payload;try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
- if(!response.ok){const message=payload?.error?.message||"HTTP "+response.status;if(response.status===429)throw Error("وصلت إلى حد الطلبات أو الحصة المجانية. انتظر ثم حاول لاحقاً.");if(response.status===400&&/location|region/i.test(message))throw Error("الخدمة رفضت موقع الاتصال. تحقق من دعم المنطقة وحالة الحساب.");if(response.status===400||response.status===403)throw Error("رفضت Google الطلب أو المفتاح: "+message);throw Error("تعذر الاتصال بخدمة Gemini: "+message)}
+ let response,payload,lastError;
+ for(let attempt=0;attempt<3;attempt++){
+  try{
+   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",temperature:.2,maxOutputTokens:8192}})});
+   if(response.ok)break;
+   try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
+   const message=payload?.error?.message||"HTTP "+response.status;
+   if(![502,503,504].includes(response.status)||attempt===2){
+    if(response.status===429)throw Error("وصلت إلى حد الطلبات أو الحصة المجانية. انتظر ثم حاول لاحقاً.");
+    if(response.status===400&&/location|region/i.test(message))throw Error("الخدمة رفضت موقع الاتصال. تحقق من دعم المنطقة وحالة الحساب.");
+    if(response.status===400||response.status===403)throw Error("رفضت Google الطلب أو المفتاح: "+message);
+    throw Error("تعذر الاتصال بخدمة Gemini: "+message);
+   }
+  }catch(error){
+   lastError=error;
+   if(attempt===2||!/fetch failed|network|503|502|504|تعذر الاتصال بخدمة Gemini/.test(String(error?.message||error)))throw error;
+  }
+  await new Promise(resolve=>setTimeout(resolve,1200*(attempt+1)));
+ }
+ if(!response?.ok)throw lastError||Error("تعذر الاتصال بخدمة Gemini.");
  return parseResponse(payload);
 }
 function credentials(apiKey,prompt){
