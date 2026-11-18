@@ -1,5 +1,6 @@
 import{validatePath}from"./engine.mjs";
 import{renderEnvironmentScene}from"./environment-art.mjs";
+import{renderMeshEnvironment}from"./mesh-scene-renderer.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
 const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
@@ -94,4 +95,23 @@ Output must be valid JSON, no markdown. SVG path strings may contain only M L H 
  if(plan?.version!==1||!plan.building||!Array.isArray(plan.trees)||!Array.isArray(plan.mountains)||!plan.road)throw Error("لم يُرجع مصمم البيئة مخططاً مكانياً مكتملاً.");
  const scene=renderEnvironmentScene(plan);
  return{plan, ...scene};
+}
+
+export async function generateMeshEnvironmentProposal(apiKey,prompt,fetcher=fetch,model=GEMINI_MODEL){
+ const{key,description}=credentials(apiKey,prompt);
+ const instruction=`You are ZERO STUDIO's senior 3D anime environment art director. Design a real 3D scene graph blueprint, NOT a 2D drawing and NOT SVG paths. The local mesh renderer will construct 3D meshes, project them through a perspective camera, shade every visible face from a directional sun, and export editable SVG paths. Your job is to make the spatial design convincing and cinematic.
+
+Return ONLY JSON with this shape: {"version":1,"camera":{"position":[9,8,19],"target":[0,2.4,0]},"sky":"#c9ded9","sun":"#f3d39a","sunDirection":[-0.55,0.9,0.35],"building":{"width":9,"height":4.5,"depth":4.5,"wall":"#d8c6a8","roof":"#514b48","windows":[{"x":-3.5,"y":1.4,"width":1.3,"height":1.5},{"x":-1.5,"y":1.4,"width":1.3,"height":1.5},{"x":0.5,"y":1.4,"width":1.3,"height":1.5}],"door":{"x":2.5,"y":0,"width":1.2,"height":2.7},"sign":{"x":-1.5,"y":3.6,"width":3.2,"height":0.6},"awning":{"x":-3.8,"y":2.9,"width":4.6,"height":0.6,"color":"#a64c43"}},"trees":[{"x":-8,"z":-3,"scale":1.2,"color":"#477255"},{"x":8,"z":-4,"scale":1.1,"color":"#6d916a"},{"x":11,"z":4,"scale":1.3,"color":"#477255"}],"poles":[{"x":9,"z":0,"height":8},{"x":13,"z":-3,"height":7}],"van":{"x":-9,"z":5,"width":2.8,"depth":1.6}}
+
+WORLD AND CAMERA: world axes x=left/right, y=height, z=depth. The street-facing building facade must face the camera at positive z. Use a three-quarter camera position so both the front facade and one side wall are visible; avoid a flat front elevation. Camera target should look at the center of the hero building. Use realistic relative scales and keep the whole building inside the view. Camera position values typically range x=6..13, y=6..11, z=15..24; target near [0,2,0].
+
+BUILDING: a distinctive Japanese countryside ramen shop, two-story or strongly articulated facade, gabled tiled roof with deep eaves, thick roof ridge, visible side wall, 3-6 windows, a clear entrance, signboard and red fabric awning/noren. Width 7..12, height 4..6, depth 3.5..7. Place all windows/door/sign inside the front facade. Roof and facade must not intersect the road. Use warm plaster/wood with a dark tile roof.
+
+ENVIRONMENT: 3-6 trees, distributed in depth and at varied sizes, never all in one row. Add 1-2 utility poles with overhead wire. Include a small parked van only if it improves composition. A foreground road and sidewalk are generated automatically. Sun direction should create clear dimensional tonal differences across roof, wall and side surfaces. Palette should feel like a premium anime film background at late-afternoon golden hour.
+
+All 3D positions and dimensions must be finite and plausible. Use only hex colors. No prose or markdown. Scene request: ${description}`;
+ const plan=await request(key,instruction,fetcher,model);
+ if(plan?.version!==1||!plan.building||!Array.isArray(plan.trees)||!Array.isArray(plan.camera?.position)||!Array.isArray(plan.camera?.target))throw Error("لم يُرجع الفنان مخططاً ثلاثي الأبعاد مكتملاً.");
+ const scene=renderMeshEnvironment(plan);
+ return{plan,...scene};
 }
