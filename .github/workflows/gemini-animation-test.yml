@@ -1,0 +1,43 @@
+name: Gemini vector animation quality gate
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Gemini model for the six-frame quality test
+        required: true
+        type: choice
+        options:
+          - gemini-3.5-flash-lite
+          - gemini-3.1-flash-lite
+          - gemini-3-flash
+        default: gemini-3.5-flash-lite
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - ".github/workflows/gemini-animation-test.yml"
+      - "scripts/run-gemini-animation-test.mjs"
+      - "app/gemini-animation.mjs"
+      - "app/animation-worker.mjs"
+      - "app/animation-production.mjs"
+jobs:
+  vector-quality-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run one real six-frame Gemini batch
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ inputs.model || 'gemini-3.5-flash-lite' }}
+        run: node scripts/run-gemini-animation-test.mjs
+      - name: Upload editable vector project and SVG preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-gemini-vector-test
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
