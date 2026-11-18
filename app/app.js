@@ -59,7 +59,7 @@ function renderRigEditor(){
  }
  for(const key of NORI_JOINT_KEYS){
   const joint=point(key);if(!joint.visible)continue;
-  const circle=document.createElementNS(NS,"circle");circle.setAttribute("cx",joint.x);circle.setAttribute("cy",joint.y);circle.setAttribute("r","65");circle.setAttribute("fill","#fff");circle.setAttribute("stroke","#0284c7");circle.setAttribute("stroke-width","10");circle.setAttribute("data-joint",key);circle.setAttribute("role","button");circle.setAttribute("aria-label",key);rigHandles.appendChild(circle);
+  const circle=document.createElementNS(NS,"circle");circle.setAttribute("cx",joint.x);circle.setAttribute("cy",joint.y);const anchor=key==="torso-center"||key==="head-center";circle.setAttribute("r",anchor?"78":"65");circle.setAttribute("fill",anchor?"#fef3c7":"#fff");circle.setAttribute("stroke",anchor?"#d97706":"#0284c7");circle.setAttribute("stroke-width","10");circle.setAttribute("data-joint",key);circle.setAttribute("role","button");circle.setAttribute("aria-label",key);rigHandles.appendChild(circle);
  }
 }
 function updateRigPalette(){
