@@ -305,6 +305,26 @@ export function addCharacterModelToFrame(frame,model,options={}){
  return added;
 }
 
+
+export function createCharacterModelFromFrame(frame,name="شخصية مرسومة"){
+ if(!frame||!Array.isArray(frame.layers))throw Error("إطار الرسم غير صالح");
+ const label=String(name??"").trim().slice(0,100);
+ if(!label)throw Error("اسم الشخصية لا يمكن أن يكون فارغاً");
+ const parts=[];
+ for(const layer of frame.layers){
+  if(layer.visible===false)continue;
+  for(const operation of layer.operations||[]){
+   if(operation.kind==="erase")throw Error("أزل عمليات الممحاة أو ادمجها قبل تحويل الإطار إلى نموذج شخصية");
+   if(operation.kind!=="stroke")continue;
+   parts.push({id:uid("part"),name:"رسم "+(parts.length+1),layer:layer.name,visible:true,path:validatePath(operation.path)});
+   if(parts.length>200)throw Error("نموذج الشخصية يتجاوز 200 جزء متجهي");
+  }
+ }
+ if(!parts.length)throw Error("لا توجد رسومات متجهية ظاهرة في الإطار الحالي");
+ const model={format:"zero-character-model",version:CHARACTER_MODEL_VERSION,id:uid("character"),name:label,canvas:{width:1920,height:1080},guide:{view:"custom",pose:"custom"},view:"custom",pose:"custom",expression:"custom",palette:{},parts};
+ return validateCharacterModel(model);
+}
+
 export function copyCharacterInstanceToFrame(sourceFrame,targetFrame,instanceId){
  if(!sourceFrame||!targetFrame||sourceFrame===targetFrame||!Array.isArray(sourceFrame.layers)||!Array.isArray(targetFrame.layers))throw Error("إطارات نسخ الشخصية غير صالحة");
  const source=sourceFrame.layers.filter(layer=>layer.characterInstance?.id===instanceId);
