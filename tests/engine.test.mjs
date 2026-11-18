@@ -160,3 +160,10 @@ test("drawing cadence audit rejects unsupported frame rates and malformed frames
  assert.throws(()=>analyzeDrawingCadence([]),/قائمة الإطارات/);
  assert.throws(()=>analyzeDrawingCadence([{}]),/بنية أحد الإطارات/);
 });
+
+test("project normalization validates character instance layer metadata",()=>{
+ const p=createProject(),l=p.frames[0].layers[0];
+ l.characterInstance={id:"instance-1",modelId:"nori",name:"Nori",partIds:["head","body"]};
+ assert.equal(normalizeProject(p).frames[0].layers[0].characterInstance.id,"instance-1");
+ assert.throws(()=>normalizeProject({...p,frames:[{...p.frames[0],layers:[{...l,characterInstance:{id:"",modelId:"nori",name:"Nori",partIds:["head"]}}]}]}),/مثيل الشخصية/);
+});
