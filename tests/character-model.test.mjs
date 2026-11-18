@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createLayer,createInbetweenFrames,normalizeProject} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -293,4 +293,22 @@ test("character instance replacement respects locked semantic layers",()=>{
  layers[1].locked=true;
  assert.throws(()=>replaceCharacterInstanceInFrame(frame,layers[0].characterInstance.id,createNoriModel("happy")),/مقفلة/);
  assert.equal(frame.layers.includes(layers[1]),true);
+});
+
+test("hand-drawn vector frames can be converted into reusable editable character models",()=>{
+ const frame=createFrame();appendOperation(frame.layers[0],"stroke",{d:"M 800 200 L 1000 200",stroke:"#111111",width:8,fill:"none"});
+ const details=createLayer("التفاصيل");appendOperation(details,"stroke",{d:"M 850 300 Q 900 250 950 300",stroke:"#ff0000",width:4,fill:"none"});frame.layers.push(details);
+ const hidden=createLayer("مخفية");hidden.visible=false;appendOperation(hidden,"stroke",{d:"M 1 1 L 2 2",stroke:"#000",width:1,fill:"none"});frame.layers.push(hidden);
+ const model=createCharacterModelFromFrame(frame,"شخصيتي الأصلية");
+ assert.equal(model.parts.length,2);
+ assert.equal(model.parts[0].layer,frame.layers[0].name);
+ assert.equal(model.parts[1].layer,"التفاصيل");
+ assert.equal(validateCharacterModel(model).parts.length,2);
+ const inserted=createFrame();assert.equal(addCharacterModelToFrame(inserted,model).length,2);
+});
+test("hand-drawn character conversion rejects blank frames, blank names and non-destructive eraser masks",()=>{
+ assert.throws(()=>createCharacterModelFromFrame(createFrame(),"فارغ"),/لا توجد رسومات/);
+ const frame=createFrame();appendOperation(frame.layers[0],"stroke",{d:"M 1 1 L 2 2",stroke:"#111",width:2,fill:"none"});appendOperation(frame.layers[0],"erase",{d:"M 1 1 L 2 2",stroke:"#000",width:10,fill:"none"});
+ assert.throws(()=>createCharacterModelFromFrame(frame,"رسمة"),/الممحاة/);
+ assert.throws(()=>createCharacterModelFromFrame(frame," "),/اسم الشخصية/);
 });
