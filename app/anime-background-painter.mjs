@@ -248,6 +248,11 @@ function drawRamenBuilding(ops){
  ops.push(poly([[x,y],[x+w,y+10],[x+w,y+350],[x,y+350]],"url(#zero-anime-plaster)","#51463b",5));
  ops.push(poly([[x+w,y+9],[x+w+100,y-18],[x+w+87,y+320],[x+w,y+350]],"#b79e80","#574b40",4));
  const ridgeX=x+285,ridgeY=y-176,leftEave=x-108,rightEave=x+w+118,eaveY=y+28;
+ // The light gable wall sits behind the roof planes; it must not expose the sky through the roof.
+ ops.push(poly([[leftEave+18,eaveY+45],[ridgeX+8,ridgeY+31],[rightEave-18,eaveY+55]],"url(#zero-anime-plaster)","#665643",3));
+ ops.push(poly([[leftEave+38,eaveY+38],[ridgeX+8,ridgeY+55],[rightEave-40,eaveY+50],[rightEave-28,eaveY+64],[ridgeX+8,ridgeY+69],[leftEave+28,eaveY+61]],"url(#zero-anime-timber)","none",1,.4));
+ ops.push(line("M "+pt(ridgeX+8,ridgeY+34)+" L "+pt(ridgeX+8,eaveY+50),"#785b42",5,.72));
+ ops.push(line("M "+pt(leftEave+45,eaveY+42)+" Q "+pt(ridgeX+8,ridgeY+65)+" "+pt(rightEave-44,eaveY+52),"#f0dfc0",3,.62));
  ops.push(poly([[leftEave,eaveY],[ridgeX,ridgeY],[ridgeX+18,ridgeY+30],[leftEave+16,eaveY+53]],"url(#zero-anime-tile)","#3a4140",5));
  ops.push(poly([[ridgeX,ridgeY],[rightEave,eaveY],[rightEave-15,eaveY+48],[ridgeX+18,ridgeY+30]],"#454d4d","#343c3c",5));
  ops.push(poly([[leftEave+5,eaveY+38],[ridgeX+18,ridgeY+30],[rightEave-15,eaveY+48],[rightEave-8,eaveY+69],[ridgeX+10,ridgeY+50],[leftEave+12,eaveY+60]],"#574f46","#3f413c",3));
@@ -317,39 +322,26 @@ function drawForestHouse(ops){
  ops.push(poly([[x+610,y+14],[x+w,y+92],[x+w-5,y+378],[x+700,y+370]],"#c0ad8f","#54493e",4));
  ops.push(poly([[x-88,y+30],[x+345,y-208],[x+585,y-122],[x+860,y+38],[x+820,y+88],[x+570,y-75],[x+343,y-142],[x-35,y+86]],"url(#zero-anime-tile)","#39413f",5));
  ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
- ops.push(line("M "+pt(x-75,y+33)+" Q "+pt(x+355,y-217)+" "+pt(x+865,y+41),"#dbc49c",9,.9));
- ops.push(line("M "+pt(x+350,y-208)+" Q "+pt(x+685,y-317)+" "+pt(x+1040,y-78),"#c4b18f",7,.84));
+ ops.push(line("M "+pt(x-82,y+30)+" L "+pt(x+345,y-208)+" L "+pt(x+860,y+38),"#dbc49c",8,.92));
+ ops.push(line("M "+pt(x-70,y+41)+" L "+pt(x+345,y-194)+" L "+pt(x+848,y+51),"#3d4240",3,.72));
+ // Tile courses follow the left and right roof slopes and stop at the roof silhouette.
+ const leftBase=[x-82,y+30],ridge=[x+345,y-208],rightBase=[x+860,y+38];
  for(let row=1;row<10;row++){
-  const t=row/10;
-  const leftX=(x-82)*(1-t)+(x+345)*t;
-  const leftY=(y+27)*(1-t)+(y-208)*t;
-  const ridgeX=x+345,ridgeY=y-208;
-  const rightX=(x+345)*(1-t)+(x+860)*t;
-  const rightY=(y-208)*(1-t)+(y+38)*t;
-  ops.push(line("M "+pt(leftX,leftY)+" Q "+pt((leftX+ridgeX)/2,(leftY+ridgeY)/2+3)+" "+pt(ridgeX,ridgeY+t*18),"#c2b296",2.1,.7));
-  ops.push(line("M "+pt(ridgeX,ridgeY+t*18)+" Q "+pt((ridgeX+rightX)/2,(ridgeY+rightY)/2+5)+" "+pt(rightX,rightY),"#a99e88",2,.64));
+  const yy=leftBase[1]+(ridge[1]-leftBase[1])*(row/10)+8;
+  const lx=leftBase[0]+(ridge[0]-leftBase[0])*((leftBase[1]-yy)/(leftBase[1]-ridge[1]));
+  const ry=ridge[1]+(rightBase[1]-ridge[1])*(row/10)+8;
+  const rx=ridge[0]+(rightBase[0]-ridge[0])*((ry-ridge[1])/(rightBase[1]-ridge[1]));
+  ops.push(line("M "+pt(lx,yy)+" Q "+pt((lx+ridge[0])/2,yy-2)+" "+pt(ridge[0],yy-10),"#c2b296",2.1,.72));
+  ops.push(line("M "+pt(ridge[0],ry-10)+" Q "+pt((ridge[0]+rx)/2,ry+2)+" "+pt(rx,ry),"#a99e88",2,.66));
  }
- for(let col=1;col<13;col++){
-  const t=col/13;
-  const xx=(x-82)*(1-t)+(x+345)*t,yy=(y+27)*(1-t)+(y-208)*t;
-  ops.push(line("M "+pt(xx,yy)+" L "+pt(xx+18,yy+22),"#343f3c",1.5,.66));
-  const rx=(x+345)*(1-t)+(x+860)*t,ry=(y-208)*(1-t)+(y+38)*t;
-  ops.push(line("M "+pt(rx,ry)+" L "+pt(rx-17,ry+23),"#343f3c",1.5,.62));
+ for(let col=1;col<14;col++){
+  const t=col/14;
+  const lx=leftBase[0]+(ridge[0]-leftBase[0])*t,ly=leftBase[1]+(ridge[1]-leftBase[1])*t;
+  ops.push(line("M "+pt(lx-8,ly+8)+" L "+pt(lx+11,ly+23),"#343f3c",1.5,.64));
+  const rx=ridge[0]+(rightBase[0]-ridge[0])*t,ry=ridge[1]+(rightBase[1]-ridge[1])*t;
+  ops.push(line("M "+pt(rx+7,ry+7)+" L "+pt(rx-12,ry+22),"#343f3c",1.5,.6));
  }
- for(let i=0;i<13;i++){
-  const xx=x+24+i*61;
-  ops.push(line("M "+pt(xx,y+8)+" Q "+pt(xx+10,y-50)+" "+pt(xx+26,y-90),"#88735b",2,.5));
- }
- // A strong shadow band, timber posts and layered veranda establish facade depth.
- ops.push(poly([[x-5,y+145],[x+700,y+150],[x+700,y+192],[x-5,y+188]],"url(#zero-anime-shadow)","none",1,.55));
- ops.push(rect(x+8,y+162,690,14,"url(#zero-anime-timber)","#514238",2));
- for(let i=0;i<12;i++){
-  const xx=x+18+i*57;
-  ops.push(rect(xx,y+176,6,155,"url(#zero-anime-timber)","none"));
-  ops.push(line("M "+pt(xx+11,y+190)+" L "+pt(xx+11,y+325),"#ead7b6",1.1,.34));
- }
- ops.push(poly([[x-28,y+335],[x+712,y+335],[x+738,y+366],[x-45,y+366]],"#705940","#453a32",3));
- ops.push(poly([[x-28,y+335],[x+712,y+335],[x+710,y+345],[x-24,y+345]],"#c8ac83","none",1,.75));
+ ops.push(line("M "+pt(leftBase[0]-4,leftBase[1]+16)+" Q "+pt(ridge[0],ridge[1]+20)+" "+pt(rightBase[0]+5,rightBase[1]+18),"#d8c29d",10,.95));
  for(let i=0;i<6;i++){
   const wx=x+36+i*128;
   drawWindow(ops,wx,y+210,86,120,95+i);
