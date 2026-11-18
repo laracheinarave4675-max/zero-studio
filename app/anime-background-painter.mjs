@@ -40,37 +40,50 @@ function addCloud(target,x,y,s,opacity=.5){
  target.push(ellipse(x+s*.16,y-s*.14,s*.72,s*.48,"#fff5df","none",1,opacity*.92));
  target.push(line("M "+pt(x-s,y+s*.12)+" Q "+pt(x,y+s*.22)+" "+pt(x+s,y+s*.1),"#fff0d7",2,opacity*.55));
 }
+function canopyLobe(ops,x,y,rx,ry,seed,fill,opacity=1){
+ const r=rng(seed),j1=.82+r()*.3,j2=.84+r()*.28,j3=.84+r()*.3,j4=.82+r()*.3;
+ const d="M "+pt(x-rx,y)+" C "+pt(x-rx*1.18,y-ry*.56)+" "+pt(x-rx*.56*j1,y-ry*1.13)+" "+pt(x-rx*.08,y-ry*.86)+" C "+pt(x+rx*.37,y-ry*1.12*j2)+" "+pt(x+rx*.93,y-ry*.72)+" "+pt(x+rx,y-ry*.06)+" C "+pt(x+rx*1.15,y+ry*.47)+" "+pt(x+rx*.58*j3,y+ry*1.08)+" "+pt(x+rx*.03,y+ry*.84)+" C "+pt(x-rx*.48,y+ry*1.12*j4)+" "+pt(x-rx*1.13,y+ry*.61)+" "+pt(x-rx,y)+" Z";
+ ops.push(makePath(d,fill,"none",1,opacity));
+}
 function drawTree(target,x,y,scale,seed,depth="mid",species="broadleaf"){
- const r=rng(seed),dark=depth==="far"?["#6e8d79","#7f9b7e","#94aa83"]: [C.leaf0,C.leaf1,C.leaf2],light=depth==="near"?[C.leaf2,C.leaf3,C.leaf4,C.leafSun]:[C.leaf1,C.leaf2,C.leaf3,C.leaf4];
- const trunkW=scale*(species==="pine"?15:20);
- target.push(makePath("M "+pt(x-trunkW*.38,y)+" C "+pt(x-trunkW*.68,y-scale*90)+" "+pt(x+trunkW*.34,y-scale*180)+" "+pt(x+trunkW*.18,y-scale*290)+" Q "+pt(x+trunkW*.8,y-scale*180)+" "+pt(x+trunkW*.66,y)+" Z","url(#zero-anime-timber)",C.bark,2));
- for(let i=0;i<5;i++){
-  const a=-2.55+i*.48;
-  const endX=x+Math.cos(a)*scale*(75+r()*45),endY=y-scale*(115+r()*140);
-  target.push(branch(x,y-scale*(40+i*32),scale,a,90+r()*55,i%2?C.bark:C.barkLight,3.1));
-  target.push(line("M "+pt(x,y-scale*(80+i*28))+" Q "+pt(endX-20*scale,endY+22*scale)+" "+pt(endX,endY),"none",1));
+ const r=rng(seed),far=depth==="far",dark=far?["#6e8d79","#7f9b7e","#94aa83"]:[C.leaf0,C.leaf1,C.leaf2],light=depth==="near"?[C.leaf2,C.leaf3,C.leaf4,C.leafSun]:[C.leaf1,C.leaf2,C.leaf3,C.leaf4];
+ const trunkW=scale*(species==="pine"?13:22),canopyY=y-scale*185;
+ target.push(makePath("M "+pt(x-trunkW*.38,y)+" C "+pt(x-trunkW*.68,y-scale*90)+" "+pt(x+trunkW*.34,y-scale*180)+" "+pt(x+trunkW*.18,y-scale*315)+" Q "+pt(x+trunkW*.8,y-scale*190)+" "+pt(x+trunkW*.66,y)+" Z","url(#zero-anime-timber)",C.bark,2));
+ for(let i=0;i<7;i++){
+  const a=-2.68+i*.43,len=105+r()*90,baseY=y-scale*(70+i*24);
+  target.push(branch(x,baseY,scale,a,len,i%2?C.bark:C.barkLight,2.6));
  }
- const count=depth==="near"?54:depth==="far"?28:42;
+ const lobes=far?7:10;
+ for(let i=0;i<lobes;i++){
+  const a=(i/lobes)*Math.PI*2,rad=scale*(48+r()*55),cx=x+Math.cos(a)*rad,cy=canopyY+Math.sin(a)*rad*.67;
+  const rx=scale*(62+r()*36),ry=scale*(42+r()*27);
+  const col=i%4===0?dark[0]:dark[i%dark.length];
+  canopyLobe(target,cx,cy,rx,ry,seed+i*13,col,far?.88:.98);
+ }
+ const count=far?55:depth==="near"?118:88;
  for(let i=0;i<count;i++){
-  const t=r(),a=r()*Math.PI*2,rad=Math.sqrt(r())*scale*(species==="pine"?95:138);
-  const cx=x+Math.cos(a)*rad,cy=y-scale*175+Math.sin(a)*rad*.67;
-  const rx=scale*(15+r()*23)*(depth==="far"?.78:1),ry=rx*(.43+r()*.34),rot=(r()-.5)*.85;
-  const fill=i%7===0?light[light.length-1]:i%3===0?light[Math.floor(r()*light.length)]:dark[Math.floor(r()*dark.length)];
-  target.push(organicLeaf(cx,cy,rx,ry,rot,fill,.94));
-  if(i%4===0)target.push(line("M "+pt(cx-rx*.48,cy-ry*.16)+" Q "+pt(cx,cy+ry*.03)+" "+pt(cx+rx*.5,cy+ry*.12),i%2?"#c7cf91":"#a5bd80",1.3,.44));
+  const a=r()*Math.PI*2,rad=Math.sqrt(r())*scale*(species==="pine"?104:178);
+  const cx=x+Math.cos(a)*rad,cy=canopyY+Math.sin(a)*rad*.72;
+  const rx=scale*(18+r()*31)*(far?.78:1),ry=rx*(.46+r()*.42),rot=(r()-.5)*1.12;
+  const shade= r()<.12?light[light.length-1]:r()<.5?light[Math.floor(r()*light.length)]:dark[Math.floor(r()*dark.length)];
+  target.push(organicLeaf(cx,cy,rx,ry,rot,shade,far?.82:.97));
+  if(i%5===0){
+   target.push(line("M "+pt(cx-rx*.54,cy-ry*.12)+" Q "+pt(cx,cy+ry*.05)+" "+pt(cx+rx*.54,cy+ry*.1),i%2?"#d4d69a":"#b1c88b",1.4,far?.25:.46));
+  }
  }
- for(let i=0;i<8;i++){
-  const cx=x+(r()-.5)*scale*210,cy=y-scale*(90+r()*180);
-  target.push(organicLeaf(cx,cy,scale*(11+r()*9),scale*(5+r()*5),(r()-.5),light[1],.58));
+ for(let i=0;i<14;i++){
+  const cx=x+(r()-.5)*scale*300,cy=canopyY-scale*80+(r()-.5)*scale*140;
+  target.push(organicLeaf(cx,cy,scale*(13+r()*12),scale*(7+r()*8),(r()-.5)*1.3,light[Math.floor(r()*light.length)],.72));
  }
 }
 function drawShrub(target,x,y,scale,seed){
  const r=rng(seed);
- for(let i=0;i<18;i++){
-  const cx=x+(r()-.5)*scale*110,cy=y+(r()-.5)*scale*34,rx=scale*(12+r()*19),ry=scale*(7+r()*12);
+ canopyLobe(target,x,y-scale*12,scale*65,scale*30,seed,C.leaf1,.96);
+ for(let i=0;i<42;i++){
+  const cx=x+(r()-.5)*scale*132,cy=y-scale*10+(r()-.5)*scale*54,rx=scale*(12+r()*21),ry=scale*(7+r()*14);
   const col=[C.leaf1,C.leaf2,C.leaf3,C.leaf4][Math.floor(r()*4)];
-  target.push(organicLeaf(cx,cy,rx,ry,(r()-.5)*.9,col));
-  if(i%5===0)target.push(line("M "+pt(cx-rx*.45,cy)+" Q "+pt(cx,cy-ry*.25)+" "+pt(cx+rx*.48,cy+ry*.08),"#d1d18e",1.2,.55));
+  target.push(organicLeaf(cx,cy,rx,ry,(r()-.5)*1.2,col));
+  if(i%7===0)target.push(line("M "+pt(cx-rx*.48,cy)+" Q "+pt(cx,cy-ry*.18)+" "+pt(cx+rx*.47,cy+ry*.06),"#d1d18e",1.4,.56));
  }
 }
 function drawHill(target,d,fill,opacity=1){target.push(makePath(d,fill,"none",1,opacity))}
