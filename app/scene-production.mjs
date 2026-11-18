@@ -9,11 +9,11 @@ function parseResponse(payload){
  if(!text)throw Error("لم يُرجع النموذج اقتراحاً نصياً. قد يكون الطلب محظوراً أو غير مكتمل.");
  try{return JSON.parse(text)}catch{throw Error("رد النموذج ليس JSON صالحاً. أعد صياغة الوصف وحاول مجدداً.")}
 }
-async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL){
+async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL,settings={}){
  let response,payload,lastError;
  for(let attempt=0;attempt<3;attempt++){
   try{
-   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",temperature:.2,maxOutputTokens:8192}})});
+   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction}]}],generationConfig:{responseMimeType:"application/json",temperature:Number.isFinite(settings.temperature)?settings.temperature:.2,maxOutputTokens:Number.isFinite(settings.maxOutputTokens)?settings.maxOutputTokens:8192}})});
    if(response.ok)break;
    try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
    const message=payload?.error?.message||"HTTP "+response.status;
