@@ -12,7 +12,7 @@
 
 ## Public Android test copy
 
-Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 build includes constrained limb IK, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
+Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 build includes constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
 
 ## Drawing and character toolset
 
