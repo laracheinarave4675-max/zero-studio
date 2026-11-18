@@ -55,7 +55,7 @@ test("completed batches append real editable frames and survive project save/ope
  appendAnimationBatch(project,batchFor(project.animationProduction));
  assert.equal(project.frames.length,12);assert.equal(project.animationProduction.completedFrames,12);
  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
- assert.equal(reopened.frames.length,12);assert.equal(reopened.animationProduction.completedFrames,12);assert.match(reopened.animationProduction.continuityNote,/شارع واحد/);
+ assert.equal(reopened.frames.length,12);assert.equal(reopened.animationProduction.completedFrames,12);assert.match(reopened.animationProduction.continuityNote,/نفس الشارع/);
  assert.equal(reopened.frames[11].layers[1].operations.length,1);
 });
 test("final partial batch is accepted and completes the plan exactly",()=>{
