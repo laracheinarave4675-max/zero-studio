@@ -324,6 +324,7 @@ export function replaceCharacterInstanceInFrame(frame,instanceId,model){
  if(!frame||!Array.isArray(frame.layers))throw Error("إطار الشخصية غير صالح");
  const indices=frame.layers.map((layer,index)=>layer.characterInstance?.id===instanceId?index:-1).filter(index=>index>=0);
  if(!indices.length)throw Error("مثيل الشخصية غير موجود في الإطار");
+ if(indices.some(index=>frame.layers[index].locked))throw Error("إحدى طبقات الشخصية مقفلة؛ افتحها قبل التحديث");
  const first=indices[0],safe=validateCharacterModel(model),existing=new Set(indices);
  const retained=frame.layers.filter((layer,index)=>!existing.has(index));
  const needed=new Set(safe.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;
