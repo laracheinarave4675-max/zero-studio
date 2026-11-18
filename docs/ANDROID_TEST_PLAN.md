@@ -19,7 +19,7 @@ These checks have not yet been performed on the user's physical Android phone.
 - [ ] Add, duplicate, select, and delete frames.
 - [ ] Generate 1, 2, 3, and 5 in-between frames between compatible keyframes; confirm mismatched path topology/colors are rejected.
 - [ ] Confirm onion-skin display of previous frame.
-- [ ] Preview at 6, 12, and 24 playback FPS.
+- [ ] Preview at 6, 12, and 24 playback FPS.\n- [ ] Run the unique-drawing cadence audit on a sequence with repeated frames and on 24 individually changed drawings; verify unique count and rate.
 - [ ] Save a .zero project, reload it, and compare frame contents.
 - [ ] Export SVG sequence JSON and inspect SVG output in another viewer.
 - [ ] Export the ZIP bundle, open it with Android Files/archive manager, and verify `project.zero`, `manifest.json`, and frame SVG files are present.
