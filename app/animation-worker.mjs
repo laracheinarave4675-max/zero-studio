@@ -26,18 +26,22 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
    abort(signal);
    const prompt=createAnimationBatchPrompt(job);
    const correction=lastError?"\n\nCORRECTION REQUIRED AFTER THE LAST REJECTED RESPONSE: "+lastError+" Return the entire exact next batch again, with all required full-scene frames and the continuityNote. Do not omit frames or change their indexes.": "";
+   let result;
    try{
     const response=await provider({prompt:prompt+correction,jobId:job.id,batchIndex:range.batchIndex,startFrame:range.startFrame,frameCount:range.frameCount,fps:job.fps,responseFormat:"json",attempt:attempt+1,signal});
     abort(signal);
     const payload=extractPayload(response);
-    const result=appendAnimationBatch(project,payload);
+    result=appendAnimationBatch(project,payload);
     accepted.push(result);
-    if(typeof onBatch==="function")await onBatch({jobId:job.id,...result});
     done=true;
    }catch(error){
     if(error?.name==="AbortError"||signal?.aborted)throw error;
     lastError=String(error?.message||error).slice(0,1000);
     if(attempt===maxRetries)throw Error("تعذر إنتاج الدفعة "+(range.batchIndex+1)+" بعد "+(attempt+1)+" محاولات: "+lastError);
+   }
+   if(done&&typeof onBatch==="function"){
+    try{await onBatch({jobId:job.id,...result})}
+    catch(error){throw Error("قُبلت الدفعة "+(range.batchIndex+1)+" وأضيفت إلى المشروع، لكن تعذر حفظ نقطة الاستكمال: "+String(error?.message||error).slice(0,500)+". احفظ ملف .zero قبل المتابعة.")}
    }
   }
  }
