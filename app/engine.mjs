@@ -279,6 +279,47 @@ export function translatePathData(d,dx,dy){
  }
  return out.join(" ");
 }
+
+export function rotatePathData(d,angleDegrees,cx=0,cy=0){
+ if(!Number.isFinite(angleDegrees)||!Number.isFinite(cx)||!Number.isFinite(cy)||Math.abs(angleDegrees)>3600||Math.abs(cx)>1000000||Math.abs(cy)>1000000)throw Error("معاملات تدوير المسار غير صالحة");
+ const tokens=tokenizePathData(String(d)),out=[],radians=angleDegrees*Math.PI/180,cos=Math.cos(radians),sin=Math.sin(radians);
+ const fmt=n=>String(+n.toFixed(3)),rotate=(x,y)=>({x:cx+(x-cx)*cos-(y-cy)*sin,y:cy+(x-cx)*sin+(y-cy)*cos});
+ let index=0,current={x:0,y:0},subpath={x:0,y:0};
+ while(index<tokens.length){
+  if(!("command"in tokens[index]))throw Error("بنية مسار غير متوقعة");
+  const command=tokens[index++].command,upper=command.toUpperCase(),relative=command!==upper;
+  if(upper==="Z"){out.push("Z");current={...subpath};continue}
+  const arity=PATH_ARITY[upper],values=[];
+  while(index<tokens.length&&!("command"in tokens[index]))values.push(tokens[index++].number);
+  if(!arity||!values.length||values.length%arity!==0)throw Error("معاملات المسار غير مكتملة");
+  let first=true;
+  for(let offset=0;offset<values.length;offset+=arity){
+   const base={...current},point=(x,y)=>rotate(relative?base.x+x:x,relative?base.y+y:y);
+   if(upper==="M"||upper==="L"||upper==="T"){
+    const p=point(values[offset],values[offset+1]),op=upper==="M"&&first?"M":upper==="M"?"L":upper;
+    out.push(op,fmt(p.x),fmt(p.y));current={x:relative?base.x+values[offset]:values[offset],y:relative?base.y+values[offset+1]:values[offset+1]};
+    if(upper==="M"&&first)subpath={...current};
+   }else if(upper==="H"||upper==="V"){
+    const p=upper==="H"?point(values[offset],0):point(0,values[offset]);
+    out.push("L",fmt(p.x),fmt(p.y));
+    current=upper==="H"?{x:relative?base.x+values[offset]:values[offset],y:base.y}:{x:base.x,y:relative?base.y+values[offset]:values[offset]};
+   }else if(upper==="C"){
+    const a=point(values[offset],values[offset+1]),b=point(values[offset+2],values[offset+3]),p=point(values[offset+4],values[offset+5]);
+    out.push("C",fmt(a.x),fmt(a.y),fmt(b.x),fmt(b.y),fmt(p.x),fmt(p.y));current={x:relative?base.x+values[offset+4]:values[offset+4],y:relative?base.y+values[offset+5]:values[offset+5]};
+   }else if(upper==="S"||upper==="Q"){
+    const a=point(values[offset],values[offset+1]),p=point(values[offset+2],values[offset+3]);
+    out.push(upper,fmt(a.x),fmt(a.y),fmt(p.x),fmt(p.y));current={x:relative?base.x+values[offset+2]:values[offset+2],y:relative?base.y+values[offset+3]:values[offset+3]};
+   }else if(upper==="A"){
+    const p=point(values[offset+5],values[offset+6]),rotation=((values[offset+2]+angleDegrees)%360+360)%360;
+    out.push("A",fmt(values[offset]),fmt(values[offset+1]),fmt(rotation),fmt(values[offset+3]),fmt(values[offset+4]),fmt(p.x),fmt(p.y));
+    current={x:relative?base.x+values[offset+5]:values[offset+5],y:relative?base.y+values[offset+6]:values[offset+6]};
+   }
+   first=false;
+  }
+ }
+ return out.join(" ");
+}
+
 export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" stroke-linecap="round" stroke-linejoin="round"/>';
