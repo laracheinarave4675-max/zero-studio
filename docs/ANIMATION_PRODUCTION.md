@@ -83,7 +83,7 @@ For each frame, index is the zero-based global frame number and timeSeconds is i
 - All imported paths pass the engine's local SVG path validation.
 - The batch must arrive in sequence. Repeated, missing, out-of-order, wrong-job, oversized, malformed, or duplicate frame batches are rejected before commit.
 - The application currently allows opening .zero files up to 128 MiB. This does not guarantee that a project close to that size will run smoothly on every Android phone.
-- To avoid serializing an enormous project on every pencil stroke, full-project undo snapshots are currently limited to projects of 600 frames or fewer. Above that size, save a checkpoint before bulk imports or risky edits; frame-level undo is a planned improvement.
+- On projects above 600 frames, undo/redo keeps up to 40 frame-scoped actions and stores the affected frame plus animation-progress metadata instead of serializing the complete timeline for every pencil stroke. Project-wide metadata edits are not yet handled by this lightweight history mode.
 - Existing ZIP32 export remains subject to ZIP32's 4 GiB archive limit and device memory.
 - No real provider has been connected or tested for this batch contract yet. No artistic quality claim is made from contract tests alone.
 
