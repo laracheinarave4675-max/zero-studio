@@ -4,7 +4,7 @@ Last updated: 2026-11-18 (UTC)
 
 ## High-volume frame production infrastructure — 2026-11-18
 
-- Application source commit deployed for this milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`; current tested branch commit `4159c4cdc04e4d2ad91680899e1fbbc0fef05177` includes the provider-neutral worker and its tests.
+- Current tested branch commit: `4159c4cdc04e4d2ad91680899e1fbbc0fef05177`; the public Vercel release snapshot includes `animation-worker.mjs` and the large-frame workspace.
 - GitHub Actions runs #834 and #835 passed; the suite reports 141 tests passed and 0 failures, including syntax checks for the production, frame-history, and provider-neutral worker modules. Run #835: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44308337095.
 - Raised the structural project ceiling from 600 to 30,000 frames (20 minutes 50 seconds at 24 drawings/second).
 - Reworked the timeline to render only 24 thumbnails at a time, with page navigation and direct frame-number jumping.
