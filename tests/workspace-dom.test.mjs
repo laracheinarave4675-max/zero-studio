@@ -66,3 +66,9 @@ test("head rotation slider is exposed and wired to the vector rig",()=>{
  assert.match(html,/id="headRotationValue"/);
  assert.match(app,/rotateNoriHead/);
 });
+
+test("whole-body lean slider is present and wired to the character rig",()=>{
+ assert.match(html,/id="bodyRotationRange"/);
+ assert.match(html,/id="bodyRotationValue"/);
+ assert.match(app,/rotateNoriBody/);
+});
