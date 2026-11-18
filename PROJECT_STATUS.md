@@ -4,8 +4,8 @@ Last updated: 2026-11-18 (UTC)
 
 ## High-volume frame production infrastructure — 2026-11-18
 
-- Application source commit deployed for this milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`; current branch head `5de795eeae1f388e396250e4b042956ad9a1197e` adds the final release documentation.
-- GitHub Actions runs #831 and #832 passed on the current branch head; the suite reports 141 tests passed and 0 failures, including syntax checks for the production and frame-history modules. Run #831: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44308036851.
+- Application source commit deployed for this milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`; current tested branch commit `4159c4cdc04e4d2ad91680899e1fbbc0fef05177` includes the provider-neutral worker and its tests.
+- GitHub Actions runs #834 and #835 passed; the suite reports 141 tests passed and 0 failures, including syntax checks for the production, frame-history, and provider-neutral worker modules. Run #835: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44308337095.
 - Raised the structural project ceiling from 600 to 30,000 frames (20 minutes 50 seconds at 24 drawings/second).
 - Reworked the timeline to render only 24 thumbnails at a time, with page navigation and direct frame-number jumping.
 - Added a provider-independent animation plan. A 10-second shot is exactly 240 independently drawn frames; default six-frame batches produce 40 ordered batches.
@@ -17,6 +17,17 @@ Last updated: 2026-11-18 (UTC)
 - Continuity note handoff now travels from each accepted batch into the next batch's instructions; the stored note is preserved when the .zero project is reopened.
 - Latest public deployment: `dpl_7PPydR428pifMUv8qt2Yyx2hg6zA` reached READY and the stable alias `https://zero-studio-three.vercel.app/` was assigned. Its file manifest contains the 15 expected app modules under `src/`, including `animation-production.mjs`, `animation-worker.mjs`, and `frame-history.mjs`. It is a manual static snapshot of the private development branch.
 - **Not yet verified:** an actual 240-frame street scene, real provider-generated drawings, artistic quality, physical Android performance, large-file save/export behavior. A prepared plan or exported prompt is not a completed animation.
+
+## Free native-SVG provider research — 2026-11-18
+
+- Added `docs/SVG_PROVIDER_RESEARCH.md` with current evidence and a staged free-first recommendation.
+- Strongest dedicated SVG test candidate: OmniSVG's Hugging Face Space, which emits native SVG from text. Its hosted Space source currently states 300 GPU-seconds/day and approximately 20–60 seconds per generation, making it suitable for a few vector assets or quality tests, not thousands of frames. Local OmniSVG-3B inference is reported at 8.49 GB model size and about 17 GB GPU memory; this is not a practical install on the Android phone.
+- OpenRouter free variants currently have 20 requests/minute and 50 requests/day on a free account. At six frames per batch, this is not enough for a one-minute 24-drawing/second shot (240 calls); a ten-second shot takes 40 calls before retries.
+- Groq offers strict JSON-schema output for selected models, but the public table's displayed numeric limits are Developer-plan figures; exact free-plan limits must be checked in the account console.
+- Cerebras' current $5 promotion is a one-time credit requiring a valid payment method and expiring after 30 days; not a recurring free backend. Hugging Face Inference Providers currently list no monthly credits for Free accounts.
+- Local `llama.cpp` via Termux is a possible no-API-quota path for compact text/code models, but exact Android performance has not been measured.
+- **Research conclusion:** no verified unlimited free hosted service was found for 28,800 full-scene SVG drawings. The recommended experiment is occasional AI-authored vector design plus a local scene-specific vector compiler that still emits and validates a separate complete SVG frame document at every timestamp. This is only a proposal to test; it does not reduce the 24-unique-drawings/second requirement and cannot be accepted until a 240-frame prototype passes the cadence and art-quality checks.
+- **Next tasks:** test OmniSVG SVG output and import conversion; compare one OpenRouter free model and Groq structured output for drawing-plan quality; then prototype a scene-specific vector compiler and benchmark on Android. No new provider is connected, no API key was used, and no service has been selected.
 
 ## Latest AI scene-artist implementation and validation
 
