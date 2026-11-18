@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData,getPathAnchors,movePathAnchor} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData,getPathAnchors,movePathAnchor,getPathEditHandles,movePathControlPoint} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -198,4 +198,18 @@ test("SVG path anchor editor handles arcs, relative paths and invalid node indic
  assert.deepEqual(getPathAnchors(moved).map(p=>[p.x,p.y]),[[10,0],[20,0],[40,20]]);
  assert.throws(()=>movePathAnchor(d,8,1,1),/غير موجودة/);
  assert.throws(()=>movePathAnchor(d,0,Infinity,1),/غير صالح/);
+});
+
+test("SVG node editor exposes Bézier controls separately from path anchors",()=>{
+ const handles=getPathEditHandles("M 0 0 C 10 0 10 20 20 20 Q 30 30 40 40");
+ assert.equal(handles.anchors.length,3);
+ assert.equal(handles.controls.length,3);
+ assert.deepEqual(handles.controls.map(p=>[p.x,p.y]),[[10,0],[10,20],[30,30]]);
+});
+test("SVG Bézier control movement changes only the selected control handle",()=>{
+ const d="M 0 0 C 10 0 10 20 20 20";
+ const moved=movePathControlPoint(d,1,15,25);
+ assert.match(moved,/C 10 0 15 25 20 20/);
+ assert.deepEqual(getPathAnchors(moved).map(p=>[p.x,p.y]),[[0,0],[20,20]]);
+ assert.throws(()=>movePathControlPoint(d,9,0,0),/غير موجود/);
 });
