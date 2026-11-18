@@ -53,7 +53,7 @@ test("completed batches append real editable frames and survive project save/ope
  const project=createProject("اختبار");beginAnimationProduction(project,createAnimationPlan("سيارات تعبر الشارع",{durationSeconds:1,batchSize:6}));
  appendAnimationBatch(project,batchFor(project.animationProduction));
  appendAnimationBatch(project,batchFor(project.animationProduction));
- assert.equal(project.frames.length,24);assert.equal(project.animationProduction.completedFrames,12);
+ assert.equal(project.frames.length,12);assert.equal(project.animationProduction.completedFrames,12);
  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
  assert.equal(reopened.frames.length,12);assert.equal(reopened.animationProduction.completedFrames,12);
  assert.equal(reopened.frames[11].layers[1].operations.length,1);
