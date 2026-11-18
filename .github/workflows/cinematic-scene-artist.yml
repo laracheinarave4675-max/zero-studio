@@ -5,6 +5,8 @@ on:
     branches: ["feature/mobile-drawing-workspace"]
     paths:
       - "scripts/run-gemini-scene-artist-test.mjs"
+      - "scripts/run-gemini-2d-anime-tests.mjs"
+      - "tests/anime-vector-artist.test.mjs"
       - "scripts/render-environment-showcase.mjs"
       - "scripts/render-3d-mesh-showcase.mjs"
       - "app/mesh-scene-renderer.mjs"
@@ -19,7 +21,7 @@ on:
 jobs:
   scene-artist:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,18 +30,18 @@ jobs:
       - name: Syntax-check procedural renderers
         run: node --check app/environment-art.mjs && node --check app/mesh-scene-renderer.mjs && node --check app/anime-background-painter.mjs
       - name: Validate semantic art direction and procedural renderer
-        run: node --test tests/environment-art.test.mjs tests/mesh-scene-renderer.test.mjs tests/scene-production.test.mjs tests/anime-background-painter.test.mjs
+        run: node --test tests/environment-art.test.mjs tests/mesh-scene-renderer.test.mjs tests/scene-production.test.mjs tests/anime-background-painter.test.mjs tests/anime-vector-artist.test.mjs
       - name: Render three editable 2D anime background tests
         run: node scripts/render-anime-2d-tests.mjs
       - name: Render reproducible local 2.5D showcase
         run: node scripts/render-environment-showcase.mjs
       - name: Render true 3D mesh-to-SVG showcase
         run: node scripts/render-3d-mesh-showcase.mjs
-      - name: Generate one real editable cinematic scene with Gemini
+      - name: Generate three real 2D anime background scenes with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3.5-flash-lite
-        run: node scripts/run-gemini-scene-artist-test.mjs
+        run: node scripts/run-gemini-2d-anime-tests.mjs
       - name: Upload editable scene and preview SVG
         if: always()
         uses: actions/upload-artifact@v4
