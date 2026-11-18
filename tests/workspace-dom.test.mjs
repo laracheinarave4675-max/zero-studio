@@ -34,3 +34,9 @@ test("character library and unique-drawing audit controls are present and wired"
  assert.match(app,/removeCharacterFromLibrary/);
  assert.match(app,/analyzeDrawingCadence/);
 });
+
+test("rig-aware character pose interpolation controls are present and wired",()=>{
+ for(const id of ["rigBlendStartSelect","rigBlendEndSelect","rigBlendProgress","rigBlendValue","interpolateRigBtn"])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(app,/interpolateNoriRigModels/);
+ assert.match(app,/rigBlendProgress/);
+});
