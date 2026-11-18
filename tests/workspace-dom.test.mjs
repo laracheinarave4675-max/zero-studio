@@ -47,3 +47,10 @@ test("linked character instance frame controls are present and connected",()=>{
  assert.match(app,/replaceCharacterInstanceInFrame/);
  assert.match(app,/renderCharacterInstances/);
 });
+
+test("head and torso anchor handles are exposed by the character rig editor",()=>{
+ assert.match(app,/torso-center/);
+ assert.match(app,/head-center/);
+ assert.match(app,/const anchor=key==="torso-center"/);
+ assert.match(html,/المقابض الذهبية/);
+});
