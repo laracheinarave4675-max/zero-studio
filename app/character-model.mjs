@@ -99,7 +99,7 @@ export function createNoriModel(expression="neutral",view="front",pose="neutral"
  if(pose==="wave"&&view==="front")Object.assign(joints,{"elbow-right":{x:1160,y:555,visible:true},"wrist-right":{x:1130,y:430,visible:true}});
  if(pose==="walk")Object.assign(joints,{"elbow-left":{x:735,y:655,visible:true},"wrist-left":{x:700,y:735,visible:true},"elbow-right":{x:1185,y:665,visible:view!=="side"},"wrist-right":{x:1220,y:730,visible:view!=="side"},"knee-left":{x:825,y:900,visible:true},"ankle-left":{x:780,y:965,visible:true},"knee-right":{x:1100,y:910,visible:view!=="side"},"ankle-right":{x:1150,y:970,visible:view!=="side"}});
  if(pose==="sit")Object.assign(joints,{"elbow-left":{x:780,y:700,visible:true},"wrist-left":{x:875,y:755,visible:true},"elbow-right":{x:1140,y:700,visible:view!=="side"},"wrist-right":{x:1045,y:755,visible:view!=="side"},"hip-left":{x:850,y:805,visible:true},"knee-left":{x:760,y:850,visible:true},"ankle-left":{x:720,y:930,visible:true},"hip-right":{x:1070,y:805,visible:view!=="side"},"knee-right":{x:1160,y:850,visible:view!=="side"},"ankle-right":{x:1200,y:930,visible:view!=="side"}});
- model.rig={version:1,headRotation:0,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
+ model.rig={version:1,headRotation:0,bodyRotation:0,joints,bones:NORI_RIG_BONES.map(bone=>({...bone}))};
  model.id="nori-"+view+"-"+pose+"-"+expression;
  model.name="Nori — "+view+" / "+pose+" / "+expression;
  return model;
@@ -155,6 +155,8 @@ export function validateCharacterModel(model){
   }
   if(rig.headRotation===undefined)rig.headRotation=0;
   if(!Number.isFinite(rig.headRotation)||rig.headRotation< -60||rig.headRotation>60)throw Error("زاوية دوران الرأس غير صالحة");
+  if(rig.bodyRotation===undefined)rig.bodyRotation=0;
+  if(!Number.isFinite(rig.bodyRotation)||rig.bodyRotation< -45||rig.bodyRotation>45)throw Error("زاوية ميل الجسم غير صالحة");
   if(!Array.isArray(rig.bones)||rig.bones.length!==NORI_RIG_BONES.length)throw Error("عظام الشخصية غير صالحة");
   for(let i=0;i<NORI_RIG_BONES.length;i++){
    const actual=rig.bones[i],expected=NORI_RIG_BONES[i];
@@ -218,6 +220,25 @@ export function rotateNoriHead(model,angleDegrees){
   }
  }
  next.rig.headRotation=angleDegrees;
+ return validateCharacterModel(next);
+}
+
+
+export function rotateNoriBody(model,angleDegrees){
+ const safe=validateCharacterModel(model);
+ if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
+ if(!Number.isFinite(angleDegrees)||angleDegrees< -45||angleDegrees>45)throw Error("ميل الجسم يجب أن يكون بين -45 و45 درجة");
+ const next=JSON.parse(JSON.stringify(safe)),delta=angleDegrees-safe.rig.bodyRotation,pivot=next.rig.joints["torso-center"];
+ if(delta!==0){
+  for(const item of next.parts)item.path.d=rotatePathData(item.path.d,delta,pivot.x,pivot.y);
+  const radians=delta*Math.PI/180,cos=Math.cos(radians),sin=Math.sin(radians);
+  for(const key of NORI_JOINT_KEYS){
+   if(key==="torso-center")continue;
+   const joint=next.rig.joints[key],dx=joint.x-pivot.x,dy=joint.y-pivot.y;
+   next.rig.joints[key]={...joint,x:Number((pivot.x+dx*cos-dy*sin).toFixed(3)),y:Number((pivot.y+dx*sin+dy*cos).toFixed(3))};
+  }
+ }
+ next.rig.bodyRotation=angleDegrees;
  return validateCharacterModel(next);
 }
 
@@ -296,6 +317,7 @@ export function interpolateNoriRigModels(startModel,endModel,t){
   result=solveNoriRigJoint(result,bone.to,{x:endpoint.x,y:endpoint.y});
  }
  result.rig.headRotation=lerp(start.rig.headRotation,end.rig.headRotation);
+ result.rig.bodyRotation=lerp(start.rig.bodyRotation,end.rig.bodyRotation);
  result.id="nori-interpolated-"+start.id+"-"+end.id+"-"+String(t);
  result.name="وضعية وسيطة: "+start.name+" → "+end.name;
  result.pose="interpolated";
