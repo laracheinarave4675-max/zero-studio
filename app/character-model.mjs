@@ -1,4 +1,4 @@
-import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg} from "./engine.mjs";
+import {createLayer,appendOperation,validatePath,safeColor,createFrame,frameSvg,interpolatePathData} from "./engine.mjs";
 
 export const CHARACTER_MODEL_VERSION=1;
 export const NORI_EXPRESSIONS=["neutral","happy","sad","surprised"];
@@ -229,6 +229,39 @@ export function solveNoriRigJoint(model,jointKey,target){
   updates[bone.to]=endpoint;
  }
  return applyNoriRigPose(next,updates);
+}
+
+
+export function interpolateNoriRigModels(startModel,endModel,t){
+ if(!Number.isFinite(t)||t<0||t>1)throw Error("نسبة انتقال الوضعية يجب أن تكون بين صفر وواحد");
+ const start=validateCharacterModel(startModel),end=validateCharacterModel(endModel);
+ if(!start.rig||!end.rig)throw Error("يجب أن يحتوي نموذجا البداية والنهاية على هيكل مفاصل");
+ if(start.view!==end.view)throw Error("يجب أن تتطابق زاوية العرض بين الوضعيتين");
+ if(start.parts.length!==end.parts.length)throw Error("عدد أجزاء الشخصيتين غير متطابق");
+ const next=JSON.parse(JSON.stringify(start)),lerp=(a,b)=>Number((a+(b-a)*t).toFixed(3));
+ for(let i=0;i<start.parts.length;i++){
+  const a=start.parts[i],b=end.parts[i];
+  if(a.id!==b.id||a.layer!==b.layer||a.visible!==b.visible)throw Error("ترتيب أجزاء الشخصية أو ظهورها غير متطابق");
+  if(a.path.stroke!==b.path.stroke||a.path.fill!==b.path.fill)throw Error("ألوان أجزاء الشخصية غير متطابقة");
+  next.parts[i].path.d=interpolatePathData(a.path.d,b.path.d,t);
+  next.parts[i].path.width=lerp(a.path.width,b.path.width);
+ }
+ const updates={};
+ for(const key of NORI_JOINT_KEYS){
+  const a=start.rig.joints[key],b=end.rig.joints[key];
+  if(a.visible!==b.visible)throw Error("ظهور المفاصل غير متطابق");
+  updates[key]={x:lerp(a.x,b.x),y:lerp(a.y,b.y)};
+ }
+ let result=applyNoriRigPose(next,updates);
+ for(const bone of NORI_RIG_BONES){
+  const endpoint=result.rig.joints[bone.to];
+  result=solveNoriRigJoint(result,bone.to,{x:endpoint.x,y:endpoint.y});
+ }
+ result.id="nori-interpolated-"+start.id+"-"+end.id+"-"+String(t);
+ result.name="وضعية وسيطة: "+start.name+" → "+end.name;
+ result.pose="interpolated";
+ result.expression="interpolated";
+ return validateCharacterModel(result);
 }
 
 export function addCharacterModelToFrame(frame,model){
