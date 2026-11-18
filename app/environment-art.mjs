@@ -12,8 +12,8 @@ function tree(x,y,s,colors= [PALETTE.deep,PALETTE.mid,PALETTE.leaf,PALETTE.light
  const a=[];
  a.push(p(`M ${fmt(x)} ${fmt(y)} Q ${fmt(x-12*s)} ${fmt(y-45*s)} ${fmt(x+2*s)} ${fmt(y-100*s)} Q ${fmt(x+8*s)} ${fmt(y-125*s)} ${fmt(x+18*s)} ${fmt(y-140*s)} Q ${fmt(x+14*s)} ${fmt(y-75*s)} ${fmt(x+24*s)} ${fmt(y)} Z`, "#665b45"));
  a.push(p(`M ${fmt(x+5*s)} ${fmt(y-45*s)} Q ${fmt(x-25*s)} ${fmt(y-82*s)} ${fmt(x-50*s)} ${fmt(y-94*s)} M ${fmt(x+12*s)} ${fmt(y-68*s)} Q ${fmt(x+40*s)} ${fmt(y-102*s)} ${fmt(x+58*s)} ${fmt(y-112*s)}`,"none","#665b45",5*s));
- const clusters=[[-35,-108,42,28],[-2,-143,48,34],[40,-115,42,29],[-65,-80,38,25],[24,-82,48,30],[70,-86,30,23],[-10,-105,48,33]];
- clusters.forEach(([dx,dy,rx,ry],i)=>{a.push(organicLeaf(x+dx*s,y+dy*s,rx*s,ry*s,colors[i%colors.length],5*s));for(let j=0;j<3;j++){const ox=dx*s+(j-1)*rx*s*.42,oy=dy*s+((j%2)?-1:1)*ry*s*.42;a.push(organicLeaf(x+ox,y+oy,rx*s*.34,ry*s*.42,colors[(i+j+1)%colors.length],2*s));}});
+ const clusters=[[-35,-108,42,28],[-2,-143,48,34],[40,-115,42,29],[-65,-80,38,25],[24,-82,48,30],[70,-86,30,23]];
+ clusters.forEach(([dx,dy,rx,ry],i)=>{a.push(organicLeaf(x+dx*s,y+dy*s,rx*s,ry*s,colors[i%colors.length],5*s));for(let j=0;j<2;j++){const ox=dx*s+(j-1)*rx*s*.42,oy=dy*s+((j%2)?-1:1)*ry*s*.42;a.push(organicLeaf(x+ox,y+oy,rx*s*.34,ry*s*.42,colors[(i+j+1)%colors.length],2*s));}});
  a.push(p(`M ${fmt(x-56*s)} ${fmt(y-90*s)} Q ${fmt(x-20*s)} ${fmt(y-125*s)} ${fmt(x+10*s)} ${fmt(y-113*s)} M ${fmt(x+4*s)} ${fmt(y-120*s)} Q ${fmt(x+38*s)} ${fmt(y-145*s)} ${fmt(x+56*s)} ${fmt(y-137*s)}`,"none","#b0bd83",3*s));
  return a;
 }
@@ -31,7 +31,7 @@ export function renderEnvironmentScene(plan){
  if(!plan||plan.version!==1||!plan.building||!Array.isArray(plan.trees)||plan.trees.length<2||plan.trees.length>18)throw Error("مخطط البيئة غير مكتمل: يلزم مبنى وأشجار موزعة على العمق.");
  const source=plan.building,scale=Math.min(1,Math.max(.55,(790-source.y)/source.height));
  const scaled=item=>item?{...item,x:item.x*scale,y:item.y*scale,width:item.width*scale,height:item.height*scale}:item;
- const b={...source,x:source.x+source.width*(1-scale)/2,y:source.y,width:source.width*scale,height:source.height*scale,roofHeight:source.roofHeight*scale,windows:(source.windows||[]).map(scaled),door:scaled(source.door),sign:scaled(source.sign)};
+ const b={...source,x:source.x+source.width*(1-scale)/2,y:buildingY,width:source.width*scale,height:source.height*scale,roofHeight:source.roofHeight*scale,windows:(source.windows||[]).map(scaled),door:scaled(source.door),sign:scaled(source.sign)};
  const x=b.x,y=b.y,w=b.width,h=b.height,rh=b.roofHeight;
  if([x,y,w,h,rh].some(v=>!Number.isFinite(v))||w<300||h<180||x<0||y<0||x+w>1920||y+h>1080||rh<80||rh>h)throw Error("أبعاد المبنى أو السقف خارج نطاق التكوين.");
  const layers=[];
