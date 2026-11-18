@@ -214,7 +214,9 @@ function normalizeCharacterAsset(asset,index){
 function normalizeAnimationProduction(raw){
  if(raw===undefined||raw===null)return null;
  if(!raw||raw.format!=="zero-studio-animation-job"||raw.version!==1||typeof raw.id!=="string"||!raw.id)throw Error("بيانات إنتاج الحركة غير صالحة");
- const description=String(raw.description??"");\n const continuityNote=String(raw.continuityNote??"").trim();\n if(continuityNote.length>2000)throw Error("ملاحظة استمرارية المشهد تتجاوز 2000 حرف");
+ const description=String(raw.description??"");
+ const continuityNote=String(raw.continuityNote??"").trim();
+ if(continuityNote.length>2000)throw Error("ملاحظة استمرارية المشهد تتجاوز 2000 حرف");
  const fps=+raw.fps,durationSeconds=+raw.durationSeconds,totalFrames=+raw.totalFrames,batchSize=+raw.batchSize,batchCount=+raw.batchCount,completedFrames=+raw.completedFrames,nextBatchIndex=+raw.nextBatchIndex,baseFrameCount=+raw.baseFrameCount;
  if(!description.trim()||description.length>10000||fps!==24||!Number.isInteger(durationSeconds)||durationSeconds<1||totalFrames!==durationSeconds*fps||totalFrames>MAX_FRAMES)throw Error("وصف أو مدة إنتاج الحركة غير صالحين");
  if(![1,2,3,4,6,8,12,24].includes(batchSize)||batchCount!==Math.ceil(totalFrames/batchSize))throw Error("تقسيم دفعات الإنتاج غير صالح");
