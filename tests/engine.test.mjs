@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData,getPathAnchors,movePathAnchor} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -179,4 +179,23 @@ test("SVG path rotation preserves line, curve, arc and relative path geometry",(
 test("SVG path rotation rejects invalid angles and pivots",()=>{
  assert.throws(()=>rotatePathData("M 0 0 L 1 1",NaN),/غير صالحة/);
  assert.throws(()=>rotatePathData("M 0 0 L 1 1",0,Infinity,0),/غير صالحة/);
+});
+
+test("SVG path anchor editor reads endpoints and moves a selected node without changing controls",()=>{
+ const d="M 10 10 C 20 10 20 30 30 30 Q 40 40 50 50";
+ const anchors=getPathAnchors(d);
+ assert.deepEqual(anchors.map(p=>[p.x,p.y]),[[10,10],[30,30],[50,50]]);
+ const moved=movePathAnchor(d,1,35,25);
+ assert.match(moved,/C 20 10 20 30 35 25/);
+ assert.match(moved,/Q 40 40 50 50/);
+ assert.deepEqual(getPathAnchors(moved).map(p=>[p.x,p.y]),[[10,10],[35,25],[50,50]]);
+});
+test("SVG path anchor editor handles arcs, relative paths and invalid node indices",()=>{
+ const d="m 10 0 l 10 0 A 5 5 0 0 1 30 10";
+ const anchors=getPathAnchors(d);
+ assert.deepEqual(anchors.map(p=>[p.x,p.y]),[[10,0],[20,0],[30,10]]);
+ const moved=movePathAnchor(d,2,40,20);
+ assert.deepEqual(getPathAnchors(moved).map(p=>[p.x,p.y]),[[10,0],[20,0],[40,20]]);
+ assert.throws(()=>movePathAnchor(d,8,1,1),/غير موجودة/);
+ assert.throws(()=>movePathAnchor(d,0,Infinity,1),/غير صالح/);
 });
