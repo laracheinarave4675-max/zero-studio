@@ -184,6 +184,53 @@ export function applyNoriRigPose(model,jointUpdates={}){
  return validateCharacterModel(next);
 }
 
+
+export function solveNoriRigJoint(model,jointKey,target){
+ const safe=validateCharacterModel(model);
+ if(!safe.rig)throw Error("هذا النموذج لا يحتوي على هيكل مفاصل قابل للتحريك");
+ if(!NORI_JOINT_KEYS.includes(jointKey)||!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))throw Error("هدف المفصل غير صالح");
+ const bone=NORI_RIG_BONES.find(item=>[item.from,item.through,item.to].includes(jointKey));
+ if(!bone)throw Error("المفصل غير مرتبط بعظمة");
+ const next=JSON.parse(JSON.stringify(safe)),joints=next.rig.joints;
+ const start=joints[bone.from],middle=joints[bone.through],end=joints[bone.to];
+ const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
+ const unit=(a,b,fallback)=>{const d=distance(a,b);return d<1e-6?fallback:{x:(b.x-a.x)/d,y:(b.y-a.y)/d}};
+ const updates={};
+ const bounded={x:Math.max(0,Math.min(1920,target.x)),y:Math.max(0,Math.min(1080,target.y))};
+ if(jointKey===bone.from){
+  const dx=bounded.x-start.x,dy=bounded.y-start.y;
+  updates[bone.from]=bounded;
+  updates[bone.through]={x:middle.x+dx,y:middle.y+dy};
+  updates[bone.to]={x:end.x+dx,y:end.y+dy};
+ }else if(jointKey===bone.through){
+  const upper=distance(start,middle),lower=distance(middle,end);
+  const direction=unit(start,bounded,unit(start,middle,{x:1,y:0}));
+  const constrained={x:start.x+direction.x*upper,y:start.y+direction.y*upper};
+  const distal=unit(middle,end,{x:0,y:1});
+  updates[bone.through]=constrained;
+  updates[bone.to]={x:constrained.x+distal.x*lower,y:constrained.y+distal.y*lower};
+ }else{
+  const upper=distance(start,middle),lower=distance(middle,end);
+  const raw={x:Math.max(0,Math.min(1920,bounded.x)),y:Math.max(0,Math.min(1080,bounded.y))};
+  const total=upper+lower;
+  const minReach=Math.sqrt(Math.max(0,upper*upper+lower*lower-2*upper*lower*Math.cos(20*Math.PI/180)));
+  const maxReach=Math.sqrt(Math.max(0,upper*upper+lower*lower-2*upper*lower*Math.cos(160*Math.PI/180)));
+  let vector={x:raw.x-start.x,y:raw.y-start.y},reach=Math.hypot(vector.x,vector.y);
+  if(reach<1e-6){vector={x:end.x-start.x,y:end.y-start.y};reach=Math.hypot(vector.x,vector.y)||1}
+  const clampedReach=Math.max(minReach,Math.min(maxReach,reach));
+  const ux=vector.x/reach,uy=vector.y/reach;
+  const endpoint={x:Math.max(0,Math.min(1920,start.x+ux*clampedReach)),y:Math.max(0,Math.min(1080,start.y+uy*clampedReach))};
+  const cross=(middle.x-start.x)*(end.y-start.y)-(middle.y-start.y)*(end.x-start.x);
+  const side=cross<0?-1:1;
+  const along=(upper*upper-lower*lower+clampedReach*clampedReach)/(2*clampedReach);
+  const height=Math.sqrt(Math.max(0,upper*upper-along*along));
+  const perpendicular={x:-uy*side,y:ux*side};
+  updates[bone.through]={x:start.x+ux*along+perpendicular.x*height,y:start.y+uy*along+perpendicular.y*height};
+  updates[bone.to]=endpoint;
+ }
+ return applyNoriRigPose(next,updates);
+}
+
 export function addCharacterModelToFrame(frame,model){
  const safe=validateCharacterModel(model),groups=new Map();
  for(const item of safe.parts){
