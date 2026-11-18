@@ -4,8 +4,8 @@ Last updated: 2026-11-18 (UTC)
 
 ## High-volume frame production infrastructure — 2026-11-18
 
-- Development branch head for the new milestone: `8e4b1dc7d7977c68044495c2cd0aa114d18f1ba9`.
-- GitHub Actions runs #773 and #772 passed; the suite reports 133 tests passed and 0 failures, including syntax checks for the production and frame-history modules. Run #773: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44305158955.
+- Development branch head for the new milestone: `9b301d4b7928e98393ef53b04ea417602743bd6a`.
+- GitHub Actions runs #809 and #808 passed; the suite reports 134 tests passed and 0 failures, including syntax checks for the production and frame-history modules. Run #809: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44306239089.
 - Raised the structural project ceiling from 600 to 30,000 frames (20 minutes 50 seconds at 24 drawings/second).
 - Reworked the timeline to render only 24 thumbnails at a time, with page navigation and direct frame-number jumping.
 - Added a provider-independent animation plan. A 10-second shot is exactly 240 independently drawn frames; default six-frame batches produce 40 ordered batches.
@@ -14,6 +14,8 @@ Last updated: 2026-11-18 (UTC)
 - Added lightweight frame-scoped undo/redo for projects above 600 frames; it stores only the affected frame plus production progress rather than serializing the entire project for each edit.
 - Added `docs/ANIMATION_PRODUCTION.md` and automated tests for planning, batch integrity, continuity structure, uniqueness, save/open persistence, high-volume frame capacity, and large-project undo/redo.
 - **Not yet implemented:** a live provider adapter that automatically creates `.zbatch` files, automatic multi-batch orchestration/retries, IndexedDB-backed paged storage, and large-project memory/performance tuning. The user explicitly deferred provider/API selection and quota analysis.
+- Continuity note handoff now travels from each accepted batch into the next batch's instructions; the stored note is preserved when the .zero project is reopened.
+- Latest public deployment: `dpl_GrG696zsGTFU7CVnzkjDUriCPFDT` reached READY and the stable alias `https://zero-studio-three.vercel.app/` was assigned. Its file manifest contains the 14 expected app modules under `src/`, including `animation-production.mjs` and `frame-history.mjs`. It is a manual static snapshot of the private development branch.
 - **Not yet verified:** an actual 240-frame street scene, real provider-generated drawings, artistic quality, physical Android performance, large-file save/export behavior. A prepared plan or exported prompt is not a completed animation.
 
 ## Latest AI scene-artist implementation and validation
