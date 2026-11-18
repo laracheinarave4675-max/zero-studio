@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createFrame,createLayer,appendOperation,createInbetweenFrames,normalizeProject} from "../app/engine.mjs";
-import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
+import {createNoriModel,validateCharacterModel,addCharacterModelToFrame,NORI_VIEWS,NORI_POSES,NORI_EXPRESSIONS,applyNoriPalette,createNoriModelSheetSvg,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame,createCharacterModelFromFrame,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,rotateNoriHead,NORI_JOINT_KEYS,NORI_RIG_BONES} from "../app/character-model.mjs";
 
 test("Nori model contains uniquely identified editable vector parts",()=>{
  const model=validateCharacterModel(createNoriModel());
@@ -311,4 +311,20 @@ test("hand-drawn character conversion rejects blank frames, blank names and non-
  const frame=createFrame();appendOperation(frame.layers[0],"stroke",{d:"M 1 1 L 2 2",stroke:"#111",width:2,fill:"none"});appendOperation(frame.layers[0],"erase",{d:"M 1 1 L 2 2",stroke:"#000",width:10,fill:"none"});
  assert.throws(()=>createCharacterModelFromFrame(frame,"رسمة"),/الممحاة/);
  assert.throws(()=>createCharacterModelFromFrame(frame," "),/اسم الشخصية/);
+});
+
+test("head rotation turns the head, hair and face around its anchor only",()=>{
+ const base=createNoriModel(),rotated=rotateNoriHead(base,30);
+ const path=(model,id)=>model.parts.find(part=>part.id===id).path.d;
+ for(const id of ["head","hair","eye-left","eye-right","mouth"])assert.notEqual(path(base,id),path(rotated,id));
+ assert.equal(path(base,"body"),path(rotated,"body"));
+ assert.equal(rotated.rig.headRotation,30);
+ assert.equal(base.rig.headRotation,0);
+});
+test("head rotation validates limits and interpolates between saved poses",()=>{
+ const a=rotateNoriHead(createNoriModel(),30),b=rotateNoriHead(createNoriModel("happy"),-30);
+ const mid=interpolateNoriRigModels(a,b,.5);
+ assert.equal(mid.rig.headRotation,0);
+ assert.throws(()=>rotateNoriHead(a,61),/بين -60 و60/);
+ assert.throws(()=>rotateNoriHead(a,NaN),/بين -60 و60/);
 });
