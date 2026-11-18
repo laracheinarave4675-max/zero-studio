@@ -4,7 +4,7 @@ import{createProject,normalizeProject,MAX_FRAMES}from"../app/engine.mjs";
 import{createAnimationPlan,beginAnimationProduction,getAnimationBatchRange,createAnimationBatchPrompt,validateAnimationBatch,appendAnimationBatch}from"../app/animation-production.mjs";
 function batchFor(job,batchIndex=job.nextBatchIndex){
  const range=getAnimationBatchRange(job,batchIndex);
- return{version:1,jobId:job.id,batchIndex,startFrame:range.startFrame,frames:Array.from({length:range.frameCount},(_,offset)=>{
+ return{version:1,jobId:job.id,batchIndex,startFrame:range.startFrame,continuityNote:"نفس الشارع والمباني والسيارات الحمراء، الكاميرا ثابتة، السيارة الأولى تتجه يميناً والثانية يساراً.",frames:Array.from({length:range.frameCount},(_,offset)=>{
   const index=range.startFrame+offset;
   return{index,timeSeconds:index/24,layers:[
    {name:"الخلفية",operations:[{d:"M 0 0 L 1920 0 L 1920 1080 L 0 1080 Z",stroke:"#334455",width:2,fill:"#eeeeee"}]},
@@ -24,8 +24,8 @@ test("plan rejects durations beyond the 30000-frame ceiling",()=>{
 });
 test("batch prompt specifies its exact global frame numbers and forbids static-image reuse",()=>{
  const project=createProject();const plan=createAnimationPlan("مشهد سيارة في شارع",{durationSeconds:2,batchSize:6});const job=beginAnimationProduction(project,plan);
- const prompt=createAnimationBatchPrompt(job,1);
- assert.match(prompt,/BATCH 2 OF 8/);assert.match(prompt,/6 @ 0\.2500s/);assert.match(prompt,/independently drawn/);assert.match(prompt,/Do not reference, reuse/);
+ job.continuityNote="شارع واحد، كاميرا ثابتة، مبانٍ رمادية وسيارات حمراء.";const prompt=createAnimationBatchPrompt(job,1);
+ assert.match(prompt,/BATCH 2 OF 8/);assert.match(prompt,/CONTINUITY NOTE FROM THE PREVIOUS APPROVED BATCH/);assert.match(prompt,/شارع واحد/);assert.match(prompt,/6 @ 0\.2500s/);assert.match(prompt,/independently drawn/);assert.match(prompt,/Do not reference, reuse/);
 });
 test("batch validation requires every complete frame and stable layer ordering",()=>{
  const project=createProject();const job=beginAnimationProduction(project,createAnimationPlan("مشهد",{durationSeconds:1,batchSize:6}));
@@ -55,7 +55,7 @@ test("completed batches append real editable frames and survive project save/ope
  appendAnimationBatch(project,batchFor(project.animationProduction));
  assert.equal(project.frames.length,12);assert.equal(project.animationProduction.completedFrames,12);
  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
- assert.equal(reopened.frames.length,12);assert.equal(reopened.animationProduction.completedFrames,12);
+ assert.equal(reopened.frames.length,12);assert.equal(reopened.animationProduction.completedFrames,12);assert.match(reopened.animationProduction.continuityNote,/شارع واحد/);
  assert.equal(reopened.frames[11].layers[1].operations.length,1);
 });
 test("final partial batch is accepted and completes the plan exactly",()=>{
