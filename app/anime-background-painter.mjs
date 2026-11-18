@@ -324,22 +324,23 @@ function drawForestHouse(ops){
  ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
  ops.push(line("M "+pt(x-82,y+30)+" L "+pt(x+345,y-208)+" L "+pt(x+860,y+38),"#dbc49c",8,.92));
  ops.push(line("M "+pt(x-70,y+41)+" L "+pt(x+345,y-194)+" L "+pt(x+848,y+51),"#3d4240",3,.72));
- // Tile courses follow the left and right roof slopes and stop at the roof silhouette.
- const leftBase=[x-82,y+30],ridge=[x+345,y-208],rightBase=[x+860,y+38];
- for(let row=1;row<10;row++){
-  const yy=leftBase[1]+(ridge[1]-leftBase[1])*(row/10)+8;
-  const lx=leftBase[0]+(ridge[0]-leftBase[0])*((leftBase[1]-yy)/(leftBase[1]-ridge[1]));
-  const ry=ridge[1]+(rightBase[1]-ridge[1])*(row/10)+8;
-  const rx=ridge[0]+(rightBase[0]-ridge[0])*((ry-ridge[1])/(rightBase[1]-ridge[1]));
-  ops.push(line("M "+pt(lx,yy)+" Q "+pt((lx+ridge[0])/2,yy-2)+" "+pt(ridge[0],yy-10),"#c2b296",2.1,.72));
-  ops.push(line("M "+pt(ridge[0],ry-10)+" Q "+pt((ridge[0]+rx)/2,ry+2)+" "+pt(rx,ry),"#a99e88",2,.66));
+ // Horizontal tile courses recede toward the apex while staying inside the two roof edges.
+ for(let row=1;row<11;row++){
+  const t=row/11,yCourse=leftBase[1]+(ridge[1]-leftBase[1])*t;
+  const lx=leftBase[0]+(ridge[0]-leftBase[0])*t;
+  const rx=rightBase[0]+(ridge[0]-rightBase[0])*t;
+  ops.push(line("M "+pt(lx,yCourse)+" Q "+pt((lx+rx)/2,yCourse+4)+" "+pt(rx,yCourse+5),"#c2b296",2.2,.72));
+  for(let col=1;col<19;col++){
+   const q=col/19,xx=lx+(rx-lx)*q,yy=yCourse+2+Math.sin(q*Math.PI)*2;
+   if(col%2===row%2)ops.push(line("M "+pt(xx-4,yy-3)+" Q "+pt(xx,yy-5)+" "+pt(xx+5,yy-2),"#e2d0ae",1.2,.52));
+  }
  }
- for(let col=1;col<14;col++){
-  const t=col/14;
-  const lx=leftBase[0]+(ridge[0]-leftBase[0])*t,ly=leftBase[1]+(ridge[1]-leftBase[1])*t;
-  ops.push(line("M "+pt(lx-8,ly+8)+" L "+pt(lx+11,ly+23),"#343f3c",1.5,.64));
-  const rx=ridge[0]+(rightBase[0]-ridge[0])*t,ry=ridge[1]+(rightBase[1]-ridge[1])*t;
-  ops.push(line("M "+pt(rx+7,ry+7)+" L "+pt(rx-12,ry+22),"#343f3c",1.5,.6));
+ // Short staggered tile seams follow the pitch without escaping the roof silhouette.
+ for(let col=1;col<13;col++){
+  const t=col/13,xx=leftBase[0]+(ridge[0]-leftBase[0])*t,yy=leftBase[1]+(ridge[1]-leftBase[1])*t;
+  ops.push(line("M "+pt(xx-4,yy+6)+" L "+pt(xx+11,yy+18),"#343f3c",1.45,.62));
+  const xr=ridge[0]+(rightBase[0]-ridge[0])*t,yr=ridge[1]+(rightBase[1]-ridge[1])*t;
+  ops.push(line("M "+pt(xr+4,yr+6)+" L "+pt(xr-11,yr+18),"#343f3c",1.45,.58));
  }
  ops.push(line("M "+pt(leftBase[0]-4,leftBase[1]+16)+" Q "+pt(ridge[0],ridge[1]+20)+" "+pt(rightBase[0]+5,rightBase[1]+18),"#d8c29d",10,.95));
  for(let i=0;i<6;i++){
