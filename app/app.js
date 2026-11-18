@@ -1,7 +1,7 @@
 import{WIDTH,HEIGHT,createProject,createFrame,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,analyzeDrawingCadence,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
 import{generateVectorProposal}from"./gemini-drawing.mjs";
-import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg}from"./character-model.mjs";
+import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg}from"./character-model.mjs";
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 (()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
@@ -9,13 +9,24 @@ function createBaseNori(){return applyNoriPalette(createNoriModel($("characterEx
 
 function characterModelSelection(){return rigModel||selectedCharacterModel||applyNoriRigPose(createBaseNori(),{})}
 function renderCharacterLibrary(){
- const select=$("characterLibrarySelect");if(!select)return;
- const selected=select.value;select.replaceChildren();
+ const assets=project.characterLibrary||[];
+ const select=$("characterLibrarySelect"),selected=select.value;select.replaceChildren();
  const empty=document.createElement("option");empty.value="";empty.textContent="اختر شخصية محفوظة";select.appendChild(empty);
- for(const asset of project.characterLibrary||[]){const option=document.createElement("option");option.value=asset.id;option.textContent=asset.name;select.appendChild(option)}
- if((project.characterLibrary||[]).some(asset=>asset.id===selected))select.value=selected;
+ for(const asset of assets){const option=document.createElement("option");option.value=asset.id;option.textContent=asset.name;select.appendChild(option)}
+ if(assets.some(asset=>asset.id===selected))select.value=selected;
  $("loadCharacterLibraryBtn").disabled=!select.value;
  $("deleteCharacterLibraryBtn").disabled=!select.value;
+ for(const id of ["rigBlendStartSelect","rigBlendEndSelect"]){
+  const control=$(id),previous=control.value;control.replaceChildren();
+  const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="اختر وضعية محفوظة";control.appendChild(placeholder);
+  for(const asset of assets){const option=document.createElement("option");option.value=asset.id;option.textContent=asset.name;control.appendChild(option)}
+  if(assets.some(asset=>asset.id===previous))control.value=previous;
+ }
+ if(assets.length>=2){
+  if(!$("rigBlendStartSelect").value)$("rigBlendStartSelect").value=assets[0].id;
+  if(!$("rigBlendEndSelect").value)$("rigBlendEndSelect").value=assets[1].id;
+ }
+ $("interpolateRigBtn").disabled=assets.length<2;
 }
 
 function renderRigEditor(){
@@ -103,6 +114,9 @@ $("saveCharacterLibraryBtn").onclick=()=>{const before=history.length;try{const 
 $("loadCharacterLibraryBtn").onclick=()=>{try{const model=loadCharacterFromLibrary(project,$("characterLibrarySelect").value);selectedCharacterModel=model;rigModel=model.rig?model:null;$("characterView").value=model.view||"front";$("characterPose").value=model.pose||"neutral";$("characterExpression").value=model.expression||"neutral";for(const key of ["line","skin","hair","cloth","accent"])if(model.palette?.[key])$("character"+key[0].toUpperCase()+key.slice(1)).value=model.palette[key];renderRigEditor();$("characterStatus").textContent="تم تحميل "+model.name+" من مكتبة المشروع."}catch(error){$("characterStatus").textContent="تعذر تحميل الشخصية: "+error.message}};
 $("deleteCharacterLibraryBtn").onclick=()=>{try{const id=$("characterLibrarySelect").value,entry=(project.characterLibrary||[]).find(item=>item.id===id);if(!entry)throw Error("اختر شخصية من المكتبة أولاً");snapshot();removeCharacterFromLibrary(project,id);if(selectedCharacterModel?.id===entry.model.id)resetRigModel();renderCharacterLibrary();$("characterStatus").textContent="حُذفت "+entry.name+" من مكتبة المشروع."}catch(error){$("characterStatus").textContent="تعذر حذف الشخصية: "+error.message}};
 $("characterLibrarySelect").onchange=renderCharacterLibrary;
+$("interpolateRigBtn").onclick=()=>{try{const start=loadCharacterFromLibrary(project,$("rigBlendStartSelect").value),end=loadCharacterFromLibrary(project,$("rigBlendEndSelect").value),progress=+$("rigBlendProgress").value;const model=interpolateNoriRigModels(start,end,progress);selectedCharacterModel=model;rigModel=model;$("characterView").value=model.view||"front";$("characterPose").value="neutral";$("characterExpression").value="neutral";renderRigEditor();$("characterStatus").textContent="تم إنشاء وضعية وسيطة بنسبة "+Math.round(progress*100)+"٪. أضفها إلى الإطار أو احفظها في المكتبة."}catch(error){$("characterStatus").textContent="تعذر إنشاء الوضعية الوسيطة: "+error.message}};
+$("rigBlendProgress").oninput=e=>$("rigBlendValue").textContent=Math.round(+e.target.value*100)+"٪";
+
 $("exportCharacterSheetBtn").onclick=()=>{try{const svg=createNoriModelSheetSvg({line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value});download("nori-model-sheet.svg",new Blob([svg],{type:"image/svg+xml"}));$("characterStatus").textContent="تم تصدير ورقة Nori المتجهية: 3 اتجاهات و4 تعبيرات و4 وضعيات."}catch(error){$("characterStatus").textContent="تعذر إنشاء ورقة النموذج: "+error.message}};
 $("exportCharacterBtn").onclick=()=>{try{const model=characterModelSelection();download((model.name.replace(/[^\\p{L}\\p{N}-]+/gu,"-")||"character")+".zchar",new Blob([JSON.stringify(model,null,2)],{type:"application/json"}));$("characterStatus").textContent="تم تصدير نموذج الشخصية كملف ZCHAR مستقل."}catch(error){$("characterStatus").textContent="تعذر التصدير: "+error.message}};
 $("importCharacterBtn").onclick=()=>$("characterFile").click();
