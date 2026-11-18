@@ -287,3 +287,10 @@ test("legacy character rigs receive default head and torso anchors during valida
  assert.deepEqual(upgraded.rig.joints["torso-center"],{x:960,y:700,visible:true});
  assert.equal(legacy.rig.joints["head-center"],undefined);
 });
+
+test("character instance replacement respects locked semantic layers",()=>{
+ const frame=createFrame(),layers=addCharacterModelToFrame(frame,createNoriModel());
+ layers[1].locked=true;
+ assert.throws(()=>replaceCharacterInstanceInFrame(frame,layers[0].characterInstance.id,createNoriModel("happy")),/مقفلة/);
+ assert.equal(frame.layers.includes(layers[1]),true);
+});
