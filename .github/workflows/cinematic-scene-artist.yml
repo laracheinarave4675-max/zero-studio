@@ -1,0 +1,30 @@
+name: Cinematic anime scene artist test
+on:
+  workflow_dispatch:
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - "scripts/run-gemini-scene-artist-test.mjs"
+      - "app/scene-production.mjs"
+      - ".github/workflows/cinematic-scene-artist.yml"
+jobs:
+  scene-artist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate one real editable cinematic scene with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/run-gemini-scene-artist-test.mjs
+      - name: Upload editable scene and preview SVG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-cinematic-scene-artist-test
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
