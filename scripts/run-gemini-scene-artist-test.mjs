@@ -18,6 +18,6 @@ await mkdir("artifacts",{recursive:true});
 await writeFile("artifacts/cinematic-ramen-shop.zero",JSON.stringify(project));
 await writeFile("artifacts/cinematic-ramen-shop.svg",'<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+body+'</svg>');
 const counts=frame.layers.map(layer=>({name:layer.name,paths:layer.operations.length}));
-const report={model,layers:counts.length,totalPaths:proposal.totalOperations,layerBreakdown:counts,editable:true,referenceImagesSent:false,renderer:"procedural-cinematic-2.5D",visualQualityStatus:"awaiting-human-review",sceneDescription:description};
+const report={model,layers:counts.length,totalPaths:proposal.totalOperations,layerBreakdown:counts,editable:true,referenceImagesSent:false,renderer:"procedural-cinematic-2.5D",visualQualityStatus:"awaiting-human-review",sceneDescription:description,blueprint:proposal.plan};
 await writeFile("artifacts/report.json",JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));
