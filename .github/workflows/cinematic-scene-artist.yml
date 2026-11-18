@@ -6,6 +6,9 @@ on:
     paths:
       - "scripts/run-gemini-scene-artist-test.mjs"
       - "scripts/render-environment-showcase.mjs"
+      - "scripts/render-3d-mesh-showcase.mjs"
+      - "app/mesh-scene-renderer.mjs"
+      - "tests/mesh-scene-renderer.test.mjs"
       - "app/scene-production.mjs"
       - "app/environment-art.mjs"
       - "tests/environment-art.test.mjs"
@@ -19,12 +22,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Syntax-check procedural renderer
-        run: node --check app/environment-art.mjs
+      - name: Syntax-check procedural renderers
+        run: node --check app/environment-art.mjs && node --check app/mesh-scene-renderer.mjs
       - name: Validate semantic art direction and procedural renderer
-        run: node --test tests/environment-art.test.mjs tests/scene-production.test.mjs
+        run: node --test tests/environment-art.test.mjs tests/mesh-scene-renderer.test.mjs tests/scene-production.test.mjs
       - name: Render reproducible local 2.5D showcase
         run: node scripts/render-environment-showcase.mjs
+      - name: Render true 3D mesh-to-SVG showcase
+        run: node scripts/render-3d-mesh-showcase.mjs
       - name: Generate one real editable cinematic scene with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
