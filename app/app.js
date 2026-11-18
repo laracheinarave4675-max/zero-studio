@@ -1,7 +1,7 @@
 import{WIDTH,HEIGHT,createProject,createFrame,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
 import{generateVectorProposal}from"./gemini-drawing.mjs";
-import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg}from"./character-model.mjs";
+import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg}from"./character-model.mjs";
 (()=>{"use strict";const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="pen",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedOperations=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
 function createBaseNori(){return applyNoriPalette(createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value),noriPalette())}
@@ -102,11 +102,12 @@ rigCanvas.addEventListener("pointerdown",e=>{
 rigCanvas.addEventListener("pointermove",e=>{
  if(!rigDrag)return;
  const position=rigCoords(e);
- rigModel=applyNoriRigPose(rigDrag.startModel,{[rigDrag.joint]:position});
+ rigModel=solveNoriRigJoint(rigDrag.startModel,rigDrag.joint,position);
  renderRigEditor();
 });
 rigCanvas.addEventListener("pointerup",()=>{if(!rigDrag)return;rigDrag=null;$("characterStatus").textContent="تم تعديل وضعية المفصل؛ ستضاف الشخصية بهذه الوضعية."});
 rigCanvas.addEventListener("pointercancel",()=>{if(!rigDrag)return;rigModel=rigDrag.startModel;rigDrag=null;renderRigEditor()});
+rigCanvas.addEventListener("lostpointercapture",()=>{if(!rigDrag)return;rigModel=rigDrag.startModel;rigDrag=null;renderRigEditor()});
 $("addCharacterBtn").onclick=()=>{try{const model=characterModelSelection();const needed=new Set(model.parts.filter(part=>part.visible!==false).map(part=>part.layer)).size;if(frame().layers.length+needed>100)throw Error("لا توجد مساحة كافية لطبقات الشخصية");snapshot();const added=addCharacterModelToFrame(frame(),model);if(!added.length)throw Error("النموذج لا يحتوي على أجزاء ظاهرة");activeLayerId=added[added.length-1].id;render();$("characterStatus").textContent="أضيف "+model.name+" إلى "+added.length+" طبقات متجهية مستقلة."}catch(error){$("characterStatus").textContent="تعذر إضافة النموذج: "+error.message}};
 $("deleteLayerBtn").onclick=()=>{snapshot();try{removeLayer(frame(),activeLayerId);activeLayerId=frame().layers[0].id;render()}catch(e){history.pop();buttons();status(e.message,false)}};
 $("addFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();project.frames.splice(current+1,0,createFrame());current++;activeLayerId=frame().layers[0].id;render()};
