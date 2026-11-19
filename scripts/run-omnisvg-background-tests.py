@@ -19,7 +19,7 @@ for slug,prompt in scenes:
  if not isinstance(result,(list,tuple)) or len(result)<2:
   raise RuntimeError("Unexpected OmniSVG response structure: "+repr(type(result)))
  svg_text=str(result[1] or "")
- match=re.search(r"<svg\\b.*?</svg>",svg_text,re.S|re.I)
+ match=re.search(r"<svg\b.*?</svg>",svg_text,re.S|re.I)
  if not match:
   raise RuntimeError("OmniSVG returned no complete SVG. Response preview: "+svg_text[:400])
  svg=match.group(0)
@@ -27,7 +27,7 @@ for slug,prompt in scenes:
  folder.mkdir(parents=True,exist_ok=True)
  (folder/"scene.svg").write_text(svg,encoding="utf-8")
  cairosvg.svg2png(bytestring=svg.encode("utf-8"),write_to=str(folder/"preview.png"),output_width=1280,output_height=720)
- paths=len(re.findall(r"<path\\b",svg,re.I))
+ paths=len(re.findall(r"<path\b",svg,re.I))
  report={"slug":slug,"model":"OmniSVG-3B hosted Hugging Face Space","task":"text-to-svg","generation_seconds":elapsed,"path_elements":paths,"editable_svg":True,"candidate_count":1,"max_length":512,"provider_quota_note":"Space UI states free users receive 300 GPU seconds/day and a generation takes about 20–60 seconds; actual usage/quota is provider-controlled.","prompt":prompt,"response_status":str(result[2]) if len(result)>2 else None,"quality_status":"awaiting visual review"}
  (folder/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  summary.append(report)
