@@ -28,13 +28,13 @@ export function applyPainterlyForestPass(scene){
  }
  // Fine grass blades and small sunlit ground strokes follow the garden slope.
  const grass=["#405f43","#58764a","#789157","#a1a56a","#c3b77d"];
- for(let i=0;i<2500;i++){
+ for(let i=0;i<350;i++){
   const x=80+r()*1760,y=790+r()*280;
   const len=5+r()*20,lean=(r()-.5)*12;
   ops.push(taperedStroke(x,y,lean,-len,.8+r()*2.2,grass[Math.floor(r()*grass.length)],.32+r()*.48,(r()-.5)*2));
  }
  // Irregular roof glints and broken tile accents, not repeated straight courses.
- for(let i=0;i<35;i++){
+ for(let i=0;i<250;i++){
   const x=470+r()*850,y=115+r()*245,len=12+r()*38;
   ops.push(taperedStroke(x,y,len,(-.35+r()*.7)*len,.8+r()*1.8,r()<.65?"#d8c49c":"#343c39",.18+r()*.3,(r()-.5)*2));
  }
