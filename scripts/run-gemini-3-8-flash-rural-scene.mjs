@@ -16,7 +16,7 @@ for(let pass=1;pass<=2;pass++){
  const png=new Resvg(svg,{fitTo:{mode:"width",value:1280}}).render().asPng();
  const dir=out+"/pass-"+pass;await mkdir(dir,{recursive:true});await writeFile(dir+"/scene.zero",JSON.stringify(project));await writeFile(dir+"/scene.svg",svg);await writeFile(dir+"/preview.png",png);
  await new Promise(resolve=>setTimeout(resolve,14000));
- const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model,{thinkingLevel:"low",timeoutMs:180000});
+ const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model,{thinkingLevel:"low",timeoutMs:180000,fallbackModels:["gemini-3.1-flash-lite","gemini-3.5-flash-lite"]});
  history.push({pass,model:critique.model,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,strengths:critique.strengths});
  await writeFile(dir+"/critique.json",JSON.stringify(critique,null,2));
  finalResult=result;finalPreview=png;finalCritique=critique;
