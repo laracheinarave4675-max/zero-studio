@@ -166,3 +166,10 @@ This file records decisions that must not be changed silently. Add dated entries
 **Implementation requirements:** Remove generator controls from the active drawing workflow; audit and isolate legacy generator modules so they cannot be invoked from the final-art UI or project pipeline; add regression checks for the no-generation boundary; preserve existing SVG and Raster authoring paths. No destructive bulk deletion of legacy code or existing artwork without review.
 
 **Quality requirement:** Do not imply that deterministic procedural marks equal professional painting. The project must prove quality through a human-painted full-scene study, reviewed on the target Android device. Passing tests is not artistic acceptance.
+
+
+## D-025 — Canvas-first artist engine
+
+**Status:** Approved by user, 2026-11-19.
+
+ZERO STUDIO's primary drawing medium is a native Canvas2D raster engine, following the agreed Claude recommendation. SVG is no longer the planned foundation or a development priority. Existing SVG content is legacy compatibility during migration only. The artist engine must support real brush rendering, pressure/velocity dynamics, natural-media texture, blend modes, editable stroke records, deterministic replay, raster layers, masks, and mobile-safe undo/storage. No generative image or video model may create or modify final artwork. The 24 independently drawn images-per-second target remains unchanged.
