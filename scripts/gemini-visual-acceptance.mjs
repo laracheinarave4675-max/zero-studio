@@ -46,7 +46,7 @@ try {
       const approve = document.querySelector("#aiApproveBtn");
       const svg = document.querySelector("#proposalLayer");
       const pathCount = svg?.querySelectorAll("path").length || 0;
-      const scores = [...status.matchAll(/(\\d+(?:\\.\\d+)?)\\s*\\/10/g)].map(m => Number(m[1]));
+      const scores = [...status.matchAll(/(\d+(?:\.\d+)?)\s*\/10/g)].map(m => Number(m[1]));
       return {
         status,
         score: scores.length ? scores[scores.length - 1] : null,
