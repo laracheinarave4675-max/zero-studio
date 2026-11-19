@@ -180,6 +180,24 @@ export function pressureOutlinePath(points,baseWidth=5){
 
 function normalizeLayer(l,i){
  if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");
+ if(l.type==="raster"){
+  const id=typeof l.id==="string"&&l.id.length>0&&l.id.length<=120?l.id:uid("layer");
+  const name=String(l.name||("طبقة نقطية "+(i+1))).slice(0,80);
+  const mime=String(l.mimeType||"");
+  const data=String(l.dataUrl||"");
+  if(!["image/png","image/webp","image/jpeg"].includes(mime))throw Error("نوع صورة الطبقة النقطية غير مدعوم");
+  const prefix="data:"+mime+";base64,";
+  if(!data.startsWith(prefix)||data.length>24*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(data.slice(prefix.length)))throw Error("بيانات صورة الطبقة النقطية غير صالحة أو كبيرة جداً");
+  const bytes=Math.floor((data.length-prefix.length)*3/4);
+  if(bytes<1||bytes>16*1024*1024)throw Error("حجم صورة الطبقة النقطية خارج الحدود");
+  const width=Number(l.width),height=Number(l.height);
+  if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>16384||height>16384)throw Error("أبعاد صورة الطبقة النقطية غير صالحة");
+  const opacity=Number(l.opacity??1);
+  if(!Number.isFinite(opacity)||opacity<0||opacity>1)throw Error("شفافية الطبقة النقطية غير صالحة");
+  const blendMode=String(l.blendMode||"normal");
+  if(!["normal","multiply","screen","overlay","darken","lighten"].includes(blendMode))throw Error("نمط مزج الطبقة النقطية غير مدعوم");
+  return{id,name,type:"raster",visible:l.visible!==false,locked:l.locked===true,operations:[],mimeType:mime,dataUrl:data,width,height,opacity,blendMode};
+ }
  const ids=new Set();
  const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{
   if(o?.kind!=="erase"&&o?.kind!=="stroke"&&typeof o?.d!=="string")throw Error("عملية طبقة غير معروفة");
@@ -249,6 +267,15 @@ export function normalizeProject(p){
  return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animationProduction,animationBackground};
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
+export function createRasterLayer({name="طبقة نقطية",dataUrl,mimeType,width,height,opacity=1,blendMode="normal"}={}){
+ const layer=normalizeLayer({id:uid("layer"),name,type:"raster",dataUrl,mimeType,width,height,opacity,blendMode,visible:true,locked:false},0);
+ return layer;
+}
+export function addRasterLayer(frame,asset){
+ if(!frame||!Array.isArray(frame.layers))throw Error("الإطار غير صالح");
+ if(frame.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");
+ const layer=createRasterLayer(asset);frame.layers.push(layer);return layer;
+}
 export function renameLayer(f,id,name){const l=f.layers.find(x=>x.id===id);if(!l)throw Error("الطبقة غير موجودة");const next=String(name??"").trim();if(!next)throw Error("اسم الطبقة لا يمكن أن يكون فارغاً");if(next.length>80)throw Error("اسم الطبقة يتجاوز 80 حرفاً");l.name=next;return l}
 export function removeLayer(f,id){if(f.layers.length<=1)throw Error("يجب إبقاء طبقة واحدة على الأقل");const i=f.layers.findIndex(l=>l.id===id);if(i<0)throw Error("الطبقة غير موجودة");f.layers.splice(i,1)}
 export function reorderLayer(f,id,delta){const i=f.layers.findIndex(l=>l.id===id),j=i+delta;if(i<0||j<0||j>=f.layers.length)return false;[f.layers[i],f.layers[j]]=[f.layers[j],f.layers[i]];return true}
@@ -390,6 +417,6 @@ export function movePathControlPoint(d,controlIndex,x,y){
 export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" opacity="'+(Number.isFinite(+p.opacity)?Math.max(0,Math.min(1,+p.opacity)):1)+'"'+(p.filter?' filter="'+esc(p.filter)+'"':'')+' stroke-linecap="round" stroke-linejoin="round"/>';
-export function layerSvg(l,i=0,prefix="drawing"){if(!l.visible)return"";let pending=[],erasures=[],out="",k=0;const flush=()=>{if(!pending.length)return;if(erasures.length){const id="erase-mask-"+prefix+"-"+i+"-"+k++;out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(op=>markup(op.path,"black",op.id)).join("")+'</mask></defs><g mask="url(#'+id+')">'+pending.map(op=>markup(op.path,undefined,op.id)).join("")+"</g>"}else out+=pending.map(op=>markup(op.path,undefined,op.id)).join("");pending=[];erasures=[]};for(const op of l.operations){if(op.kind==="erase"){if(pending.length)erasures.push(op);continue}if(op.kind==="stroke"){if(erasures.length)flush();pending.push(op)}}flush();return'<g data-layer="'+esc(l.id)+'">'+out+"</g>"}
+export function layerSvg(l,i=0,prefix="drawing"){if(!l.visible)return"";if(l.type==="raster"){const opacity=Number.isFinite(+l.opacity)?Math.max(0,Math.min(1,+l.opacity)):1;const blend=["normal","multiply","screen","overlay","darken","lighten"].includes(l.blendMode)?l.blendMode:"normal";return'<g data-layer="'+esc(l.id)+'" opacity="'+opacity+'" style="mix-blend-mode:'+blend+'"><image href="'+esc(l.dataUrl)+'" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'" preserveAspectRatio="none"/></g>'}let pending=[],erasures=[],out="",k=0;const flush=()=>{if(!pending.length)return;if(erasures.length){const id="erase-mask-"+prefix+"-"+i+"-"+k++;out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(op=>markup(op.path,"black",op.id)).join("")+'</mask></defs><g mask="url(#'+id+')">'+pending.map(op=>markup(op.path,undefined,op.id)).join("")+"</g>"}else out+=pending.map(op=>markup(op.path,undefined,op.id)).join("");pending=[];erasures=[]};for(const op of l.operations){if(op.kind==="erase"){if(pending.length)erasures.push(op);continue}if(op.kind==="stroke"){if(erasures.length)flush();pending.push(op)}}flush();return'<g data-layer="'+esc(l.id)+'">'+out+"</g>"}
 export function frameSvg(f,prefix="export",backgroundLayers=[]){const layers=[...(Array.isArray(backgroundLayers)?backgroundLayers:[]),...f.layers];return'<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+SVG_DEFS+SVG_ART_DEFS+layers.map((l,i)=>layerSvg(l,i,prefix)).join("")+"</svg>"}
 export function renderLayerInto(svg,l,i=0,prefix="live"){const markupSvg='<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+layerSvg(l,i,prefix)+'</svg>';const parsed=new DOMParser().parseFromString(markupSvg,"image/svg+xml");for(const node of parsed.documentElement.childNodes)if(node.nodeType===1)svg.appendChild(document.importNode(node,true))}
