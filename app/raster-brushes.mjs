@@ -121,12 +121,68 @@ function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,tex
  }
  ctx.restore();
 }
+function paintWatercolorWash(context,dabs,{color,opacity,seed,texture}){
+ if(!dabs.length)return;
+ // A watercolor mark is a connected, translucent wash with a broken pigment edge,
+ // not a row of opaque circular stamps.
+ paintRibbon(context,dabs,{color,opacity:opacity*.34,seed,widthScale:1.28,roughness:.24,texture:0,bristles:0,edgePigment:.52,dryness:0});
+ const stride=Math.max(1,Math.ceil(dabs.length/520));
+ for(let i=0;i<dabs.length;i+=stride){
+  const d=dabs[i],r=d.radius*(1.02+hash(seed,d.index,307)*.5);
+  context.save();context.translate(d.x,d.y);context.rotate(d.angle);
+  context.globalAlpha=clamp(opacity*(.045+texture*.075)*d.alpha,0,.12);
+  context.fillStyle=color;
+  if(typeof context.createRadialGradient==="function"){
+   const bloom=context.createRadialGradient(0,0,r*.28,0,0,r*1.28);
+   bloom.addColorStop(0,color);bloom.addColorStop(.68,color);bloom.addColorStop(1,"rgba(255,255,255,0)");
+   context.fillStyle=bloom;
+  }
+  context.beginPath();context.ellipse(0,0,r*1.18,r*(.78+hash(seed,d.index,311)*.48),0,0,Math.PI*2);context.fill();
+  // Fine granulation is sparse and deterministic, preserving a paper-like wash.
+  if(texture>.2&&hash(seed,d.index,313)<texture*.72){
+   context.globalAlpha=clamp(opacity*texture*.11,0,.09);
+   context.fillStyle=colorVariant(color,-.24);
+   const dot=r*(.035+hash(seed,d.index,317)*.075);
+   context.beginPath();context.ellipse((hash(seed,d.index,319)-.5)*r*1.25,(hash(seed,d.index,323)-.5)*r*.9,dot,dot*.72,0,0,Math.PI*2);context.fill();
+  }
+  context.restore();
+ }
+}
+function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
+ for(const d of dabs){
+  const variation=hash(seed,d.index,401),length=d.radius*(.72+variation*.72),width=length*d.aspect*(.72+hash(seed,d.index,409)*.85);
+  const hue=hash(seed,d.index,419),leafColor=colorVariant(color,hue>.72?.2:hue<.2?-.24:(hue-.5)*.24);
+  context.save();context.translate(d.x,d.y);context.rotate(d.angle+(hash(seed,d.index,421)-.5)*.75);
+  context.globalAlpha=clamp(d.alpha*opacity,0,1);context.fillStyle=leafColor;
+  context.beginPath();context.moveTo(-length*.62,0);
+  context.quadraticCurveTo(-length*.2,-width*1.18,length*.52,-width*.12);
+  context.quadraticCurveTo(length*.82,width*.16,-length*.62,0);context.fill();
+  // A fine central vein gives each mark a readable leaf direction.
+  if(texture>.16){
+   context.globalAlpha*=.36;context.strokeStyle=colorVariant(leafColor,.3);
+   context.lineWidth=Math.max(.3,length*.025);context.beginPath();
+   context.moveTo(-length*.48,0);context.quadraticCurveTo(0,width*.02,length*.66,width*.05);context.stroke();
+  }
+  // A few small companion leaves create clustered foliage instead of repeated stamps.
+  if(hash(seed,d.index,431)<texture*.34){
+   for(let side of [-1,1]){
+    const scale=.28+hash(seed,d.index,437+side)*.18;
+    context.globalAlpha=clamp(d.alpha*opacity*.62,0,.8);
+    context.fillStyle=colorVariant(leafColor,side>0?.12:-.16);
+    context.beginPath();context.moveTo(-length*.12,0);
+    context.quadraticCurveTo(length*.02,side*width*.82,length*.42,side*width*.48);
+    context.quadraticCurveTo(length*.26,side*width*.12,-length*.12,0);context.fill();
+   }
+  }
+  context.restore();
+ }
+}
 export function drawRasterBrushStroke(context,points,options={}){
  if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
  context.save();context.globalCompositeOperation=options.erase?"destination-out":"source-over";
- if(brush==="watercolor"){for(const d of dabs){context.save();context.translate(d.x,d.y);context.rotate(d.angle);context.globalAlpha=clamp(d.alpha*opacity*.62,0,.32);context.fillStyle=color;if(typeof context.createRadialGradient==="function"){const g=context.createRadialGradient(0,0,d.radius*.1,0,0,d.radius*1.3);g.addColorStop(0,color);g.addColorStop(.72,color);g.addColorStop(1,"rgba(255,255,255,0)");context.fillStyle=g;}context.beginPath();context.ellipse(0,0,d.radius*1.18,d.radius*d.aspect*1.24,0,0,Math.PI*2);context.fill();context.restore();}}
- else if(brush==="foliage"){for(const d of dabs){context.save();context.translate(d.x,d.y);context.rotate(d.angle);context.globalAlpha=clamp(d.alpha*opacity,0,1);context.fillStyle=color;context.beginPath();context.moveTo(-d.radius*.95,0);context.quadraticCurveTo(-d.radius*.25,-d.radius*d.aspect*1.85,d.radius,0);context.quadraticCurveTo(-d.radius*.25,d.radius*d.aspect*1.85,-d.radius*.95,0);context.fill();if(texture>0){context.globalAlpha*=.42;context.strokeStyle=colorVariant(color,.32);context.lineWidth=Math.max(.35,d.radius*.07);context.beginPath();context.moveTo(-d.radius*.72,0);context.lineTo(d.radius*.8,0);context.stroke();}context.restore();}}
+ if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
+ else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
  else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
  context.restore();return{dabCount:dabs.length,brush,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
 }
