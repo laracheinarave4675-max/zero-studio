@@ -20,6 +20,18 @@ test("Hokusai painter rejects an unknown brush identifier",async()=>{
  await assert.rejects(()=>painter.loadBrush("not-a-brush"),/Unknown Hokusai brush/);painter.destroy();
 });
 
+test("Hokusai painter passes real touch pressure to the brush engine",async()=>{
+ let receivedPressure=null;
+ class Brush{radiusLog(){return 1}setColorHsv(){}setRadiusLog(){}}
+ class Engine{constructor(){}pixels(){return new Uint8Array(960*540*4)}resetStroke(){}strokeTo(_brush,_x,_y,pressure){receivedPressure=pressure}finishStroke(){}clear(){}free(){}}
+ const listeners={};const context={putImageData(){},createImageData(w,h){return{data:new Uint8ClampedArray(w*h*4),width:w,height:h}}};
+ const canvas={getContext(){return context},addEventListener(n,f){listeners[n]=f},removeEventListener(){},getBoundingClientRect(){return{left:0,top:0,width:960,height:540}},setPointerCapture(){}};
+ const painter=await createHokusaiPainter({canvasElement:canvas,init:async()=>{},HokusaiBrush:Brush,HokusaiCanvas:Engine,fetchImpl:async()=>({ok:true,text:async()=>"{}"})});
+ listeners.pointerdown({clientX:40,clientY:30,pointerType:"touch",pressure:.35,timeStamp:10,pointerId:1});
+ assert.equal(receivedPressure,.35);
+ painter.destroy();
+});
+
 test("Hokusai PNG imports as a persistent raster operation in an editable project layer",()=>{
  const project=createProject("Raster integration"),layer=project.frames[0].layers[0];
  const png="data:image/png;base64,iVBORw0KGgo=";
