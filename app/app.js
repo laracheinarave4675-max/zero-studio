@@ -6,7 +6,7 @@ import{captureFrameHistory,captureFrameHistoryAfter,applyFrameHistory}from"./fra
 import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg,createCharacterModelFromFrame,rotateNoriHead,rotateNoriBody,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame}from"./character-model.mjs";
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
-import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager}from"./raster-surface.mjs";
+import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
 (()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 function noriPalette(){return{line:$("characterLine").value,skin:$("characterSkin").value,hair:$("characterHair").value,cloth:$("characterCloth").value,accent:$("characterAccent").value}}
 function createBaseNori(){return applyNoriPalette(createNoriModel($("characterExpression").value,$("characterView").value,$("characterPose").value),noriPalette())}
@@ -129,13 +129,14 @@ function coords(e){const p=canvas.createSVGPoint();p.x=e.clientX;p.y=e.clientY;c
 function dpath(a){return $("pressureToggle").checked&&activePointerType==="pen"&&tool==="pen"?pressureOutlinePath(a,+$("strokeWidth").value):pointsToPath(a)}
 const shapeTools=new Set(["line","rect","ellipse"]),rasterBrushTools=new Set(["raster-pencil","raster-brush"]);let rasterCommitPending=false;
 async function commitRasterBrushStroke(target,strokePoints,brushOptions){
- const surface=await rasterSurfaces.get(target),context=surface.context;
- const mapped=mapPointsToRaster(strokePoints,WIDTH,HEIGHT,target.width,target.height,brushOptions.size);
- const result=drawRasterBrushStroke(context,mapped.points,{...brushOptions,size:mapped.size});
- const nextData=surface.canvas.toDataURL("image/png");
- if(nextData.length>24*1024*1024||Math.floor((nextData.length-"data:image/png;base64,".length)*3/4)>16*1024*1024)throw Error("حجم الطبقة بعد الرسم تجاوز الحد الآمن؛ خفّض أبعاد الصورة أو قسّم العمل إلى طبقات.");
- target.dataUrl=nextData;target.mimeType="image/png";target.strokes=Array.isArray(target.strokes)?target.strokes:[];
- target.strokes.push({points:strokePoints.map(p=>({x:p.x,y:p.y,pressure:p.pressure})),options:{brush:brushOptions.brush,size:brushOptions.size,color:brushOptions.color,opacity:brushOptions.opacity,texture:brushOptions.texture,blendMode:brushOptions.blendMode||"normal",pressureSensitive:brushOptions.pressureSensitive!==false,erase:brushOptions.erase===true,seed:brushOptions.seed}});
+ const{result,dataUrl:nextData}=await encodeRasterSurfaceStroke(rasterSurfaces,target,surface=>{
+  const mapped=mapPointsToRaster(strokePoints,WIDTH,HEIGHT,target.width,target.height,brushOptions.size);
+  return drawRasterBrushStroke(surface.context,mapped.points,{...brushOptions,size:mapped.size});
+ });
+ const nextStrokes=Array.isArray(target.strokes)?target.strokes.slice():[];
+ nextStrokes.push({points:strokePoints.map(p=>({x:p.x,y:p.y,pressure:p.pressure})),options:{brush:brushOptions.brush,size:brushOptions.size,color:brushOptions.color,opacity:brushOptions.opacity,texture:brushOptions.texture,blendMode:brushOptions.blendMode||"normal",pressureSensitive:brushOptions.pressureSensitive!==false,erase:brushOptions.erase===true,seed:brushOptions.seed}});
+ target.dataUrl=nextData;target.mimeType="image/png";target.strokes=nextStrokes;
+ rasterSurfaces.markCurrent(target);
  return result;
 }
 function previewPath(){
