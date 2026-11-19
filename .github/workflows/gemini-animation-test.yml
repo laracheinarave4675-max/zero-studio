@@ -14,14 +14,11 @@ on:
   push:
     branches: ["feature/mobile-drawing-workspace"]
     paths:
-      - ".github/workflows/gemini-animation-test.yml"
       - "scripts/run-gemini-animation-test.mjs"
       - "app/gemini-animation.mjs"
       - "app/animation-worker.mjs"
       - "app/animation-production.mjs"
-      - "app/scene-production.mjs"
       - "tests/scene-production.test.mjs"
-      - "scripts/run-gemini-scene-artist-test.mjs"
 jobs:
   vector-quality-test:
     runs-on: ubuntu-latest
