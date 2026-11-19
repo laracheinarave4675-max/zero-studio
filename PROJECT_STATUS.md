@@ -412,3 +412,16 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Latest public static snapshot: Vercel `dpl_bqibHVJ4qU7daU2jgWA6fYmuLGes`, state `READY`, stable alias `https://zero-studio-three.vercel.app/`.
 - Source remains private and deployment remains manual; future commits require a new static upload.
 - Latest code/test milestone is committed on `feature/mobile-drawing-workspace`; PR #1 remains draft and unmerged.
+
+
+## Approved hybrid raster/vector direction — 2026-11-19
+
+- The user approved a new hybrid architecture: human-painted layered Raster is the primary route for final art; native SVG remains optional, editable, and first-class. Existing SVG projects/tools/exports must continue to work; no bitmap-only replacement is authorized.
+- D-023 was added and supersedes the vector-first requirements of D-012, D-020, and D-022 where they conflict. Earlier decisions remain historical context; D-023 governs current architecture.
+- Added docs/HYBRID_ART_ARCHITECTURE.md and docs/LAYERED_ASSET_INTERCHANGE.md. Updated the human art workflow and animation production contract to describe mixed raster/vector assets.
+- Created isolated branch feat/hybrid-human-art-pipeline from commit 1e533c13f0e5524a3c63f4d9b6ac6580487b0bfb. No merge to main and no production deployment were performed.
+- First code foundation: app/hybrid-assets.mjs validates typed raster/vector layer manifests, source references, dimensions, sizes, opacity, blend modes and mixed layers; it also computes mixed-layer structural frame signatures and enforces the 24 FPS cadence setting. tests/hybrid-assets.test.mjs covers this contract.
+- **Not yet implemented:** actual PSD/ORA/PNG-layer archive decoding/import, preservation of source package bytes, raster layer storage inside .zero, mixed raster/vector rendering/compositing/export, integration with the existing frame/batch importer, and physical Android round-trip.
+- **Next gate:** identify the painting app actually available on the target Android phone, create the three-layer proof document, inspect its real exported package, then implement only the proven interchange format. Do not claim format support until tests pass.
+- The 24 independently authored moving-art drawings/second target is unchanged. Raster and vector can both represent a drawing; duplicates, tween-only motion and transformed stills do not count.
+- Current code tests have not yet been run on this branch after these changes. No test result is claimed in this status entry.
