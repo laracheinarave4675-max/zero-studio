@@ -1,7 +1,7 @@
 name: Gemini visual acceptance
 on:
   push:
-    branches: ["feature/fixed-background-visual-review"]
+    branches: ["feature/fixed-background-visual-review", "fix/replace-unreliable-svg-artist"]
     paths:
       - "app/**"
       - "scripts/gemini-visual-acceptance.mjs"
