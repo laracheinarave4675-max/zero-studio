@@ -32,3 +32,10 @@ test("Raster strokes are serialized and large canvases fail safely on mobile",as
  assert.match(app,/target\.width\*target\.height>8\*1024\*1024/);
  assert.match(app,/stylusPressure\?e\.pressure:Math\.max\(/);
 });
+
+test("Raster eraser clears pixels on an active image layer instead of creating SVG paths",async()=>{
+ const app=await readFile(new URL("../app/app.js",import.meta.url),"utf8");
+ assert.match(app,/tool==="eraser"&&layer\(\)\.type==="raster"/);
+ assert.match(app,/erase:rasterErase/);
+ assert.match(app,/مُحيت بكسلات من طبقة Raster/);
+});
