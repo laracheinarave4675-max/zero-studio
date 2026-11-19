@@ -509,3 +509,13 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - This is a focused improvement to the human-operated raster stroke primitive. It does not establish wet-pigment mixing, true watercolor diffusion, professional brush-tip dynamics, or reference-level anime painting quality.
 - The commit was confirmed on `feat/hybrid-human-art-pipeline`. A new automated test result and visual Android inspection have not yet been confirmed; do not report this refinement as accepted until both code regression tests and an actual painted study are reviewed.
 - Next drawing-only gate: refine the watercolor and foliage material behavior, then paint the forest-house reference as a complete layered still and inspect the rendered result at full resolution. No animation, production-management, or deployment work is included in this milestone.
+
+## Watercolor and foliage material pass — 2026-11-19
+
+- Reworked the watercolor brush to lay down a connected translucent wash with irregular edge pigment, overlapping blooms and sparse deterministic granulation instead of relying only on a sequence of round stamps.
+- Reworked foliage marks into varied directional leaf shapes with per-leaf color variation, central veins, and occasional companion leaves for clustered canopy texture.
+- Added regression tests for connected watercolor wash behavior and deterministic foliage variation.
+- Corrected pigment-edge accumulation so the two sides of a stroke are rendered independently rather than joined by a zig-zag line.
+- Commits: `c2ff78d989a58b06864bf2be4b12ffa550b1c93e`, `9196c338397abd85dbb1784ba85041635cb176e5`, `1567e6355021572ba041420d9a7e6039c7357a9a`.
+- The changes are committed to the isolated `feat/hybrid-human-art-pipeline` branch. GitHub Actions results for these exact commits and visual inspection on Android have not yet been confirmed. These are brush-engine improvements, not evidence that the reference-level forest-house painting has been achieved.
+- Next art-only gate: inspect actual rendered watercolor and canopy strokes at full size, tune material behavior against the forest-house reference, and build a complete layered background study before expanding scope.
