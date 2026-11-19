@@ -153,3 +153,16 @@ This file records decisions that must not be changed silently. Add dated entries
 **Architecture:** ZERO STUDIO is the production, asset, timeline, continuity, compositing, and delivery workspace. A professional Android painting app may be the primary painting surface initially, but it must not become a mandatory runtime dependency. Native vector editing/export remains available. The asset model and compositor must support mixed raster/vector layers without forcing either format into the other.
 
 **Acceptance gates:** (1) lossless layered import/export round-trip on Android; (2) mixed raster/vector project save/open and composite tests; (3) no silent flattening or source loss; (4) distinct 24-drawing/second moving-art cadence remains measurable; (5) human visual approval remains mandatory. No claim of professional painting quality until a real artist workflow is tested.
+
+
+## D-024 — Absolutely no generative image models in ZERO STUDIO artwork (2026-11-19)
+
+**User confirmation:** The user explicitly confirmed that image-generation models are prohibited entirely for this project.
+
+**Binding rule:** No generative image or video model may create, alter, inpaint, outpaint, extend, stylize, upscale-generatively, or synthesize any final artwork, background, character, prop, texture, animation frame, or visual mark. This prohibition also applies to hidden workflows, API integrations, external services, and "assistant-only" image generation. Do not add a generator toggle or offer a generator-based fallback.
+
+**Allowed assistance:** Text-only planning, art-direction checklists, perspective/material analysis, technical debugging, code generation for deterministic drawing tools, test authoring, metadata, and non-generative critique. All final pixels and vector marks must result from human drawing input or explicit deterministic editing operations controlled by the artist.
+
+**Implementation requirements:** Remove generator controls from the active drawing workflow; audit and isolate legacy generator modules so they cannot be invoked from the final-art UI or project pipeline; add regression checks for the no-generation boundary; preserve existing SVG and Raster authoring paths. No destructive bulk deletion of legacy code or existing artwork without review.
+
+**Quality requirement:** Do not imply that deterministic procedural marks equal professional painting. The project must prove quality through a human-painted full-scene study, reviewed on the target Android device. Passing tests is not artistic acceptance.
