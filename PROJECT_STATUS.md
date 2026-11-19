@@ -472,3 +472,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Full native test suite: **200 tests passed, 0 failed** (run duration about 6.7 seconds).
 - A new Vercel preview deployment was retried for this verified commit, but Vercel again returned HTTP 429 rate limiting. No preview deployment was created and production was not changed.
 - The authored sample SVG is available at `samples/first-hand-authored-anime-background.svg`.
+
+
+## Native Raster brush engineering — 2026-11-19
+
+- Added `app/raster-brushes.mjs`: deterministic dab interpolation and Canvas2D pixel rendering for graphite, ink, gouache-like, watercolor-like and foliage brushes.
+- Added dedicated Arabic UI controls for Raster pencil/Raster brush, brush material, opacity and texture; existing vector pen remains unchanged.
+- Raster brush gestures now create a transparent PNG layer when needed and commit painted pixels into the selected Raster layer rather than SVG paths.
+- Imported images are painted in their true pixel coordinates while respecting aspect-ratio letterboxing.
+- Large Raster document undo history is bounded to reduce memory exhaustion; a 16-megapixel working-area guard prevents unsafe canvas allocation.
+- Automated regression tests cover brush dab determinism, pressure response, invalid inputs, pathological stroke caps, canvas context drawing and source-image coordinate mapping.
+- Important limitation: these are textured dab brushes, not yet simulated wet pigment or a professional paint engine. Android hardware testing and visual artist acceptance are still pending.
