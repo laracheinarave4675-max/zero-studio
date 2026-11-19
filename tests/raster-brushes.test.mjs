@@ -31,6 +31,18 @@ test("curved brush paths sample their spline length rather than only pointer-to-
  assert.ok(curved.length>straight.length,"a winding spline must receive enough samples to keep its ribbon continuous");
  assert.ok(curved.every(d=>Number.isFinite(d.x)&&Number.isFinite(d.y)&&d.radius>0));
 });
+test("pressure follows a smooth bounded spline through sparse stylus samples",()=>{
+ const points=[{x:0,y:0,pressure:.12},{x:40,y:0,pressure:.92},{x:80,y:0,pressure:.24},{x:120,y:0,pressure:.78}];
+ const size=12,profile=RASTER_BRUSH_PRESETS.gouache;
+ const dabs=buildBrushDabs(points,{brush:"gouache",size,seed:31});
+ const pressureFromRadius=radius=>(2*radius/(size*profile.radius)-.24)/.76;
+ const pressures=dabs.map(dab=>pressureFromRadius(dab.radius));
+ assert.ok(Math.abs(pressures[0]-.12)<1e-9,"the first stylus pressure must be preserved");
+ assert.ok(Math.abs(pressures.at(-1)-.78)<1e-9,"the final stylus pressure must be preserved");
+ assert.ok(pressures.every(value=>value>=.06-1e-9&&value<=1+1e-9),"spline pressure must never create out-of-range brush widths");
+ assert.ok(pressures.some(value=>value>.92-1e-6),"the high-pressure section must remain represented");
+ assert.ok(pressures.some(value=>value<.25),"the low-pressure section must remain represented");
+});
 test("a tap creates one dab and mouse mode can use stable simulated pressure",()=>{
  const dab=buildBrushDabs([{x:25,y:30}],{brush:"ink",size:10,pressureSensitive:false,seed:2});
  assert.equal(dab.length,1);
