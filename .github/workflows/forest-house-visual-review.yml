@@ -1,0 +1,29 @@
+name: Forest house visual review
+on:
+  push:
+    branches: ["feat/forest-house-painterly-pass"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render-and-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm init -y && npm install --no-save sharp
+      - name: Render forest-house scene and request Gemini visual critique
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/visual-review-forest.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forest-house-visual-review
+          path: |
+            forest-house-review.png
+            forest-house-review.svg
+            forest-house-gemini-review.json
+          if-no-files-found: error
+          retention-days: 14
