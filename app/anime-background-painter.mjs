@@ -1,4 +1,5 @@
 import{validatePath}from"./engine.mjs";
+import{applyPainterlyForestPass}from"./painterly-forest-pass.mjs";
 const C={
  ink:"#3e4947",inkSoft:"#58635b",sky:"#b8d6d4",far:"#a9bd9f",hill:"#819b79",hillDark:"#607b66",
  leaf0:"#294f43",leaf1:"#37674e",leaf2:"#4e8057",leaf3:"#6f995e",leaf4:"#9eb46d",leafSun:"#d1c887",
@@ -526,7 +527,7 @@ export function validateAnimeBackgroundPlan(plan){
 }
 export function renderAnimeBackground(plan){
  validateAnimeBackgroundPlan(plan);
- const result=SCENE_RENDERERS[plan.kind]();
+ const result=applyPainterlyForestPass(SCENE_RENDERERS[plan.kind]());
  let total=0;const names=new Set();
  for(const l of result.layers){
   if(!l.name||names.has(l.name))throw Error("أسماء طبقات الخلفية يجب أن تكون فريدة.");names.add(l.name);
