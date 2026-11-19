@@ -492,3 +492,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Visual diagnosis: the committed sample `samples/first-hand-authored-anime-background.svg` is an evening Japanese bookshop street, not the requested forest-house reference. Its tree crowns use a small number of circles and the architecture is largely broad filled polygons. It therefore cannot be treated as the requested detailed painterly forest-house result.
 - The current Raster brush module is a foundational Canvas2D stroke renderer (pressure-shaped ribbons, bristle tracks, wash and leaf marks), not a full natural-media engine. The existence of the brush module and passing unit tests does not prove a professional painterly result.
 - Next acceptance gate: create and inspect the actual forest-house scene against the user's reference; verify organic foliage, curved layered roof tiles, timber construction, glazing, balcony, stone retaining wall, light and depth. Do not mark the artwork accepted based on source complexity, path counts, or test results. Keep PR isolated; no merge or production deployment.
+
+## Forest-house artwork study — 2026-11-19
+
+- Added `samples/forest-house-canopy-study.svg` on the isolated hybrid branch. It is a new 1920×1080, self-contained, editable SVG study composed of twelve named scene groups: atmosphere, forest trunks, distant canopy, stone wall, house structure, upper story, ground floor, curved roof, timber eaves, garden, foreground canopy, and light accents.
+- The authored scene includes a curved layered tile roof, timber framing, upper glazing and balcony rails, sliding ground-floor doors, varied foliage clusters, stone retaining wall, garden path, sunlight and atmospheric depth.
+- Added `tests/forest-house-artwork.test.mjs` to check scene dimensions, required named groups/material definitions, self-contained assets, and minimum path detail.
+- Artwork commit: `c576f50dd6b9e5df0256f39be80741a7bb837cfb`. Structural test commit: `22c518e9a54382e69ca65a98d8509b88858e6306`.
+- This is a hand-authored vector study, not a raster-painted final background and not yet visually rendered/inspected on an Android device. It does not establish professional painterly quality or artist acceptance. The native raster brush remains a foundational tool.
+- CI for these latest commits has not yet been confirmed. No merge to main and no production deployment.
