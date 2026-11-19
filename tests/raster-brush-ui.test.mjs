@@ -35,7 +35,7 @@ test("Raster strokes are serialized and large canvases fail safely on mobile",as
  assert.match(surface,/maxPixels=8\*1024\*1024/);
  assert.match(surface,/width\*height>maxPixels/);
  assert.match(app,/createPersistentRasterSurfaceManager/);
- assert.match(app,/stylusPressure\?e\.pressure:Math\.max\(/);
+ assert.match(app,/resolveBrushPressure\(activePointerType,e\.pressure,fallbackPressure\)/);\n assert.match(app,/Number\.isFinite\(e\?\.clientX\).*?addPoint\(e\);drawing=false/);
 });
 
 test("Raster eraser clears pixels on an active image layer instead of creating SVG paths",async()=>{
