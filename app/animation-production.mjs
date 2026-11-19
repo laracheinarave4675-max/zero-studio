@@ -91,7 +91,7 @@ export function validateAnimationBatch(job,payload){
   const layers=entry.layers.map((source,layerIndex)=>{
    const name=cleanName(source?.name);
    if(!name||localNames.has(name))fail("اسم طبقة فارغ أو مكرر في الإطار "+(globalIndex+1)+".");
-   if(job.backgroundMode&&source.role!=="moving")fail("وضع الخلفية الثابتة يتطلب role=\\"moving\\" لكل طبقة؛ لا تعِد رسم الخلفية.");
+   if(job.backgroundMode&&source.role!=="moving")fail('وضع الخلفية الثابتة يتطلب role="moving" لكل طبقة؛ لا تعِد رسم الخلفية.');
    localNames.add(name);
    if(!Array.isArray(source.operations)||source.operations.length>100)fail("عدد مسارات الطبقة "+name+" غير صالح.");
    total+=source.operations.length;
