@@ -56,7 +56,15 @@ export function buildBrushDabs(points,options={}){
  for(let segment=0;segment<samples.length-1;segment++){
   const a=samples[segment],b=samples[segment+1],distance=Math.hypot(b.x-a.x,b.y-a.y);
   if(distance<0.001)continue;
-  const p0=samples[Math.max(0,segment-1)],p3=samples[Math.min(samples.length-1,segment+2)],steps=Math.max(1,Math.ceil(distance/spacing));
+  const p0=samples[Math.max(0,segment-1)],p3=samples[Math.min(samples.length-1,segment+2)];
+  // Estimate the spline arc length, not only the straight pointer chord.
+  // Tight turns otherwise receive too few dabs and can expose tiny gaps.
+  let arcLength=0,previousX=a.x,previousY=a.y;
+  for(let probe=1;probe<=8;probe++){
+   const t=probe/8,x=curve(p0.x,a.x,b.x,p3.x,t),y=curve(p0.y,a.y,b.y,p3.y,t);
+   arcLength+=Math.hypot(x-previousX,y-previousY);previousX=x;previousY=y;
+  }
+  const steps=Math.max(1,Math.ceil(arcLength/spacing));
   for(let step=segment===0?0:1;step<=steps;step++){
    if(output.length>=30000)return output;
    const t=step/steps,x=curve(p0.x,a.x,b.x,p3.x,t),y=curve(p0.y,a.y,b.y,p3.y,t),p=a.pressure+(b.pressure-a.pressure)*t;
