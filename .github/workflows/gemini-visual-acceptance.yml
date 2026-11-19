@@ -1,0 +1,40 @@
+name: Gemini visual acceptance
+on:
+  push:
+    branches: ["feature/fixed-background-visual-review"]
+    paths:
+      - "app/**"
+      - "scripts/gemini-visual-acceptance.mjs"
+      - ".github/workflows/gemini-visual-acceptance.yml"
+jobs:
+  visual-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser automation
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start ZERO STUDIO
+        run: |
+          python3 -m http.server 4173 --directory app > /tmp/zero-studio-http.log 2>&1 &
+          for i in $(seq 1 30); do curl --fail http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+      - name: Generate and visually critique three anime backgrounds
+        run: node scripts/gemini-visual-acceptance.mjs
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ZERO_STUDIO_URL: http://127.0.0.1:4173
+      - name: Save PNG previews and critique reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-visual-acceptance
+          path: artifacts/gemini-visual-acceptance/
+          if-no-files-found: warn
+          retention-days: 30
