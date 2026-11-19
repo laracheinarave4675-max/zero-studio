@@ -436,3 +436,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Latest implementation commit: 145fa6704a4cc47ee26ee2f005618bdf835de837.
 - NOT YET VERIFIED: CI on this commit, actual image-file picker/import UI, large-image memory behavior, Android save/open on-device, PSD/ORA decoding, and a visual human-painted sample. No image-generation model creates or modifies the artwork.
 - No merge to main and no production deployment were performed.
+
+## Raster import UI integration — 2026-11-19
+
+- Connected the raster engine to the Arabic mobile workspace: the Layers panel now includes an image import control accepting PNG, WebP, and JPEG up to 16 MiB. The browser reads the selected file, validates its decoded dimensions and type, and inserts it as a separate editable/reorderable raster layer.
+- Mixed raster/vector frames persist through the existing .zero JSON project save/open path and are composited into SVG output without flattening the source layer records.
+- Updated the PWA shell cache from v31 to v32 so Android browsers fetch the new controller and engine modules.
+- Current branch head at this update: 55e2e4b6bd3152df0c31d1a853e13e7333124e45.
+- Added engine regression tests, but GitHub Actions results for this exact head have not yet been returned by the available commit-run query. Treat automated test execution as pending; do not claim green CI.
+- PSD/ORA archive decoding, high-resolution memory optimization, image crop/transform UI, physical Android testing, and artist-supplied sample review remain pending. No merge or production deployment.
