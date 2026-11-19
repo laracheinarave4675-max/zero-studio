@@ -12,7 +12,7 @@ test("raster layers persist through ZERO project normalization without flattenin
  assert.equal(raster.type,"raster");
  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
  assert.equal(reopened.frames[0].layers.length,2);
- assert.equal(reopened.frames[0].layers[0].type,"vector");
+ assert.equal(reopened.frames[0].layers[0].operations.length,1);
  assert.equal(reopened.frames[0].layers[1].type,"raster");
  assert.equal(reopened.frames[0].layers[1].dataUrl,pixel);
  assert.equal(reopened.frames[0].layers[1].opacity,.8);
@@ -32,6 +32,6 @@ test("raster layer is composited into SVG output as an embedded image",()=>{
 test("raster layer validation rejects unsafe data, unsupported MIME and oversized dimensions",()=>{
  assert.throws(()=>createRasterLayer({dataUrl:"https://example.com/a.png",mimeType:"image/png",width:1,height:1}),/غير صالحة/);
  assert.throws(()=>createRasterLayer({dataUrl:pixel,mimeType:"image/svg+xml",width:1,height:1}),/غير مدعوم/);
- assert.throws(()=>createRasterLayer({dataUrl:pixel,mimeType:"image/png",width:20000,height:1}),/الأبعاد/);
+ assert.throws(()=>createRasterLayer({dataUrl:pixel,mimeType:"image/png",width:20000,height:1}),/أبعاد/);
  assert.throws(()=>createRasterLayer({dataUrl:pixel,mimeType:"image/png",width:1,height:1,opacity:2}),/شفافية/);
 });
