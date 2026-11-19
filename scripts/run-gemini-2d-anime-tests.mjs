@@ -12,6 +12,7 @@ const scenes=[
 await mkdir("artifacts/gemini-2d-anime-scenes",{recursive:true});
 const summary=[];
 for(const scene of scenes){
+ const dir="artifacts/gemini-2d-anime-scenes/"+scene.slug;await mkdir(dir,{recursive:true});
  console.log("Starting "+scene.slug+"; maximum visual passes: "+maxPasses);
  let revisionBrief="",finalResult,finalPreview,finalCritique;
  const critiqueHistory=[];
@@ -22,9 +23,11 @@ for(const scene of scenes){
   frame.layers=result.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
   const svg='<?xml version="1.0" encoding="UTF-8"?>'+frameSvg(frame,scene.slug);
   const png=new Resvg(svg,{fitTo:{mode:"width",value:1280}}).render().asPng();
+  const passDir=dir+"/passes/pass-"+pass;await mkdir(passDir,{recursive:true});await writeFile(passDir+"/draft.zero",JSON.stringify(project));await writeFile(passDir+"/draft.svg",svg);await writeFile(passDir+"/preview.png",png);
   console.log("Visually reviewing "+scene.slug+" preview ("+png.length+" bytes)");
   const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model);
   critiqueHistory.push({pass,model:critique.model,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,strengths:critique.strengths});
+  await writeFile(passDir+"/review.json",JSON.stringify(critique,null,2));
   console.log(JSON.stringify({scene:scene.slug,pass,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,issues:critique.issues.length}));
   if(pass<maxPasses&&!(critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0))await new Promise(resolve=>setTimeout(resolve,5200));
   finalResult={...result,model:result.model,pass};finalPreview=png;finalCritique=critique;
@@ -33,7 +36,6 @@ for(const scene of scenes){
  }
  const frameProject=createProject("ZERO STUDIO — "+scene.name);
  frameProject.frames[0].layers=finalResult.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
- const dir="artifacts/gemini-2d-anime-scenes/"+scene.slug;await mkdir(dir,{recursive:true});
  await writeFile(dir+"/scene.zero",JSON.stringify(frameProject));
  await writeFile(dir+"/scene.svg",'<?xml version="1.0" encoding="UTF-8"?>'+frameSvg(frameProject.frames[0],scene.slug));
  await writeFile(dir+"/scene-preview.png",finalPreview);
