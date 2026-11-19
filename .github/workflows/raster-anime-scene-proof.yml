@@ -1,0 +1,29 @@
+name: ZERO STUDIO Canvas2D anime scene visual proof
+on:
+  push:
+    branches: ["feat/hybrid-human-art-pipeline"]
+    paths:
+      - "app/raster-anime-scene.mjs"
+      - "app/raster-environment-media.mjs"
+      - "scripts/render-raster-anime-scene.mjs"
+      - "tests/raster-anime-scene.test.mjs"
+      - ".github/workflows/raster-anime-scene-proof.yml"
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save @napi-rs/canvas
+      - name: Render native deterministic Canvas2D scene
+        run: node scripts/render-raster-anime-scene.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-canvas2d-anime-scene
+          path: artifacts/raster-anime-scene/
+          if-no-files-found: error
+          retention-days: 14
