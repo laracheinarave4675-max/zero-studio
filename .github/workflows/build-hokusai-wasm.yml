@@ -8,6 +8,9 @@ on:
       - "app/index.html"
       - ".github/workflows/build-hokusai-wasm.yml"
   workflow_dispatch:
+concurrency:
+  group: hokusai-wasm-build-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
