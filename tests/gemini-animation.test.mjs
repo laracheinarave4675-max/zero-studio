@@ -18,3 +18,5 @@ test("Gemini animation provider reports HTTP quota errors without hiding status"
  const provider=createGeminiAnimationProvider({apiKey:"x",fetcher:async()=>({ok:false,status:429,json:async()=>({error:{message:"quota exceeded"}})})});
  await assert.rejects(()=>provider({prompt:"test"}),error=>error.status===429&&/quota exceeded/.test(error.message));
 });
+
+test("Gemini 3 Flash Preview is accepted as the documented API model ID",async()=>{const provider=createGeminiAnimationProvider({apiKey:"x",model:"gemini-3-flash-preview",fetcher:async(url)=>{assert.match(url,/gemini-3-flash-preview:generateContent$/);return{ok:true,json:async()=>({candidates:[{content:{parts:[{text:'{"version":1,"frames":[]}' }]}}]})}}});assert.deepEqual(await provider({prompt:"test"}),{version:1,frames:[]});});
