@@ -106,3 +106,12 @@ This file records decisions that must not be changed silently. Add dated entries
 ## D-020 — Vector-first material texture; raster texture deferred (2026-11-19)
 
 **Decision:** Keep final artwork editable and vector-first for the current quality milestone. Use SVG gradients, patterns, organic paths, selective filters, and procedural material marks to improve painterly richness. Temporary raster previews are permitted for visual review. Do not add raster texture layers to final artwork until a separate measured comparison demonstrates that vector methods cannot meet the target and the user approves that change.
+
+## D-021 — Human-authored artwork and professional painting department (2026-11-19)
+**Decision:** ZERO STUDIO is a human-led anime production studio. Final backgrounds, characters, props and animation drawings must be painted/drawn by a human artist using a professional drawing application or genuinely artist-operated drawing tools. Generative image/video models must not create, alter, inpaint, outpaint, or synthesize final artwork.
+
+**Implication:** Do not mistake procedural SVG primitives or a minimal Canvas brush implementation for a painterly art engine. Stop expanding procedural scene painters as a route to reference-quality anime background painting. A professional Android painting application is the art department; ZERO STUDIO is the production manager, asset organizer, animation timeline, compositor and delivery workspace.
+
+**Interchange:** Validate PSD, OpenRaster, or lossless PNG-layer bundles on the actual Android workflow before choosing a format. Never silently flatten a layered source. Keep source artwork and metadata intact.
+
+**Animation:** The 24 independently drawn images/second target remains unchanged. Static backgrounds may be reused; moving artwork must meet the independent-drawing target. See docs/HUMAN_ART_WORKFLOW.md.
