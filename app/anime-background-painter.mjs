@@ -535,7 +535,7 @@ export function renderAnimeBackground(plan){
  for(const l of result.layers){
   if(!l.name||names.has(l.name))throw Error("أسماء طبقات الخلفية يجب أن تكون فريدة.");names.add(l.name);
   l.operations=l.operations.map(p=>validatePath(p));total+=l.operations.length;
-  if(l.operations.length<1||l.operations.length>1000)throw Error("حجم إحدى طبقات الخلفية غير صالح.");
+  if(l.operations.length<1||l.operations.length>2500)throw Error("حجم إحدى طبقات الخلفية غير صالح.");
  }
  if(total>5000)throw Error("تجاوزت الخلفية حد 5000 مسار متجهي.");
  return{version:1,kind:result.kind,layers:result.layers,totalOperations:total,style:"cinematic-2d-anime-with-selective-depth"};
