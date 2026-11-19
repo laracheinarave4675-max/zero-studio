@@ -445,3 +445,15 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Current branch head at this update: 55e2e4b6bd3152df0c31d1a853e13e7333124e45.
 - Added engine regression tests, but GitHub Actions results for this exact head have not yet been returned by the available commit-run query. Treat automated test execution as pending; do not claim green CI.
 - PSD/ORA archive decoding, high-resolution memory optimization, image crop/transform UI, physical Android testing, and artist-supplied sample review remain pending. No merge or production deployment.
+
+## Raster editing safety and regression workflow — 2026-11-19
+
+- Corrected raster preview scaling to preserve source image aspect ratio inside the 1920×1080 canvas.
+- Layer list now visibly distinguishes raster image layers from SVG/vector drawing layers.
+- When the selected active layer is raster and the user begins a pen/shape/eraser gesture, the editor creates a new vector layer above it before recording operations. This prevents invisible/lost vector operations from being appended to a raster layer. Command-based path insertion follows the same rule.
+- Added an assertion that raster SVG output preserves aspect ratio.
+- Added `.github/workflows/hybrid-raster-tests.yml`: Node 22 syntax checks and the full native Node test suite run on pushes to this feature branch and pull requests.
+- Latest branch head at this update: c31320bc155cd00ddf41aea64590c8367891d4e8.
+- GitHub commit-run/status queries currently return no run/status records for this head; CI execution is therefore **unconfirmed**, not green.
+- A Vercel preview creation was attempted twice but the Vercel API returned HTTP 429 (GitHub API rate limit exceeded); no new preview deployment was created. Existing production aliases were not changed.
+- Still pending: PSD/ORA decoding, raster transform/crop controls, memory/performance testing on large images, real Android save/open, and human-art visual acceptance. No merge to main and no production deployment.
