@@ -8,6 +8,7 @@ export const RASTER_BRUSH_PRESETS = Object.freeze({
  foliage: { spacing: 0.78, radius: 0.72, opacity: 0.84, jitter: 0.48, aspect: 0.34, grain: 0.18 }
 });
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+export const RASTER_BLEND_MODES=Object.freeze({normal:"source-over",multiply:"multiply",screen:"screen",overlay:"overlay",darken:"darken",lighten:"lighten"});
 const hash=(seed,index,salt=0)=>{const x=Math.sin(seed*12.9898+index*78.233+salt*37.719)*43758.5453;return x-Math.floor(x)};
 function cleanPoints(points){
  if(!Array.isArray(points)||!points.length||points.length>20000)throw Error("نقاط ضربة الفرشاة غير صالحة");
@@ -190,11 +191,13 @@ function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
 export function drawRasterBrushStroke(context,points,options={}){
  if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
- context.save();context.globalCompositeOperation=options.erase?"destination-out":"source-over";
+ const blendMode=String(options.blendMode||"normal");
+ if(!Object.hasOwn(RASTER_BLEND_MODES,blendMode))throw Error("نمط مزج ضربات الفرشاة غير مدعوم");
+ context.save();context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];
  if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
  else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
  else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
- context.restore();return{dabCount:dabs.length,brush,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
+ context.restore();return{dabCount:dabs.length,brush,blendMode:options.erase?"destination-out":blendMode,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
 }
 export function mapPointsToRaster(points,canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize){
  const values=[canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize].map(Number);
