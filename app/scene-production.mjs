@@ -2,7 +2,7 @@ import{validatePath,pathGeometryBounds}from"./engine.mjs";
 import{renderEnvironmentScene}from"./environment-art.mjs";
 import{renderMeshEnvironment}from"./mesh-scene-renderer.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash-preview"]);
+const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-3.8-flash"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
 function parseResponse(payload){
  const text=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
@@ -167,7 +167,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   const maxLayerAttempts=Math.min(3,Math.max(1,Number(options.maxLayerAttempts)||2));
   for(let attempt=0;attempt<maxLayerAttempts;attempt++){
    try{
-    const recoveryNote=lastError?"\\n\\nPREVIOUS VALIDATION FEEDBACK: "+String(lastError.message||lastError).slice(0,700)+"\\nCorrect every reported defect, especially keep ALL coordinates within x=-100..2020 and y=-100..1180.":"";const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response failed validation. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout, correct the validation feedback below, and do not add explanations, markdown, or long redundant path sequences."+recoveryNote;parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:8192});
+    const recoveryNote=lastError?"\\n\\nPREVIOUS VALIDATION FEEDBACK: "+String(lastError.message||lastError).slice(0,700)+"\\nCorrect every reported defect, especially keep ALL coordinates within x=-100..2020 and y=-100..1180.":"";const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response failed validation. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout, correct the validation feedback below, and do not add explanations, markdown, or long redundant path sequences."+recoveryNote;parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:Number.isFinite(options.maxLayerOutputTokens)?Math.max(4096,Math.min(24000,options.maxLayerOutputTokens)):8192});
     if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
     if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
     if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
