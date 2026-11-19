@@ -2,6 +2,17 @@
 
 Last updated: 2026-11-19 (UTC)
 
+## Preview deployment and live Gemini acceptance — 2026-11-19
+
+- Created an isolated Vercel preview deployment for the 19 static application files from commit `01638713b846da04682867712301b574eec25523` (branch `feature/fixed-background-visual-review`) in existing project `zero-studio`; no production target or custom domain was assigned.
+- Preview URL: https://zero-studio-d7y2l6q77-studio-37a2.vercel.app/
+- Deployment ID: `dpl_A7PRKxLy9K3A3oMidg37PfYiJSN8`; Vercel reported `READY`. Build log: 19 files downloaded, static build completed in 85 ms. The root page and app modules/styles/service worker/manifest returned successfully from the preview.
+- Deployment was created from inline static files because Vercel's Git-source deployment endpoint repeatedly returned a GitHub API rate-limit 429. This preview is a snapshot of the application files at the commit above, not a live Git-linked auto-deploy.
+- Added branch-scoped workflow `.github/workflows/gemini-visual-acceptance.yml` and Playwright runner `scripts/gemini-visual-acceptance.mjs`. It uses the existing repository Actions secret `GEMINI_API_KEY` without printing or persisting it; runs the actual seven-layer SVG artist and Gemini inline-PNG visual reviewer against three original scene briefs; and uploads PNG previews plus JSON critique reports as a 30-day artifact.
+- First visual workflow attempt (#1) stopped before making Gemini requests due to a malformed score-parsing regex in the test harness. Corrected the regex in commit `01638713b846da04682867712301b574eec25523`. Second visual workflow attempt (#2), run ID `44514892131`, is in progress at the browser-install step at the time of this update; no visual scene results are claimed yet.
+- Latest engine test run #1299 passed all 186 tests with 0 failures on the current branch head at that time.
+- Remaining: complete the three live Gemini runs, inspect their PNGs and critique JSON, and if desired later deploy the latest exact branch head to a refreshed preview. No production deployment, alias, or `main` branch was changed.
+
 ## Fixed-background animation and visual-review gate implementation — 2026-11-19
 
 - Implemented on the isolated branch `feature/fixed-background-visual-review`, based on `feature/mobile-drawing-workspace`. The existing PR #1 and `main` were not modified or merged.
