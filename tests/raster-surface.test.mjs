@@ -70,7 +70,7 @@ test("an oversized raster stroke is rejected and its mutated surface is discarde
  const oversized="data:image/png;base64,"+"A".repeat(80);
  const h=createHarness({encodedUrl:oversized}),entry=layer();
  const original=entry.dataUrl;
- await assert.rejects(encodeRasterSurfaceStroke(h.manager,entry,({context})=>{context.drawImage({source:"rejected-pixels"});return true},{maxDataUrlChars:40,maxImageBytes:16}),/encoded image limit/);
+ await assert.rejects(encodeRasterSurfaceStroke(h.manager,entry,({context})=>{context.drawImage({source:"rejected-pixels"});return true},{maxDataUrlChars:40,maxImageBytes:16}),/تجاوز الحد الآمن/);
  assert.equal(entry.dataUrl,original,"failed transactions must not change the persisted layer");
  const recovered=await h.manager.get(entry);
  assert.equal(h.created.length,2,"the surface containing rejected pixels must not be reused");
