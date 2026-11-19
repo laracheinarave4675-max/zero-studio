@@ -166,15 +166,16 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   const maxLayerAttempts=Math.min(3,Math.max(1,Number(options.maxLayerAttempts)||2));
   for(let attempt=0;attempt<maxLayerAttempts;attempt++){
    try{
-    const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response was malformed or incomplete. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout and do not add explanations, markdown, or long redundant path sequences.";parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:8192});
+    const recoveryNote=lastError?"\\n\\nPREVIOUS VALIDATION FEEDBACK: "+String(lastError.message||lastError).slice(0,700)+"\\nCorrect every reported defect, especially keep ALL coordinates within x=-100..2020 and y=-100..1180.":"";const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response failed validation. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout, correct the validation feedback below, and do not add explanations, markdown, or long redundant path sequences."+recoveryNote;parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:8192});
     if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
     if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
     if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
+    const checked=parsed.operations.map(validatePath);for(const op of checked){const b=pathGeometryBounds(op.d);if(b.minX< -120||b.minY< -120||b.maxX>2040||b.maxY>1200)throw Error("إحداثيات مسار خارج حدود الكادر في "+spec.name+" ("+[b.minX,b.minY,b.maxX,b.maxY].join(", ")+").");}parsed.operations=checked;
     break;
    }catch(error){
     lastError=error;
     const msg=String(error?.message||error);
-    if(attempt===1||/الحصة المجانية|حد الطلبات|رفضت Google|موقع الاتصال/.test(msg))throw error;
+    if(attempt===maxLayerAttempts-1||/الحصة المجانية|حد الطلبات|رفضت Google|موقع الاتصال/.test(msg))throw error;
     await new Promise(resolve=>setTimeout(resolve,1600));
    }
   }
