@@ -21,7 +21,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-      - uses: taiki-e/install-action@wasm-pack
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
       - name: Build upstream Hokusai WASM
         run: |
           git clone --depth 1 https://github.com/reearth/hokusai.git /tmp/hokusai
