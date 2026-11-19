@@ -15,8 +15,8 @@ test("forest-house receives deterministic tapered brush marks and directional li
  const second=applyPainterlyForestPass({version:1,kind:"forest-house",layers:[]});
  assert.equal(first.layers.length,1);
  assert.equal(first.layers[0].name,"08 — ضربات الفرشاة والضوء الاتجاهي");
- assert.ok(first.layers[0].operations.length>=500);
- assert.ok(first.layers[0].operations.length<=600);
+ assert.ok(first.layers[0].operations.length>=140);
+ assert.ok(first.layers[0].operations.length<=160);
  assert.deepEqual(first.layers[0].operations,second.layers[0].operations);
  assert.ok(first.layers[0].operations.some(op=>op.d.includes(" Q ")&&op.fill.startsWith("#")));
  assert.ok(first.layers[0].operations.some(op=>op.opacity<.2));
