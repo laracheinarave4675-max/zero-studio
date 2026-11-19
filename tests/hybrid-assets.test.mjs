@@ -11,7 +11,7 @@ test("hybrid manifest preserves ordered raster and vector layers without flatten
 });
 test("manifest rejects duplicate IDs, unsafe source paths, unsupported blends and invalid sizes",()=>{
  assert.throws(()=>validateHybridAssetManifest({...manifest,layers:[manifest.layers[0],{...manifest.layers[1],id:"bg"}]}),/مكرر/);
- assert.throws(()=>validateHybridAssetManifest({...manifest,layers:[{...manifest.layers[0],sourceFile:"../secret.png"}]}),/رموز/);
+ assert.throws(()=>validateHybridAssetManifest({...manifest,layers:[{...manifest.layers[0],sourceFile:"../secret.png"}]}),/غير آمن/);
  assert.throws(()=>validateHybridAssetManifest({...manifest,layers:[{...manifest.layers[0],blendMode:"unknown"}]}),/غير مدعوم/);
  assert.throws(()=>validateHybridAssetManifest({...manifest,width:0}),/الحدود/);
 });
