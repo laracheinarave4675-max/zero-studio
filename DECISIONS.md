@@ -136,3 +136,20 @@ This file records decisions that must not be changed silently. Add dated entries
 **Relationship to D-021:** Human-authored final art and native SVG are compatible. Artists may draw directly in ZERO STUDIO's vector tools or import layered hand-painted assets. The project remains a hybrid-capable, vector-first production system with optional human-painted raster assets—not a raster-only replacement.
 
 **Acceptance gate:** Any architecture proposal that removes native SVG editing/export, silently flattens SVG, or makes vector assets non-editable requires explicit user approval before implementation.
+
+
+## D-023 — Human-painted raster is the primary art path; SVG remains optional and first-class (2026-11-19)
+
+**Decision:** Adopt a hybrid production architecture. Human-authored layered raster painting is the primary path for final anime backgrounds, characters, props, and painted animation drawings. Native SVG remains a supported, editable, first-class optional path for artwork that benefits from vectors. Neither representation is mandatory for every asset. This decision supersedes the vector-first/mandatory-vector implications of D-012, D-020, and D-022 where they conflict; it does not delete or invalidate existing SVG projects, tools, exports, or assets.
+
+**Human-art boundary:** Raster pixels and vector marks in final artwork must be authored by a human artist. Generative image/video models may not create, modify, inpaint, outpaint, or synthesize final visual content. AI may assist with planning, metadata, technical validation, and critique text, but not make final visual marks.
+
+**Layer and source preservation:** A project may contain raster layers, SVG/vector layers, and mixed composites. Preserve layer identity, source files, dimensions, pixel density, color profile when available, alpha, names, order, visibility, opacity, supported blend modes, and provenance. Never silently flatten, discard unsupported layers, convert SVG source destructively, or replace a layered source with a preview. Any flattened composite or PNG preview is derived output, clearly marked and reproducible where possible.
+
+**Interchange:** PSD, OpenRaster (.ora), and lossless PNG-layer bundles are candidates, not declared supported formats, until round-trip tests prove layer fidelity on Android. The first verified interchange must include at least three named transparent layers, differing opacity/visibility, alpha, and known ordering. Preserve the original imported package unchanged alongside normalized project metadata. Report unsupported blend modes, color profiles, masks, and effects explicitly.
+
+**Animation:** Preserve the user's requirement of 24 independently authored moving-art drawings per second. Raster and vector drawings both count when each is a genuinely distinct human-authored drawing. A static approved background may be reused while the camera/layout remains fixed. Do not satisfy the target through duplicated frames, tween-only motion, transforms of a still, or generated video. Audit unique drawings independently from playback FPS; structural uniqueness does not prove human authorship or artistic quality.
+
+**Architecture:** ZERO STUDIO is the production, asset, timeline, continuity, compositing, and delivery workspace. A professional Android painting app may be the primary painting surface initially, but it must not become a mandatory runtime dependency. Native vector editing/export remains available. The asset model and compositor must support mixed raster/vector layers without forcing either format into the other.
+
+**Acceptance gates:** (1) lossless layered import/export round-trip on Android; (2) mixed raster/vector project save/open and composite tests; (3) no silent flattening or source loss; (4) distinct 24-drawing/second moving-art cadence remains measurable; (5) human visual approval remains mandatory. No claim of professional painting quality until a real artist workflow is tested.
