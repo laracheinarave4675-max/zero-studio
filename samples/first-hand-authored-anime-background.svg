@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+<title>ZERO STUDIO — Evening at the old bookshop</title>
+<desc>Original hand-authored layered anime background illustration: a quiet Japanese shopping street at blue hour, warm bookshop light, overhead cables, tiled roofs, trees, bicycles and wet pavement.</desc>
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#182a4b"/><stop offset=".52" stop-color="#526887"/><stop offset="1" stop-color="#e7a77d"/></linearGradient>
+ <linearGradient id="road" x2="0" y2="1"><stop stop-color="#596575"/><stop offset="1" stop-color="#1d293b"/></linearGradient>
+ <linearGradient id="shopLight" x2="0" y2="1"><stop stop-color="#ffe8a5"/><stop offset="1" stop-color="#d98c50"/></linearGradient>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#e9d9bd"/><stop offset="1" stop-color="#ad9277"/></linearGradient>
+ <linearGradient id="shadow" x2="0" y2="1"><stop stop-color="#26364c" stop-opacity=".1"/><stop offset="1" stop-color="#101b30" stop-opacity=".65"/></linearGradient>
+ <pattern id="tiles" width="38" height="18" patternUnits="userSpaceOnUse"><path d="M0 9 Q9 -1 19 9 Q28 19 38 9" fill="none" stroke="#65565a" stroke-width="2" opacity=".65"/></pattern>
+ <pattern id="brick" width="54" height="26" patternUnits="userSpaceOnUse"><path d="M0 0H54M0 13H54M27 0V13M0 13V26M54 13V26" fill="none" stroke="#8e7b6d" stroke-width="1" opacity=".3"/></pattern>
+ <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<!-- distant atmosphere -->
+<g id="01-sky-and-distant-hills">
+ <rect width="1920" height="1080" fill="url(#sky)"/>
+ <circle cx="1390" cy="285" r="105" fill="#ffd8a0" opacity=".28" filter="url(#soft)"/>
+ <path d="M0 565 Q160 480 310 535T620 515T930 540T1250 500T1580 535T1920 490V760H0Z" fill="#394d64"/>
+ <path d="M0 625 Q240 550 440 600T850 575T1220 610T1620 560T1920 590V790H0Z" fill="#263c50"/>
+ <g fill="#243b4c" opacity=".8"><path d="M90 560l-18-92 19 27 17-51 10 61 24-25-8 80zM1590 555l-15-85 20 30 18-62 13 76 26-26-5 72zM1710 565l-10-70 17 20 13-48 12 59 19-18-4 63z"/></g>
+</g>
+<!-- far houses -->
+<g id="02-distant-houses" stroke="#273449" stroke-width="7" stroke-linejoin="round">
+ <path d="M0 650V510l110-88 115 87v147z" fill="#857e7a"/>
+ <path d="M-25 520L110 410l142 110-22 18-120-84-116 87z" fill="#343e50"/>
+ <path d="M250 650V540l100-72 112 75v108z" fill="#b7a18c"/>
+ <path d="M228 550l123-98 134 97-18 18-116-80-106 81z" fill="#465064"/>
+ <path d="M1460 650V515l115-82 135 85v132z" fill="#b09c88"/>
+ <path d="M1435 525l140-111 157 110-20 19-137-91-119 92z" fill="#3c4759"/>
+ <path d="M1705 650V540l100-70 115 75v105z" fill="#877f79"/>
+ <path d="M1688 548l117-95 133 97-18 17-115-80-99 79z" fill="#354257"/>
+</g>
+<!-- power poles and wires -->
+<g id="03-utility-lines" fill="none" stroke="#17253a" stroke-linecap="round">
+ <path d="M150 170V690M143 235h90M140 280h115" stroke-width="12"/>
+ <path d="M1770 110V720M1710 185h115M1690 225h150" stroke-width="13"/>
+ <g stroke-width="4" opacity=".8"><path d="M150 235 Q650 360 990 250T1770 185"/><path d="M150 280 Q700 410 1120 300T1770 225"/><path d="M150 170 Q620 255 960 190T1770 110"/></g>
+ <g stroke="#c4a78e" stroke-width="3"><path d="M147 236l-12 20m12-20l12 20M1768 185l-12 20m12-20l12 20"/></g>
+</g>
+<!-- left bookshop building -->
+<g id="04-bookshop-architecture" stroke="#473e42" stroke-width="9" stroke-linejoin="round">
+ <path d="M90 1080V445L430 310l390 145v625z" fill="url(#wall)"/>
+ <path d="M55 470L425 290l430 170-23 46-403-148L80 530z" fill="#3e4654"/>
+ <path d="M55 470L425 290l430 170-23 46-403-148L80 530z" fill="url(#tiles)" opacity=".85" stroke="none"/>
+ <path d="M90 520l335-139 390 142" fill="none" stroke="#f0d8b4" stroke-width="8"/>
+ <path d="M90 445L425 310l390 145" fill="none" stroke="#9d8a7d" stroke-width="8"/>
+ <path d="M125 570h265v410H125z" fill="#344052"/>
+ <path d="M145 590h225v350H145z" fill="url(#shopLight)" stroke="#54443e" stroke-width="8"/>
+ <path d="M145 590h225v350H145z" fill="#ffdb9b" opacity=".22"/>
+ <path d="M158 610h198v125H158z" fill="#526176" stroke="#4d423d" stroke-width="7"/>
+ <path d="M170 622h174v100H170z" fill="#c5d0cb"/>
+ <path d="M170 675h174v47H170z" fill="#e6b77f"/>
+ <path d="M185 625v95m48-95v95m55-95v95" stroke="#544b4a" stroke-width="6"/>
+ <path d="M115 555h280v38H115z" fill="#9c4d48"/>
+ <path d="M115 555h280v38H115z" fill="#e5b27f" opacity=".35"/>
+ <path d="M415 530h300v360H415z" fill="#5c6570"/>
+ <path d="M440 555h250v300H440z" fill="#27374b"/>
+ <path d="M455 570h220v270H455z" fill="#e5b77e"/>
+ <g fill="#594d49" stroke="none"><path d="M470 595h45v80h-45zM525 595h55v80h-55zM590 595h65v80h-65zM470 690h185v10H470zM470 720h185v10H470zM470 750h185v10H470z"/></g>
+ <path d="M420 890h300v25H420z" fill="#3b4655"/>
+ <path d="M100 975h710v105H100z" fill="#9d8069"/>
+ <path d="M100 975h710v105H100z" fill="url(#brick)" stroke="none"/>
+ <path d="M100 975h710" stroke="#f1d5b1" stroke-width="10"/>
+</g>
+<!-- shop sign and lantern -->
+<g id="05-sign-and-lantern">
+ <path d="M250 420h250v92H250z" fill="#26384b" stroke="#e4c9a4" stroke-width="7"/>
+ <path d="M267 435h216v60H267z" fill="#a94f43"/>
+ <text x="375" y="478" text-anchor="middle" font-size="34" font-family="serif" fill="#fff0cf" letter-spacing="8">古書店</text>
+ <path d="M520 530v-55" stroke="#51454a" stroke-width="8"/>
+ <path d="M488 474q32-38 64 0v94q-32 34-64 0z" fill="#f5bf76" stroke="#54434a" stroke-width="7"/>
+ <path d="M493 500h54M493 540h54" stroke="#a85b45" stroke-width="5"/>
+ <ellipse cx="520" cy="525" rx="55" ry="72" fill="#ffc778" opacity=".25" filter="url(#glow)"/>
+</g>
+<!-- right apartment and cafe -->
+<g id="06-right-building" stroke="#394253" stroke-width="9" stroke-linejoin="round">
+ <path d="M1190 1080V395l360-125 370 130v680z" fill="#c6b39d"/>
+ <path d="M1160 410l390-170 405 155-22 55-383-126-368 143z" fill="#424b5a"/>
+ <path d="M1200 425l350-125 350 120" fill="none" stroke="#e5d0b0" stroke-width="8"/>
+ <path d="M1260 510h245v210h-245z" fill="#334256"/>
+ <path d="M1280 530h205v170h-205z" fill="#b8c8c8"/>
+ <path d="M1380 530v170M1280 615h205" stroke="#465264" stroke-width="9"/>
+ <path d="M1580 490h260v240h-260z" fill="#39465a"/>
+ <path d="M1600 510h220v200h-220z" fill="#d7c39e"/>
+ <path d="M1705 510v200M1600 610h220" stroke="#465264" stroke-width="9"/>
+ <path d="M1250 790h610v290h-610z" fill="#756b65"/>
+ <path d="M1250 790h610v290h-610z" fill="url(#brick)" stroke="none"/>
+ <path d="M1270 825h570v220h-570z" fill="#2c3b50"/>
+ <path d="M1290 845h530v180h-530z" fill="url(#shopLight)"/>
+ <path d="M1290 845h530v180h-530z" fill="#fff0c0" opacity=".25"/>
+ <path d="M1410 845v180m180-180v180" stroke="#51464a" stroke-width="8"/>
+ <path d="M1260 815h590v32h-590z" fill="#a34e43"/>
+</g>
+<!-- trees -->
+<g id="07-trees-and-shrubs">
+ <g transform="translate(1010 510)"><path d="M-10 240L5 0 35 240" fill="#59483d"/><g fill="#344d4d" stroke="#263e45" stroke-width="7"><circle cx="-30" cy="30" r="92"/><circle cx="55" cy="0" r="105"/><circle cx="110" cy="75" r="83"/><circle cx="-70" cy="110" r="70"/></g><g fill="#6b8a76" opacity=".8"><circle cx="-65" cy="2" r="28"/><circle cx="28" cy="-54" r="34"/><circle cx="105" cy="40" r="26"/><circle cx="-95" cy="105" r="22"/></g></g>
+ <g fill="#3e665c"><path d="M810 790q-40-150 45-205 90-25 120 70 40 105-5 160z"/><path d="M1080 820q-35-110 40-170 85-20 120 70 25 70-5 110z"/></g>
+ <g fill="#759176" opacity=".8"><circle cx="870" cy="650" r="18"/><circle cx="930" cy="680" r="14"/><circle cx="1130" cy="700" r="20"/></g>
+</g>
+<!-- pavement and road -->
+<g id="08-ground-and-road">
+ <path d="M0 760L1920 735V1080H0z" fill="#8e8a7d"/>
+ <path d="M0 850L1920 810V1080H0z" fill="url(#road)"/>
+ <path d="M0 860L1920 820" stroke="#d8c9aa" stroke-width="13" opacity=".8"/>
+ <path d="M0 920L1920 885" stroke="#26364b" stroke-width="5"/>
+ <path d="M0 1030L1920 980" stroke="#d6c7a8" stroke-width="5" opacity=".55"/>
+ <path d="M820 1080l165-260h70l-40 260z" fill="#d8d0b7" opacity=".55"/>
+ <path d="M1190 1080l85-270h38l-35 270z" fill="#e4d5b5" opacity=".35"/>
+ <g fill="none" stroke="#d5c7aa" stroke-width="7" opacity=".5"><path d="M90 900l300-5M120 930l230-5M1520 900l270-12M1450 930l350-18"/></g>
+ <path d="M0 800Q430 770 760 810T1300 790T1920 775" fill="none" stroke="#f5d2a0" stroke-width="6" opacity=".35"/>
+</g>
+<!-- bicycles and street details -->
+<g id="09-foreground-props" stroke-linecap="round" stroke-linejoin="round">
+ <g transform="translate(690 800)" fill="none" stroke="#273448" stroke-width="9">
+  <circle cx="0" cy="95" r="54"/><circle cx="165" cy="95" r="54"/>
+  <path d="M0 95l55-95 45 95H0l55-95 60 0 50 95M100 95l-20-125h-45M135-15h42"/>
+  <path d="M44-12h45" stroke-width="12"/><path d="M92-2h32l20 15" stroke-width="7"/>
+ </g>
+ <g transform="translate(700 735)"><path d="M20 0h100l-10 28H28z" fill="#a44f45" stroke="#344153" stroke-width="7"/><path d="M35 28v28m70-28v28" stroke="#344153" stroke-width="7"/></g>
+ <path d="M1850 690v150" stroke="#27394b" stroke-width="15"/>
+ <path d="M1818 690h65l-8 92h-48z" fill="#e7c17f" stroke="#39465a" stroke-width="8"/>
+ <ellipse cx="1850" cy="737" rx="55" ry="70" fill="#f6c77e" opacity=".25" filter="url(#glow)"/>
+</g>
+<!-- reflections and painterly highlights -->
+<g id="10-light-reflections" fill="none" stroke-linecap="round">
+ <path d="M165 900q65-12 125-4M250 928q55-9 98-3M460 875q45-7 75-4M1320 900q80-14 150-8M1450 930q95-12 180-7" stroke="#f5c88c" stroke-width="12" opacity=".32"/>
+ <path d="M320 1010q110-18 190-7M980 950q70-9 130-4M1540 1010q90-18 160-8" stroke="#a8c3ce" stroke-width="7" opacity=".28"/>
+ <path d="M520 865l55-5m-30 28l40-3m730-35l70-7m-40 31l55-4" stroke="#fff0cf" stroke-width="5" opacity=".55"/>
+</g>
+<!-- final atmospheric silhouettes and grain-like marks -->
+<g id="11-foreground-accents" fill="none" stroke-linecap="round">
+ <path d="M0 760q170-28 320-10m100 4q120-23 220-4m830-5q110-18 220-4m110 0q65-10 120-3" stroke="#f2d4ac" stroke-width="4" opacity=".65"/>
+ <g stroke="#d7c3a2" stroke-width="3" opacity=".5"><path d="M40 700l22-4m45 20l31-5m390-4l18-3m970-14l28-4m190 15l35-6M230 1040l45-5m1100 0l40-6"/></g>
+</g>
+<rect width="1920" height="1080" fill="url(#shadow)" opacity=".24"/>
+</svg>
