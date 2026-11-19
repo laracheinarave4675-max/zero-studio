@@ -13,7 +13,7 @@ async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL,settings={}
  let response,payload,lastError;
  for(let attempt=0;attempt<3;attempt++){
   try{
-   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction},...(settings.inlineImage?[{inline_data:{mime_type:"image/png",data:settings.inlineImage}}]:[])]}],generationConfig:{responseMimeType:"application/json",temperature:Number.isFinite(settings.temperature)?settings.temperature:.2,maxOutputTokens:Number.isFinite(settings.maxOutputTokens)?settings.maxOutputTokens:8192}})});
+   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction},...(settings.inlineImage?[{inline_data:{mime_type:"image/png",data:settings.inlineImage}}]:[])]}],generationConfig:{responseMimeType:"application/json",temperature:Number.isFinite(settings.temperature)?settings.temperature:.2,maxOutputTokens:Number.isFinite(settings.maxOutputTokens)?settings.maxOutputTokens:8192}}),signal:AbortSignal.timeout(Number.isFinite(settings.timeoutMs)?Math.max(10000,Math.min(180000,settings.timeoutMs)):120000)});
    if(response.ok)break;
    try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
    const message=payload?.error?.message||"HTTP "+response.status;
