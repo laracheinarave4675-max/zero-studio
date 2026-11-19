@@ -2,7 +2,7 @@ import{writeFile,mkdir}from"node:fs/promises";
 import{Resvg}from"@resvg/resvg-js";
 import{createProject,uid,validatePath,frameSvg}from"../app/engine.mjs";
 import{generateAnimeVectorBackground,reviewAnimeVectorPreview}from"../app/scene-production.mjs";
-const key=process.env.GEMINI_API_KEY,model=process.env.GEMINI_MODEL||"gemini-3.5-flash-lite",maxPasses=Math.min(3,Math.max(2,Number(process.env.MAX_ART_PASSES)||3));
+const key=process.env.GEMINI_API_KEY,model=process.env.GEMINI_MODEL||"gemini-3.5-flash-lite",requestedPasses=Number(process.env.MAX_ART_PASSES||3),maxPasses=Math.min(3,Math.max(2,Number.isFinite(requestedPasses)?requestedPasses:3));
 if(!key)throw Error("GEMINI_API_KEY is not configured.");
 const scenes=[
  {slug:"01-urban-store",name:"Japanese urban convenience-store street",prompt:"A wide cinematic 2D anime background of a Japanese neighborhood convenience store on a quiet summer afternoon. Three-quarter street-level view with the store frontage extending across frame and a little visible side depth. Detailed glass storefront with reflections of trees and sky, metal mullions, colored fascia bands, sign, entrance door, vending machines, benches, curb, road markings and overhead street infrastructure. Dense mature trees behind the roof, layered shrubs and foreground plants. Two small high-school-age passersby and one bicycle provide scale without becoming the focal point. Warm late afternoon sun from upper right, soft leaf shadows and reflected green light. Rich believable urban material details, natural Japanese neighborhood ambience."},
@@ -34,7 +34,7 @@ for(const scene of scenes){
  frameProject.frames[0].layers=finalResult.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
  const dir="artifacts/gemini-2d-anime-scenes/"+scene.slug;await mkdir(dir,{recursive:true});
  await writeFile(dir+"/scene.zero",JSON.stringify(frameProject));
- await writeFile(dir+"/scene.svg",'<?xml version="1.0" encoding="UTF-8?>'+frameSvg(frameProject.frames[0],scene.slug));
+ await writeFile(dir+"/scene.svg",'<?xml version="1.0" encoding="UTF-8"?>'+frameSvg(frameProject.frames[0],scene.slug));
  await writeFile(dir+"/scene-preview.png",finalPreview);
  const report={scene:scene.name,scenePrompt:scene.prompt,model:finalResult.model,provider:"Google Gemini Developer API",artist:"seven-pass 2D vector background artist with visual critique and revision",referenceImagesSent:false,referenceBasis:"the assistant analysed the user's original references; Gemini received a written scene brief only",style:finalResult.style,blueprint:finalResult.plan,layers:frameProject.frames[0].layers.map(layer=>({name:layer.name,paths:layer.operations.length})),totalPaths:finalResult.totalOperations,editable:true,passes:critiqueHistory,finalCritique,visualQualityStatus:finalCritique.overallScore>=8&&finalCritique.looksLike2DAnime&&finalCritique.criticalIssues.length===0?"automated-gate-passed-pending-user-approval":"below-artistic-acceptance-target"};
  await writeFile(dir+"/report.json",JSON.stringify(report,null,2));
