@@ -482,3 +482,13 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Large Raster document undo history is bounded to reduce memory exhaustion; a 16-megapixel working-area guard prevents unsafe canvas allocation.
 - Automated regression tests cover brush dab determinism, pressure response, invalid inputs, pathological stroke caps, canvas context drawing and source-image coordinate mapping.
 - Important limitation: these are textured dab brushes, not yet simulated wet pigment or a professional paint engine. Android hardware testing and visual artist acceptance are still pending.
+
+
+## Diagnostic follow-up — 2026-11-19
+
+- GitHub access diagnosis: PR #6 and branch `feat/hybrid-human-art-pipeline` are present and readable. The earlier 404 was not evidence that the repository or branch had disappeared; the reliable recovery path is to resolve files against the confirmed branch ref and exact paths. The current branch ref successfully resolves both `samples/first-hand-authored-anime-background.svg` and `app/raster-brushes.mjs`.
+- Current PR #6 head remains `b8423635588cd1d6aa19d96b6cbbf47dfd27a589`; PR remains open, draft, and unmerged.
+- Confirmed GitHub Actions run `44568385952` completed successfully. Its `node-tests` job passed both application syntax checks and the complete native Node test command. This is code-level validation only, not visual or Android acceptance.
+- Visual diagnosis: the committed sample `samples/first-hand-authored-anime-background.svg` is an evening Japanese bookshop street, not the requested forest-house reference. Its tree crowns use a small number of circles and the architecture is largely broad filled polygons. It therefore cannot be treated as the requested detailed painterly forest-house result.
+- The current Raster brush module is a foundational Canvas2D stroke renderer (pressure-shaped ribbons, bristle tracks, wash and leaf marks), not a full natural-media engine. The existence of the brush module and passing unit tests does not prove a professional painterly result.
+- Next acceptance gate: create and inspect the actual forest-house scene against the user's reference; verify organic foliage, curved layered roof tiles, timber construction, glazing, balcony, stone retaining wall, light and depth. Do not mark the artwork accepted based on source complexity, path counts, or test results. Keep PR isolated; no merge or production deployment.
