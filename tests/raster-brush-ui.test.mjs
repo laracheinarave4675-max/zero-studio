@@ -24,3 +24,11 @@ test("Raster paint commit preserves source dimensions and keeps vector authoring
  assert.match(app,/رسم متجهي فوق:/);
  assert.match(app,/historyLimit=project\.frames\.length>600\?40:rasterBytes>8\*1024\*1024\?3/);
 });
+
+test("Raster strokes are serialized and large canvases fail safely on mobile",async()=>{
+ const app=await readFile(new URL("../app/app.js",import.meta.url),"utf8");
+ assert.match(app,/rasterCommitPending/);
+ assert.match(app,/if\(playing\|\|e\.button>0\|\|rasterCommitPending\)return/);
+ assert.match(app,/target\.width\*target\.height>8\*1024\*1024/);
+ assert.match(app,/stylusPressure\?e\.pressure:Math\.max\(/);
+});
