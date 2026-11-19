@@ -349,6 +349,9 @@ function drawForestHouse(ops){
  const x=515,y=345,w=865,h=445;
  ops.push(poly([[x-80,y+310],[x+50,y-12],[x+460,y-115],[x+w+100,y+90],[x+w+52,y+370],[x+825,y+410]],"#5c5348","#3e423e",4));
  ops.push(poly([[x,y],[x+610,y+14],[x+700,y+370],[x-36,y+365]],"url(#zero-anime-plaster)","#5c5145",5));
+ // Fill the gable beneath the roof so the ridge does not expose the distant trees.
+ ops.push(poly([[x-34,y+68],[x+345,y-151],[x+850,y+83],[x+700,y+144],[x+345,y-36],[x+18,y+137]],"#d8c6a7","#665744",3));
+ ops.push(poly([[x+10,y+78],[x+345,y-115],[x+820,y+94],[x+700,y+120],[x+345,y-18],[x+35,y+118]],"#c6b18f","none",1,.38));
  ops.push(poly([[x+610,y+14],[x+w,y+92],[x+w-5,y+378],[x+700,y+370]],"#c0ad8f","#54493e",4));
  drawPlasterTexture(ops,x+22,y+25,600,330,132,88);
  drawPlasterTexture(ops,x+715,y+105,w-735,250,133,45);
