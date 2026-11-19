@@ -2,6 +2,20 @@
 
 Last updated: 2026-11-19 (UTC)
 
+## Human-authored studio direction — 2026-11-19
+
+- The user explicitly confirmed that ZERO STUDIO must be a **human-art studio**, not an AI image-generation studio.
+- Final visual artwork (backgrounds, characters, props and animation drawings) must be drawn/painted by a human in a professional drawing application. No generative image/video model may create, inpaint, outpaint, modify, or synthesize final artwork.
+- The architecture is now reframed: a professional Android painting app is the art department; ZERO STUDIO manages production, scene/shot organization, asset layers, continuity, timeline, 24-fps playback, unique-drawing audits, compositing and delivery.
+- Added `docs/HUMAN_ART_WORKFLOW.md` and decision D-021. Updated README to make this the approved product direction.
+- PSD, OpenRaster and lossless PNG-layer bundles are candidate interchange formats only. None is declared supported until a real three-layer round-trip is tested on the Android workflow.
+- The existing procedural SVG scene painter and experimental Canvas brush are not accepted as a route to painterly quality. They remain prototypes/tools only; do not claim they can replace a professional painting application.
+- The animation target remains 24 independently drawn images per second for moving artwork. Fixed backgrounds may be reused.
+- **Next implementation gate:** choose/verify a professional painting app compatible with the user's Android phone, then prove a lossless layered import into ZERO STUDIO. Physical-device compatibility and interchange remain unverified.
+- No production deployment or merge to `main` was performed.
+
+Last updated: 2026-11-19 (UTC)
+
 ## Preview deployment and live Gemini acceptance — 2026-11-19
 
 - Created an isolated Vercel preview deployment for the 19 static application files from commit `01638713b846da04682867712301b574eec25523` (branch `feature/fixed-background-visual-review`) in existing project `zero-studio`; no production target or custom domain was assigned.
