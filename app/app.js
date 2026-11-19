@@ -148,10 +148,15 @@ function updateRasterPreview(){
  if(!drawing||(!rasterBrushTools.has(tool)&&!(tool==="eraser"&&layer().type==="raster"))||!points.length)return;
  const target=layer();if(target.type!=="raster")return;
  try{
-  if(!rasterPreviewCanvas){rasterPreviewCanvas=document.createElement("canvas");rasterPreviewCanvas.width=target.width;rasterPreviewCanvas.height=target.height;rasterPreviewContext=rasterPreviewCanvas.getContext("2d");if(!rasterPreviewContext)throw Error("تعذر إنشاء سطح معاينة الفرشاة النقطية")}
-  if(rasterPreviewCanvas.width!==target.width||rasterPreviewCanvas.height!==target.height){rasterPreviewCanvas.width=target.width;rasterPreviewCanvas.height=target.height}
+  // Keep pointer-move previews lightweight on phones. The committed stroke
+  // still renders at the full raster-layer dimensions in commitRasterBrushStroke.
+  const previewScale=Math.min(1,960/target.width,540/target.height);
+  const previewWidth=Math.max(1,Math.round(target.width*previewScale));
+  const previewHeight=Math.max(1,Math.round(target.height*previewScale));
+  if(!rasterPreviewCanvas){rasterPreviewCanvas=document.createElement("canvas");rasterPreviewCanvas.width=previewWidth;rasterPreviewCanvas.height=previewHeight;rasterPreviewContext=rasterPreviewCanvas.getContext("2d");if(!rasterPreviewContext)throw Error("تعذر إنشاء سطح معاينة الفرشاة النقطية")}
+  if(rasterPreviewCanvas.width!==previewWidth||rasterPreviewCanvas.height!==previewHeight){rasterPreviewCanvas.width=previewWidth;rasterPreviewCanvas.height=previewHeight}
   rasterPreviewContext.clearRect(0,0,rasterPreviewCanvas.width,rasterPreviewCanvas.height);
-  const options=rasterBrushOptions(),mapped=mapPointsToRaster(points,WIDTH,HEIGHT,target.width,target.height,options.size);
+  const options=rasterBrushOptions(),mapped=mapPointsToRaster(points,WIDTH,HEIGHT,previewWidth,previewHeight,options.size);
   drawRasterBrushStroke(rasterPreviewContext,mapped.points,{...options,size:mapped.size});
   rasterPreview.setAttribute("href",rasterPreviewCanvas.toDataURL("image/png"));
   rasterPreview.setAttribute("visibility","visible");
