@@ -16,5 +16,5 @@
 .hokusai-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}
 .hokusai-controls label{display:grid;gap:5px;font-size:13px}
 .hokusai-controls input[type=color]{width:100%;height:38px}
-#hokusaiCanvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#fff;border:1px solid var(--border,#394150);border-radius:10px;touch-action:none;cursor:crosshair}
+#hokusaiCanvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background-color:#fff;background-image:linear-gradient(45deg,#e7eaf0 25%,transparent 25%),linear-gradient(-45deg,#e7eaf0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7eaf0 75%),linear-gradient(-45deg,transparent 75%,#e7eaf0 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;border:1px solid var(--border,#394150);border-radius:10px;touch-action:none;cursor:crosshair}
 #hokusaiStatus[data-state=error]{color:#dc7777}
