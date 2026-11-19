@@ -63,7 +63,7 @@ Paint one complete Japanese forest-house background manually using only ZERO STU
 ## Immediate next tasks
 
 1. Move the primary drawing surface and pointer input to a Canvas2D workspace.
-2. Replace per-stroke full-image decode/encode with persistent canvases and bounded tile/cache storage.
+2. Replace per-stroke PNG encoding with deferred save checkpoints and bounded tile/cache storage.
 3. Replay editable stroke records deterministically after save/reopen; add stroke-level undo/redo.
 4. Add taper/velocity-aware dynamics and brush-tip controls.
 5. Add raster-native masks, alpha-lock and clipping.
@@ -73,4 +73,9 @@ Paint one complete Japanese forest-house background manually using only ZERO STU
 
 ## Architecture correction — Canvas-first (2026-11-19)
 
-The user explicitly approved Claude's Canvas/WebGL raster-engine direction and instructed the project to stop treating SVG as the drawing foundation. New artist-engine development is Canvas2D/raster-first. Existing vector data may remain readable only as a migration/compatibility concern; it is not the target drawing medium and must not consume the artist-engine roadmap. This does not authorize generative image/video models. The immediate implementation stores editable stroke samples and brush settings on raster layers, in addition to the current rendered PNG. Persistent Canvas surfaces, deterministic replay, and eliminating per-stroke PNG decode/encode are still required before this can be called a complete Canvas-first engine.
+The user explicitly approved Claude's Canvas/WebGL raster-engine direction and instructed the project to stop treating SVG as the drawing foundation. New artist-engine development is Canvas2D/raster-first. Existing vector data may remain readable only as a migration/compatibility concern; it is not the target drawing medium and must not consume the artist-engine roadmap. This does not authorize generative image/video models. The immediate implementation stores editable stroke samples and brush settings on raster layers, in addition to the current rendered PNG. Persistent Canvas2D surfaces are now implemented: each in-memory raster layer is decoded once and subsequent brush strokes reuse the same canvas. A PNG snapshot is still encoded after each committed stroke for project/render compatibility. Deterministic replay from stroke records, stroke-level undo/redo, and deferred/tiled persistence remain unfinished; the Canvas-first migration is therefore in progress, not complete.
+
+
+## Canvas surface implementation update — 2026-11-19
+
+Added `app/raster-surface.mjs`, a WeakMap-backed persistent surface manager with dimension/pixel-budget validation and explicit invalidation. `app/app.js` now obtains a persistent 2D surface for each raster layer and paints directly into it on subsequent strokes, instead of creating a fresh canvas and decoding the layer PNG on every stroke. PNG encoding remains at stroke commit for current rendering and serialization compatibility. Added tests for one-time decode/reuse, cache invalidation, and safe pixel limits; the service worker shell cache includes the new module. This removes repeated decode/allocation, but not repeated PNG encoding.
