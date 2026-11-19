@@ -25,8 +25,9 @@ for(let pass=1;pass<=2;pass++){
  revisionBrief=critique.nextRevisionBrief||critique.issues.map(x=>x.area+": "+x.problem+" — "+x.correction).join("\n");
  if(pass<2)await new Promise(resolve=>setTimeout(resolve,14000));
 }
-await writeFile(out+"/scene.zero",JSON.stringify({version:1,name:scene.name,frames:[{id:"final",layers:finalResult.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}))}]}));
-await writeFile(out+"/scene.svg",'<?xml version="1.0" encoding="UTF-8"?>'+frameSvg({layers:finalResult.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}))},scene.slug));
+const finalProject=createProject("ZERO STUDIO — "+scene.name);finalProject.frames[0].layers=finalResult.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
+await writeFile(out+"/scene.zero",JSON.stringify(finalProject));
+await writeFile(out+"/scene.svg",'<?xml version="1.0" encoding="UTF-8"?>'+frameSvg(finalProject.frames[0],scene.slug));
 await writeFile(out+"/preview.png",finalPreview);
 await writeFile(out+"/report.json",JSON.stringify({scene:scene.name,model:finalResult.model,passes:history,finalCritique,paths:finalResult.totalOperations,style:finalResult.style,visualQualityStatus:finalCritique.overallScore>=8&&finalCritique.looksLike2DAnime&&finalCritique.criticalIssues.length===0?"automated-gate-passed-pending-user-approval":"below-artistic-acceptance-target"},null,2));
 console.log("Gemini 3 Flash two-pass scene experiment complete.");
