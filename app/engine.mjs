@@ -196,7 +196,19 @@ function normalizeLayer(l,i){
   if(!Number.isFinite(opacity)||opacity<0||opacity>1)throw Error("شفافية الطبقة النقطية غير صالحة");
   const blendMode=String(l.blendMode||"normal");
   if(!["normal","multiply","screen","overlay","darken","lighten"].includes(blendMode))throw Error("نمط مزج الطبقة النقطية غير مدعوم");
-  return{id,name,type:"raster",visible:l.visible!==false,locked:l.locked===true,operations:[],mimeType:mime,dataUrl:data,width,height,opacity,blendMode};
+  const strokes=Array.isArray(l.strokes)?l.strokes:[];
+  if(strokes.length>10000)throw Error("عدد ضربات الطبقة النقطية يتجاوز الحد الآمن");
+  let totalSamples=0;
+  const editableStrokes=strokes.map(stroke=>{
+   if(!stroke||!Array.isArray(stroke.points)||!stroke.points.length||stroke.points.length>20000)throw Error("سجل ضربة Raster غير صالح");
+   totalSamples+=stroke.points.length;if(totalSamples>500000)throw Error("حجم سجل ضربات Raster يتجاوز الحد الآمن");
+   const points=stroke.points.map(p=>{const x=Number(p?.x),y=Number(p?.y),pressure=Number(p?.pressure??.55);if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(pressure)||Math.abs(x)>1000000||Math.abs(y)>1000000||pressure<0||pressure>1)throw Error("نقطة ضربة Raster غير صالحة");return{x,y,pressure}});
+   const options=stroke.options&&typeof stroke.options==="object"?stroke.options:{};
+   const brush=String(options.brush||"gouache"),mode=String(options.blendMode||"normal");
+   if(!["graphite","ink","gouache","watercolor","foliage"].includes(brush)||!["normal","multiply","screen","overlay","darken","lighten"].includes(mode))throw Error("إعدادات ضربة Raster غير مدعومة");
+   return{points,options:{brush,size:Number(options.size)||12,color:String(options.color||"#243348"),opacity:Number(options.opacity??1),texture:Number(options.texture??.55),blendMode:mode,pressureSensitive:options.pressureSensitive!==false,erase:options.erase===true,seed:Number.isFinite(+options.seed)?+options.seed:1}};
+  });
+  return{id,name,type:"raster",visible:l.visible!==false,locked:l.locked===true,operations:[],strokes:editableStrokes,mimeType:mime,dataUrl:data,width,height,opacity,blendMode};
  }
  const ids=new Set();
  const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{
@@ -268,7 +280,7 @@ export function normalizeProject(p){
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function createRasterLayer({name="طبقة نقطية",dataUrl,mimeType,width,height,opacity=1,blendMode="normal"}={}){
- const layer=normalizeLayer({id:uid("layer"),name,type:"raster",dataUrl,mimeType,width,height,opacity,blendMode,visible:true,locked:false},0);
+ const layer=normalizeLayer({id:uid("layer"),name,type:"raster",dataUrl,mimeType,width,height,opacity,blendMode,strokes:[],visible:true,locked:false},0);
  return layer;
 }
 export function addRasterLayer(frame,asset){
