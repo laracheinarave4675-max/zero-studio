@@ -353,8 +353,11 @@ function drawForestHouse(ops){
  drawPlasterTexture(ops,x+22,y+25,600,330,132,88);
  drawPlasterTexture(ops,x+715,y+105,w-735,250,133,45);
  drawTimberGrain(ops,x+18,y+164,650,20,134,28);
- ops.push(poly([[x-88,y+30],[x+345,y-208],[x+585,y-122],[x+860,y+38],[x+820,y+88],[x+570,y-75],[x+343,y-142],[x-35,y+86]],"url(#zero-anime-tile)","#39413f",5));
- ops.push(poly([[x-60,y+64],[x+345,y-175],[x+585,y-105],[x+860,y+60],[x+844,y+86],[x+578,y-76],[x+344,y-128],[x-32,y+91]],"#74685b","#403e38",2));
+ // Two solid roof planes meet at one ridge; this removes the exposed triangular gap.
+ ops.push(poly([[x-88,y+30],[x+345,y-208],[x+345,y-142],[x-35,y+86]],"#5c5b53","#39413f",4));
+ ops.push(poly([[x+345,y-208],[x+860,y+38],[x+820,y+88],[x+345,y-142]],"url(#zero-anime-tile)","#39413f",4));
+ ops.push(poly([[x-76,y+39],[x+345,y-194],[x+345,y-177],[x-46,y+69]],"#877a67","none",1,.58));
+ ops.push(poly([[x+360,y-198],[x+844,y+45],[x+830,y+65],[x+360,y-164]],"#7a7163","none",1,.34));
  ops.push(line("M "+pt(x-82,y+30)+" L "+pt(x+345,y-208)+" L "+pt(x+860,y+38),"#dbc49c",8,.92));
  ops.push(line("M "+pt(x-70,y+41)+" L "+pt(x+345,y-194)+" L "+pt(x+848,y+51),"#3d4240",3,.72));
  const leftBase=[x-88,y+30],ridge=[x+345,y-208],rightBase=[x+860,y+38];
@@ -486,7 +489,7 @@ function sceneForest(){
  addCloud(sky,460,116,145,.14);
  L.push(layer("01 — السماء وضوء الشمس",sky));
  const distant=[];
- drawHill(distant,"M 0 380 C 280 205 490 286 720 390 C 940 195 1160 210 1390 370 C 1610 200 1800 245 1920 340 L 1920 800 L 0 800 Z","#63866d");
+ drawHill(distant,"M 0 380 C 280 205 490 286 720 390 C 940 195 1160 210 1390 370 C 1610 200 1800 245 1920 340 L 1920 800 L 0 800 Z","#91a99a");
  for(let i=0;i<5;i++)drawTree(distant,80+i*430,650-(i%3)*40,.8+(i%3)*.12,102+i,"far");
  L.push(layer("02 — الغابة الخلفية والعمق",distant));
  const mid=[];
