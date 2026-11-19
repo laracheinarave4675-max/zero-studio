@@ -85,3 +85,24 @@ This file records decisions that must not be changed silently. Add dated entries
 **Acceptance gate:** create and visually review three editable scenes (urban store, rural ramen shop, forest house). Passing code tests or increasing path count does not count as artistic acceptance. The 24 unique full-scene drawings/second requirement remains unchanged for animation.
 
 **Durable art specification:** `docs/ANIME_ART_DIRECTION.md`.
+
+
+## D-018 — Static background assets with independently redrawn animation layers (2026-11-19)
+
+**Decision:** Adopt the standard anime production separation of environment backgrounds and animated foreground elements. A finished background is painted once as an editable layered vector asset and may be reused for the duration of a shot while the camera/layout remains fixed. Characters and every other moving element are drawn as new, independently authored vector artwork at each of the required 24 timepoints per second.
+
+**Frame definition:** Each playback timepoint is composited from the approved background asset plus that timepoint's newly drawn animated layers. The background's intentional reuse does not count as a new drawing. The moving artwork must meet 24 unique drawings per second; do not substitute duplicated moving frames, raster transforms, video, or tween-only motion. If the camera moves or the background visibly changes, the affected environment layers must also be redrawn or generated as distinct editable frames at the required cadence.
+
+**Implication:** The animation project must track background asset identity/version separately from per-frame animated layers, preserve layer order and continuity, and export a complete visible composite for every timestamp. Validate unique moving-art signatures independently from playback FPS and from the reused background.
+
+## D-019 — Visual critique-and-revision loop (2026-11-19)
+
+**Decision:** A generated scene is a draft until it has been rendered to a temporary preview, visually critiqued, revised as editable vector operations, and reviewed by the user. Raster previews are allowed only as temporary inspection inputs; they are not final artwork and are never imported as replacement scene content.
+
+**Review dimensions:** composition, perspective, architecture, foliage, material differentiation, lighting, atmosphere, line/edge quality, focal hierarchy, scene-specific detail, and consistency with the approved 2D anime art direction.
+
+**Implication:** Implement a bounded review cycle: render preview → vision-capable critique → prioritized corrections → apply corrections to SVG paths/material parameters → render again. Record the critique and iteration count. A model must never claim to have inspected an image it was not actually given. Human visual approval remains the acceptance gate.
+
+## D-020 — Vector-first material texture; raster texture deferred (2026-11-19)
+
+**Decision:** Keep final artwork editable and vector-first for the current quality milestone. Use SVG gradients, patterns, organic paths, selective filters, and procedural material marks to improve painterly richness. Temporary raster previews are permitted for visual review. Do not add raster texture layers to final artwork until a separate measured comparison demonstrates that vector methods cannot meet the target and the user approves that change.
