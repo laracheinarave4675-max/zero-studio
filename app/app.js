@@ -138,7 +138,7 @@ async function commitRasterBrushStroke(target,strokePoints,brushOptions){
  const result=drawRasterBrushStroke(context,mapped.points,{...brushOptions,size:mapped.size});
  const nextData=work.toDataURL("image/png");
  if(nextData.length>24*1024*1024||Math.floor((nextData.length-"data:image/png;base64,".length)*3/4)>16*1024*1024)throw Error("حجم الطبقة بعد الرسم تجاوز الحد الآمن؛ خفّض أبعاد الصورة أو قسّم العمل إلى طبقات.");
- target.dataUrl=nextData;target.mimeType="image/png";return result;
+ target.dataUrl=nextData;target.mimeType="image/png";target.strokes=Array.isArray(target.strokes)?target.strokes:[];target.strokes.push({points:strokePoints.map(p=>({x:p.x,y:p.y,pressure:p.pressure})),options:{brush:brushOptions.brush,size:brushOptions.size,color:brushOptions.color,opacity:brushOptions.opacity,texture:brushOptions.texture,blendMode:brushOptions.blendMode||"normal",pressureSensitive:brushOptions.pressureSensitive!==false,erase:brushOptions.erase===true,seed:brushOptions.seed}});return result;
 }
 function previewPath(){
  if(shapeTools.has(tool)&&startPoint&&points.length)return shapePath(tool,startPoint,points[points.length-1]);
