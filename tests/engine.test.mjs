@@ -221,11 +221,11 @@ test("raster layers preserve editable stroke samples and brush settings across p
  layer.strokes=[{points:[{x:12,y:24,pressure:.7},{x:18,y:29,pressure:1}],options:{brush:"gouache",size:14,color:"#52764b",opacity:.8,texture:.6,blendMode:"multiply",seed:91}}];
  p.frames[0].layers=[layer];
  const reopened=normalizeProject(JSON.parse(JSON.stringify(p)));
- assert.deepEqual(reopened.frames[0].layers[0].strokes,layer.strokes);
+ assert.equal(reopened.frames[0].layers[0].strokes.length,1);\n assert.deepEqual(reopened.frames[0].layers[0].strokes[0].points,layer.strokes[0].points);\n assert.deepEqual(reopened.frames[0].layers[0].strokes[0].options,{...layer.strokes[0].options,erase:false,pressureSensitive:true});
 });
 test("raster layer rejects malformed or excessive editable stroke history",()=>{
  const dataUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pS8AAAAASUVORK5CYII=";
  const p=createProject(),layer=createRasterLayer({dataUrl,mimeType:"image/png",width:1,height:1});
- layer.strokes=[{points:[{x:Infinity,y:0,pressure:.5}],options:{brush:"ink"}}];p.frames[0].layers=[layer];
+ layer.strokes=[{points:[{x:"not-a-number",y:0,pressure:.5}],options:{brush:"ink"}}];p.frames[0].layers=[layer];
  assert.throws(()=>normalizeProject(JSON.parse(JSON.stringify(p))),/نقطة ضربة Raster/);
 });
