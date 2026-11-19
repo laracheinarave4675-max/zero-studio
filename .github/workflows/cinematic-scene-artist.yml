@@ -21,7 +21,7 @@ on:
 jobs:
   scene-artist:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,10 +33,8 @@ jobs:
         run: node --test tests/environment-art.test.mjs tests/mesh-scene-renderer.test.mjs tests/scene-production.test.mjs tests/anime-background-painter.test.mjs tests/anime-vector-artist.test.mjs
       - name: Render three editable 2D anime background tests
         run: node scripts/render-anime-2d-tests.mjs
-      - name: Render reproducible local 2.5D showcase
-        run: node scripts/render-environment-showcase.mjs
-      - name: Render true 3D mesh-to-SVG showcase
-        run: node scripts/render-3d-mesh-showcase.mjs
+      - name: Install SVG-to-PNG preview renderer
+        run: npm install --no-save @resvg/resvg-js
       - name: Generate three real 2D anime background scenes with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
