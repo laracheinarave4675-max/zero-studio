@@ -2,7 +2,7 @@ import{validatePath,pathGeometryBounds}from"./engine.mjs";
 import{renderEnvironmentScene}from"./environment-art.mjs";
 import{renderMeshEnvironment}from"./mesh-scene-renderer.mjs";
 export const GEMINI_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash"]);
+const ALLOWED_MODELS=new Set([GEMINI_MODEL,"gemini-3.1-flash-lite","gemini-3-flash-preview"]);
 const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج Gemini غير مدعوم.");return "https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent"};
 function parseResponse(payload){
  const text=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
