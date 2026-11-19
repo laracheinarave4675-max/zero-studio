@@ -425,3 +425,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - **Next gate:** identify the painting app actually available on the target Android phone, create the three-layer proof document, inspect its real exported package, then implement only the proven interchange format. Do not claim format support until tests pass.
 - The 24 independently authored moving-art drawings/second target is unchanged. Raster and vector can both represent a drawing; duplicates, tween-only motion and transformed stills do not count.
 - Current code tests have not yet been run on this branch after these changes. No test result is claimed in this status entry.
+
+## First raster-layer engine integration — 2026-11-19
+
+- Added native raster layer support to the existing .zero frame engine while preserving the existing vector layer representation and SVG tools.
+- Raster layers store an embedded PNG/WebP/JPEG data URL, pixel dimensions, visibility, opacity, blend mode, lock state, and a stable layer ID. The project normalizer validates the payload and preserves it across JSON save/open normalization.
+- The existing SVG compositor now emits an embedded SVG image element for raster layers; vector layers continue through the original path/mask renderer. Mixed frames therefore remain layered rather than being flattened.
+- Added createRasterLayer and addRasterLayer engine APIs.
+- Added tests/raster-layer-engine.test.mjs for mixed-layer persistence, SVG compositing, and invalid raster input rejection.
+- Latest implementation commit: 145fa6704a4cc47ee26ee2f005618bdf835de837.
+- NOT YET VERIFIED: CI on this commit, actual image-file picker/import UI, large-image memory behavior, Android save/open on-device, PSD/ORA decoding, and a visual human-painted sample. No image-generation model creates or modifies the artwork.
+- No merge to main and no production deployment were performed.
