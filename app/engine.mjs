@@ -184,7 +184,7 @@ function normalizeLayer(l,i){
  const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{
   if(o?.kind==="raster"){
    const src=String(o.src||"");
-   if(!/^data:image\\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("بيانات طبقة الصورة النقطية غير صالحة أو كبيرة جداً");
+   if(!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("بيانات طبقة الصورة النقطية غير صالحة أو كبيرة جداً");
    const id=typeof o.id==="string"&&o.id.length>0&&o.id.length<=100?o.id:uid("op");
    const unique=ids.has(id)?uid("op"):id;ids.add(unique);
    return{id:unique,kind:"raster",src,x:0,y:0,width:WIDTH,height:HEIGHT};
@@ -400,7 +400,7 @@ const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="
 const rasterMarkup=op=>'<image data-operation="'+esc(op.id)+'" href="'+op.src+'" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'" preserveAspectRatio="none"/>';
 export function addRasterImageOperation(layer,src){
  if(!layer||layer.locked)throw Error("الطبقة مقفلة أو غير صالحة");
- if(typeof src!=="string"||!/^data:image\\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("صورة PNG غير صالحة أو تتجاوز 18 ميغابايت تقريباً");
+ if(typeof src!=="string"||!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("صورة PNG غير صالحة أو تتجاوز 18 ميغابايت تقريباً");
  if(layer.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");
  const operation={id:uid("op"),kind:"raster",src,x:0,y:0,width:WIDTH,height:HEIGHT};
  layer.operations.push(operation);return operation;
