@@ -14,7 +14,7 @@ Every layer has a stable ID, name, type, order, visibility, opacity, blend mode,
 
 ## Editing responsibilities
 - Professional painting application: high-quality natural-media brushes and artist-controlled raster painting.
-- ZERO STUDIO native tools: optional editable SVG authoring and, in later stages, human-operated raster brush/layer editing. The experimental Canvas dab engine is not a professional paint engine.
+- ZERO STUDIO native tools: optional editable SVG authoring plus a first human-operated Canvas2D Raster brush foundation (graphite pencil, ink, gouache-like, watercolor-like and foliage dabs). It is a technical foundation, **not yet a professional natural-media paint engine**; pressure curves, wet mixing, pigment simulation, advanced masks and Android stylus validation remain open.
 - Production workspace: asset import, naming, shot/scene organization, continuity notes, frame timeline, compositing, unique-drawing audit, and delivery.
 
 A third-party painting app may be used for authoring but must not be a mandatory runtime dependency. Android import must be validated on the actual phone before a format is declared supported.
@@ -39,3 +39,10 @@ Existing .zero projects and SVG-only assets must continue to open and export. Ad
 
 ## Non-goals
 Do not replace SVG with bitmap-only rendering, call the experimental brush professional, claim PSD/ORA support before tests, reduce 24 independent moving drawings/second, or use image/video generation for final artwork.
+
+
+## Native raster brush foundation — 2026-11-19
+
+A first in-app human-operated pixel painting path is now implemented alongside SVG tools. The Raster pencil and Raster brush create or paint on actual PNG-backed layers; they do not append SVG path operations. Brush profiles include graphite-like pencil grain, ink, textured gouache-like marks, soft watercolor-like dabs and foliage marks. Tablet pressure is sampled when available; source-image aspect ratio and letterboxing are accounted for when painting imported layers. Raster editing history is bounded more aggressively for large image documents to reduce mobile memory pressure.
+
+This is the beginning of the native paint engine, not a claim of parity with mature digital painting software. Still required: more natural stroke interpolation, brush-tip/material simulation, alpha lock/clipping/masks, layer transforms, large-canvas performance benchmarks, Android pen/touch tests, and visual artist acceptance against the reference paintings.
