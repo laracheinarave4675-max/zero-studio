@@ -105,3 +105,16 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - A checkbox is completed only after an observable implementation and test.
 - Keep a list of known limitations.
 - Never trade away the no-image-generation rule or the 24-unique-drawings target without the user's explicit agreement.
+
+## Phase 5 — Human painting department and layered asset interchange (approved 2026-11-19)
+- [x] Approve human-authored final artwork; prohibit generative image/video output for final pixels or drawing marks (D-021).
+- [x] Define ZERO STUDIO as production management, asset organization, continuity, timeline, compositing and delivery around a professional human painting department.
+- [ ] Verify one professional painting app on the user's actual Android phone; check brush, layer, perspective and lossless export features.
+- [ ] Create a three-layer test artwork (named transparent layers, different opacity and alpha) in the selected app.
+- [ ] Validate PSD import/export round-trip on Android.
+- [ ] Validate OpenRaster (.ora) round-trip if supported by both applications.
+- [ ] Implement the first proven non-destructive import path (never silently flatten source layers).
+- [ ] Add an asset/shot browser with source file, scene, camera, layer and continuity metadata.
+- [ ] Integrate imported hand-painted backgrounds with the existing timeline and frame compositor.
+- [ ] Physically test the complete round-trip and playback on the target Android phone.
+- [ ] Keep 24 independently drawn moving-art images per second as the acceptance target.
