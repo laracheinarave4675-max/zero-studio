@@ -150,6 +150,8 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   try{plan=validateAnimeLayoutPlan(rawPlan)}catch(secondError){throw Error("تعذر إصلاح مخطط الفنان بعد محاولة تصحيح واحدة: "+secondError.message);}
  }
  if(typeof options.onProgress==="function")options.onProgress({stage:"layout",completed:0,total:ANIME_2D_LAYERS.length,message:"اكتمل تخطيط الكاميرا والمنظور؛ يبدأ الآن رسم الطبقات الفنية."});
+ const requestDelay=Number.isFinite(options.interRequestDelayMs)?Math.max(0,Math.min(10000,options.interRequestDelayMs)):5200;
+ if(requestDelay)await new Promise(resolve=>setTimeout(resolve,requestDelay));
  const layers=[],allPaths=new Set();let totalOperations=0;
  for(let i=0;i<ANIME_2D_LAYERS.length;i++){
   const spec=ANIME_2D_LAYERS[i],keys=["sky","distance","architecture","architectureDetails","road","foreground","lighting"],note=plan.layerNotes[keys[i]];
@@ -190,7 +192,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   totalOperations+=operations.length;
   layers.push({name:spec.name,operations});
   if(typeof options.onProgress==="function")options.onProgress({stage:"layer",completed:i+1,total:ANIME_2D_LAYERS.length,message:"اكتملت الطبقة "+(i+1)+" من "+ANIME_2D_LAYERS.length+": "+spec.name});
-  if(i<ANIME_2D_LAYERS.length-1){const delay=Number.isFinite(options.interRequestDelayMs)?Math.max(0,Math.min(10000,options.interRequestDelayMs)):4200;if(delay)await new Promise(resolve=>setTimeout(resolve,delay));}
+  if(i<ANIME_2D_LAYERS.length-1){const delay=requestDelay;if(delay)await new Promise(resolve=>setTimeout(resolve,delay));}
  }
  if(totalOperations<220||totalOperations>1100)throw Error("عدد المسارات الكلي لا يحقق حد جودة المشهد: "+totalOperations);
  return{version:1,kind:"gemini-2d-vector-scene",plan,layers,totalOperations,style:"cinematic-2d-anime-background",model:activeModel,revisionBriefUsed:Boolean(options.revisionBrief)};
