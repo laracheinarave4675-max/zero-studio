@@ -59,9 +59,9 @@ test("painting over imported art maps stage coordinates into letterboxed source 
 });
 
 test("gouache and graphite use continuous pressure-shaped ribbons instead of chains of oval stamps",()=>{
- const calls=[],ctx={save(){},restore(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},bezierCurveTo(){},translate(){},rotate(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ const calls=[],ctx={save(){},restore(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){calls.push("quadratic")},bezierCurveTo(){},translate(){},rotate(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
  const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.2},{x:35,y:8,pressure:.7},{x:80,y:24,pressure:1}],{brush:"gouache",size:18,color:"#52764b",texture:.8,seed:13});
- assert.equal(r.renderMode,"continuous-ribbon");assert.ok(calls.includes("close")&&calls.includes("fill")&&calls.includes("stroke"));assert.equal(calls.includes("ellipse"),false);
+ assert.equal(r.renderMode,"continuous-ribbon");assert.ok(calls.includes("close")&&calls.includes("fill")&&calls.includes("stroke"));assert.ok(calls.filter(x=>x==="quadratic").length>4,"ribbon contours should use smooth quadratic joins and rounded tapered ends");assert.equal(calls.includes("ellipse"),false);
 });
 
 test("watercolor uses one connected translucent wash with pigment blooms, not only circular stamps",()=>{
