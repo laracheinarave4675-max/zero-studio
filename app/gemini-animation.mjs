@@ -1,5 +1,5 @@
 const DEFAULT_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set(["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3-flash"]);
+const ALLOWED_MODELS=new Set(["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3-flash-preview"]);
 export function createGeminiAnimationProvider({apiKey,model=DEFAULT_MODEL,fetcher=fetch}={}){
  const key=String(apiKey??"").trim();
  if(!key)throw Error("GEMINI_API_KEY is missing.");
