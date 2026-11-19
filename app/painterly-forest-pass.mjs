@@ -14,8 +14,8 @@ export function applyPainterlyForestPass(scene){
  if(!scene||scene.kind!=="forest-house")return scene;
  const r=random(0x5a17c0de),ops=[];
  const canopyZones=[
-  [20,120,470,500],[390,80,480,420],[900,70,480,390],[1400,90,500,470],
-  [0,460,300,470],[1480,450,420,520],[280,650,380,280],[1280,650,420,300]
+  [0,300,390,470],[1500,260,420,470],[0,650,500,360],[1420,650,500,360],
+  [300,650,360,260],[1250,650,380,270]
  ];
  const greens=["#183f35","#285440","#3b6947","#568653","#71985b","#a4ad68","#d2c78a","#41634a","#8a9c60","#d8d39a"];
  // Layered, tapered leaf strokes: each mark has a pointed tip and a hand-varied axis.
@@ -43,8 +43,10 @@ export function applyPainterlyForestPass(scene){
  ops.push(softPatch("M 1570 0 L 1640 0 L 1370 600 L 1300 600 Z","#fff0bd",.055));
  ops.push(softPatch("M 1180 0 L 1230 0 L 850 540 L 800 540 Z","#f3d9a2",.035));
  // Cool occlusion under the roof/eaves and warm bounced light on the facade.
- ops.push(softPatch("M 425 370 Q 850 330 1395 385 L 1380 420 Q 900 380 430 415 Z","#34483e",.17));
- ops.push(softPatch("M 560 470 Q 800 435 1120 465 L 1110 485 Q 800 465 560 490 Z","#f1d29a",.11));
+ ops.push(softPatch("M 425 370 Q 850 330 1395 385 L 1380 420 Q 900 380 430 415 Z","#263d37",.26));
+ ops.push(softPatch("M 455 395 Q 520 405 650 392 L 645 445 Q 540 432 450 430 Z","#465347",.14));
+ ops.push(softPatch("M 1060 390 Q 1210 392 1380 420 L 1368 458 Q 1210 430 1068 425 Z","#273b37",.18));
+ ops.push(softPatch("M 560 470 Q 800 435 1120 465 L 1110 485 Q 800 465 560 490 Z","#f1d29a",.16));
  // Dappled sun spots are deliberately irregular, clustered, and low-contrast.
  for(let i=0;i<20;i++){
   const x=800+r()*620,y=470+r()*330,rx=5+r()*18,ry=2+r()*8;
