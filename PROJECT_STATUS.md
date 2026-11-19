@@ -519,3 +519,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Commits: `c2ff78d989a58b06864bf2be4b12ffa550b1c93e`, `9196c338397abd85dbb1784ba85041635cb176e5`, `1567e6355021572ba041420d9a7e6039c7357a9a`.
 - The changes are committed to the isolated `feat/hybrid-human-art-pipeline` branch. GitHub Actions results for these exact commits and visual inspection on Android have not yet been confirmed. These are brush-engine improvements, not evidence that the reference-level forest-house painting has been achieved.
 - Next art-only gate: inspect actual rendered watercolor and canopy strokes at full size, tune material behavior against the forest-house reference, and build a complete layered background study before expanding scope.
+
+## CI diagnosis and foliage cluster refinement — 2026-11-19
+
+- Inspected failed GitHub Actions run `44585994842`: syntax checks passed; 213 of 214 native tests passed. The sole failure was a false-positive assertion in `tests/forest-house-artwork.test.mjs`: it rejected the standard SVG namespace URI `http://www.w3.org/2000/svg` as a remote asset.
+- Corrected the assertion to reject only external `href`, `xlink:href`, or `src` references. Commit: `19b6b9ae30e8f48eead3855abaccb4449ba584a5`.
+- Refined `paintFoliageLeaves` to create deterministic companion leaves with actual scaled geometry, branch offsets, and contrasting green tones. Removed an unused scale calculation from the previous implementation. Commit: `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6`.
+- The corrected test has not yet been confirmed by a new successful CI run. Do not mark CI green until a run for the updated branch is visible.
+- Artistic limitation remains: these are brush-renderer improvements and an editable SVG study, not yet a visually accepted, painterly raster reproduction of the user's reference.
