@@ -29,6 +29,10 @@ test("live raster brush preview is rendered as real Canvas2D pixels during point
  ]);
  assert.match(app,/function updateRasterPreview\(\)/);
  assert.match(app,/drawRasterBrushStroke\(rasterPreviewContext,mapped\.points/);
+ assert.match(app,/previewScale=Math\.min\(1,960\/target\.width,540\/target\.height\)/);
+ assert.match(app,/previewWidth=Math\.max\(1,Math\.round\(target\.width\*previewScale\)\)/);
+ assert.match(app,/previewHeight=Math\.max\(1,Math\.round\(target\.height\*previewScale\)\)/);
+ assert.match(app,/mapPointsToRaster\(points,WIDTH,HEIGHT,previewWidth,previewHeight,options\.size\)/);
  assert.match(app,/rasterPreviewCanvas\.toDataURL\("image\/png"\)/);
  assert.match(app,/samples\.forEach\(addPoint\);if\(rasterBrushTools\.has\(tool\).*?updateRasterPreview\(\)/);
  assert.match(app,/clearRasterPreview\(\);rasterCommitPending=true/);
