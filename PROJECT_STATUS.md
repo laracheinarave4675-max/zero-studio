@@ -1,6 +1,20 @@
 # ZERO STUDIO — Project Status
 
-Last updated: 2026-11-18 (UTC)
+Last updated: 2026-11-19 (UTC)
+
+## Approved cinematic anime art direction and new visual-review workflow — 2026-11-19
+
+- The user approved the 2D-first cinematic anime target with selective 3D support. Final artwork must read as richly painted 2D anime, not low-poly 3D, flat clip-art, or generic geometric illustration.
+- The user approved the standard anime production split: a fixed-camera background is painted once as a layered editable vector asset; characters and all moving foreground elements are independently redrawn at 24 unique drawings per second. Every visible timepoint is the composite of the approved static background plus that timestamp's new moving artwork. Reused background pixels/paths do not count as new animated drawings. Moving elements may not be replaced with raster transforms, duplicated frames, video, or tween-only motion.
+- The user approved a visual critique-and-revision workflow. SVG is rasterized only into a temporary preview; a vision-capable reviewer receives the actual preview, critiques composition/perspective/architecture/foliage/materials/light/atmosphere/linework, and returns corrections that are fed back into the editable vector artist. Raster previews are not final artwork.
+- Raster texture layers in final artwork are deferred. The current milestone remains vector-first with gradients, patterns, organic paths and bounded SVG effects.
+- Durable decisions recorded in D-018, D-019 and D-020 in DECISIONS.md. The art-direction bible is docs/ANIME_ART_DIRECTION.md.
+- The existing 2D local painter in app/anime-background-painter.mjs can render three distinct editable scene studies (urban store, rural ramen shop, forest house) with multiple layers and detailed organic vector marks. It is a procedural prototype with authored scene layouts, not yet a fully general scene-understanding painter and not proof of reference-level quality.
+- app/scene-production.mjs now includes a vision-review adapter that sends an actual PNG preview to Gemini and validates a structured critique. The 2D artist accepts critique-guided revision instructions on its layout and layer prompts.
+- scripts/run-gemini-2d-anime-tests.mjs now runs three separate Gemini 2D scene briefs, renders temporary previews, performs up to three critique/revision passes, and exports editable .zero projects, SVGs, PNG review previews, and critique reports. .github/workflows/cinematic-scene-artist.yml runs this test and installs @resvg/resvg-js only in CI.
+- A stale fixture in tests/anime-vector-artist.test.mjs was corrected so the layout-repair test recognizes the actual repair prompt. New tests cover image-preview transmission, critique validation, and critique-guided redraw prompts.
+- **Not yet verified at this update:** the new GitHub Actions run, whether Gemini 3.5 Flash Lite accepts image inputs in this project/region, the three generated scenes' visual quality, and whether critique-guided revisions improve the images. Do not report the artist as reaching the target until the generated previews are actually inspected.
+- **Still pending:** implement the static-background plus independently drawn moving-layer contract in app/animation-production.mjs and the batch importer; connect vision review to the interactive Android artist workflow; visually inspect all three real Gemini outputs; refine the 2D painter based on the actual defects; and verify physical Android performance.
 
 ## High-volume frame production infrastructure — 2026-11-18
 
