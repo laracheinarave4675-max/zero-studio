@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import { generateAnimeVectorBackground, reviewAnimeVectorPreview } from "../app/scene-production.mjs";
+import { reviewAnimeVectorPreview } from "../app/scene-production.mjs";
+import { renderAnimeBackground } from "../app/anime-background-painter.mjs";
 
 const key = String(process.env.GEMINI_API_KEY || "").trim();
 const out = "artifacts/gemini-visual-acceptance";
@@ -18,18 +19,21 @@ function renderSvg(layers) {
   const groups = layers.map(layer => '<g data-layer="'+String(layer.name).replaceAll("&","&amp;").replaceAll('"',"&quot;")+'">'+layer.operations.map(op => '<path d="'+op.d+'" fill="'+(op.fill||"none")+'" stroke="'+(op.stroke||"none")+'" stroke-width="'+(op.width||1)+'" stroke-linecap="round" stroke-linejoin="round"'+(op.opacity===undefined?"":' opacity="'+op.opacity+'"')+(op.filter?' filter="'+op.filter+'"':"")+'/>').join("")+'</g>').join("");
   return '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+defs+groups+'</svg>';
 }
-const report={branch:"feature/fixed-background-visual-review",method:"ZERO STUDIO seven-layer SVG artist + Gemini PNG vision reviewer; SVG rasterized with resvg",scenes:[],startedAt:new Date().toISOString()};
+const report={branch:"feature/fixed-background-visual-review",method:"ZERO STUDIO authored local 2D SVG painter + Gemini PNG vision reviewer; Gemini does not author final paths",scenes:[],startedAt:new Date().toISOString()};
 for(const scene of scenes){
   const item={id:scene.id,title:scene.title,prompt:scene.prompt,passes:[]};
   let revisionBrief="";
   try{
     for(let pass=1;pass<=2;pass++){
-      const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,"gemini-3.5-flash-lite",{fallbackModels:["gemini-3.1-flash-lite"],revisionBrief});
+      // Use ZERO STUDIO's authored local 2D painter as the renderer. Gemini is a
+      // vision critic only; it must not invent final SVG paths.
+      const kind=scene.id==="woodland-japanese-house"?"forest-house":scene.id==="rural-japanese-convenience-store"?"urban-store":"rural-ramen";
+      const result=renderAnimeBackground({version:1,kind});
       const svg=renderSvg(result.layers);
       const png=new Resvg(svg,{fitTo:{mode:"width",value:1280}}).render().asPng();
-      const critique=await reviewAnimeVectorPreview(key,scene.prompt,new Uint8Array(png),fetch,result.model,{fallbackModels:["gemini-3.1-flash-lite"]});
+      const critique=await reviewAnimeVectorPreview(key,scene.prompt,new Uint8Array(png),fetch,"gemini-3.5-flash-lite",{fallbackModels:["gemini-3.1-flash-lite"]});
       const passed=critique.overallScore>=8&&critique.looksLike2DAnime===true&&Array.isArray(critique.criticalIssues)&&critique.criticalIssues.length===0;
-      item.passes.push({pass,model:result.model,layerCount:result.layers.length,totalOperations:result.totalOperations,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,nextRevisionBrief:critique.nextRevisionBrief,qualityGatePassed:passed});
+      item.passes.push({pass,model:"ZERO STUDIO local painter",layerCount:result.layers.length,totalOperations:result.totalOperations,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,nextRevisionBrief:critique.nextRevisionBrief,qualityGatePassed:passed});
       await fs.writeFile(path.join(out,scene.id+"-pass-"+pass+".svg"),svg);
       await fs.writeFile(path.join(out,scene.id+"-pass-"+pass+".png"),png);
       if(passed){item.finalPass=pass;item.qualityGatePassed=true;break;}
