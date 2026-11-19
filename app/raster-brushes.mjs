@@ -154,32 +154,37 @@ function paintWatercolorWash(context,dabs,{color,opacity,seed,texture}){
  }
 }
 function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
- for(const d of dabs){
-  const variation=hash(seed,d.index,401),length=d.radius*(.72+variation*.72),width=length*d.aspect*(.72+hash(seed,d.index,409)*.85);
-  const hue=hash(seed,d.index,419),leafColor=colorVariant(color,hue>.72?.2:hue<.2?-.24:(hue-.5)*.24);
-  context.save();context.translate(d.x,d.y);context.rotate(d.angle+(hash(seed,d.index,421)-.5)*.75);
-  context.globalAlpha=clamp(d.alpha*opacity,0,1);context.fillStyle=leafColor;
+ const paintLeaf=(x,y,angle,length,width,leafColor,alpha,vein=true)=>{
+  context.save();context.translate(x,y);context.rotate(angle);
+  context.globalAlpha=clamp(alpha,0,1);context.fillStyle=leafColor;
   context.beginPath();context.moveTo(-length*.62,0);
   context.quadraticCurveTo(-length*.2,-width*1.18,length*.52,-width*.12);
   context.quadraticCurveTo(length*.82,width*.16,-length*.62,0);context.fill();
-  // A fine central vein gives each mark a readable leaf direction.
-  if(texture>.16){
-   context.globalAlpha*=.36;context.strokeStyle=colorVariant(leafColor,.3);
+  if(vein&&texture>.16){
+   context.globalAlpha*=.38;context.strokeStyle=colorVariant(leafColor,.3);
    context.lineWidth=Math.max(.3,length*.025);context.beginPath();
    context.moveTo(-length*.48,0);context.quadraticCurveTo(0,width*.02,length*.66,width*.05);context.stroke();
   }
-  // A few small companion leaves create clustered foliage instead of repeated stamps.
-  if(hash(seed,d.index,431)<texture*.34){
-   for(let side of [-1,1]){
-    const scale=.28+hash(seed,d.index,437+side)*.18;
-    context.globalAlpha=clamp(d.alpha*opacity*.62,0,.8);
-    context.fillStyle=colorVariant(leafColor,side>0?.12:-.16);
-    context.beginPath();context.moveTo(-length*.12,0);
-    context.quadraticCurveTo(length*.02,side*width*.82,length*.42,side*width*.48);
-    context.quadraticCurveTo(length*.26,side*width*.12,-length*.12,0);context.fill();
+  context.restore();
+ };
+ for(const d of dabs){
+  const variation=hash(seed,d.index,401),length=d.radius*(.72+variation*.72),width=length*d.aspect*(.72+hash(seed,d.index,409)*.85);
+  const hue=hash(seed,d.index,419),leafColor=colorVariant(color,hue>.72?.2:hue<.2?-.24:(hue-.5)*.24);
+  const angle=d.angle+(hash(seed,d.index,421)-.5)*.75;
+  paintLeaf(d.x,d.y,angle,length,width,leafColor,d.alpha*opacity,true);
+  // Companion leaves branch from the same mark at different scales and angles.
+  // Their offsets are deterministic, so redraw and undo remain reproducible.
+  if(hash(seed,d.index,431)<texture*.52){
+   for(const side of [-1,1]){
+    const scale=.30+hash(seed,d.index,437+side)*.24;
+    const branchAngle=angle+side*(.48+hash(seed,d.index,443+side)*.48);
+    const offset=length*(.22+hash(seed,d.index,449+side)*.2);
+    const x=d.x+Math.cos(angle)*offset-Math.sin(angle)*width*side*.48;
+    const y=d.y+Math.sin(angle)*offset+Math.cos(angle)*width*side*.48;
+    const branchColor=colorVariant(leafColor,side>0?.13:-.17);
+    paintLeaf(x,y,branchAngle,length*scale,width*scale,branchColor,d.alpha*opacity*.72,false);
    }
   }
-  context.restore();
  }
 }
 export function drawRasterBrushStroke(context,points,options={}){
