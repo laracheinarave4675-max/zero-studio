@@ -486,7 +486,7 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 ## Diagnostic follow-up — 2026-11-19
 
-- GitHub access diagnosis: PR #6 and branch `feat/hybrid-human-art-pipeline` are present and readable. The earlier 404 was not evidence that the repository or branch had disappeared; the reliable recovery path is to resolve files against the confirmed branch ref and exact paths. The current branch ref successfully resolves both `samples/first-hand-authored-anime-background.svg` and `app/raster-brushes.mjs`.
+- GitHub access diagnosis: PR #6 and branch `feat/hybrid-human-art-pipeline` are present and readable. Both the branch ref and exact prior head SHA `b8423635588cd1d6aa19d96b6cbbf47dfd27a589` now successfully resolve `samples/first-hand-authored-anime-background.svg` and `app/raster-brushes.mjs`. Therefore the earlier 404 was transient or caused by the earlier request/path context; the available evidence does not isolate a more specific root cause. It was not evidence that the repository or branch had disappeared.
 - Current PR #6 head remains `b8423635588cd1d6aa19d96b6cbbf47dfd27a589`; PR remains open, draft, and unmerged.
 - Confirmed GitHub Actions run `44568385952` completed successfully. Its `node-tests` job passed both application syntax checks and the complete native Node test command. This is code-level validation only, not visual or Android acceptance.
 - Visual diagnosis: the committed sample `samples/first-hand-authored-anime-background.svg` is an evening Japanese bookshop street, not the requested forest-house reference. Its tree crowns use a small number of circles and the architecture is largely broad filled polygons. It therefore cannot be treated as the requested detailed painterly forest-house result.
