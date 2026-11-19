@@ -12,7 +12,7 @@ const scenes = [
   { id:"rural-ramen-restaurant", title:"Roadside ramen restaurant in the Japanese countryside", prompt:"Create an original premium cinematic 2D Japanese anime background: a modest two-storey roadside ramen restaurant in rural Japan, traditional tiled sloping roof, wooden signboard with abstract non-readable lettering, noren entrance curtain, planters, parking shoulder and sidewalk, two-lane road receding toward green hills, utility poles and distant countryside. Wide 16:9 cinematic composition from the roadside, accurate perspective and scale, golden-hour sunlight from the left, long soft shadows, layered mountains, lush natural vegetation, finely observed wood, tile, concrete and asphalt. No people, no real logos, no copied film frame." }
 ];
 const html = await fs.readFile("app/index.html","utf8");
-const defs = [...html.matchAll(/<defs>[\\s\\S]*?<\\/defs>/g)].map(m=>m[0]).join("");
+const defs = [...html.matchAll(/<defs>[\s\S]*?<\/defs>/g)].map(m=>m[0]).join("");
 if (!defs) throw new Error("ZERO STUDIO SVG material/filter definitions were not found.");
 function renderSvg(layers) {
   const groups = layers.map(layer => '<g data-layer="'+String(layer.name).replaceAll("&","&amp;").replaceAll('"',"&quot;")+'">'+layer.operations.map(op => '<path d="'+op.d+'" fill="'+(op.fill||"none")+'" stroke="'+(op.stroke||"none")+'" stroke-width="'+(op.width||1)+'" stroke-linecap="round" stroke-linejoin="round"'+(op.opacity===undefined?"":' opacity="'+op.opacity+'"')+(op.filter?' filter="'+op.filter+'"':"")+'/>').join("")+'</g>').join("");
@@ -33,7 +33,7 @@ for(const scene of scenes){
       await fs.writeFile(path.join(out,scene.id+"-pass-"+pass+".svg"),svg);
       await fs.writeFile(path.join(out,scene.id+"-pass-"+pass+".png"),png);
       if(passed){item.finalPass=pass;item.qualityGatePassed=true;break;}
-      if(pass===1)revisionBrief=critique.nextRevisionBrief||critique.issues.map(x=>x.area+": "+x.problem+" — "+x.correction).join("\\n");
+      if(pass===1)revisionBrief=critique.nextRevisionBrief||critique.issues.map(x=>x.area+": "+x.problem+" — "+x.correction).join("\n");
       else item.qualityGatePassed=false;
     }
   }catch(error){item.error=String(error?.message||error);item.qualityGatePassed=false;}
@@ -43,6 +43,6 @@ for(const scene of scenes){
 }
 report.finishedAt=new Date().toISOString();
 await fs.writeFile(path.join(out,"report.json"),JSON.stringify(report,null,2));
-const rows=report.scenes.map(s=>{const p=s.passes.at(-1);return "| "+s.title+" | "+(p?.score??"n/a")+"/10 | "+(s.qualityGatePassed?"PASS":"FAIL")+" | "+(p?.totalOperations??0)+" | "+(s.error||"").replaceAll("|","/")+" |";}).join("\\n");
+const rows=report.scenes.map(s=>{const p=s.passes.at(-1);return "| "+s.title+" | "+(p?.score??"n/a")+"/10 | "+(s.qualityGatePassed?"PASS":"FAIL")+" | "+(p?.totalOperations??0)+" | "+(s.error||"").replaceAll("|","/")+" |";})..join("\n");
 await fs.appendFile(process.env.GITHUB_STEP_SUMMARY||"/dev/null","## ZERO STUDIO — Gemini visual acceptance\\n\\n| Scene | Gemini score | Quality gate | SVG operations | Error |\\n|---|---:|---|---:|---|\\n"+rows+"\\n\\nSVG source, PNG previews and JSON critique reports are attached as the `gemini-visual-acceptance` workflow artifact.\\n");
 if(report.scenes.length!==3||report.scenes.some(s=>!s.qualityGatePassed))process.exitCode=1;
