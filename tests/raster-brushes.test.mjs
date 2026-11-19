@@ -69,6 +69,14 @@ test("brush rasterizer paints through a Canvas2D-compatible context",()=>{
  assert.ok(result.dabCount>1);
  assert.ok(calls.includes("dab")&&calls.includes("fill"));
 });
+test("raster brush always restores Canvas2D state when a draw operation fails",()=>{
+ let saves=0,restores=0;
+ const context={save(){saves++},restore(){restores++},beginPath(){},fill(){},ellipse(){}};
+ Object.defineProperty(context,"globalCompositeOperation",{set(){throw Error("blend state rejected")}});
+ assert.throws(()=>drawRasterBrushStroke(context,[{x:0,y:0}],{brush:"ink"}),/blend state rejected/);
+ assert.equal(saves,1);
+ assert.equal(restores,1,"the outer Canvas2D state must be restored even when drawing aborts");
+});
 test("painting over imported art maps stage coordinates into letterboxed source pixels",()=>{
  const mapped=mapPointsToRaster([{x:960,y:540,pressure:.8}],1920,1080,960,540,20);
  assert.equal(mapped.scale,2);
