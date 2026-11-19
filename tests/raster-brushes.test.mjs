@@ -52,3 +52,13 @@ test("gouache and graphite use continuous pressure-shaped ribbons instead of cha
  const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.2},{x:35,y:8,pressure:.7},{x:80,y:24,pressure:1}],{brush:"gouache",size:18,color:"#52764b",texture:.8,seed:13});
  assert.equal(r.renderMode,"continuous-ribbon");assert.ok(calls.includes("close")&&calls.includes("fill")&&calls.includes("stroke"));assert.equal(calls.includes("ellipse"),false);
 });
+
+test("watercolor uses one connected translucent wash with pigment blooms, not only circular stamps",()=>{
+ const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){},createRadialGradient(){return{addColorStop(){}}}};
+ const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.3},{x:28,y:12,pressure:.7},{x:66,y:20,pressure:1}],{brush:"watercolor",size:16,color:"#527c9b",texture:.8,seed:23});
+ assert.equal(r.renderMode,"wash");assert.ok(calls.includes("close")&&calls.includes("ellipse")&&calls.includes("fill"));
+});
+test("foliage creates varied directional leaves and companion leaf clusters deterministically",()=>{
+ const render=()=>{const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){},quadraticCurveTo(){calls.push("curve")},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};const r=drawRasterBrushStroke(ctx,[{x:0,y:0},{x:35,y:12},{x:70,y:-5}],{brush:"foliage",size:14,color:"#39734b",texture:.9,seed:77});return{calls,r};};
+ const a=render(),b=render();assert.deepEqual(a,b);assert.equal(a.r.renderMode,"leaf-marks");assert.ok(a.calls.filter(x=>x==="curve").length>10);assert.ok(a.calls.includes("stroke"));
+});
