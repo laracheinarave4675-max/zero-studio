@@ -64,15 +64,61 @@ function colorVariant(color,amount){
  const n=parseInt(m[1],16),v=[n>>16&255,n>>8&255,n&255];
  return "#"+v.map(c=>Math.round(clamp(c+(amount>=0?(255-c)*amount:c*amount),0,255)).toString(16).padStart(2,"0")).join("");
 }
-function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,texture=.4,bristles=5}){
+function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,texture=.4,bristles=5,edgePigment=.16,dryness=.18}){
  if(!dabs.length)return;
  if(dabs.length===1){const d=dabs[0];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.angle);ctx.globalAlpha=opacity*d.alpha;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,d.radius*widthScale,d.radius*d.aspect,0,0,Math.PI*2);ctx.fill();ctx.restore();return;}
- const stride=Math.max(1,Math.ceil(dabs.length/5000)),s=dabs.filter((_,i)=>i%stride===0||i===dabs.length-1),left=[],right=[];
- for(let i=0;i<s.length;i++){const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)];let dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy);if(len<.001){dx=Math.cos(d.angle);dy=Math.sin(d.angle);len=1;}const nx=-dy/len,ny=dx/len,e=(hash(seed,d.index,31)-.5)*d.radius*roughness,h=Math.max(.25,d.radius*widthScale);left.push([d.x+nx*(h+e),d.y+ny*(h+e)]);right.push([d.x-nx*(h-e),d.y-ny*(h-e)]);}
- ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(left[0][0],left[0][1]);for(let i=1;i<left.length;i++)ctx.lineTo(left[i][0],left[i][1]);for(let i=right.length-1;i>=0;i--)ctx.lineTo(right[i][0],right[i][1]);ctx.closePath();ctx.fill();ctx.restore();
+ // Build one continuous pressure-shaped body. The edge variation is correlated
+ // along the stroke so it reads as a hand-loaded brush, not random noisy pixels.
+ const stride=Math.max(1,Math.ceil(dabs.length/3600)),s=dabs.filter((_,i)=>i%stride===0||i===dabs.length-1),left=[],right=[],edge=[];
+ for(let i=0;i<s.length;i++){
+  const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)];
+  let dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy);
+  if(len<.001){dx=Math.cos(d.angle);dy=Math.sin(d.angle);len=1;}
+  const nx=-dy/len,ny=dx/len;
+  const slow=(hash(seed,Math.floor(i/5),131)-.5)*roughness;
+  const fine=(hash(seed,i,137)-.5)*roughness*.42;
+  const h=Math.max(.22,d.radius*widthScale),wobble=(slow+fine)*h;
+  left.push([d.x+nx*(h+wobble),d.y+ny*(h+wobble)]);
+  right.push([d.x-nx*(h-wobble*.72),d.y-ny*(h-wobble*.72)]);
+  edge.push({d,nx,ny,h});
+ }
+ ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(left[0][0],left[0][1]);
+ for(let i=1;i<left.length;i++)ctx.lineTo(left[i][0],left[i][1]);
+ for(let i=right.length-1;i>=0;i--)ctx.lineTo(right[i][0],right[i][1]);
+ ctx.closePath();ctx.fill();ctx.restore();
+ // Pigment gathers lightly at the outside edge of a loaded gouache stroke.
+ if(edgePigment>0){
+  ctx.save();ctx.strokeStyle=color;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();
+  for(let i=0;i<edge.length;i+=Math.max(1,Math.ceil(edge.length/900))){
+   const e=edge[i],side=i%2?1:-1,x=e.d.x+e.nx*e.h*side,y=e.d.y+e.ny*e.h*side;
+   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+  ctx.globalAlpha=opacity*edgePigment;ctx.lineWidth=Math.max(.35,Math.min(2.4,s[0].radius*.075));ctx.stroke();ctx.restore();
+ }
  if(texture<=0||bristles<=0)return;
- const step=Math.max(1,Math.ceil(s.length/700));ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
- for(let strand=0;strand<bristles;strand++){const off=(strand/(Math.max(1,bristles-1))-.5)*.78;ctx.beginPath();for(let i=0;i<s.length;i+=step){const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)],dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,j=(hash(seed,d.index,strand+83)-.5)*d.radius*.12,x=d.x+nx*(off*d.radius+j),y=d.y+ny*(off*d.radius+j);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.strokeStyle=colorVariant(color,hash(seed,strand,71)>.5?.16:-.2);ctx.lineWidth=Math.max(.35,texture*(.55+hash(seed,strand,97)*1.15));ctx.globalAlpha=opacity*(.12+hash(seed,strand,113)*.24);ctx.stroke();}
+ // Bristle lanes are broken into short, irregular passages. This creates dry
+ // pigment skips and visible brush direction instead of uniform parallel wires.
+ const laneCount=Math.max(2,Math.min(16,Math.round(bristles+texture*5))),step=Math.max(1,Math.ceil(s.length/1100));
+ ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+ for(let lane=0;lane<laneCount;lane++){
+  let drawing=false,run=0;
+  for(let i=0;i<s.length;i+=step){
+   const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)];
+   let dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+   const across=(lane/(Math.max(1,laneCount-1))-.5)*1.42;
+   const jitter=(hash(seed,d.index,lane+181)-.5)*d.radius*.16;
+   const x=d.x+nx*(across*d.radius+jitter),y=d.y+ny*(across*d.radius+jitter);
+   const skip=hash(seed,d.index,lane+223)<dryness*(.18+.62*(1-texture));
+   if(skip){if(drawing){ctx.stroke();ctx.beginPath();drawing=false;}continue;}
+   if(!drawing){ctx.beginPath();ctx.moveTo(x,y);drawing=true;run=0;}else ctx.lineTo(x,y);
+   run++;
+   if(run>4&&hash(seed,d.index,lane+251)<dryness*.13){ctx.stroke();ctx.beginPath();ctx.moveTo(x,y);run=0;}
+   ctx.strokeStyle=colorVariant(color,hash(seed,lane,71)>.5?.19:-.24);
+   ctx.lineWidth=Math.max(.28,texture*(.32+hash(seed,lane,97)*.9));
+   ctx.globalAlpha=opacity*(.07+hash(seed,lane,113)*.2);
+  }
+  if(drawing)ctx.stroke();
+ }
  ctx.restore();
 }
 export function drawRasterBrushStroke(context,points,options={}){
