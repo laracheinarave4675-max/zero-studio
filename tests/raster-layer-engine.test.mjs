@@ -22,6 +22,7 @@ test("raster layers persist through ZERO project normalization without flattenin
 test("raster layer is composited into SVG output as an embedded image",()=>{
  const layer=createRasterLayer({dataUrl:pixel,mimeType:"image/png",width:1,height:1});
  const markup=layerSvg(layer);
+ assert.match(markup,/preserveAspectRatio="xMidYMid meet"/);
  assert.match(markup,/<image href="data:image\/png;base64,/);
  const project=createProject();
  addRasterLayer(project.frames[0],{dataUrl:pixel,mimeType:"image/png",width:1,height:1});
