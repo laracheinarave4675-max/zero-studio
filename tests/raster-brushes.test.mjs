@@ -5,6 +5,13 @@ import {RASTER_BRUSH_PRESETS,RASTER_BLEND_MODES,buildBrushDabs,drawRasterBrushSt
 test("natural brush presets expose pencil, ink, gouache, watercolor and foliage",()=>{
  assert.deepEqual(Object.keys(RASTER_BRUSH_PRESETS),["graphite","ink","gouache","watercolor","foliage"]);
 });
+test("stylus and touch pressure are preserved while mouse pressure remains speed-derived",()=>{
+ assert.equal(resolveBrushPressure("pen",.18,.7),.18);
+ assert.equal(resolveBrushPressure("touch",.42,.7),.42);
+ assert.equal(resolveBrushPressure("touch",0,.7),.7);
+ assert.equal(resolveBrushPressure("mouse",.95,.3),.3);
+ assert.equal(resolveBrushPressure("pen",1.8,.4),1);
+});
 test("brush dab interpolation is deterministic, pressure-aware and finite",()=>{
  const points=[{x:10,y:20,pressure:.2},{x:100,y:60,pressure:1}];
  const first=buildBrushDabs(points,{brush:"graphite",size:9,seed:41});
