@@ -16,6 +16,14 @@ Last updated: 2026-11-19 (UTC)
 - **Not yet verified at this update:** the new GitHub Actions run, whether Gemini 3.5 Flash Lite accepts image inputs in this project/region, the three generated scenes' visual quality, and whether critique-guided revisions improve the images. Do not report the artist as reaching the target until the generated previews are actually inspected.
 - **Still pending:** implement the static-background plus independently drawn moving-layer contract in app/animation-production.mjs and the batch importer; connect vision review to the interactive Android artist workflow; visually inspect all three real Gemini outputs; refine the 2D painter based on the actual defects; and verify physical Android performance.
 
+## Artistic validation findings and alternate native-SVG model tests — 2026-11-19
+
+- The full automated test suite passed **176 tests, 0 failures** on commit `fca647c785b723f83c01614c3c266eaff5b928a9` before the latest OmniSVG experiment commits; later commits rerun the suite.
+- The three deterministic local 2D scene studies were rendered and visually inspected at 1280×720. They contain 1,102 paths (urban store), 1,284 (rural ramen), and 2,319 (forest house), but they still look too geometric/cartoon-like and are **not artistically accepted**. Path count is not the target.
+- The first real Gemini-generated 2D urban-store draft was visually scored **2/10** by the vision reviewer and marked not convincingly 2D anime. Its first revision response was malformed JSON, so the run stopped before saving a final scene. The failure motivated compact-JSON recovery, per-pass artifact checkpoints, slower request pacing, and a second revision attempt. The old run's artifacts did not preserve that draft; new runs checkpoint every pass.
+- A new native-SVG alternative test uses the official OmniSVG Hugging Face Space. Its app advertises 300 GPU seconds/day for free users and approximately 20–60 seconds per generation; the hosted UI currently offers 4B and 8B model variants. The experiment selects 4B, one candidate, 512 max tokens, and tests three reference-matched scene descriptions. The hosted model is a candidate only; it has not yet passed the visual review. Official references: https://huggingface.co/spaces/OmniSVG/OmniSVG-3B and https://github.com/OmniSVG/OmniSVG.
+- The OmniSVG 4B run and latest Gemini 2D artist run are still under validation; do not call either successful until artifacts are downloaded and visually inspected.
+
 ## High-volume frame production infrastructure — 2026-11-18
 
 - Current tested branch commit: `4159c4cdc04e4d2ad91680899e1fbbc0fef05177`; the public Vercel release snapshot includes `animation-worker.mjs` and the large-frame workspace.
