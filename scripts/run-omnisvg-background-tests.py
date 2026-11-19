@@ -14,7 +14,7 @@ summary=[]
 for slug,prompt in scenes:
  print("OmniSVG generation:",slug,flush=True)
  start=time.time()
- result=client.predict(prompt,"3B",1,0.6,0.9,60,1.03,512,api_name="/gradio_text_to_svg")
+ result=client.predict(prompt,"4B",1,0.6,0.9,60,1.03,512,api_name="/gradio_text_to_svg")
  elapsed=round(time.time()-start,2)
  if not isinstance(result,(list,tuple)) or len(result)<2:
   raise RuntimeError("Unexpected OmniSVG response structure: "+repr(type(result)))
@@ -28,7 +28,7 @@ for slug,prompt in scenes:
  (folder/"scene.svg").write_text(svg,encoding="utf-8")
  cairosvg.svg2png(bytestring=svg.encode("utf-8"),write_to=str(folder/"preview.png"),output_width=1280,output_height=720)
  paths=len(re.findall(r"<path\b",svg,re.I))
- report={"slug":slug,"model":"OmniSVG-3B hosted Hugging Face Space","task":"text-to-svg","generation_seconds":elapsed,"path_elements":paths,"editable_svg":True,"candidate_count":1,"max_length":512,"provider_quota_note":"Space UI states free users receive 300 GPU seconds/day and a generation takes about 20–60 seconds; actual usage/quota is provider-controlled.","prompt":prompt,"response_status":str(result[2]) if len(result)>2 else None,"quality_status":"awaiting visual review"}
+ report={"slug":slug,"model":"OmniSVG 1.1 4B hosted Hugging Face Space","task":"text-to-svg","generation_seconds":elapsed,"path_elements":paths,"editable_svg":True,"candidate_count":1,"max_length":512,"provider_quota_note":"Space UI states free users receive 300 GPU seconds/day and a generation takes about 20–60 seconds; actual usage/quota is provider-controlled.","prompt":prompt,"response_status":str(result[2]) if len(result)>2 else None,"quality_status":"awaiting visual review"}
  (folder/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  summary.append(report)
  print(json.dumps({"slug":slug,"seconds":elapsed,"paths":paths},ensure_ascii=False),flush=True)
