@@ -127,7 +127,7 @@ function zoomCanvas(factor){
 function resetCanvasView(){setViewBox(0,0,WIDTH,HEIGHT)}
 function coords(e){const p=canvas.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const m=canvas.getScreenCTM();if(!m)return{x:0,y:0};const q=p.matrixTransform(m.inverse());return{x:Math.max(0,Math.min(WIDTH,q.x)),y:Math.max(0,Math.min(HEIGHT,q.y))}}
 function dpath(a){return $("pressureToggle").checked&&activePointerType==="pen"&&tool==="pen"?pressureOutlinePath(a,+$("strokeWidth").value):pointsToPath(a)}
-const shapeTools=new Set(["line","rect","ellipse"]),rasterBrushTools=new Set(["raster-pencil","raster-brush"]);let rasterCommitPending=false,rasterPreviewCanvas=null,rasterPreviewContext=null,rasterPreviewSeed=1;const rasterPreview=$("rasterStrokePreview");
+const shapeTools=new Set(["line","rect","ellipse"]),rasterBrushTools=new Set(["raster-pencil","raster-brush"]);let rasterCommitPending=false,rasterPreviewCanvas=null,rasterPreviewContext=null,rasterPreviewSeed=1,rasterPreviewEncodePending=false,rasterPreviewDirty=false,rasterPreviewVersion=0,rasterPreviewBlobUrl=null;const rasterPreview=$("rasterStrokePreview");
 async function commitRasterBrushStroke(target,strokePoints,brushOptions){
  const{result,dataUrl:nextData}=await encodeRasterSurfaceStroke(rasterSurfaces,target,surface=>{
   const mapped=mapPointsToRaster(strokePoints,WIDTH,HEIGHT,target.width,target.height,brushOptions.size);
@@ -143,7 +143,9 @@ function rasterBrushOptions(){
  const rasterErase=tool==="eraser",brush=tool==="raster-pencil"?"graphite":rasterErase?"ink":$("rasterBrushPreset").value;
  return{brush,size:rasterErase?Math.max(8,+$("strokeWidth").value*4):+$("strokeWidth").value,color:$("strokeColor").value,opacity:rasterErase?1:+$("rasterBrushOpacity").value/100,texture:rasterErase?0:+$("rasterBrushTexture").value/100,blendMode:rasterErase?"normal":$("rasterBrushBlend").value,pressureSensitive:rasterErase?false:$("pressureToggle").checked,erase:rasterErase,seed:rasterPreviewSeed};
 }
-function clearRasterPreview(){if(rasterPreview){rasterPreview.removeAttribute("href");rasterPreview.setAttribute("visibility","hidden")}if(rasterPreviewContext&&rasterPreviewCanvas)rasterPreviewContext.clearRect(0,0,rasterPreviewCanvas.width,rasterPreviewCanvas.height)}
+function clearRasterPreview(){rasterPreviewVersion++;rasterPreviewDirty=false;if(rasterPreview){rasterPreview.removeAttribute("href");rasterPreview.setAttribute("visibility","hidden")}if(rasterPreviewBlobUrl){URL.revokeObjectURL(rasterPreviewBlobUrl);rasterPreviewBlobUrl=null}if(rasterPreviewContext&&rasterPreviewCanvas)rasterPreviewContext.clearRect(0,0,rasterPreviewCanvas.width,rasterPreviewCanvas.height)}
+function publishRasterPreview(source,version,blobUrl=null){if(version!==rasterPreviewVersion||!drawing){if(blobUrl)URL.revokeObjectURL(blobUrl);return}const previous=rasterPreviewBlobUrl;if(blobUrl)rasterPreviewBlobUrl=blobUrl;if(previous&&previous!==blobUrl)rasterPreview.addEventListener("load",()=>{if(rasterPreviewBlobUrl!==previous)URL.revokeObjectURL(previous)},{once:true});rasterPreview.setAttribute("href",source);rasterPreview.setAttribute("visibility","visible")}
+function encodeRasterPreview(){if(rasterPreviewEncodePending||!rasterPreviewDirty||!rasterPreviewCanvas)return;rasterPreviewDirty=false;rasterPreviewEncodePending=true;const version=rasterPreviewVersion;rasterPreviewCanvas.toBlob(blob=>{rasterPreviewEncodePending=false;if(version!==rasterPreviewVersion||!drawing){if(drawing&&rasterPreviewDirty)encodeRasterPreview();return}if(blob){const url=URL.createObjectURL(blob);publishRasterPreview(url,version,url)}else publishRasterPreview(rasterPreviewCanvas.toDataURL("image/png"),version);if(rasterPreviewDirty)encodeRasterPreview()},"image/png")}
 function updateRasterPreview(){
  if(!drawing||(!rasterBrushTools.has(tool)&&!(tool==="eraser"&&layer().type==="raster"))||!points.length)return;
  const target=layer();if(target.type!=="raster")return;
@@ -158,8 +160,8 @@ function updateRasterPreview(){
   rasterPreviewContext.clearRect(0,0,rasterPreviewCanvas.width,rasterPreviewCanvas.height);
   const options=rasterBrushOptions(),mapped=mapPointsToRaster(points,WIDTH,HEIGHT,previewWidth,previewHeight,options.size);
   drawRasterBrushStroke(rasterPreviewContext,mapped.points,{...options,size:mapped.size});
-  rasterPreview.setAttribute("href",rasterPreviewCanvas.toDataURL("image/png"));
-  rasterPreview.setAttribute("visibility","visible");
+  rasterPreviewDirty=true;
+  encodeRasterPreview();
  }catch(error){clearRasterPreview();status("تعذرت معاينة ضربة Raster: "+error.message,false)}
 }
 function previewPath(){
