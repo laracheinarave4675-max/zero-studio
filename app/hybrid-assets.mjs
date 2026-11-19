@@ -7,6 +7,7 @@ function fail(message){throw new Error(message)}
 function text(value,label,max=160){const result=String(value??"").trim();if(!result||result.length>max)fail(label+" غير صالح.");return result}
 function finite(value,label,min,max){const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)fail(label+" خارج الحدود المسموحة.");return n}
 function safeId(value,label){const id=text(value,label,128);if(!ID.test(id))fail(label+" يحتوي رموزاً غير مسموحة.");return id}
+function safeSourceRef(value,label){const ref=text(value,label,240);if(ref.startsWith("/")||ref.includes("\\\\")||ref.split("/").some(part=>!part||part==="."||part===".."||!/^[A-Za-z0-9._-]+$/.test(part)))fail(label+" يحتوي مساراً غير آمن.");return ref}
 export function validateHybridAssetManifest(input){
  if(!input||typeof input!=="object"||input.version!==1)fail("إصدار بيان الأصول غير مدعوم.");
  const assetId=safeId(input.assetId,"معرّف الأصل");
@@ -27,7 +28,7 @@ export function validateHybridAssetManifest(input){
   if(type==="raster"){
    const mimeType=text(source.mimeType,"نوع ملف الطبقة",80).toLowerCase();
    if(!["image/png","image/webp","image/jpeg"].includes(mimeType))fail("نوع ملف Raster غير مسموح.");
-   const sourceFile=safeId(source.sourceFile,"مرجع ملف الطبقة");
+   const sourceFile=safeSourceRef(source.sourceFile,"مرجع ملف الطبقة");
    const bytes=finite(source.bytes,"حجم ملف الطبقة",1,MAX_SOURCE_BYTES);
    const layerWidth=finite(source.width??width,"عرض الطبقة",1,MAX_DIMENSION);
    const layerHeight=finite(source.height??height,"ارتفاع الطبقة",1,MAX_DIMENSION);
@@ -35,7 +36,7 @@ export function validateHybridAssetManifest(input){
    if(digest!==null&&!/^[a-f0-9]{64}$/.test(digest))fail("بصمة SHA-256 غير صالحة.");
    return{...common,mimeType,sourceFile,bytes,width:layerWidth,height:layerHeight,hasAlpha:source.hasAlpha===true,sha256:digest};
   }
-  const sourceFile=safeId(source.sourceFile,"مرجع ملف SVG");
+  const sourceFile=safeSourceRef(source.sourceFile,"مرجع ملف SVG");
   if(source.svg!==undefined&&typeof source.svg!=="string")fail("مصدر SVG يجب أن يكون نصاً.");
   return{...common,sourceFile,svg:source.svg??null};
  });
