@@ -2,17 +2,16 @@
 
 Last updated: 2026-11-19 (UTC)
 
-## Human-authored studio direction — 2026-11-19
+## Human-authored Raster-first studio direction — 2026-11-19
 
-- The user explicitly confirmed that ZERO STUDIO must be a **human-art studio**, not an AI image-generation studio.
-- Final visual artwork (backgrounds, characters, props and animation drawings) must be drawn/painted by a human in a professional drawing application. No generative image/video model may create, inpaint, outpaint, modify, or synthesize final artwork.
-- The architecture is now reframed: a professional Android painting app is the art department; ZERO STUDIO manages production, scene/shot organization, asset layers, continuity, timeline, 24-fps playback, unique-drawing audits, compositing and delivery.
-- Added `docs/HUMAN_ART_WORKFLOW.md` and decision D-021. Updated README to make this the approved product direction.
-- PSD, OpenRaster and lossless PNG-layer bundles are candidate interchange formats only. None is declared supported until a real three-layer round-trip is tested on the Android workflow.
-- The existing procedural SVG scene painter and experimental Canvas brush are not accepted as a route to painterly quality. They remain prototypes/tools only; do not claim they can replace a professional painting application.
-- The animation target remains 24 independently drawn images per second for moving artwork. Fixed backgrounds may be reused.
-- **Next implementation gate:** choose/verify a professional painting app compatible with the user's Android phone, then prove a lossless layered import into ZERO STUDIO. Physical-device compatibility and interchange remain unverified.
-- No production deployment or merge to `main` was performed.
+- Final backgrounds, characters, props and animation drawings must be authored through human pointer/stylus input. Generative image/video models are not allowed to create, alter, inpaint, or synthesize final artwork.
+- The active drawing workspace opens in native Raster pencil mode. Gouache/ink/graphite multi-point strokes use a continuous pressure-shaped ribbon with variable edges and bristle tracks; watercolor remains a translucent wash and foliage uses directional leaf marks. These are foundational brush algorithms, not a professional natural-media engine.
+- Old Gemini/SVG and mesh scene-generation controls are removed from the visible art department. Their legacy modules and hidden compatibility wiring remain temporarily, but they are not an approved final-art path.
+- Native SVG remains optional, editable and first-class. Raster/vector layers coexist; imported images remain optional and no external painting app is a prerequisite.
+- The immediate visual acceptance target is the user-supplied Japanese forest house: layered curved tile roof, timber/eaves, windows and balcony, dense varied foliage, stone retaining wall, sunlight and atmospheric depth. Path counts and passing unit tests do not constitute artistic acceptance.
+- The animation target remains 24 independently drawn moving-art drawings per second. Fixed backgrounds may be reused while the camera remains fixed.
+- Physical Android stylus/touch testing, natural-media simulation, visual acceptance, memory benchmarks and lossless package round-trip remain unverified. No PSD/ORA support is claimed.
+- Work remains on PR #6's isolated branch; no merge to `main` and no production deployment.
 
 Last updated: 2026-11-19 (UTC)
 
