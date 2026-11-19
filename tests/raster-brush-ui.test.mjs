@@ -33,7 +33,12 @@ test("live raster brush preview is rendered as real Canvas2D pixels during point
  assert.match(app,/previewWidth=Math\.max\(1,Math\.round\(target\.width\*previewScale\)\)/);
  assert.match(app,/previewHeight=Math\.max\(1,Math\.round\(target\.height\*previewScale\)\)/);
  assert.match(app,/mapPointsToRaster\(points,WIDTH,HEIGHT,previewWidth,previewHeight,options\.size\)/);
- assert.match(app,/rasterPreviewCanvas\.toBlob\(blob=>/);\n assert.match(app,/rasterPreviewEncodePending\|\|!rasterPreviewDirty/);\n assert.match(app,/rasterPreviewVersion\+\+/);\n assert.match(app,/URL\.createObjectURL\(blob\)/);\n assert.match(app,/URL\.revokeObjectURL\(rasterPreviewBlobUrl\)/);\n assert.match(app,/rasterPreviewCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(app,/rasterPreviewCanvas\.toBlob\(blob=>/ );
+ assert.match(app,/rasterPreviewEncodePending\|\|!rasterPreviewDirty/ );
+ assert.match(app,/rasterPreviewVersion\+\+/ );
+ assert.match(app,/URL\.createObjectURL\(blob\)/ );
+ assert.match(app,/URL\.revokeObjectURL\(rasterPreviewBlobUrl\)/ );
+ assert.match(app,/rasterPreviewCanvas\.toDataURL\("image\/png"\)/);
  assert.match(app,/samples\.forEach\(addPoint\);if\(rasterBrushTools\.has\(tool\).*?updateRasterPreview\(\)/);
  assert.match(app,/clearRasterPreview\(\);rasterCommitPending=true/);
  assert.match(app,/if\(rasterBrushTools\.has\(tool\).*?updateRasterPreview\(\);drawing=false/);
