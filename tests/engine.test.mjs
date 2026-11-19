@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createProject,createFrame,createLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData,getPathAnchors,movePathAnchor,getPathEditHandles,movePathControlPoint} from "../app/engine.mjs";
+import {createProject,createFrame,createLayer,createRasterLayer,normalizeProject,addLayer,renameLayer,removeLayer,reorderLayer,appendOperation,validatePath,layerSvg,frameSvg,pointsToPath,shapePath,interpolatePathData,createInbetweenFrames,pressureOutlinePath,pathGeometryBounds,removeOperation,translateOperation,translatePathData,updateOperation,duplicateOperation,analyzeDrawingCadence,rotatePathData,getPathAnchors,movePathAnchor,getPathEditHandles,movePathControlPoint} from "../app/engine.mjs";
 
 const line=(x=10)=>({d:"M "+x+" 10 L "+(x+40)+" 40",stroke:"#172033",width:5,fill:"none"});
 test("new projects use v2 with one editable layer",()=>{const p=createProject();assert.equal(p.version,2);assert.equal(p.frames[0].layers.length,1);assert.deepEqual(p.frames[0].layers[0].operations,[])});
@@ -213,4 +213,19 @@ test("SVG Bézier control movement changes only the selected control handle",()=
  assert.match(moved,/C 10 0 15 25 20 20/);
  assert.deepEqual(getPathAnchors(moved).map(p=>[p.x,p.y]),[[0,0],[20,20]]);
  assert.throws(()=>movePathControlPoint(d,9,0,0),/غير موجود/);
+});
+
+test("raster layers preserve editable stroke samples and brush settings across project reopen",()=>{
+ const dataUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pS8AAAAASUVORK5CYII=";
+ const p=createProject("raster history"),layer=createRasterLayer({name:"paint",dataUrl,mimeType:"image/png",width:1,height:1});
+ layer.strokes=[{points:[{x:12,y:24,pressure:.7},{x:18,y:29,pressure:1}],options:{brush:"gouache",size:14,color:"#52764b",opacity:.8,texture:.6,blendMode:"multiply",seed:91}}];
+ p.frames[0].layers=[layer];
+ const reopened=normalizeProject(JSON.parse(JSON.stringify(p)));
+ assert.deepEqual(reopened.frames[0].layers[0].strokes,layer.strokes);
+});
+test("raster layer rejects malformed or excessive editable stroke history",()=>{
+ const dataUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pS8AAAAASUVORK5CYII=";
+ const p=createProject(),layer=createRasterLayer({dataUrl,mimeType:"image/png",width:1,height:1});
+ layer.strokes=[{points:[{x:Infinity,y:0,pressure:.5}],options:{brush:"ink"}}];p.frames[0].layers=[layer];
+ assert.throws(()=>normalizeProject(JSON.parse(JSON.stringify(p))),/نقطة ضربة Raster/);
 });
