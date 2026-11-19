@@ -19,7 +19,7 @@ export function applyPainterlyForestPass(scene){
  ];
  const greens=["#24483d","#315b43","#3e704b","#568653","#71985b","#a4ad68","#d2c78a","#41634a","#8a9c60"];
  // Layered, tapered leaf strokes: each mark has a pointed tip and a hand-varied axis.
- for(let i=0;i<790;i++){
+ for(let i=0;i<360;i++){
   const z=canopyZones[Math.floor(r()*canopyZones.length)];
   const x=z[0]+r()*z[2],y=z[1]+r()*z[3];
   const angle=-.95+r()*1.9,len=5+r()*22,w=1.1+r()*5.4;
@@ -28,13 +28,13 @@ export function applyPainterlyForestPass(scene){
  }
  // Fine grass blades and small sunlit ground strokes follow the garden slope.
  const grass=["#405f43","#58764a","#789157","#a1a56a","#c3b77d"];
- for(let i=0;i<190;i++){
+ for(let i=0;i<85;i++){
   const x=80+r()*1760,y=790+r()*280;
   const len=5+r()*20,lean=(r()-.5)*12;
   ops.push(taperedStroke(x,y,lean,-len,.8+r()*2.2,grass[Math.floor(r()*grass.length)],.24+r()*.35,(r()-.5)*2));
  }
  // Irregular roof glints and broken tile accents, not repeated straight courses.
- for(let i=0;i<105;i++){
+ for(let i=0;i<55;i++){
   const x=470+r()*850,y=115+r()*245,len=12+r()*38;
   ops.push(taperedStroke(x,y,len,(-.35+r()*.7)*len,.8+r()*1.8,r()<.65?"#d8c49c":"#343c39",.18+r()*.3,(r()-.5)*2));
  }
@@ -46,7 +46,7 @@ export function applyPainterlyForestPass(scene){
  ops.push(softPatch("M 425 370 Q 850 330 1395 385 L 1380 420 Q 900 380 430 415 Z","#34483e",.17));
  ops.push(softPatch("M 560 470 Q 800 435 1120 465 L 1110 485 Q 800 465 560 490 Z","#f1d29a",.11));
  // Dappled sun spots are deliberately irregular, clustered, and low-contrast.
- for(let i=0;i<28;i++){
+ for(let i=0;i<16;i++){
   const x=800+r()*620,y=470+r()*330,rx=5+r()*18,ry=2+r()*8;
   const d=`M ${pt(x-rx)} ${pt(y)} Q ${pt(x-rx*.65)} ${pt(y-ry*1.3)} ${pt(x+rx*.25)} ${pt(y-ry)} Q ${pt(x+rx*1.25)} ${pt(y-ry*.2)} ${pt(x+rx)} ${pt(y+ry*.25)} Q ${pt(x)} ${pt(y+ry*1.25)} ${pt(x-rx)} ${pt(y)} Z`;
   ops.push(softPatch(d,r()<.55?"#f4d99d":"#e9dcae",.08+r()*.12));
