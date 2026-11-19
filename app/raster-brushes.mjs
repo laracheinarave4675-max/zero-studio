@@ -1,3 +1,4 @@
+import{paintNaturalFoliageCluster}from"./raster-environment-media.mjs";
 // Human-operated raster brush engine. It generates editable-in-project pixel marks,
 // never artwork from a prompt or an external image-generation model.
 export const RASTER_BRUSH_PRESETS = Object.freeze({
@@ -155,39 +156,14 @@ function paintWatercolorWash(context,dabs,{color,opacity,seed,texture}){
  }
 }
 function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
- const paintLeaf=(x,y,angle,length,width,leafColor,alpha,vein=true)=>{
-  context.save();context.translate(x,y);context.rotate(angle);
-  context.globalAlpha=clamp(alpha,0,1);context.fillStyle=leafColor;
-  context.beginPath();context.moveTo(-length*.62,0);
-  context.quadraticCurveTo(-length*.2,-width*1.18,length*.52,-width*.12);
-  context.quadraticCurveTo(length*.82,width*.16,-length*.62,0);context.fill();
-  if(vein&&texture>.16){
-   context.globalAlpha*=.38;context.strokeStyle=colorVariant(leafColor,.3);
-   context.lineWidth=Math.max(.3,length*.025);context.beginPath();
-   context.moveTo(-length*.48,0);context.quadraticCurveTo(0,width*.02,length*.66,width*.05);context.stroke();
-  }
-  context.restore();
- };
  for(const d of dabs){
-  const variation=hash(seed,d.index,401),length=d.radius*(.72+variation*.72),width=length*d.aspect*(.72+hash(seed,d.index,409)*.85);
+  const variation=hash(seed,d.index,401),size=d.radius*(1.25+variation*.95);
   const hue=hash(seed,d.index,419),leafColor=colorVariant(color,hue>.72?.2:hue<.2?-.24:(hue-.5)*.24);
-  const angle=d.angle+(hash(seed,d.index,421)-.5)*.75;
-  paintLeaf(d.x,d.y,angle,length,width,leafColor,d.alpha*opacity,true);
-  // Companion leaves branch from the same mark at different scales and angles.
-  // Their offsets are deterministic, so redraw and undo remain reproducible.
-  if(hash(seed,d.index,431)<texture*.52){
-   for(const side of [-1,1]){
-    const scale=.30+hash(seed,d.index,437+side)*.24;
-    const branchAngle=angle+side*(.48+hash(seed,d.index,443+side)*.48);
-    const offset=length*(.22+hash(seed,d.index,449+side)*.2);
-    const x=d.x+Math.cos(angle)*offset-Math.sin(angle)*width*side*.48;
-    const y=d.y+Math.sin(angle)*offset+Math.cos(angle)*width*side*.48;
-    const branchColor=colorVariant(leafColor,side>0?.13:-.17);
-    paintLeaf(x,y,branchAngle,length*scale,width*scale,branchColor,d.alpha*opacity*.72,false);
-   }
-  }
+  const angle=d.angle+(hash(seed,d.index,421)-.5)*.58;
+  paintNaturalFoliageCluster(context,{x:d.x,y:d.y,size,angle,color:leafColor,seed:seed+d.index*17,opacity:d.alpha*opacity,texture});
  }
 }
+
 export function drawRasterBrushStroke(context,points,options={}){
  if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
