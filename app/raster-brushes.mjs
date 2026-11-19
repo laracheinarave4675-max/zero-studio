@@ -186,11 +186,18 @@ export function drawRasterBrushStroke(context,points,options={}){
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
  const blendMode=String(options.blendMode||"normal");
  if(!Object.hasOwn(RASTER_BLEND_MODES,blendMode))throw Error("نمط مزج ضربات الفرشاة غير مدعوم");
- context.save();context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];
- if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
- else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
- else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
- context.restore();return{dabCount:dabs.length,brush,blendMode:options.erase?"destination-out":blendMode,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
+ context.save();
+ try{
+  context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];
+  if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
+  else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
+  else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
+ }finally{
+  // A failed Canvas2D operation must not leak blend/alpha/transform state
+  // into the artist's next stroke.
+  context.restore();
+ }
+ return{dabCount:dabs.length,brush,blendMode:options.erase?"destination-out":blendMode,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
 }
 export function mapPointsToRaster(points,canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize){
  const values=[canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize].map(Number);
