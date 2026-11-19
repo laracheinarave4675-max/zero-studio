@@ -27,9 +27,7 @@ export async function createHokusaiPainter({canvasElement,init,HokusaiBrush,Hoku
  }
  function setSize(px){if(!Number.isFinite(px))throw new TypeError("Brush size must be finite.");brush?.setRadiusLog(designedRadius+Math.log2(clamp(px,1,180)/Math.pow(2,designedRadius)));}
  function flush(){
-  engine.flushPixels();const ptr=engine.pixelsPtr(),len=engine.pixelsLen();
-  const memory=engine.wasmMemory||null;
-  const bytes=memory?.buffer?new Uint8ClampedArray(memory.buffer,ptr,len):engine.pixels();
+  const bytes=engine.pixels();
   const data=new ImageData(new Uint8ClampedArray(bytes),width,height);ctx.putImageData(data,0,0);
  }
  function feed(event,original=event){
