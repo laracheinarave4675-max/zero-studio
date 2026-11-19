@@ -27,6 +27,7 @@ test("batch prompt specifies its exact global frame numbers and forbids static-i
  job.continuityNote="شارع واحد، كاميرا ثابتة، مبانٍ رمادية وسيارات حمراء.";const prompt=createAnimationBatchPrompt(job,1);
  assert.match(prompt,/BATCH 2 OF 8/);assert.match(prompt,/CONTINUITY NOTE FROM THE PREVIOUS APPROVED BATCH/);assert.match(prompt,/شارع واحد/);assert.match(prompt,/6 @ 0\.2500s/);assert.match(prompt,/independently drawn/);assert.match(prompt,/Do not reference, reuse/);
 });
+test("fixed-background jobs request only independently redrawn moving artwork",()=>{const project=createProject();project.animationBackground=[{id:"bg",name:"Background",visible:true,locked:true,operations:[{id:"bg-op",kind:"stroke",path:{d:"M 0 0 L 1920 1080",stroke:"#172033",width:2,fill:"none"}}]}];const job=beginAnimationProduction(project,createAnimationPlan("فتاة تمشي أمام متجر ياباني",{durationSeconds:1,batchSize:6}));assert.equal(job.backgroundMode,true);const prompt=createAnimationBatchPrompt(job);assert.match(prompt,/fixed, approved, editable vector background/);assert.match(prompt,/Draw ONLY the moving characters/);assert.match(prompt,/Do NOT redraw the static architecture/);assert.doesNotMatch(prompt,/Each frame must contain the complete scene/);});
 test("batch validation requires every complete frame and stable layer ordering",()=>{
  const project=createProject();const job=beginAnimationProduction(project,createAnimationPlan("مشهد",{durationSeconds:1,batchSize:6}));
  const batch=batchFor(job);const parsed=validateAnimationBatch(job,batch);
