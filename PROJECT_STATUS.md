@@ -2,6 +2,30 @@
 
 Last updated: 2026-11-19 (UTC)
 
+## Preview deployment and live Gemini acceptance — 2026-11-19
+
+- Created an isolated Vercel preview deployment for the 19 static application files from commit `01638713b846da04682867712301b574eec25523` (branch `feature/fixed-background-visual-review`) in existing project `zero-studio`; no production target or custom domain was assigned.
+- Preview URL: https://zero-studio-d7y2l6q77-studio-37a2.vercel.app/
+- Deployment ID: `dpl_A7PRKxLy9K3A3oMidg37PfYiJSN8`; Vercel reported `READY`. Build log: 19 files downloaded, static build completed in 85 ms. The root page and app modules/styles/service worker/manifest returned successfully from the preview.
+- Deployment was created from inline static files because Vercel's Git-source deployment endpoint repeatedly returned a GitHub API rate-limit 429. This preview is a snapshot of the application files at the commit above, not a live Git-linked auto-deploy.
+- Added branch-scoped workflow `.github/workflows/gemini-visual-acceptance.yml` and Playwright runner `scripts/gemini-visual-acceptance.mjs`. It uses the existing repository Actions secret `GEMINI_API_KEY` without printing or persisting it; runs the actual seven-layer SVG artist and Gemini inline-PNG visual reviewer against three original scene briefs; and uploads PNG previews plus JSON critique reports as a 30-day artifact.
+- First visual workflow attempt (#1) stopped before making Gemini requests due to a malformed score-parsing regex in the test harness. Corrected the regex in commit `01638713b846da04682867712301b574eec25523`. Second visual workflow attempt (#2), run ID `44514892131`, is in progress at the browser-install step at the time of this update; no visual scene results are claimed yet.
+- Latest engine test run #1299 passed all 186 tests with 0 failures on the current branch head at that time.
+- Remaining: complete the three live Gemini runs, inspect their PNGs and critique JSON, and if desired later deploy the latest exact branch head to a refreshed preview. No production deployment, alias, or `main` branch was changed.
+
+## Fixed-background animation and visual-review gate implementation — 2026-11-19
+
+- Implemented on the isolated branch `feature/fixed-background-visual-review`, based on `feature/mobile-drawing-workspace`. The existing PR #1 and `main` were not modified or merged.
+- Added a project-level `animationBackground` asset. The Android workspace now offers **"اعتماد الإطار الحالي كخلفية ثابتة للحركة"**: it copies the current editable vector layers into a separately persisted, locked background asset and clears the current frame to receive moving artwork.
+- The fixed background is rendered beneath every frame, timeline thumbnail, playback frame, and exported SVG/ZIP frame. The background remains a separate editable vector asset in the `.zero` project and is normalized/validated on project reopen (unique layer names, layer/operation limits).
+- Animation plans now record `backgroundMode`. When a fixed background exists, the batch prompt requests only moving characters/foreground elements, requires `role: "moving"` on each returned layer, and forbids redrawing static architecture/sky/road/trees. The importer rejects layers without that role and rejects moving frames with fewer than eight vector operations. Frame signatures continue to reject duplicate moving drawings. The original 24 independently drawn moving frames/second requirement is unchanged.
+- The onion-skin overlay deliberately excludes the fixed background so an unchanged background is not ghosted over itself.
+- Tightened the 2D visual-review gate: Gemini receives the actual temporary PNG preview as inline image data; a reviewer failure aborts the proposal instead of allowing approval. The 2D proposal's approve control is enabled only when the final critique scores at least 8/10, says it reads as 2D anime, and reports no critical issues. Two bounded artist/reviewer passes remain the maximum for this UI action.
+- Added regression coverage for background persistence/compositing, moving-only prompt and layer-role validation, Gemini inline-image transmission, and UI quality gating.
+- **Verified:** GitHub Actions run #1295 passed all **186 tests, 0 failures**, including JavaScript syntax checks, on commit `0ceb6b92a0efdae4cf1407a1fee1334b6e9c5363`: https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44514376602.
+- **Not yet verified:** live Gemini image-review behavior with the user's API key, whether critique-guided revisions materially improve a real scene, the artistic quality of generated outputs, Android touch/performance, and physical-device project round-trips. This implementation is a structural milestone, not proof of reference-level artwork.
+- **Deployment:** no Vercel deployment was changed. The public URL remains the previous manual snapshot and does not yet include this branch's changes.
+
 ## Approved cinematic anime art direction and new visual-review workflow — 2026-11-19
 
 - The user approved the 2D-first cinematic anime target with selective 3D support. Final artwork must read as richly painted 2D anime, not low-poly 3D, flat clip-art, or generic geometric illustration.

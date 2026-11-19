@@ -89,3 +89,4 @@ test("editable background library controls are present and connected to the draw
  const sw=readFileSync(new URL("../app/sw.js",import.meta.url),"utf8");
  assert.match(sw,/backgrounds\.mjs/);
 });
+test("fixed-background capture and visual-review quality gate are wired into the mobile workspace",()=>{assert.match(html,/id="setAnimationBackgroundBtn"/);assert.match(app,/project\.animationBackground=source\.map/);assert.match(app,/frameSvg\(f,"frame-"\+i,p\.animationBackground\|\|\[\]\)/);assert.match(app,/لم يجتز الرسم مراجعة الجودة لأن الفحص البصري فشل/);assert.match(app,/aiApproveBtn/);assert.match(app,/overallScore>=8/)});
