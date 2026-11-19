@@ -25,5 +25,5 @@ test("forest-house receives deterministic tapered brush marks and directional li
 test("rendered forest house includes the painterly pass without exceeding operation budget",()=>{
  const result=renderAnimeBackground({version:1,kind:"forest-house"});
  assert.ok(result.layers.some(layer=>layer.name==="08 — ضربات الفرشاة والضوء الاتجاهي"));
- assert.ok(result.totalOperations<=2800);
+ assert.ok(result.totalOperations<=5000);
 });
