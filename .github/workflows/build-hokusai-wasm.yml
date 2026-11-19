@@ -1,0 +1,47 @@
+name: Build Hokusai WebAssembly brush engine
+on:
+  push:
+    branches: ["feat/hokusai-wasm-brush-engine"]
+    paths:
+      - "app/hokusai-painter.mjs"
+      - "app/hokusai-painter-ui.mjs"
+      - "app/index.html"
+      - ".github/workflows/build-hokusai-wasm.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/hokusai-wasm-brush-engine
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@wasm-pack
+      - name: Build upstream Hokusai WASM
+        run: |
+          git clone --depth 1 https://github.com/reearth/hokusai.git /tmp/hokusai
+          wasm-pack build /tmp/hokusai/crates/hokusai-wasm --target web --release --out-dir "$GITHUB_WORKSPACE/app/vendor/hokusai/pkg" --out-name hokusai_wasm
+          mkdir -p app/vendor/hokusai/brushes
+          cp /tmp/hokusai/hokusai/examples/fixtures/charcoal.myb app/vendor/hokusai/brushes/
+          cp /tmp/hokusai/hokusai/examples/fixtures/calligraphy.myb app/vendor/hokusai/brushes/
+          cp /tmp/hokusai/hokusai/examples/fixtures/brush.myb app/vendor/hokusai/brushes/
+          cp /tmp/hokusai/hokusai/examples/fixtures/marker_fat.myb app/vendor/hokusai/brushes/
+          cp /tmp/hokusai/LICENSE-MIT app/vendor/hokusai/
+          cp /tmp/hokusai/LICENSE-APACHE app/vendor/hokusai/
+          printf '%s\n' 'Hokusai brush engine by Re:Earth and contributors.' 'Upstream: https://github.com/reearth/hokusai' 'Licensed under MIT OR Apache-2.0; see adjacent license files.' 'Generated WASM package built from the upstream source at workflow time.' > app/vendor/hokusai/NOTICE
+      - name: Commit generated WASM package and licensed brush fixtures
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/vendor/hokusai
+          if git diff --cached --quiet; then
+            echo "Hokusai package is already up to date."
+          else
+            git commit -m "Build and vendor Hokusai WebAssembly brush engine"
+            git push origin HEAD:feat/hokusai-wasm-brush-engine
+          fi
