@@ -113,9 +113,10 @@ export function interpolatePathData(from,to,t){
  return a.map((v,i)=>"command"in v?v.command:String(+(v.number+(b[i].number-v.number)*t).toFixed(3))).join(" ");
 }
 
+function rasterFingerprint(src){if(typeof src!=="string")return"";let hash=2166136261;const step=Math.max(1,Math.floor(src.length/1024));for(let i=0;i<src.length;i+=step)hash=Math.imul(hash^src.charCodeAt(i),16777619)>>>0;return src.length+":"+hash.toString(16)}
 function drawingSignature(frame){
  if(!frame||!Array.isArray(frame.layers))throw Error("بنية أحد الإطارات غير صالحة");
- const data=JSON.stringify(frame.layers.filter(layer=>layer.visible!==false).map(layer=>({operations:(layer.operations||[]).map(operation=>({kind:operation.kind,d:operation.path?.d,stroke:operation.path?.stroke,width:operation.path?.width,fill:operation.path?.fill,opacity:operation.path?.opacity,filter:operation.path?.filter}))})));
+ const data=JSON.stringify(frame.layers.filter(layer=>layer.visible!==false).map(layer=>({operations:(layer.operations||[]).map(operation=>({kind:operation.kind,raster:operation.kind==="raster"?rasterFingerprint(operation.src):undefined,d:operation.path?.d,stroke:operation.path?.stroke,width:operation.path?.width,fill:operation.path?.fill,opacity:operation.path?.opacity,filter:operation.path?.filter}))})));
  let a=2166136261,b=0x9e3779b9;
  for(let i=0;i<data.length;i++){const c=data.charCodeAt(i);a=Math.imul(a^c,16777619)>>>0;b=Math.imul(b^(c+i),2246822519)>>>0}
  return a.toString(16).padStart(8,"0")+b.toString(16).padStart(8,"0");
