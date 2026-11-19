@@ -33,7 +33,7 @@ export async function createHokusaiPainter({canvasElement,init,HokusaiBrush,Hoku
  function feed(event,original=event){
   if(!brush||disposed)return;
   const rect=canvasElement.getBoundingClientRect(),x=(event.clientX-rect.left)*width/rect.width,y=(event.clientY-rect.top)*height/rect.height;
-  const pen=(original.pointerType||event.pointerType)==="pen",pressure=pen?(event.pressure>0?event.pressure:1):1;
+  const pointerType=original.pointerType||event.pointerType,pressure=pointerType==="mouse"?1:(event.pressure>0?event.pressure:1);
   const now=Number(event.timeStamp)||performance.now(),dt=lastTime?Math.max(.001,(now-lastTime)/1000):.01;lastTime=now;
   const xtilt=Math.sin((event.tiltX||0)*Math.PI/180),ytilt=Math.sin((event.tiltY||0)*Math.PI/180);
   engine.strokeTo(brush,x,y,pressure,xtilt,ytilt,dt);
