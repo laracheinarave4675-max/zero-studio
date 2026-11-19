@@ -85,15 +85,18 @@ function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,tex
   const nx=-dy/len,ny=dx/len;
   const slow=(hash(seed,Math.floor(i/5),131)-.5)*roughness;
   const fine=(hash(seed,i,137)-.5)*roughness*.42;
-  const progress=i/Math.max(1,s.length-1),taper=.18+.82*Math.min(1,progress*5,(1-progress)*5),h=Math.max(.18,d.radius*widthScale*taper),wobble=(slow+fine)*h;
+  const progress=i/Math.max(1,s.length-1),endEnvelope=Math.min(1,Math.sqrt(progress*5),Math.sqrt((1-progress)*5)),taper=.035+.965*endEnvelope,h=Math.max(.12,d.radius*widthScale*taper),wobble=(slow+fine)*h;
   left.push([d.x+nx*(h+wobble),d.y+ny*(h+wobble)]);
   right.push([d.x-nx*(h-wobble*.72),d.y-ny*(h-wobble*.72)]);
   edge.push({d,nx,ny,h});
  }
  ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(left[0][0],left[0][1]);
- for(let i=1;i<left.length;i++)ctx.lineTo(left[i][0],left[i][1]);
- for(let i=right.length-1;i>=0;i--)ctx.lineTo(right[i][0],right[i][1]);
- ctx.closePath();ctx.fill();ctx.restore();
+ // Quadratic midpoint joins smooth the sampled contour without hiding the
+ // artist's pressure changes. Rounded centre joins avoid flat polygon caps.
+ for(let i=1;i<left.length-1;i++){const mx=(left[i][0]+left[i+1][0])*.5,my=(left[i][1]+left[i+1][1])*.5;ctx.quadraticCurveTo(left[i][0],left[i][1],mx,my);}
+ const last=s.length-1;ctx.quadraticCurveTo(left[last][0],left[last][1],s[last].x,s[last].y);
+ for(let i=right.length-2;i>0;i--){const mx=(right[i][0]+right[i-1][0])*.5,my=(right[i][1]+right[i-1][1])*.5;ctx.quadraticCurveTo(right[i][0],right[i][1],mx,my);}
+ ctx.quadraticCurveTo(right[0][0],right[0][1],s[0].x,s[0].y);ctx.closePath();ctx.fill();ctx.restore();
  // Pigment gathers lightly at the outside edge of a loaded gouache stroke.
  if(edgePigment>0){
   ctx.save();ctx.strokeStyle=color;ctx.lineCap="round";ctx.lineJoin="round";
