@@ -10,15 +10,18 @@ Build a human-operated painting engine capable of carrying a detailed cinematic 
 
 ## Protected foundations
 
-- Preserve native editable SVG paths, vector layers, masks, gradients, patterns, filters and export.
-- Preserve lossless raster source layers and mixed raster/vector projects.
+- Make Canvas2D raster painting the primary artist workspace and final-art pipeline.
+- Store each brush stroke as editable structured data (samples, pressure, brush, color, blend mode, texture and deterministic seed), alongside its rendered pixels.
+- Build raster-native layers, masks, alpha lock, clipping, undo/redo and replay. Do not spend new development effort extending SVG drawing features.
+- Treat existing vector content as legacy compatibility only during migration; it must not dictate the new artist engine architecture.
 - Preserve the 24 independently drawn moving-art images per second target.
 - Never silently flatten source artwork or claim PSD/ORA support without Android round-trip tests.
 - No generative image/video model may create or alter visual content.
 
 ## Build sequence
 
-### A. Stroke core
+### A. Canvas-first stroke core
+- The artist draws directly into persistent Canvas2D raster surfaces; do not decode and re-encode the full PNG for every stroke.
 - Coalesced pointer samples, stable interpolation, pressure/velocity response, tapered starts and ends.
 - Brush tip shape, spacing, rotation, tilt where available, texture and deterministic replay.
 - Pencil, ink, gouache, watercolor, foliage and smudge as distinct material behaviors.
@@ -26,7 +29,7 @@ Build a human-operated painting engine capable of carrying a detailed cinematic 
 - Stroke data/history must support undo, redo, save/reopen and bounded mobile memory.
 
 ### B. Layer and paint operations
-- Raster/vector mixed compositing with normal, multiply, screen, overlay, darken and lighten.
+- Raster-layer compositing with normal, multiply, screen, overlay, darken and lighten.
 - Layer opacity, lock, visibility, reorder and non-destructive masks.
 - Alpha lock/clipping and selection-based paint constraints.
 - Transform/crop without mutating the original imported source.
@@ -59,9 +62,15 @@ Paint one complete Japanese forest-house background manually using only ZERO STU
 
 ## Immediate next tasks
 
-1. Confirm CI for the blend-mode implementation.
-2. Add taper/velocity-aware stroke dynamics and brush-tip controls.
-3. Add undo-safe layer masks and alpha-lock semantics.
-4. Replace repeated whole-image decode/encode per stroke with a bounded tile/cache strategy.
-5. Perform physical Android drawing and memory tests.
-6. Paint and inspect the full forest-house study before expanding scope.
+1. Move the primary drawing surface and pointer input to a Canvas2D workspace.
+2. Replace per-stroke full-image decode/encode with persistent canvases and bounded tile/cache storage.
+3. Replay editable stroke records deterministically after save/reopen; add stroke-level undo/redo.
+4. Add taper/velocity-aware dynamics and brush-tip controls.
+5. Add raster-native masks, alpha-lock and clipping.
+6. Perform physical Android drawing and memory tests.
+7. Paint and inspect the full forest-house study before expanding scope.
+
+
+## Architecture correction — Canvas-first (2026-11-19)
+
+The user explicitly approved Claude's Canvas/WebGL raster-engine direction and instructed the project to stop treating SVG as the drawing foundation. New artist-engine development is Canvas2D/raster-first. Existing vector data may remain readable only as a migration/compatibility concern; it is not the target drawing medium and must not consume the artist-engine roadmap. This does not authorize generative image/video models. The immediate implementation stores editable stroke samples and brush settings on raster layers, in addition to the current rendered PNG. Persistent Canvas surfaces, deterministic replay, and eliminating per-stroke PNG decode/encode are still required before this can be called a complete Canvas-first engine.
