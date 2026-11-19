@@ -182,6 +182,13 @@ function normalizeLayer(l,i){
  if(!l||typeof l!=="object")throw Error("طبقة غير صالحة");
  const ids=new Set();
  const operations=(Array.isArray(l.operations)?l.operations:[]).map(o=>{
+  if(o?.kind==="raster"){
+   const src=String(o.src||"");
+   if(!/^data:image\\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("بيانات طبقة الصورة النقطية غير صالحة أو كبيرة جداً");
+   const id=typeof o.id==="string"&&o.id.length>0&&o.id.length<=100?o.id:uid("op");
+   const unique=ids.has(id)?uid("op"):id;ids.add(unique);
+   return{id:unique,kind:"raster",src,x:0,y:0,width:WIDTH,height:HEIGHT};
+  }
   if(o?.kind!=="erase"&&o?.kind!=="stroke"&&typeof o?.d!=="string")throw Error("عملية طبقة غير معروفة");
   const kind=o.kind==="erase"?"erase":"stroke",path=validatePath(o.path||o);
   let id=typeof o.id==="string"&&o.id.length>0&&o.id.length<=100?o.id:uid("op");
@@ -390,6 +397,32 @@ export function movePathControlPoint(d,controlIndex,x,y){
 export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" opacity="'+(Number.isFinite(+p.opacity)?Math.max(0,Math.min(1,+p.opacity)):1)+'"'+(p.filter?' filter="'+esc(p.filter)+'"':'')+' stroke-linecap="round" stroke-linejoin="round"/>';
-export function layerSvg(l,i=0,prefix="drawing"){if(!l.visible)return"";let pending=[],erasures=[],out="",k=0;const flush=()=>{if(!pending.length)return;if(erasures.length){const id="erase-mask-"+prefix+"-"+i+"-"+k++;out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(op=>markup(op.path,"black",op.id)).join("")+'</mask></defs><g mask="url(#'+id+')">'+pending.map(op=>markup(op.path,undefined,op.id)).join("")+"</g>"}else out+=pending.map(op=>markup(op.path,undefined,op.id)).join("");pending=[];erasures=[]};for(const op of l.operations){if(op.kind==="erase"){if(pending.length)erasures.push(op);continue}if(op.kind==="stroke"){if(erasures.length)flush();pending.push(op)}}flush();return'<g data-layer="'+esc(l.id)+'">'+out+"</g>"}
+const rasterMarkup=op=>'<image data-operation="'+esc(op.id)+'" href="'+op.src+'" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'" preserveAspectRatio="none"/>';
+export function addRasterImageOperation(layer,src){
+ if(!layer||layer.locked)throw Error("الطبقة مقفلة أو غير صالحة");
+ if(typeof src!=="string"||!/^data:image\\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("صورة PNG غير صالحة أو تتجاوز 18 ميغابايت تقريباً");
+ if(layer.operations.length>=MAX_OPERATIONS)throw Error("بلغت حد العمليات");
+ const operation={id:uid("op"),kind:"raster",src,x:0,y:0,width:WIDTH,height:HEIGHT};
+ layer.operations.push(operation);return operation;
+}
+export function layerSvg(l,i=0,prefix="drawing"){
+ if(!l.visible)return"";
+ let pending=[],erasures=[],out="",k=0;
+ const flush=()=>{
+  if(!pending.length)return;
+  const content=pending.map(op=>op.kind==="raster"?rasterMarkup(op):markup(op.path,undefined,op.id)).join("");
+  if(erasures.length){
+   const id="erase-mask-"+prefix+"-"+i+"-"+k++;
+   out+='<defs><mask id="'+id+'" maskUnits="userSpaceOnUse" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'"><rect width="'+WIDTH+'" height="'+HEIGHT+'" fill="white"/>'+erasures.map(op=>markup(op.path,"black",op.id)).join("")+'</mask></defs><g mask="url(#'+id+')">'+content+"</g>";
+  }else out+=content;
+  pending=[];erasures=[];
+ };
+ for(const op of l.operations){
+  if(op.kind==="erase"){if(pending.length)erasures.push(op);continue}
+  if(op.kind==="stroke"||op.kind==="raster"){if(erasures.length)flush();pending.push(op)}
+ }
+ flush();
+ return'<g data-layer="'+esc(l.id)+'">'+out+"</g>";
+}
 export function frameSvg(f,prefix="export",backgroundLayers=[]){const layers=[...(Array.isArray(backgroundLayers)?backgroundLayers:[]),...f.layers];return'<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+SVG_DEFS+SVG_ART_DEFS+layers.map((l,i)=>layerSvg(l,i,prefix)).join("")+"</svg>"}
 export function renderLayerInto(svg,l,i=0,prefix="live"){const markupSvg='<svg xmlns="'+NS+'" width="'+WIDTH+'" height="'+HEIGHT+'" viewBox="0 0 '+WIDTH+" "+HEIGHT+'">'+layerSvg(l,i,prefix)+'</svg>';const parsed=new DOMParser().parseFromString(markupSvg,"image/svg+xml");for(const node of parsed.documentElement.childNodes)if(node.nodeType===1)svg.appendChild(document.importNode(node,true))}
