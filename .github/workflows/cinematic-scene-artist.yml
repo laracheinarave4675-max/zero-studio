@@ -18,6 +18,9 @@ on:
       - "app/environment-art.mjs"
       - "tests/environment-art.test.mjs"
       - ".github/workflows/cinematic-scene-artist.yml"
+concurrency:
+  group: zero-studio-cinematic-scene-artist
+  cancel-in-progress: false
 jobs:
   scene-artist:
     runs-on: ubuntu-latest
