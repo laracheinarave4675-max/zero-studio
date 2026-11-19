@@ -44,9 +44,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/vendor/hokusai
+          git add -f app/vendor/hokusai/pkg
           if git diff --cached --quiet; then
             echo "Hokusai package is already up to date."
           else
             git commit -m "Build and vendor Hokusai WebAssembly brush engine"
+            git fetch origin feat/hokusai-wasm-brush-engine
+            git rebase origin/feat/hokusai-wasm-brush-engine
             git push origin HEAD:feat/hokusai-wasm-brush-engine
           fi
