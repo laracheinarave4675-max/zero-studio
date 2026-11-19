@@ -25,6 +25,12 @@ test("raster brush sampling keeps dense contour points for broad strokes",()=>{
  const dabs=buildBrushDabs([{x:0,y:0,pressure:.8},{x:100,y:0,pressure:.8}],{brush:"gouache",size:20,seed:9});
  assert.ok(dabs.length>50,"broad brush edges need enough samples to avoid visibly polygonal contours");
 });
+test("curved brush paths sample their spline length rather than only pointer-to-pointer chords",()=>{
+ const curved=buildBrushDabs([{x:0,y:0,pressure:.8},{x:30,y:90,pressure:.8},{x:60,y:0,pressure:.8},{x:90,y:90,pressure:.8}],{brush:"ink",size:8,seed:19});
+ const straight=buildBrushDabs([{x:0,y:0,pressure:.8},{x:90,y:90,pressure:.8}],{brush:"ink",size:8,seed:19});
+ assert.ok(curved.length>straight.length,"a winding spline must receive enough samples to keep its ribbon continuous");
+ assert.ok(curved.every(d=>Number.isFinite(d.x)&&Number.isFinite(d.y)&&d.radius>0));
+});
 test("a tap creates one dab and mouse mode can use stable simulated pressure",()=>{
  const dab=buildBrushDabs([{x:25,y:30}],{brush:"ink",size:10,pressureSensitive:false,seed:2});
  assert.equal(dab.length,1);
