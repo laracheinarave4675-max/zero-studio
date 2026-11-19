@@ -115,3 +115,24 @@ This file records decisions that must not be changed silently. Add dated entries
 **Interchange:** Validate PSD, OpenRaster, or lossless PNG-layer bundles on the actual Android workflow before choosing a format. Never silently flatten a layered source. Keep source artwork and metadata intact.
 
 **Animation:** The 24 independently drawn images/second target remains unchanged. Static backgrounds may be reused; moving artwork must meet the independent-drawing target. See docs/HUMAN_ART_WORKFLOW.md.
+
+## D-022 — SVG is a protected core capability, not a disposable prototype (2026-11-19)
+
+**Decision:** SVG remains a first-class, strategic foundation of ZERO STUDIO. The human-led painting department decision (D-021) does not cancel, replace, or demote the editable SVG drawing engine. ZERO STUDIO must preserve and continue developing native SVG authoring, path geometry, semantic layers, vector brushes/marks, gradients, patterns, masks, filters, lighting effects, validation, editing, animation, and SVG export.
+
+**Two complementary art paths:**
+1. **Native vector path:** Artists and approved tools can create and refine original artwork directly as editable SVG paths and vector layers. Painterly appearance may be built from expressive tapered paths, varied marks, material patterns, controlled edge variation, and non-destructive vector effects. SVG is not limited to flat geometric primitives.
+2. **Hand-painted asset path:** Artists may create artwork in a professional painting application and import layered source assets through a verified, lossless interchange workflow. Imported raster layers remain clearly identified as raster source assets; they do not silently replace, flatten, or erase native SVG content.
+
+**Architecture protections:**
+- Keep SVG as a documented, tested, editable project format and core rendering/compositing representation.
+- Preserve path data, layer names/order, visibility, opacity, blend/effect metadata, and source identity through save/open/export wherever supported.
+- Never silently rasterize or flatten SVG artwork during editing or interchange. Any required raster preview is derived and disposable; the source SVG remains intact.
+- Do not replace the SVG engine with a bitmap-only canvas or make an external painting app a mandatory runtime dependency.
+- Keep the native vector workflow available on Android, including freehand paths and future pressure/brush support where device input permits.
+- Add regression tests for SVG round-trip fidelity, vector editability, layer preservation, and mixed SVG/raster compositing.
+- Treat procedural SVG scene painting as an experimental technique, not proof of human-level art quality. Human review remains mandatory for visual acceptance.
+
+**Relationship to D-021:** Human-authored final art and native SVG are compatible. Artists may draw directly in ZERO STUDIO's vector tools or import layered hand-painted assets. The project remains a hybrid-capable, vector-first production system with optional human-painted raster assets—not a raster-only replacement.
+
+**Acceptance gate:** Any architecture proposal that removes native SVG editing/export, silently flattens SVG, or makes vector assets non-editable requires explicit user approval before implementation.
