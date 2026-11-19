@@ -4,7 +4,8 @@ async function start(){
  const status=byId("hokusaiStatus"),canvas=byId("hokusaiCanvas");
  try{
   const wasm=await import("./vendor/hokusai/pkg/hokusai_wasm.js");
-  const painter=await createHokusaiPainter({canvasElement:canvas,...wasm});
+  const painter=await createHokusaiPainter({canvasElement:canvas,init:wasm.default,HokusaiBrush:wasm.HokusaiBrush,HokusaiCanvas:wasm.HokusaiCanvas});
+  painter.setColor(byId("hokusaiColor").value);painter.setSize(Number(byId("hokusaiSize").value));
   const select=byId("hokusaiBrush");
   for(const item of HOKUSAI_BRUSHES){const option=document.createElement("option");option.value=item.id;option.textContent=item.label;select.append(option)}
   select.addEventListener("change",()=>painter.loadBrush(select.value).then(()=>{painter.setColor(byId("hokusaiColor").value);painter.setSize(Number(byId("hokusaiSize").value));status.textContent="الفرشاة جاهزة"}).catch(e=>status.textContent=e.message));
