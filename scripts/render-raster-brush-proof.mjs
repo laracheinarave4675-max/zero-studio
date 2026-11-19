@@ -24,7 +24,17 @@ for(let i=0;i<rows.length;i++){
  ctx.fillStyle="#778087";ctx.font="13px sans-serif";ctx.fillText("Pressure-shaped stroke",68,y+52);
  const result=drawRasterBrushStroke(ctx,row.points,{brush:row.brush,color:row.color,size:row.size,opacity:row.opacity,texture:row.texture,seed:20261119});
  if(!result.dabCount||result.dabCount<2)throw new Error(row.brush+" did not produce enough brush samples");
- report.push({brush:row.brush,dabCount:result.dabCount,renderMode:result.renderMode,pressureSamples:row.points.map(p=>p.pressure)});
+ // Confirm that the actual Canvas2D output changed pixels in the stroke band.
+ // The label sits to the left, and the divider sits below this band, so neither
+ // can make an otherwise empty brush appear to pass.
+ const pixels=ctx.getImageData(280,y+12,1040,70).data;
+ let paintedPixels=0;
+ for(let px=0;px<pixels.length;px+=4){
+  const delta=Math.abs(pixels[px]-244)+Math.abs(pixels[px+1]-239)+Math.abs(pixels[px+2]-228);
+  if(delta>26)paintedPixels++;
+ }
+ if(paintedPixels<200)throw new Error(row.brush+" produced too few visibly changed raster pixels: "+paintedPixels);
+ report.push({brush:row.brush,dabCount:result.dabCount,paintedPixels,renderMode:result.renderMode,pressureSamples:row.points.map(p=>p.pressure)});
 }
 const dir="artifacts/raster-brush-proof";
 await mkdir(dir,{recursive:true});
