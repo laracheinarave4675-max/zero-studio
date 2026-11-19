@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {RASTER_BRUSH_PRESETS,buildBrushDabs,drawRasterBrushStroke,mapPointsToRaster} from "../app/raster-brushes.mjs";
+import {RASTER_BRUSH_PRESETS,RASTER_BLEND_MODES,buildBrushDabs,drawRasterBrushStroke,mapPointsToRaster} from "../app/raster-brushes.mjs";
 
 test("natural brush presets expose pencil, ink, gouache, watercolor and foliage",()=>{
  assert.deepEqual(Object.keys(RASTER_BRUSH_PRESETS),["graphite","ink","gouache","watercolor","foliage"]);
@@ -61,4 +61,19 @@ test("watercolor uses one connected translucent wash with pigment blooms, not on
 test("foliage creates varied directional leaves and companion leaf clusters deterministically",()=>{
  const render=()=>{const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){},quadraticCurveTo(){calls.push("curve")},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};const r=drawRasterBrushStroke(ctx,[{x:0,y:0},{x:35,y:12},{x:70,y:-5}],{brush:"foliage",size:14,color:"#39734b",texture:.9,seed:77});return{calls,r};};
  const a=render(),b=render();assert.deepEqual(a,b);assert.equal(a.r.renderMode,"leaf-marks");assert.ok(a.calls.filter(x=>x==="curve").length>10);assert.ok(a.calls.filter(x=>x==="fill").length>7,"companion leaves should add real scaled leaf shapes");assert.ok(a.calls.includes("stroke"));
+});
+
+test("raster brush strokes support explicit non-destructive-friendly light and shadow blend modes",()=>{
+ const modes=[],ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){modes.push(v)},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ for(const mode of Object.keys(RASTER_BLEND_MODES)){
+  const result=drawRasterBrushStroke(ctx,[{x:2,y:2},{x:32,y:12}],{brush:"gouache",blendMode:mode,seed:5});
+  assert.equal(result.blendMode,mode);
+ }
+ assert.deepEqual(modes,Object.values(RASTER_BLEND_MODES));
+ assert.throws(()=>drawRasterBrushStroke(ctx,[{x:0,y:0}],{blendMode:"color-dodge"}),/مزج/);
+});
+test("raster erasing always overrides a selected paint blend mode",()=>{
+ let operation="",ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){operation=v},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ const result=drawRasterBrushStroke(ctx,[{x:0,y:0}],{brush:"ink",erase:true,blendMode:"screen"});
+ assert.equal(operation,"destination-out");assert.equal(result.blendMode,"destination-out");
 });
