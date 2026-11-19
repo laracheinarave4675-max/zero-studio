@@ -397,7 +397,7 @@ export function movePathControlPoint(d,controlIndex,x,y){
 export function translateOperation(l,id,dx,dy){if(l.locked)throw Error("الطبقة مقفلة");const op=l.operations.find(item=>item.id===id);if(!op)throw Error("العنصر المحدد غير موجود");op.path=validatePath({...op.path,d:translatePathData(op.path.d,dx,dy)});return op}
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 const markup=(p,color,id)=>'<path'+(id?' data-operation="'+esc(id)+'"':'')+' d="'+esc(p.d)+'" fill="'+esc(p.fill||"none")+'" stroke="'+esc(color||p.stroke||"#172033")+'" stroke-width="'+(+p.width||5)+'" opacity="'+(Number.isFinite(+p.opacity)?Math.max(0,Math.min(1,+p.opacity)):1)+'"'+(p.filter?' filter="'+esc(p.filter)+'"':'')+' stroke-linecap="round" stroke-linejoin="round"/>';
-const rasterMarkup=op=>'<image data-operation="'+esc(op.id)+'" href="'+op.src+'" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'" preserveAspectRatio="none"/>';
+const rasterMarkup=op=>'<image data-operation="'+esc(op.id)+'" href="'+op.src+'" x="0" y="0" width="'+WIDTH+'" height="'+HEIGHT+'" preserveAspectRatio="none" pointer-events="none"/>';
 export function addRasterImageOperation(layer,src){
  if(!layer||layer.locked)throw Error("الطبقة مقفلة أو غير صالحة");
  if(typeof src!=="string"||!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(src)||src.length>24*1024*1024)throw Error("صورة PNG غير صالحة أو تتجاوز 18 ميغابايت تقريباً");
