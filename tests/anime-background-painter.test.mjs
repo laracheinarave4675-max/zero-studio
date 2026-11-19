@@ -7,3 +7,23 @@ test("anime painter builds distinct layouts for all three reference scene famili
 test("anime background accepts only known 2D scene plan types",()=>{assert.throws(()=>validateAnimeBackgroundPlan({version:1,kind:"low-poly"}),/غير مدعوم/);assert.throws(()=>renderAnimeBackground(null),/غير مدعوم/);});
 test("material paths preserve bounded opacity and known effect references",()=>{const p=validatePath({d:"M 10 10 L 100 100",stroke:"none",width:1,fill:"url(#zero-anime-plaster)",opacity:.38,filter:"url(#zero-anime-soft-shadow)"});assert.equal(p.opacity,.38);assert.equal(p.filter,"url(#zero-anime-soft-shadow)");assert.equal(validatePath({d:"M 10 10 L 100 100",fill:"url(#zero-anime-plaster)",opacity:4,filter:"url(https://evil.example/x)"}).opacity,1);assert.equal(validatePath({d:"M 10 10 L 100 100",fill:"url(#zero-anime-plaster)",opacity:-2}).opacity,0);});
 test("vector art effects are embedded in exported SVG",()=>{const frame={layers:[{id:"x",visible:true,operations:[{kind:"stroke",id:"p",path:validatePath({d:"M 10 10 L 500 200",stroke:"none",fill:"url(#zero-anime-leaf)",filter:"url(#zero-anime-paper-grain)",opacity:.5})}]}]};const svg=frameSvg(frame);assert.ok(svg.includes('id="zero-anime-leaf"'));assert.ok(svg.includes('id="zero-anime-paper-grain"'));assert.ok(svg.includes('filter="url(#zero-anime-paper-grain)"'));assert.ok(svg.includes('opacity="0.5"'));assert.ok(SVG_ART_DEFS.includes("zero-anime-woodgrain"));});
+
+import{applyPainterlyForestPass}from"../app/painterly-forest-pass.mjs";
+test("forest-house receives deterministic tapered brush marks and directional light pass",()=>{
+ const source={version:1,kind:"forest-house",layers:[]};
+ const first=applyPainterlyForestPass({version:1,kind:"forest-house",layers:[]});
+ const second=applyPainterlyForestPass({version:1,kind:"forest-house",layers:[]});
+ assert.equal(first.layers.length,1);
+ assert.equal(first.layers[0].name,"08 — ضربات الفرشاة والضوء الاتجاهي");
+ assert.ok(first.layers[0].operations.length>=500);
+ assert.ok(first.layers[0].operations.length<=600);
+ assert.deepEqual(first.layers[0].operations,second.layers[0].operations);
+ assert.ok(first.layers[0].operations.some(op=>op.d.includes(" Q ")&&op.fill.startsWith("#")));
+ assert.ok(first.layers[0].operations.some(op=>op.opacity<.2));
+ assert.equal(applyPainterlyForestPass({version:1,kind:"urban-store",layers:[]}).layers.length,0);
+});
+test("rendered forest house includes the painterly pass without exceeding operation budget",()=>{
+ const result=renderAnimeBackground({version:1,kind:"forest-house"});
+ assert.ok(result.layers.some(layer=>layer.name==="08 — ضربات الفرشاة والضوء الاتجاهي"));
+ assert.ok(result.totalOperations<=2800);
+});
