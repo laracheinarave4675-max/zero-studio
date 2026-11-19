@@ -501,3 +501,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Artwork commit: `c576f50dd6b9e5df0256f39be80741a7bb837cfb`. Structural test commit: `22c518e9a54382e69ca65a98d8509b88858e6306`.
 - This is a hand-authored vector study, not a raster-painted final background and not yet visually rendered/inspected on an Android device. It does not establish professional painterly quality or artist acceptance. The native raster brush remains a foundational tool.
 - CI for these latest commits has not yet been confirmed. No merge to main and no production deployment.
+
+
+## Natural-media stroke refinement — 2026-11-19
+
+- Updated `app/raster-brushes.mjs` on the isolated PR #6 branch (commit `62fbcf00df8f44699bf5f2c75c817022c6f5ad42`). The pressure-shaped ribbon now uses correlated edge variation rather than only a smooth two-edge contour, adds restrained pigment-edge accumulation, and renders broken, irregular bristle lanes to suggest dry-pigment skips and directional brush loading.
+- This is a focused improvement to the human-operated raster stroke primitive. It does not establish wet-pigment mixing, true watercolor diffusion, professional brush-tip dynamics, or reference-level anime painting quality.
+- The commit was confirmed on `feat/hybrid-human-art-pipeline`. A new automated test result and visual Android inspection have not yet been confirmed; do not report this refinement as accepted until both code regression tests and an actual painted study are reviewed.
+- Next drawing-only gate: refine the watercolor and foliage material behavior, then paint the forest-house reference as a complete layered still and inspect the rendered result at full resolution. No animation, production-management, or deployment work is included in this milestone.
