@@ -30,6 +30,10 @@ The development branch includes four original SVG-path background presets, inser
 
 The development workspace includes a freehand SVG pen, optional stylus-pressure outlines, vector eraser, line/rectangle/ellipse tools, shape fill, item selection/move/style/duplicate/delete, mobile pan/zoom, layer controls, topology-matched path in-betweens, and a unique-drawing cadence audit. Character tools include Nori with 12 editable parts, three starter views, four poses, four facial expressions, customizable palette, validated `.zchar` import/export, an 11-cell editable SVG model-sheet export, a project-local character library, constrained two-bone IK for four limb chains, head/neck rotation and whole-body lean, rig-aware pose blending, linked character instances, and conversion of hand-drawn vector frames into reusable character models. Background tools include four editable vector scene starters: daytime city, forest, interior room, and night city. These are useful foundations, not a completed professional full-body rig, model-sheet editor, animation suite, or background/layout department. Physical Android testing and artist review remain pending. GitHub Actions run #698 passed 112 tests with 0 failures; syntax checks include the background module.
 
+## Approved anime art direction (2026-11-19)
+
+The visual target is cinematic 2D anime background painting with selective 3D layout assistance. Fixed-camera backgrounds are painted once as editable layered vector assets; characters and moving foreground elements are independently redrawn at 24 unique drawings per second and composited with the background. Raster previews may be used for visual critique only; final artwork remains vector-first. See [Anime Art Direction](docs/ANIME_ART_DIRECTION.md), [Architecture Decisions](DECISIONS.md), and the visual-review status in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
 ## Start here
 
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md) before continuing work.
