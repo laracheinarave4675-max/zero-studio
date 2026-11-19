@@ -1,0 +1,29 @@
+name: Hybrid raster and SVG regression tests
+
+on:
+  push:
+    branches:
+      - feat/hybrid-human-art-pipeline
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check application modules
+        run: |
+          set -e
+          for file in app/*.mjs; do node --check "$file"; done
+          node --check app/app.js
+      - name: Run all native Node.js tests
+        run: node --test tests/*.test.mjs
