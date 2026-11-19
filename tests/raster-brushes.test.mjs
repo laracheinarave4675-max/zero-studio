@@ -48,23 +48,23 @@ test("painting over imported art maps stage coordinates into letterboxed source 
 });
 
 test("gouache and graphite use continuous pressure-shaped ribbons instead of chains of oval stamps",()=>{
- const calls=[],ctx={save(){},restore(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},translate(){},rotate(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ const calls=[],ctx={save(){},restore(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},bezierCurveTo(){},translate(){},rotate(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
  const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.2},{x:35,y:8,pressure:.7},{x:80,y:24,pressure:1}],{brush:"gouache",size:18,color:"#52764b",texture:.8,seed:13});
  assert.equal(r.renderMode,"continuous-ribbon");assert.ok(calls.includes("close")&&calls.includes("fill")&&calls.includes("stroke"));assert.equal(calls.includes("ellipse"),false);
 });
 
 test("watercolor uses one connected translucent wash with pigment blooms, not only circular stamps",()=>{
- const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){},createRadialGradient(){return{addColorStop(){}}}};
+ const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},bezierCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){},createRadialGradient(){return{addColorStop(){}}}};
  const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.3},{x:28,y:12,pressure:.7},{x:66,y:20,pressure:1}],{brush:"watercolor",size:16,color:"#527c9b",texture:.8,seed:23});
  assert.equal(r.renderMode,"wash");assert.ok(calls.includes("close")&&calls.includes("ellipse")&&calls.includes("fill"));
 });
 test("foliage creates varied directional leaves and companion leaf clusters deterministically",()=>{
- const render=()=>{const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){},quadraticCurveTo(){calls.push("curve")},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};const r=drawRasterBrushStroke(ctx,[{x:0,y:0},{x:35,y:12},{x:70,y:-5}],{brush:"foliage",size:14,color:"#39734b",texture:.9,seed:77});return{calls,r};};
+ const render=()=>{const calls=[],ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){},quadraticCurveTo(){calls.push("curve")},bezierCurveTo(){calls.push("bezier")},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};const r=drawRasterBrushStroke(ctx,[{x:0,y:0},{x:35,y:12},{x:70,y:-5}],{brush:"foliage",size:14,color:"#39734b",texture:.9,seed:77});return{calls,r};};
  const a=render(),b=render();assert.deepEqual(a,b);assert.equal(a.r.renderMode,"leaf-marks");assert.ok(a.calls.filter(x=>x==="curve").length>10);assert.ok(a.calls.filter(x=>x==="fill").length>7,"companion leaves should add real scaled leaf shapes");assert.ok(a.calls.includes("stroke"));
 });
 
 test("raster brush strokes support explicit non-destructive-friendly light and shadow blend modes",()=>{
- const modes=[],ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){modes.push(v)},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ const modes=[],ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},bezierCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){modes.push(v)},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
  for(const mode of Object.keys(RASTER_BLEND_MODES)){
   const result=drawRasterBrushStroke(ctx,[{x:2,y:2},{x:32,y:12}],{brush:"gouache",blendMode:mode,seed:5});
   assert.equal(result.blendMode,mode);
@@ -73,7 +73,7 @@ test("raster brush strokes support explicit non-destructive-friendly light and s
  assert.throws(()=>drawRasterBrushStroke(ctx,[{x:0,y:0}],{blendMode:"color-dodge"}),/مزج/);
 });
 test("raster erasing always overrides a selected paint blend mode",()=>{
- let operation="",ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){operation=v},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ let operation="",ctx={save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){},ellipse(){},translate(){},rotate(){},quadraticCurveTo(){},bezierCurveTo(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){operation=v},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
  const result=drawRasterBrushStroke(ctx,[{x:0,y:0}],{brush:"ink",erase:true,blendMode:"screen"});
  assert.equal(operation,"destination-out");assert.equal(result.blendMode,"destination-out");
 });
