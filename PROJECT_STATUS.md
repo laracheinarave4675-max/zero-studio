@@ -18,12 +18,13 @@ Last updated: 2026-11-19 (UTC)
 
 ## Artistic validation findings and alternate native-SVG model tests — 2026-11-19
 
-- The full automated test suite passed **176 tests, 0 failures** on commit `fca647c785b723f83c01614c3c266eaff5b928a9` before the latest OmniSVG experiment commits; later commits rerun the suite.
+- The full automated test suite now passes **178 tests, 0 failures** on commit `cc1cf2b366540224a559ff3c7796c4dc892f5f44`.
 - The three deterministic local 2D scene studies were rendered and visually inspected at 1280×720. They contain 1,102 paths (urban store), 1,284 (rural ramen), and 2,319 (forest house), but they still look too geometric/cartoon-like and are **not artistically accepted**. Path count is not the target.
 - The first real Gemini-generated 2D urban-store draft was visually scored **2/10** by the vision reviewer and marked not convincingly 2D anime. Its first revision response was malformed JSON, so the run stopped before saving a final scene. The failure motivated compact-JSON recovery, per-pass artifact checkpoints, slower request pacing, and a second revision attempt. The old run's artifacts did not preserve that draft; new runs checkpoint every pass.
 - A new native-SVG alternative test uses the official OmniSVG Hugging Face Space. Its app advertises 300 GPU seconds/day for free users and approximately 20–60 seconds per generation; the hosted UI currently offers 4B and 8B model variants. The experiment selects 4B, one candidate, 512 max tokens, and tests three reference-matched scene descriptions. The hosted model is a candidate only; it has not yet passed the visual review. Official references: https://huggingface.co/spaces/OmniSVG/OmniSVG-3B and https://github.com/OmniSVG/OmniSVG.
 - OmniSVG 4B was tested on the hosted Space. It generated only one 12-path SVG for the urban-store prompt; visual inspection showed a generic face/icon rather than a store scene. The next request was blocked by the free Space quota (`180s requested vs. 113s left`, retry in about 24 hours). **Reject OmniSVG-3B Space as the current environment-background artist**; it may remain a future candidate for simple character/icon assets, not detailed anime backgrounds.
-- The latest Gemini 2D artist run is still under validation; do not call it successful until artifacts are downloaded and visually inspected.
+- Gemini 3 Flash was initially called with an invalid model ID (`gemini-3-flash`); the official API ID is `gemini-3-flash-preview`. A subsequent request produced out-of-frame path geometry, so the artist now validates path coordinates inside its retry loop and sends exact coordinate errors back to the model for correction. A two-pass test uses Gemini 3 Flash Preview for the first draft and Gemini 3.5 Flash Lite for the critique-guided revision to respect the separate model quotas.
+- The latest Gemini 2D artist run and the Gemini 3 Flash premium scene test are under validation; do not call either successful until artifacts are downloaded and visually inspected.
 
 ## High-volume frame production infrastructure — 2026-11-18
 
