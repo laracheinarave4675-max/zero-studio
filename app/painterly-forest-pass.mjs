@@ -13,30 +13,34 @@ function softPatch(d,fill,opacity){return{d,fill,stroke:"none",width:0.1,opacity
 export function applyPainterlyForestPass(scene){
  if(!scene||scene.kind!=="forest-house")return scene;
  const r=random(0x5a17c0de),ops=[];
- const canopyZones=[
-  [0,300,390,470],[1500,260,420,470],[0,650,500,360],[1420,650,500,360],
-  [300,650,360,260],[1250,650,380,270]
+ const canopies=[
+  [80,500,112,82],[510,445,140,96],[940,385,154,106],[1370,405,166,112],[1800,382,116,82],
+  [20,670,150,108],[500,610,170,122],[980,670,150,108],[1460,610,170,122],[1900,670,150,108],
+  [60,850,190,135],[1840,850,190,135]
  ];
  const greens=["#183f35","#285440","#3b6947","#568653","#71985b","#a4ad68","#d2c78a","#41634a","#8a9c60","#d8d39a"];
  // Layered, tapered leaf strokes: each mark has a pointed tip and a hand-varied axis.
  for(let i=0;i<1200;i++){
-  const z=canopyZones[Math.floor(r()*canopyZones.length)];
-  const x=z[0]+r()*z[2],y=z[1]+r()*z[3];
+  const z=canopies[Math.floor(r()*canopies.length)],a=r()*Math.PI*2,rad=Math.sqrt(r());
+  const x=z[0]+Math.cos(a)*rad*z[2],y=z[1]+Math.sin(a)*rad*z[3];
   const angle=-.95+r()*1.9,len=5+r()*22,w=1.1+r()*5.4;
   const col=greens[Math.floor(r()*greens.length)];
   ops.push(taperedStroke(x,y,Math.cos(angle)*len,Math.sin(angle)*len,w,col,.38+r()*.52,(r()-.5)*3));
  }
  // Fine grass blades and small sunlit ground strokes follow the garden slope.
  const grass=["#405f43","#58764a","#789157","#a1a56a","#c3b77d"];
+ const grassPatches=[[220,955,190,65],[520,900,115,42],[900,1010,220,42],[1370,930,145,55],[1710,960,190,68]];
  for(let i=0;i<350;i++){
-  const x=80+r()*1760,y=790+r()*280;
+  const z=grassPatches[Math.floor(r()*grassPatches.length)],a=r()*Math.PI*2,rad=Math.sqrt(r());
+  const x=z[0]+Math.cos(a)*rad*z[2],y=z[1]+Math.sin(a)*rad*z[3];
   const len=5+r()*20,lean=(r()-.5)*12;
   ops.push(taperedStroke(x,y,lean,-len,.8+r()*2.2,grass[Math.floor(r()*grass.length)],.32+r()*.48,(r()-.5)*2));
  }
  // Irregular roof glints and broken tile accents, not repeated straight courses.
  for(let i=0;i<250;i++){
-  const x=470+r()*850,y=115+r()*245,len=12+r()*38;
-  ops.push(taperedStroke(x,y,len,(-.35+r()*.7)*len,.8+r()*1.8,r()<.65?"#d8c49c":"#343c39",.18+r()*.3,(r()-.5)*2));
+  const x=430+r()*945,top=x<860?375-(x-430)*(238/430):137+(x-860)*(246/515);
+  const y=top+9+r()*45,len=7+r()*24;
+  ops.push(taperedStroke(x,y,len,(-.18+r()*.36)*len,.8+r()*1.8,r()<.65?"#d8c49c":"#343c39",.16+r()*.24,(r()-.5)*1.2));
  }
  // Directional late-afternoon light: broad translucent shafts and local bounce patches.
  ops.push(softPatch("M 1390 0 L 1510 0 L 1115 710 L 1000 710 Z","#f6d99c",.075));
