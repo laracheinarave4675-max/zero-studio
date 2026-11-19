@@ -26,7 +26,7 @@ for(const scene of scenes){
   const png=new Resvg(svg,{fitTo:{mode:"width",value:1280}}).render().asPng();
   const passDir=dir+"/passes/pass-"+pass;await mkdir(passDir,{recursive:true});await writeFile(passDir+"/draft.zero",JSON.stringify(project));await writeFile(passDir+"/draft.svg",svg);await writeFile(passDir+"/preview.png",png);
   console.log("Visually reviewing "+scene.slug+" preview ("+png.length+" bytes)");
-  const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model);
+  const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model,{fallbackModels:["gemini-3.1-flash-lite","gemini-3.5-flash-lite"]});
   critiqueHistory.push({pass,model:critique.model,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,strengths:critique.strengths});
   await writeFile(passDir+"/review.json",JSON.stringify(critique,null,2));
   console.log(JSON.stringify({scene:scene.slug,pass,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,issues:critique.issues.length}));
