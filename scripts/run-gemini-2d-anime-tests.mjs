@@ -16,6 +16,7 @@ for(const scene of scenes){
  console.log("Starting "+scene.slug+"; maximum visual passes: "+maxPasses);
  let revisionBrief="",finalResult,finalPreview,finalCritique;
  const critiqueHistory=[];
+ try{
  for(let pass=1;pass<=maxPasses;pass++){
   console.log("Drawing "+scene.slug+" — pass "+pass);
   const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,model,{fallbackModels:["gemini-3.1-flash-lite","gemini-3-flash"],revisionBrief,onProgress:info=>console.log(info.message)});
@@ -43,6 +44,7 @@ for(const scene of scenes){
  await writeFile(dir+"/report.json",JSON.stringify(report,null,2));
  summary.push({slug:scene.slug,name:scene.name,totalPaths:finalResult.totalOperations,layers:frameProject.frames[0].layers.length,score:finalCritique.overallScore,looksLike2DAnime:finalCritique.looksLike2DAnime,passes:critiqueHistory.length,status:report.visualQualityStatus});
  console.log(JSON.stringify(summary.at(-1)));
+ }catch(error){const failure={scene:scene.name,slug:scene.slug,status:"generation-failed",error:String(error?.message||error),completedPasses:critiqueHistory};await writeFile(dir+"/failure.json",JSON.stringify(failure,null,2));summary.push(failure);console.log("Scene failed; preserving drafts and continuing: "+scene.slug+" — "+failure.error);}
  await new Promise(resolve=>setTimeout(resolve,5200));
 }
 await writeFile("artifacts/gemini-2d-anime-scenes/summary.json",JSON.stringify(summary,null,2));
