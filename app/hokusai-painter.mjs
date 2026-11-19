@@ -9,7 +9,7 @@ export async function createHokusaiPainter({canvasElement,init,HokusaiBrush,Hoku
  if(!canvasElement||typeof canvasElement.getContext!=="function")throw new TypeError("A destination canvas is required.");
  if(typeof init!=="function"||typeof HokusaiBrush!=="function"||typeof HokusaiCanvas!=="function")throw new TypeError("Hokusai WebAssembly bindings are required.");
  await init();
- const width=960,height=540,ctx=canvasElement.getContext("2d",{alpha:false});
+ const width=960,height=540,ctx=canvasElement.getContext("2d",{alpha:true});
  if(!ctx)throw new Error("Canvas2D is unavailable.");
  const engine=new HokusaiCanvas(width,height);
  canvasElement.width=width;canvasElement.height=height;
