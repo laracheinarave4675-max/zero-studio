@@ -26,6 +26,7 @@ for(const scene of scenes){
   const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model);
   critiqueHistory.push({pass,model:critique.model,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,strengths:critique.strengths});
   console.log(JSON.stringify({scene:scene.slug,pass,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,issues:critique.issues.length}));
+  if(pass<maxPasses&&!(critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0))await new Promise(resolve=>setTimeout(resolve,5200));
   finalResult={...result,model:result.model,pass};finalPreview=png;finalCritique=critique;
   if(critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0)break;
   revisionBrief=critique.nextRevisionBrief||critique.issues.map(x=>x.area+": "+x.problem+" — "+x.correction).join("\n");
@@ -39,7 +40,7 @@ for(const scene of scenes){
  const report={scene:scene.name,scenePrompt:scene.prompt,model:finalResult.model,provider:"Google Gemini Developer API",artist:"seven-pass 2D vector background artist with visual critique and revision",referenceImagesSent:false,referenceBasis:"the assistant analysed the user's original references; Gemini received a written scene brief only",style:finalResult.style,blueprint:finalResult.plan,layers:frameProject.frames[0].layers.map(layer=>({name:layer.name,paths:layer.operations.length})),totalPaths:finalResult.totalOperations,editable:true,passes:critiqueHistory,finalCritique,visualQualityStatus:finalCritique.overallScore>=8&&finalCritique.looksLike2DAnime&&finalCritique.criticalIssues.length===0?"automated-gate-passed-pending-user-approval":"below-artistic-acceptance-target"};
  await writeFile(dir+"/report.json",JSON.stringify(report,null,2));
  summary.push({slug:scene.slug,name:scene.name,totalPaths:finalResult.totalOperations,layers:frameProject.frames[0].layers.length,score:finalCritique.overallScore,looksLike2DAnime:finalCritique.looksLike2DAnime,passes:critiqueHistory.length,status:report.visualQualityStatus});
- console.log(JSON.stringify(summary.at(-1)));
+ console.log(JSON.stringify(summary.at(-1)));\n await new Promise(resolve=>setTimeout(resolve,5200));
 }
 await writeFile("artifacts/gemini-2d-anime-scenes/summary.json",JSON.stringify(summary,null,2));
 const gallery='<!doctype html><html lang="ar" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ZERO STUDIO — Gemini 2D Anime Tests</title><style>body{margin:24px;background:#17211f;color:#f4ead7;font-family:system-ui}main{max-width:1280px;margin:auto}section{background:#26342e;padding:20px;margin:26px 0;border-radius:16px}img{width:100%;height:auto;background:#d9e4dc;border-radius:10px}p{line-height:1.7}.meta{color:#bac7b6;font-size:13px}</style><main><h1>اختبارات رسام الأنمي ثنائي الأبعاد — ZERO STUDIO</h1><p>ثلاثة مشاهد مستقلة، سبع طبقات SVG قابلة للتحرير لكل مشهد، مع معاينة بصرية ونقد وتصحيح آلي محدود. المعاينة النقطية للفحص فقط؛ العمل النهائي SVG.</p>'+summary.map(s=>'<section><h2>'+s.name+'</h2><p class="meta">'+s.totalPaths+' مساراً متجهياً · '+s.layers+' طبقات · تقييم بصري آلي '+s.score+'/10 · '+s.passes+' جولات</p><img src="'+s.slug+'/scene-preview.png"></section>').join("")+'</main></html>';
