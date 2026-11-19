@@ -43,6 +43,6 @@ for(const scene of scenes){
 }
 report.finishedAt=new Date().toISOString();
 await fs.writeFile(path.join(out,"report.json"),JSON.stringify(report,null,2));
-const rows=report.scenes.map(s=>{const p=s.passes.at(-1);return "| "+s.title+" | "+(p?.score??"n/a")+"/10 | "+(s.qualityGatePassed?"PASS":"FAIL")+" | "+(p?.totalOperations??0)+" | "+(s.error||"").replaceAll("|","/")+" |";})..join("\n");
-await fs.appendFile(process.env.GITHUB_STEP_SUMMARY||"/dev/null","## ZERO STUDIO — Gemini visual acceptance\\n\\n| Scene | Gemini score | Quality gate | SVG operations | Error |\\n|---|---:|---|---:|---|\\n"+rows+"\\n\\nSVG source, PNG previews and JSON critique reports are attached as the `gemini-visual-acceptance` workflow artifact.\\n");
+const rows=report.scenes.map(s=>{const p=s.passes.at(-1);return "| "+s.title+" | "+(p?.score??"n/a")+"/10 | "+(s.qualityGatePassed?"PASS":"FAIL")+" | "+(p?.totalOperations??0)+" | "+(s.error||"").replaceAll("|","/")+" |";}).join("\n");
+await fs.appendFile(process.env.GITHUB_STEP_SUMMARY||"/dev/null","## ZERO STUDIO — Gemini visual acceptance\n\n| Scene | Gemini score | Quality gate | SVG operations | Error |\n|---|---:|---|---:|---|\n"+rows+"\n\nSVG source, PNG previews and JSON critique reports are attached as the `gemini-visual-acceptance` workflow artifact.\n");
 if(report.scenes.length!==3||report.scenes.some(s=>!s.qualityGatePassed))process.exitCode=1;
