@@ -2,7 +2,8 @@ import{writeFile}from"node:fs/promises";
 import sharp from"sharp";
 import{renderAnimeBackground}from"../app/anime-background-painter.mjs";
 import{SVG_ART_DEFS}from"../app/engine.mjs";
-// Deterministic visual QA target: forest-house only; Gemini critiques, never edits pixels.\nconst scene=renderAnimeBackground({version:1,kind:"forest-house"});
+// Deterministic visual QA target: forest-house only; Gemini critiques, never edits pixels.
+const scene=renderAnimeBackground({version:1,kind:"forest-house"});
 const body=scene.layers.map(layer=>layer.operations.map(op=>`<path d="${op.d}" fill="${op.fill??"none"}" stroke="${op.stroke??"none"}" stroke-width="${op.width??1}" opacity="${op.opacity??1}"${op.filter?` filter="${op.filter}"`:""}/>`).join("")).join("");
 const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">${SVG_ART_DEFS}${body}</svg>`;
 await writeFile("forest-house-review.svg",svg);
