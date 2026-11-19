@@ -9,14 +9,14 @@ const out="artifacts/gemini-3-8-flash-rural-scene";await mkdir(out,{recursive:tr
 let revisionBrief="",finalResult,finalPreview,finalCritique;const history=[];
 for(let pass=1;pass<=2;pass++){
  console.log("Gemini 3.8 Flash premium scene pass "+pass);
- const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,model,{fallbackModels:["gemini-3.5-flash-lite"],interRequestDelayMs:14000,maxLayerAttempts:2,maxLayerOutputTokens:16000,revisionBrief,onProgress:x=>console.log(x.message)});
+ const result=await generateAnimeVectorBackground(key,scene.prompt,fetch,model,{fallbackModels:["gemini-3.5-flash-lite"],interRequestDelayMs:14000,maxLayerAttempts:2,maxLayerOutputTokens:16000,thinkingLevel:"low",timeoutMs:180000,revisionBrief,onProgress:x=>console.log(x.message)});
  const project=createProject("ZERO STUDIO — "+scene.name);
  project.frames[0].layers=result.layers.map(source=>({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))}));
  const svg='<?xml version="1.0" encoding="UTF-8"?>'+frameSvg(project.frames[0],scene.slug);
  const png=new Resvg(svg,{fitTo:{mode:"width",value:1280}}).render().asPng();
  const dir=out+"/pass-"+pass;await mkdir(dir,{recursive:true});await writeFile(dir+"/scene.zero",JSON.stringify(project));await writeFile(dir+"/scene.svg",svg);await writeFile(dir+"/preview.png",png);
  await new Promise(resolve=>setTimeout(resolve,14000));
- const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model);
+ const critique=await reviewAnimeVectorPreview(key,scene.prompt,png,fetch,result.model,{thinkingLevel:"low",timeoutMs:180000});
  history.push({pass,model:critique.model,score:critique.overallScore,looksLike2DAnime:critique.looksLike2DAnime,criticalIssues:critique.criticalIssues,issues:critique.issues,strengths:critique.strengths});
  await writeFile(dir+"/critique.json",JSON.stringify(critique,null,2));
  finalResult=result;finalPreview=png;finalCritique=critique;
