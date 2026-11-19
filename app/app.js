@@ -87,7 +87,7 @@ function renderFrame(g,f,opacity=1,includeBackground=true){g.replaceChildren();g
 document.addEventListener("zero-studio:raster-import",event=>{
  const src=event.detail?.src;
  try{
-  if(typeof src!=="string"||!/^data:image\\/png;base64,[A-Za-z0-9+/]+=*$/.test(src))throw Error("الصورة المستوردة ليست PNG صالحة.");
+  if(typeof src!=="string"||!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(src))throw Error("الصورة المستوردة ليست PNG صالحة.");
   if(layer().locked)throw Error("افتح قفل الطبقة الحالية أولاً.");
   snapshot();addRasterImageOperation(layer(),src);selection=null;nodeEditing=false;render();
   status("أُضيف الرسم كعنصر صورة نقطية داخل الطبقة «"+layer().name+"»؛ يمكنك إخفاء الطبقة أو قفلها أو إعادة ترتيبها وحفظ المشروع.");
