@@ -17,7 +17,7 @@ export async function createHokusaiPainter({canvasElement,init,HokusaiBrush,Hoku
  async function loadBrush(id="charcoal"){
   const spec=HOKUSAI_BRUSHES.find(x=>x.id===id);if(!spec)throw new RangeError("Unknown Hokusai brush.");
   const response=await fetchImpl(spec.url);if(!response.ok)throw new Error("تعذر تحميل الفرشاة "+spec.label);
-  brush=new HokusaiBrush(await response.text());designedRadius=brush.radiusLog();return spec;
+  const nextBrush=new HokusaiBrush(await response.text());const previous=brush;brush=nextBrush;designedRadius=brush.radiusLog();previous?.free?.();return spec;
  }
  function setColor(hex){
   if(!/^#[0-9a-f]{6}$/i.test(hex))throw new TypeError("Brush colour must be #RRGGBB.");
@@ -46,6 +46,6 @@ export async function createHokusaiPainter({canvasElement,init,HokusaiBrush,Hoku
  return{
   get engine(){return engine},loadBrush,setColor,setSize,clear(){engine.clear();flush()},
   exportPng(){return new Promise((resolve,reject)=>canvasElement.toBlob(blob=>blob?resolve(blob):reject(new Error("PNG export failed.")),"image/png"))},
-  destroy(){disposed=true;drawing=false;canvasElement.removeEventListener("pointerdown",onDown);canvasElement.removeEventListener("pointermove",onMove);canvasElement.removeEventListener("pointerup",onUp);canvasElement.removeEventListener("pointercancel",onUp)}
+  destroy(){if(disposed)return;disposed=true;drawing=false;canvasElement.removeEventListener("pointerdown",onDown);canvasElement.removeEventListener("pointermove",onMove);canvasElement.removeEventListener("pointerup",onUp);canvasElement.removeEventListener("pointercancel",onUp);brush?.free?.();engine.free?.()}
  };
 }
