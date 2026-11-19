@@ -43,13 +43,16 @@ export function buildBrushDabs(points,options={}){
  };
  if(samples.length===1){emit(samples[0].x,samples[0].y,samples[0].pressure,0,0);return output}
  let serial=0,last=null;
+ const curve=(a,b,c,d,t)=>0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
+ const tangent=(a,b,c,d,t)=>0.5*((-a+c)+2*(2*a-5*b+4*c-d)*t+3*(-a+3*b-3*c+d)*t*t);
  for(let segment=0;segment<samples.length-1;segment++){
-  const a=samples[segment],b=samples[segment+1],dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
+  const a=samples[segment],b=samples[segment+1],distance=Math.hypot(b.x-a.x,b.y-a.y);
   if(distance<0.001)continue;
-  const angle=Math.atan2(dy,dx),steps=Math.max(1,Math.ceil(distance/spacing));
+  const p0=samples[Math.max(0,segment-1)],p3=samples[Math.min(samples.length-1,segment+2)],steps=Math.max(1,Math.ceil(distance/spacing));
   for(let step=segment===0?0:1;step<=steps;step++){
    if(output.length>=30000)return output;
-   const t=step/steps,x=a.x+dx*t,y=a.y+dy*t,p=a.pressure+(b.pressure-a.pressure)*t;
+   const t=step/steps,x=curve(p0.x,a.x,b.x,p3.x,t),y=curve(p0.y,a.y,b.y,p3.y,t),p=a.pressure+(b.pressure-a.pressure)*t;
+   const dx=tangent(p0.x,a.x,b.x,p3.x,t),dy=tangent(p0.y,a.y,b.y,p3.y,t),angle=Math.atan2(dy,dx);
    if(last&&Math.hypot(x-last.x,y-last.y)<spacing*0.35&&segment===0&&step===0)continue;
    emit(x,y,p,angle,serial++);last={x,y};
   }
