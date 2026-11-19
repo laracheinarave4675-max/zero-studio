@@ -32,7 +32,7 @@ export function buildBrushDabs(points,options={}){
  if(!Number.isFinite(size)||size<0.5||size>240)throw Error("حجم الفرشاة خارج الحدود");
  const pressureEnabled=options.pressureSensitive!==false;
  const seed=Number.isFinite(+options.seed)?+options.seed:Math.round(samples[0].x*17+samples[0].y*31+size*13);
- const spacing=Math.max(0.65,size*profile.spacing);
+ const spacing=Math.max(0.65,size*profile.spacing*0.5);
  const output=[];
  const emit=(x,y,pressure,angle,index)=>{
   const p=pressureEnabled?clamp(pressure,0.06,1):0.72;
@@ -85,7 +85,7 @@ function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,tex
   const nx=-dy/len,ny=dx/len;
   const slow=(hash(seed,Math.floor(i/5),131)-.5)*roughness;
   const fine=(hash(seed,i,137)-.5)*roughness*.42;
-  const h=Math.max(.22,d.radius*widthScale),wobble=(slow+fine)*h;
+  const progress=i/Math.max(1,s.length-1),taper=.18+.82*Math.min(1,progress*5,(1-progress)*5),h=Math.max(.18,d.radius*widthScale*taper),wobble=(slow+fine)*h;
   left.push([d.x+nx*(h+wobble),d.y+ny*(h+wobble)]);
   right.push([d.x-nx*(h-wobble*.72),d.y-ny*(h-wobble*.72)]);
   edge.push({d,nx,ny,h});
