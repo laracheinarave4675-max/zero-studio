@@ -464,3 +464,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Corrected three test assertions discovered in workflow run 44552956563: update the expected PWA cache version from v31 to v32, assert legacy vector-layer operations are preserved (the existing vector schema does not carry `type: vector`), and match the actual Arabic dimension-validation message.
 - The run had 200 tests: 197 passed and 3 failed, all three failures were assertion/schema expectation mismatches. The corrected test commit is `7e46510851e1365a0c11dc2354224311d305de9d`; the sample artwork commit is `fde10e87c895d50d8591a7838e791e677be0d8f2`.
 - No subsequent successful run has been confirmed yet. The sample is an initial authored scene, not yet artist-approved final anime quality; physical Android preview and raster-import round-trip remain unverified.
+
+## Verified CI result — 2026-11-19
+
+- GitHub Actions run `44553810365` on commit `f23ae88c0205a03359d5ffb8417582e17ae26f2c` completed successfully.
+- Node 22 syntax checks passed for application modules and `app/app.js`.
+- Full native test suite: **200 tests passed, 0 failed** (run duration about 6.7 seconds).
+- A new Vercel preview deployment was retried for this verified commit, but Vercel again returned HTTP 429 rate limiting. No preview deployment was created and production was not changed.
+- The authored sample SVG is available at `samples/first-hand-authored-anime-background.svg`.
