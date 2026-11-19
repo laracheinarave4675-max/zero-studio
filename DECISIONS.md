@@ -115,3 +115,11 @@ This file records decisions that must not be changed silently. Add dated entries
 **Interchange:** Validate PSD, OpenRaster, or lossless PNG-layer bundles on the actual Android workflow before choosing a format. Never silently flatten a layered source. Keep source artwork and metadata intact.
 
 **Animation:** The 24 independently drawn images/second target remains unchanged. Static backgrounds may be reused; moving artwork must meet the independent-drawing target. See docs/HUMAN_ART_WORKFLOW.md.
+
+
+## D-026 — Hokusai as an isolated natural-media brush engine experiment (2026-11-19)
+**Decision:** Integrate the upstream Hokusai Rust/WebAssembly engine as a separate Raster painting workspace before replacing any existing drawing or animation data model.
+
+**Rationale:** Hokusai exposes real MyPaint-compatible brush simulation, pressure/tilt inputs, tiled raster surfaces, and permissive dual MIT/Apache-2.0 licensing. This is a more credible natural-media foundation than custom geometric dabs.
+
+**Constraints:** Keep the workspace isolated until PNG/layer interchange, editable stroke history, persistence, undo/redo, memory use, and Android touch/stylus performance are tested. Vendor upstream license notices and identify the upstream source. Do not claim anime-quality artwork based solely on brush-engine integration. The 24 independently drawn images/second target and ban on generative image/video artwork remain unchanged.
