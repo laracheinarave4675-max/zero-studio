@@ -35,7 +35,7 @@ test("raster project layers reject unsafe or oversized image sources",()=>{
  const layer=createProject().frames[0].layers[0];
  assert.throws(()=>addRasterImageOperation(layer,"https://example.com/image.png"),/PNG/);
  assert.throws(()=>addRasterImageOperation(layer,"data:image/jpeg;base64,AAAA"),/PNG/);
- assert.throws(()=>normalizeProject({...createProject(),frames:[{...createProject().frames[0],layers:[{...layer,operations:[{kind:"raster",src:"data:image/png;base64,AAAA"}]}]}]}),/PNG/);
+ assert.throws(()=>normalizeProject({...createProject(),frames:[{...createProject().frames[0],layers:[{...layer,operations:[{kind:"raster",src:"data:image/png;base64,@@@@"}]}]}]}),/PNG/);
 });
 
 test("raster image content contributes to independent drawing cadence",()=>{
