@@ -11,7 +11,7 @@ test("native Raster pencil and paintbrush are wired into the mobile drawing work
  assert.match(app,/from"\.\/raster-brushes\.mjs"/);
  assert.match(app,/encodeRasterSurfaceStroke/);
  assert.match(app,/rasterSurfaces\.markCurrent\(target\)/);
- assert.match(app,/drawRasterBrushStroke\(context,mapped\.points/);
+ assert.match(app,/drawRasterBrushStroke\(surface.context,mapped\.points/);
  assert.match(app,/rasterBrushTools\.has\(tool\)/);
  assert.match(app,/addRasterLayer\(frame\(\),\{name:tool==="raster-pencil"/);
  assert.match(html,/class="tool active" data-tool="raster-pencil"/);
