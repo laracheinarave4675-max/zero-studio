@@ -88,12 +88,17 @@ function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,tex
  ctx.closePath();ctx.fill();ctx.restore();
  // Pigment gathers lightly at the outside edge of a loaded gouache stroke.
  if(edgePigment>0){
-  ctx.save();ctx.strokeStyle=color;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();
-  for(let i=0;i<edge.length;i+=Math.max(1,Math.ceil(edge.length/900))){
-   const e=edge[i],side=i%2?1:-1,x=e.d.x+e.nx*e.h*side,y=e.d.y+e.ny*e.h*side;
-   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  ctx.save();ctx.strokeStyle=color;ctx.lineCap="round";ctx.lineJoin="round";
+  const stride=Math.max(1,Math.ceil(edge.length/900));
+  for(const side of [-1,1]){
+   ctx.beginPath();
+   for(let i=0;i<edge.length;i+=stride){
+    const e=edge[i],x=e.d.x+e.nx*e.h*side,y=e.d.y+e.ny*e.h*side;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+   }
+   ctx.globalAlpha=opacity*edgePigment*(side<0?.88:1);ctx.lineWidth=Math.max(.35,Math.min(2.4,s[0].radius*.075));ctx.stroke();
   }
-  ctx.globalAlpha=opacity*edgePigment;ctx.lineWidth=Math.max(.35,Math.min(2.4,s[0].radius*.075));ctx.stroke();ctx.restore();
+  ctx.restore();
  }
  if(texture<=0||bristles<=0)return;
  // Bristle lanes are broken into short, irregular passages. This creates dry
