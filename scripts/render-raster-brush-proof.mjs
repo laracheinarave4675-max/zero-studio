@@ -1,4 +1,4 @@
-import{mkdir,writeFile}from"node:fs/promises";
+import{appendFile,mkdir,writeFile}from"node:fs/promises";
 import{createCanvas}from"@napi-rs/canvas";
 import{RASTER_BRUSH_PRESETS,drawRasterBrushStroke}from"../app/raster-brushes.mjs";
 
@@ -48,4 +48,21 @@ await writeFile(dir+"/report.json",JSON.stringify({
  rows:report,
  note:"This is a brush-behaviour proof sheet, not an anime scene or artist acceptance test."
 },null,2));
+const summary=process.env.GITHUB_STEP_SUMMARY;
+if(summary){
+ const table=report.map(row=>"| "+row.brush+" | "+row.dabCount+" | "+row.paintedPixels+" | "+row.renderMode+" |").join("\\n");
+ await appendFile(summary,[
+  "## ZERO STUDIO raster brush proof",
+  "",
+  "Rendered from the repository's native Canvas2D brush engine. The pixel count is measured from the output canvas, not inferred from sample points.",
+  "",
+  "| Brush | Dabs | Changed pixels in stroke band | Render mode |",
+  "|---|---:|---:|---|",
+  table,
+  "",
+  "PNG and JSON report: workflow artifact `zero-studio-raster-brush-proof`.",
+  "",
+  "This proof checks brush rendering only; it is not an anime-scene or artist-acceptance claim."
+ ].join("\\n")+"\\n");
+}
 console.log(JSON.stringify({output:dir+"/raster-brush-proof.png",bytes:png.length,rows:report}));
