@@ -139,7 +139,13 @@ Use safe SVG gradients, patterns and bounded effects with editable layer-level c
 Generate at least three distinct reference-matched background tests. Evaluate each against perspective, architecture, foliage, materials, light, atmosphere, edge quality, focal hierarchy and editability. A sample cannot be accepted merely because it passes JSON/path validation.
 
 ### Stage F — animation integration
-Only after the still artwork passes visual review should its 2D drawing systems be adapted for motion. The 24 unique full-scene drawings/second requirement remains unchanged. Each timepoint must be a new drawing document; 3D proxy reuse, raster reuse or tween-only motion is not a substitute.
+Only after the still artwork passes visual review should its 2D drawing systems be adapted for motion. Follow the approved anime production separation: paint each fixed-camera background once as a layered editable vector asset; independently redraw the characters and every moving foreground element at each of 24 timepoints per second. Each visible frame is the composite of that background plus newly drawn moving layers. Reusing the approved static background is intentional and does not count as a new drawing. Moving artwork must still contain 24 unique drawings per second; no raster transforms, duplicated moving frames, video, or tween-only motion may replace those drawings. If camera movement or scene changes require background motion, redraw the affected background layers at the required cadence.
+
+### Stage G — visual critique and correction
+Render a temporary preview of the editable SVG, provide that preview to a vision-capable reviewer, collect specific corrections for composition, perspective, architecture, foliage, materials, lighting, atmosphere and line quality, then apply those corrections to the editable paths/materials and render again. Limit automatic cycles to a small, measurable number and retain the critique report. Raster previews are inspection-only; they are not final artwork. The user retains final artistic approval.
+
+### Stage H — texture policy
+Keep final art vector-first while testing richer gradients, patterns, organic path marks and bounded SVG effects. Defer raster texture layers until a measured comparison proves vector methods insufficient and the user approves the change.
 
 ## 8. Artistic acceptance gates
 
