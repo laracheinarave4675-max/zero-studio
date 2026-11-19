@@ -38,15 +38,15 @@ jobs:
           source = Path('/tmp/hokusai/crates/hokusai-wasm/src/lib.rs')
           text = source.read_text()
           text, reset_count = re.subn(
-              r"    // Reset to white\\.\\n    for px in out\\.chunks_exact_mut\\(4\\) \\{\\n.*?\\n    \",
-              "    // Reset to transparent; preserve empty pixels for project-layer compositing.\\n    out.fill(0);",
+              r"    // Reset to white\.\n    for px in out\.chunks_exact_mut\(4\) \{\n.*?\n    }",
+              "    // Reset to transparent; preserve empty pixels for project-layer compositing.\n    out.fill(0);",
               text,
               count=1,
               flags=re.S,
           )
           if reset_count != 1:
               raise SystemExit('Could not patch Hokusai white-background initialization')
-          flatten_pattern = r"                    let a = fix15::to_f32\\(p\\[3\\]\\);.*?                    out\\[idx \\+ 3\\] = 255;"
+          flatten_pattern = r"                    let a = fix15::to_f32\(p\[3\]\);.*?                    out\[idx \+ 3\] = 255;"
           flatten_replacement = """                    let a = fix15::to_f32(p[3]).clamp(0.0, 1.0);
                     if a <= 0.0 {
                         continue;
