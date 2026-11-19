@@ -70,6 +70,14 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
 
 ## Phase 4 — Production departments
+- [x] Approve 2D-first cinematic anime art direction with selective 3D layout support (D-017).
+- [x] Approve static editable background assets plus 24 unique independently drawn moving-art frames per second (D-018).
+- [x] Add a vision-based critique adapter and critique-guided vector revision prompts (D-019 foundation).
+- [ ] Complete visual critique integration in the Android workflow and visually validate three Gemini-generated background scenes.
+- [ ] Refactor animation batches to reference one approved static background asset and store only newly drawn moving layers per timestamp; composite complete visible SVG frames for export.
+- [ ] Compare the generated scenes against the three user references and revise the artist until the visual acceptance gate is met.
+
+## Phase 4 — Production departments
 - [ ] Story/script and storyboard.
 - [ ] Complete character model sheets and expression/pose libraries (initial Nori construction model only).
 - [x] Initial editable vector background library: day city, forest, interior room, and night city presets; inserted as separate layers beneath existing artwork and covered by tests.
