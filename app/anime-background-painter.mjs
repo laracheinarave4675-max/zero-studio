@@ -540,7 +540,7 @@ export function renderAnimeBackground(plan){
   l.operations=l.operations.map(p=>validatePath(p));total+=l.operations.length;
   if(l.operations.length<1||l.operations.length>1000)throw Error("حجم إحدى طبقات الخلفية غير صالح.");
  }
- if(total>2800)throw Error("تجاوزت الخلفية حد 2800 مسار متجهي.");
+ if(total>5000)throw Error("تجاوزت الخلفية حد 5000 مسار متجهي.");
  return{version:1,kind:result.kind,layers:result.layers,totalOperations:total,style:"cinematic-2d-anime-with-selective-depth"};
 }
 export function createAnimeBackgroundTestPlans(){return[
