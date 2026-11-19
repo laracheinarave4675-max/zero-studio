@@ -7,7 +7,7 @@ const endpointFor=model=>{if(!ALLOWED_MODELS.has(model))throw Error("نموذج 
 function parseResponse(payload){
  const text=payload?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
  if(!text)throw Error("لم يُرجع النموذج اقتراحاً نصياً. قد يكون الطلب محظوراً أو غير مكتمل.");
- try{return JSON.parse(text)}catch{throw Error("رد النموذج ليس JSON صالحاً. أعد صياغة الوصف وحاول مجدداً.")}
+ const cleaned=text.replace(/^```(?:json)?\\s*/i,"").replace(/\\s*```$/,"").trim();const first=cleaned.indexOf("{"),last=cleaned.lastIndexOf("}");const candidate=first>=0&&last>first?cleaned.slice(first,last+1):cleaned;try{return JSON.parse(candidate)}catch{const reason=payload?.candidates?.[0]?.finishReason==="MAX_TOKENS"?"انقطع الرد بسبب حد الرموز":"احتوى الرد على JSON غير مكتمل أو غير صالح";throw Error("رد النموذج ليس JSON صالحاً: "+reason+". أعد المحاولة بإخراج أقصر.")}
 }
 async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL,settings={}){
  let response,payload,lastError;
@@ -165,7 +165,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   let parsed=null,lastError=null;
   for(let attempt=0;attempt<2;attempt++){
    try{
-    parsed=await requestWithFallback(layerPrompt,{temperature:.52,maxOutputTokens:8192});
+    const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response was malformed or incomplete. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout and do not add explanations, markdown, or long redundant path sequences.";parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:8192});
     if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
     if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
     if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
