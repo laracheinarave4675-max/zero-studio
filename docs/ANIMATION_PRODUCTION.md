@@ -4,7 +4,7 @@
 
 This module is the provider-independent production contract for genuine frame-by-frame animation. It separates the scene brief, production plan, individual vector drawings, and batch import from any particular AI service. No generated raster image, video, image tween, or reused still is accepted as a substitute for the drawings.
 
-The target remains **24 independently drawn full-scene vector frames per second**:
+The target remains **24 independently drawn animated-art frames per second**, composited with the approved static background asset for each timepoint:
 - 10 seconds = 240 independent drawings.
 - 1 minute = 1,440 independent drawings.
 - 20 minutes = 28,800 independent drawings.
