@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {RASTER_BRUSH_PRESETS,RASTER_BLEND_MODES,buildBrushDabs,drawRasterBrushStroke,mapPointsToRaster} from "../app/raster-brushes.mjs";
+import {RASTER_BRUSH_PRESETS,RASTER_BLEND_MODES,buildBrushDabs,drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure} from "../app/raster-brushes.mjs";
 
 test("natural brush presets expose pencil, ink, gouache, watercolor and foliage",()=>{
  assert.deepEqual(Object.keys(RASTER_BRUSH_PRESETS),["graphite","ink","gouache","watercolor","foliage"]);
