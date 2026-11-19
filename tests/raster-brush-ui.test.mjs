@@ -29,10 +29,12 @@ test("Raster paint commit preserves source dimensions and keeps vector authoring
 });
 
 test("Raster strokes are serialized and large canvases fail safely on mobile",async()=>{
- const app=await readFile(new URL("../app/app.js",import.meta.url),"utf8");
+ const [app,surface]=await Promise.all([readFile(new URL("../app/app.js",import.meta.url),"utf8"),readFile(new URL("../app/raster-surface.mjs",import.meta.url),"utf8")]);
  assert.match(app,/rasterCommitPending/);
  assert.match(app,/if\(playing\|\|e\.button>0\|\|rasterCommitPending\)return/);
- assert.match(app,/target\.width\*target\.height>8\*1024\*1024/);
+ assert.match(surface,/maxPixels=8\*1024\*1024/);
+ assert.match(surface,/width\*height>maxPixels/);
+ assert.match(app,/createPersistentRasterSurfaceManager/);
  assert.match(app,/stylusPressure\?e\.pressure:Math\.max\(/);
 });
 
