@@ -37,7 +37,7 @@ export async function encodeRasterSurfaceStroke(manager,layer,paint,{maxDataUrlC
   if(typeof dataUrl!=="string"||!dataUrl.startsWith(prefix))throw Error("Unable to encode the raster surface as PNG");
   const encodedLength=dataUrl.length-prefix.length;
   const decodedBytes=Math.floor(encodedLength*3/4);
-  if(dataUrl.length>maxDataUrlChars||decodedBytes>maxImageBytes)throw Error("Raster layer dimensions exceed the safe encoded image limit");
+  if(dataUrl.length>maxDataUrlChars||decodedBytes>maxImageBytes)throw Error("حجم الطبقة بعد الرسم تجاوز الحد الآمن؛ خفّض أبعاد الصورة أو قسّم العمل إلى طبقات.");
   return{surface,result,dataUrl};
  }catch(error){
   manager.invalidate(layer);
