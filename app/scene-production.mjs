@@ -205,7 +205,7 @@ export async function reviewAnimeVectorPreview(apiKey,sceneDescription,pngBytes,
  if(!description||description.length>2000)throw Error("وصف المشهد غير صالح.");
  const bytes=pngBytes instanceof Uint8Array?pngBytes:new Uint8Array(pngBytes||[]);
  if(bytes.length<100||bytes.length>5*1024*1024)throw Error("معاينة الرسم غير صالحة أو تتجاوز 5 ميغابايت.");
- const inlineImage=Buffer.from(bytes).toString("base64");
+ let binary="";for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));const inlineImage=btoa(binary);
  const instruction=`You are the strict visual quality director for ZERO STUDIO. You are being shown an actual rendered PNG preview of an editable SVG anime background. Inspect the image itself; do not assume unseen details. The target is premium cinematic 2D Japanese anime background painting with selective 3D layout assistance, never low-poly 3D and never flat clip-art.
 
 SCENE BRIEF: ${description}
