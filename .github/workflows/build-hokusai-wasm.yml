@@ -4,6 +4,7 @@ on:
     branches: ["feat/hokusai-wasm-brush-engine"]
     paths:
       - "app/hokusai-painter.mjs"
+      - "app/engine.mjs"
       - "app/hokusai-painter-ui.mjs"
       - "app/index.html"
       - ".github/workflows/build-hokusai-wasm.yml"
@@ -30,6 +31,56 @@ jobs:
       - name: Build upstream Hokusai WASM
         run: |
           git clone --depth 1 https://github.com/reearth/hokusai.git /tmp/hokusai
+          # Keep brush pixels transparent so imported paint layers do not cover artwork below them.
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path('/tmp/hokusai/crates/hokusai-wasm/src/lib.rs')
+          text = source.read_text()
+          old = '''    // Reset to white.
+          for px in out.chunks_exact_mut(4) {
+              px[0] = 255;
+              px[1] = 255;
+              px[2] = 255;
+              px[3] = 255;
+          }'''
+          new = '''    // Reset to transparent; paint layers must composite over the project below.
+          out.fill(0);'''
+          if text.count(old) != 1:
+              raise SystemExit('Could not locate Hokusai white-background initialization')
+          text = text.replace(old, new)
+          old = '''                    let a = fix15::to_f32(p[3]);
+                    if a <= 0.0 {
+                        continue;
+                    }
+                    let r = fix15::to_f32(p[0]) / a;
+                    let g = fix15::to_f32(p[1]) / a;
+                    let b = fix15::to_f32(p[2]) / a;
+                    let or = r * a + 1.0 * (1.0 - a);
+                    let og = g * a + 1.0 * (1.0 - a);
+                    let ob = b * a + 1.0 * (1.0 - a);
+                    let idx = ((wy as u32 * w + wx as u32) * 4) as usize;
+                    out[idx] = (linear_to_srgb(or).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 1] = (linear_to_srgb(og).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 2] = (linear_to_srgb(ob).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 3] = 255;'''
+          new = '''                    let a = fix15::to_f32(p[3]).clamp(0.0, 1.0);
+                    if a <= 0.0 {
+                        continue;
+                    }
+                    // Surface RGB is premultiplied linear sRGB. Export straight-alpha sRGB RGBA.
+                    let r = (fix15::to_f32(p[0]) / a).clamp(0.0, 1.0);
+                    let g = (fix15::to_f32(p[1]) / a).clamp(0.0, 1.0);
+                    let b = (fix15::to_f32(p[2]) / a).clamp(0.0, 1.0);
+                    let idx = ((wy as u32 * w + wx as u32) * 4) as usize;
+                    out[idx] = (linear_to_srgb(r).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 1] = (linear_to_srgb(g).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 2] = (linear_to_srgb(b).clamp(0.0, 1.0) * 255.0).round() as u8;
+                    out[idx + 3] = (a * 255.0).round() as u8;'''
+          if text.count(old) != 1:
+              raise SystemExit('Could not locate Hokusai opaque-white flatten block')
+          source.write_text(text.replace(old, new))
+          print('Patched Hokusai WASM flattening to preserve alpha.')
+          PY
           wasm-pack build /tmp/hokusai/crates/hokusai-wasm --target web --release --out-dir "$GITHUB_WORKSPACE/app/vendor/hokusai/pkg" --out-name hokusai_wasm
           mkdir -p app/vendor/hokusai/brushes
           cp /tmp/hokusai/hokusai/examples/fixtures/charcoal.myb app/vendor/hokusai/brushes/
