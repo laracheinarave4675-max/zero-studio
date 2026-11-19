@@ -88,9 +88,8 @@ document.addEventListener("zero-studio:raster-import",event=>{
  const src=event.detail?.src;
  try{
   if(typeof src!=="string"||!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(src))throw Error("الصورة المستوردة ليست PNG صالحة.");
-  if(layer().locked)throw Error("افتح قفل الطبقة الحالية أولاً.");
-  snapshot();addRasterImageOperation(layer(),src);selection=null;nodeEditing=false;render();
-  status("أُضيف الرسم كعنصر صورة نقطية داخل الطبقة «"+layer().name+"»؛ يمكنك إخفاء الطبقة أو قفلها أو إعادة ترتيبها وحفظ المشروع.");
+  snapshot();const rasterLayer=addLayer(frame(),"رسم Hokusai");activeLayerId=rasterLayer.id;addRasterImageOperation(rasterLayer,src);selection=null;nodeEditing=false;render();
+  status("أُضيف الرسم كطبقة مستقلة «"+rasterLayer.name+"» داخل الإطار الحالي. يمكنك إعادة تسميتها أو إخفاءها أو قفلها أو ترتيبها وحفظ المشروع.");
  }catch(error){status("تعذرت إضافة الرسم إلى المشروع: "+error.message,false)}
 });
 function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
