@@ -1,4 +1,4 @@
-import{WIDTH,HEIGHT,MAX_FRAMES,createProject,createFrame,createLayer,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,analyzeDrawingCadence,getPathEditHandles,movePathAnchor,movePathControlPoint,uid}from"./engine.mjs";
+import{WIDTH,HEIGHT,MAX_FRAMES,createProject,createFrame,createLayer,normalizeProject,validatePath,appendOperation,removeOperation,translateOperation,updateOperation,duplicateOperation,addLayer,addRasterLayer,renameLayer,removeLayer,reorderLayer,frameSvg,renderLayerInto,pointsToPath,shapePath,pressureOutlinePath,createInbetweenFrames,analyzeDrawingCadence,getPathEditHandles,movePathAnchor,movePathControlPoint,uid}from"./engine.mjs";
 import{createZip}from"./zip.mjs";
 import{generateSceneProposal,generateMeshEnvironmentProposal,generateAnimeVectorBackground,reviewAnimeVectorPreview}from"./scene-production.mjs";
 import{createAnimationPlan,beginAnimationProduction,createAnimationBatchPrompt,appendAnimationBatch}from"./animation-production.mjs";
@@ -142,6 +142,30 @@ $("duplicateSelectionBtn").onclick=()=>{if(!selection)return;const targetLayer=f
 $("deleteSelectionBtn").onclick=()=>{if(!selection)return;const targetLayer=frame().layers.find(l=>l.id===selection.layerId);if(!targetLayer||targetLayer.locked){status("افتح الطبقة أولاً لحذف العنصر.",false);return}try{snapshot();removeOperation(targetLayer,selection.operationId);selection=null;render();status("تم حذف العنصر المحدد.")}catch(error){status("تعذر حذف العنصر: "+error.message,false)}};
 $("addBackgroundBtn").onclick=()=>{try{const preset=$("backgroundPreset").value;snapshot();const added=addBackgroundToFrame(frame(),preset);activeLayerId=added[added.length-1].id;selection=null;render();$("backgroundStatus").textContent="أضيفت خلفية "+(BACKGROUND_PRESETS.find(item=>item.id===preset)?.name||preset)+" في "+added.length+" طبقات متجهية مستقلة خلف الرسومات الحالية."}catch(error){$("backgroundStatus").textContent="تعذرت إضافة الخلفية: "+error.message}};
 $("addLayerBtn").onclick=()=>{snapshot();const l=addLayer(frame());activeLayerId=l.id;render()};
+$("importRasterBtn").onclick=()=>$("rasterFileInput").click();
+$("rasterFileInput").onchange=event=>{
+ const file=event.target.files?.[0];event.target.value="";
+ if(!file)return;
+ const statusNode=$("rasterImportStatus");
+ if(!["image/png","image/webp","image/jpeg"].includes(file.type)){statusNode.textContent="نوع الصورة غير مدعوم. اختر PNG أو WebP أو JPEG.";return}
+ if(file.size<1||file.size>16*1024*1024){statusNode.textContent="حجم الصورة يجب ألا يتجاوز 16 ميغابايت.";return}
+ const reader=new FileReader();
+ reader.onerror=()=>{statusNode.textContent="تعذرت قراءة ملف الصورة."};
+ reader.onload=()=>{
+  const dataUrl=String(reader.result||""),image=new Image();
+  image.onerror=()=>{statusNode.textContent="ملف الصورة تالف أو غير قابل للقراءة."};
+  image.onload=()=>{
+   try{
+    snapshot();
+    const raster=addRasterLayer(frame(),{name:file.name.replace(/\.[^.]+$/,"").slice(0,80)||"رسم نقطي",dataUrl,mimeType:file.type,width:image.naturalWidth,height:image.naturalHeight});
+    activeLayerId=raster.id;selection=null;render();
+    statusNode.textContent="استوردت الصورة كطبقة Raster مستقلة ("+image.naturalWidth+" × "+image.naturalHeight+"). يمكنك ترتيبها مع طبقات SVG وحفظ المشروع.";
+   }catch(error){statusNode.textContent="تعذر استيراد الصورة: "+error.message}
+  };
+  image.src=dataUrl;
+ };
+ reader.readAsDataURL(file);
+};
 
 $("createCharacterFromFrameBtn").onclick=()=>{const before=history.length;try{const model=createCharacterModelFromFrame(frame(),$("characterDraftName").value);snapshot(true);const entry=saveCharacterToLibrary(project,model,model.name);selectedCharacterModel=model;rigModel=null;renderRigEditor();renderCharacterLibrary();$("characterLibrarySelect").value=entry.id;renderCharacterLibrary();$("characterStatus").textContent="تم تحويل رسومات الإطار إلى نموذج شخصية قابل للتحرير وحفظه في المكتبة: "+entry.name+"."}catch(error){if(history.length>before)history.pop();buttons();$("characterStatus").textContent="تعذر تحويل الإطار إلى شخصية: "+error.message}};
 $("saveCharacterLibraryBtn").onclick=()=>{const before=history.length;try{const model=characterModelSelection();validateCharacterModel(model);snapshot(true);const entry=saveCharacterToLibrary(project,model,model.name);renderCharacterLibrary();$("characterLibrarySelect").value=entry.id;renderCharacterLibrary();$("characterStatus").textContent="حُفظت "+entry.name+" في مكتبة هذا المشروع."}catch(error){if(history.length>before)history.pop();buttons();$("characterStatus").textContent="تعذر حفظ الشخصية: "+error.message}};
