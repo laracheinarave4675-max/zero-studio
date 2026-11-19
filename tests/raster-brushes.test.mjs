@@ -21,6 +21,10 @@ test("brush dab interpolation is deterministic, pressure-aware and finite",()=>{
  assert.ok(first.every(d=>Number.isFinite(d.x)&&Number.isFinite(d.y)&&d.radius>0&&d.alpha>0));
  assert.ok(first.at(-1).radius>first[0].radius);
 });
+test("raster brush sampling keeps dense contour points for broad strokes",()=>{
+ const dabs=buildBrushDabs([{x:0,y:0,pressure:.8},{x:100,y:0,pressure:.8}],{brush:"gouache",size:20,seed:9});
+ assert.ok(dabs.length>50,"broad brush edges need enough samples to avoid visibly polygonal contours");
+});
 test("a tap creates one dab and mouse mode can use stable simulated pressure",()=>{
  const dab=buildBrushDabs([{x:25,y:30}],{brush:"ink",size:10,pressureSensitive:false,seed:2});
  assert.equal(dab.length,1);
