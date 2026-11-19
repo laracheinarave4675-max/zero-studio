@@ -34,6 +34,11 @@ The development workspace includes a freehand SVG pen, optional stylus-pressure 
 
 ZERO STUDIO is a human-led studio, not an image generator. Final backgrounds, characters, props and animation drawings are painted by a human artist in a professional Android drawing application. Generative image/video models must not create or alter final artwork. ZERO STUDIO manages production, layers/assets, continuity, animation timing, compositing and delivery. Layered PSD/OpenRaster/PNG interchange must be validated on the target phone before selecting a format; artwork must never be silently flattened. The target remains 24 independently drawn moving-art images per second. See [Human Art Workflow](docs/HUMAN_ART_WORKFLOW.md), [Anime Art Direction](docs/ANIME_ART_DIRECTION.md), and [Architecture Decisions](DECISIONS.md).
 
+
+## Experimental natural-media brush engine (Hokusai)
+
+A separate Raster painting workspace is being integrated using the upstream Hokusai Rust/WebAssembly brush engine (MIT OR Apache-2.0). It loads licensed MyPaint brush fixtures (charcoal, calligraphy, brush, marker) and accepts pointer pressure/tilt where supported. The workspace is intentionally isolated from the existing SVG frame/project model until PNG/layer interchange, persistence, undo/redo, and Android performance are validated. A GitHub Actions workflow builds the WASM package from the upstream Hokusai source and vendors the generated browser bindings, WASM binary, brush fixtures, and license notices into app/vendor/hokusai/. This is an integration experiment, not proof of professional anime-background quality. No image/video generation is used.
+
 ## Start here
 
 1. Read [PROJECT_STATUS.md](PROJECT_STATUS.md) before continuing work.
