@@ -18,9 +18,19 @@ function tree(ctx,{x,y,s=1,seed=1,far=false,species="broadleaf"}){ctx.save();ctx
   if(!far&&i%2===0)paintNaturalFoliageCluster(ctx,{x:cx,y:cy,size:sz*.9,angle:-1.3+hash(seed,i,9)*.8,color:colors[(i+2)%colors.length],seed:seed*31+i,opacity:.82,texture:.8});
  }
  ctx.restore()}
-function roof(ctx,pts,seed){polygon(ctx,pts,"#39423e","#26332f",7);const [a,b,c,d]=pts;path(ctx,[["moveTo",...a],["lineTo",...b],["lineTo",...c]],"none","#a2a18a",7);
- for(let i=1;i<15;i++){const t=i/15,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t;path(ctx,[["moveTo",x,y],["lineTo",x+(d[0]-a[0])*.85,y+(d[1]-a[1])*.85]],"none",i%3?"#59645b":"#a3a18a",1.4)}
- for(let i=0;i<34;i++){const t=hash(seed,i,2),u=hash(seed,i,3);ctx.fillStyle=i%3?"#667269":"#b0a17c";ctx.globalAlpha=.22;ctx.beginPath();ctx.ellipse(a[0]+(b[0]-a[0])*t+(d[0]-a[0])*u,a[1]+(b[1]-a[1])*t+(d[1]-a[1])*u,2+u*4,1.2,0,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+function roof(ctx,pts,seed){
+ polygon(ctx,pts,"#39423e","#26332f",7);
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+ // Clip every tile course to the actual roof silhouette so no tile marks escape the eaves.
+ ctx.save();ctx.beginPath();ctx.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)ctx.lineTo(...pts[i]);ctx.closePath();ctx.clip();
+ for(let i=1;i<18;i++){
+  const t=i/18,y=minY+(maxY-minY)*t,x0=minX+(maxX-minX)*t*.12,x1=maxX-(maxX-minX)*t*.12;
+  path(ctx,[["moveTo",x0,y],["quadraticCurveTo",(x0+x1)/2,y+3,x1,y]],"none",i%3?"#59645b":"#a3a18a",1.35);
+ }
+ for(let i=0;i<52;i++){const x=minX+hash(seed,i,2)*(maxX-minX),y=minY+hash(seed,i,3)*(maxY-minY);ctx.fillStyle=i%3?"#667269":"#b0a17c";ctx.globalAlpha=.22;ctx.beginPath();ctx.ellipse(x,y,2+hash(seed,i,4)*3,1.2,0,0,Math.PI*2);ctx.fill()}
+ ctx.restore();ctx.globalAlpha=1;
+ path(ctx,[["moveTo",...pts[0]],["lineTo",...pts[1]],["lineTo",...pts[2]]],"none","#a2a18a",6);
+}
 function house(ctx){ // Multi-plane Japanese timber house with readable perspective.
  polygon(ctx,[[350,370],[790,205],[1135,340],[1130,730],[350,730]],"#d9c6a3","#4c463d",7);
  polygon(ctx,[[790,205],[1135,340],[1130,730],[790,650]],"#b69e7d","#51483c",6);
