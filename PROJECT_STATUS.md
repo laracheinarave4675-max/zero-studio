@@ -457,3 +457,10 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - GitHub commit-run/status queries currently return no run/status records for this head; CI execution is therefore **unconfirmed**, not green.
 - A Vercel preview creation was attempted twice but the Vercel API returned HTTP 429 (GitHub API rate limit exceeded); no new preview deployment was created. Existing production aliases were not changed.
 - Still pending: PSD/ORA decoding, raster transform/crop controls, memory/performance testing on large images, real Android save/open, and human-art visual acceptance. No merge to main and no production deployment.
+
+## First authored visual sample and CI failure fixes — 2026-11-19
+
+- Added `samples/first-hand-authored-anime-background.svg`: a 1920×1080 layered SVG illustration of a Japanese old-bookshop street at blue hour. The source is manually authored SVG geometry, gradients, and grouped editable elements; no image-generation model was used to create or modify its artwork.
+- Corrected three test assertions discovered in workflow run 44552956563: update the expected PWA cache version from v31 to v32, assert legacy vector-layer operations are preserved (the existing vector schema does not carry `type: vector`), and match the actual Arabic dimension-validation message.
+- The run had 200 tests: 197 passed and 3 failed, all three failures were assertion/schema expectation mismatches. The corrected test commit is `7e46510851e1365a0c11dc2354224311d305de9d`; the sample artwork commit is `fde10e87c895d50d8591a7838e791e677be0d8f2`.
+- No subsequent successful run has been confirmed yet. The sample is an initial authored scene, not yet artist-approved final anime quality; physical Android preview and raster-import round-trip remain unverified.
