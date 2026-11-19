@@ -118,3 +118,12 @@ This approach aims to spend the model's scarce free quota on the creative design
 ## Important distinction
 
 A free website that produces a few SVG illustrations is not the same as an unlimited API capable of producing 28,800 full-scene vector drawings. No provider found in this research offers a verified, unlimited, free hosted allowance for that workload. The viable route is likely a combination of occasional AI-authored vector design, local generation of separate frame geometry, and carefully rationed free model calls.
+
+
+## 2026-11-19 — OmniSVG hosted vector test and commercial vector comparison
+
+- Official OmniSVG project documentation describes a multimodal model for native editable SVG with text-to-SVG, image-to-SVG, and character-reference SVG modes; it specifically demonstrates complex SVG and anime-character use cases: https://omnisvg.github.io/ and https://github.com/OmniSVG/OmniSVG.
+- The official OmniSVG-3B Hugging Face Space's own UI source warns that free users have **300 GPU seconds/day** and a generation uses approximately **20–60 seconds**. The current hosted UI's model selector exposes **8B** and **4B**; the 4B model is listed at 17 GB GPU memory in the upstream repository. This is a small candidate budget, not a scalable animation provider. The experiment uses one candidate and a 512-token cap for each of three still backgrounds. Sources: https://huggingface.co/spaces/OmniSVG/OmniSVG-3B and https://github.com/OmniSVG/OmniSVG.
+- Commercial comparison: Recraft's official site says the free account offers up to 30 generations/day with SVG export, and its vector models are available on Free. This is worth a separate quality experiment if the user wants to sign in to Recraft, but it is not yet integrated into ZERO STUDIO. Sources: https://www.recraft.ai/ai-vector-generator and https://www.recraft.ai/ai-models/recraft.
+- Ideogram Vector 1.0 is native SVG, but its official API pricing is per result ($0.13–$0.20 for text-to-SVG; reference-image generation can cost more), and API calls require prepaid credits; therefore it does not meet the current free-first target. Sources: https://ideogram.ai/pricing/?plan=pro and https://ideogram.ai/features/faq/.
+- **Important quality limitation:** native SVG output alone does not prove that a provider can produce painterly, high-detail anime environments. Every candidate must be rendered, visually inspected, and compared with the three user references before adoption.
