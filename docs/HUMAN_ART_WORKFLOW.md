@@ -66,3 +66,12 @@ AI may assist with non-art production tasks only when useful: script breakdown, 
 - A saved project reopens with all layer metadata and previews intact.
 - The final composite is visually inspected by the artist; no AI score substitutes for artistic approval.
 - Animation reports playback FPS and unique drawings/second separately.
+
+
+## Hybrid architecture update — 2026-11-19
+
+The approved production model is now **raster-primary, vector-optional, hybrid-capable**. Human-painted layered raster artwork is the default route for painterly backgrounds, characters, props, and painted animation drawings. SVG remains a first-class optional format for editable vector line art, graphic elements, reusable assets, and artwork for which vectors are the better tool. Existing SVG projects and the native vector editor/export must remain usable; this is not a bitmap-only migration.
+
+Earlier language describing a raster app as the only art department is superseded where it conflicts with the hybrid decision. ZERO STUDIO must eventually support both in-app human painting and verified import from an Android painting app; neither path may silently flatten or discard the other. The experimental Canvas brush remains only a low-level input primitive, not a professional painting engine.
+
+For animation, raster and vector frames are both valid if human-authored and independently distinct. The requirement remains 24 unique moving-art drawings per second. Static backgrounds may be reused only while the camera/layout remains fixed. See HYBRID_ART_ARCHITECTURE.md and D-023.
