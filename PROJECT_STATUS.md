@@ -530,3 +530,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 
 - Follow-up GitHub Actions run `44586260671` on commit `19b6b9ae30e8f48eead3855abaccb4449ba584a5` completed successfully: syntax checks passed and all 214 native tests passed (0 failures).
 - Subsequent foliage-cluster refinement commit `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6` and added cluster-shape assertion `28eb47fed11f2a99edbccc116c1ebbc8107d2e56` are newer than that green run. No CI run for those later commits is currently visible; latest foliage changes therefore still need a fresh CI confirmation.
+
+## Native Artist Engine — absolute no-generation confirmation (2026-11-19)
+
+- User explicitly reconfirmed: **generative image and video models are prohibited entirely**, including helper-only or hidden generation paths. Binding decision recorded as D-024 in `DECISIONS.md`.
+- Added `docs/NATIVE_ARTIST_ENGINE_PLAN.md` with staged implementation and visual acceptance gates: stroke dynamics, brush materials, layer compositing/masks, Android memory/input reliability, and a complete human-painted forest-house proof.
+- Implemented deterministic per-stroke blend modes in `app/raster-brushes.mjs`: normal, multiply, screen, overlay, darken, lighten. The Raster brush panel now exposes the choice in Arabic; the selected mode is passed to the actual Canvas2D stroke renderer. Erasing always overrides blend mode with destination-out.
+- Added regression tests for all supported stroke blend modes, invalid modes, and eraser precedence.
+- Commits: `cacd5b7d0849d21d0098e778b1043ccbbb20067d`, `7652f365a49cc4c8a8bee8b6721a8f7b7f276079`, `7c1a29f6315577df89b8800fd58f884ef4606f67`, `a9cd7d6e3de6897052442bd62204e79509d2bc5e`, `bcc3994f39f2afb04e6f113191ec6be069f73966`, `491010a654dc2de71d442771487b1062efdf2840`.
+- GitHub Actions has not yet returned a run for the latest application commit; do not claim the new tests are green until that run is inspected.
+- Artistic acceptance remains open. These blend modes are compositing primitives, not pigment simulation or proof of reference-level painting. Physical Android testing and full-scene human-painted review remain required.
+- Work remains isolated on `feat/hybrid-human-art-pipeline`; no merge to main and no production deployment.
