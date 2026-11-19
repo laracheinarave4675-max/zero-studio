@@ -13,7 +13,7 @@ async function request(apiKey,instruction,fetcher,model=GEMINI_MODEL,settings={}
  let response,payload,lastError;
  for(let attempt=0;attempt<3;attempt++){
   try{
-   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction},...(settings.inlineImage?[{inline_data:{mime_type:"image/png",data:settings.inlineImage}}]:[])]}],generationConfig:{responseMimeType:"application/json",temperature:Number.isFinite(settings.temperature)?settings.temperature:.2,maxOutputTokens:Number.isFinite(settings.maxOutputTokens)?settings.maxOutputTokens:8192}}),signal:AbortSignal.timeout(Number.isFinite(settings.timeoutMs)?Math.max(10000,Math.min(180000,settings.timeoutMs)):120000)});
+   response=await fetcher(endpointFor(model),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:instruction},...(settings.inlineImage?[{inline_data:{mime_type:"image/png",data:settings.inlineImage}}]:[])]}],generationConfig:{responseMimeType:"application/json",temperature:Number.isFinite(settings.temperature)?settings.temperature:.2,maxOutputTokens:Number.isFinite(settings.maxOutputTokens)?settings.maxOutputTokens:8192,...(settings.thinkingLevel?{thinkingConfig:{thinkingLevel:settings.thinkingLevel}}:{})}}),signal:AbortSignal.timeout(Number.isFinite(settings.timeoutMs)?Math.max(10000,Math.min(180000,settings.timeoutMs)):120000)});
    if(response.ok)break;
    try{payload=await response.json()}catch{throw Error("لم يصل رد JSON صالح من خدمة الرسم.")}
    const message=payload?.error?.message||"HTTP "+response.status;
@@ -167,7 +167,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
   const maxLayerAttempts=Math.min(3,Math.max(1,Number(options.maxLayerAttempts)||2));
   for(let attempt=0;attempt<maxLayerAttempts;attempt++){
    try{
-    const recoveryNote=lastError?"\\n\\nPREVIOUS VALIDATION FEEDBACK: "+String(lastError.message||lastError).slice(0,700)+"\\nCorrect every reported defect, especially keep ALL coordinates within x=-100..2020 and y=-100..1180.":"";const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response failed validation. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout, correct the validation feedback below, and do not add explanations, markdown, or long redundant path sequences."+recoveryNote;parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:Number.isFinite(options.maxLayerOutputTokens)?Math.max(4096,Math.min(24000,options.maxLayerOutputTokens)):8192});
+    const recoveryNote=lastError?"\\n\\nPREVIOUS VALIDATION FEEDBACK: "+String(lastError.message||lastError).slice(0,700)+"\\nCorrect every reported defect, especially keep ALL coordinates within x=-100..2020 and y=-100..1180.":"";const attemptPrompt=attempt===0?layerPrompt:layerPrompt+"\\n\\nCOMPACT RECOVERY: Your previous response failed validation. Return valid compact JSON only, with 40–60 concise meaningful paths maximum. Keep the same scene layout, correct the validation feedback below, and do not add explanations, markdown, or long redundant path sequences."+recoveryNote;parsed=await requestWithFallback(attemptPrompt,{temperature:attempt===0?.52:.28,maxOutputTokens:Number.isFinite(options.maxLayerOutputTokens)?Math.max(4096,Math.min(24000,options.maxLayerOutputTokens)):8192,thinkingLevel:options.thinkingLevel,timeoutMs:options.timeoutMs});
     if(parsed?.version!==1||!Array.isArray(parsed.operations))throw Error("صيغة طبقة 2D غير صالحة: "+spec.name);
     if(parsed.operations.length<12)throw Error("طبقة 2D قليلة التفاصيل ("+parsed.operations.length+" مساراً): "+spec.name);
     if(parsed.operations.length>spec.budget)throw Error("تجاوزت الطبقة ميزانية المسارات: "+spec.name);
@@ -202,7 +202,7 @@ export async function generateAnimeVectorBackground(apiKey,prompt,fetcher=fetch,
 }
 
 
-export async function reviewAnimeVectorPreview(apiKey,sceneDescription,pngBytes,fetcher=fetch,model=GEMINI_MODEL){
+export async function reviewAnimeVectorPreview(apiKey,sceneDescription,pngBytes,fetcher=fetch,model=GEMINI_MODEL,options={}){
  const key=String(apiKey??"").trim(),description=String(sceneDescription??"").trim();
  if(!key||key.length>200)throw Error("مفتاح API غير صالح.");
  if(!description||description.length>2000)throw Error("وصف المشهد غير صالح.");
@@ -219,7 +219,7 @@ Return ONLY JSON with this exact shape:
 {"version":1,"overallScore":0,"looksLike2DAnime":false,"criticalIssues":[],"strengths":[],"issues":[{"severity":"critical|major|minor","area":"perspective|architecture|foliage|materials|lighting|atmosphere|composition|linework|other","problem":"specific visible defect","correction":"specific editable-vector change that would fix it"}],"nextRevisionBrief":"A concise, prioritized instruction for the artist to redraw the weakest parts while preserving correct composition and scene identity."}
 
 Score honestly from 0 to 10. Do not award a high score for path count or code validity. If the scene is geometric, sparse, repetitive, or visually unlike a painted anime background, say so explicitly and score it low. Give 3–8 concrete issues when needed. Do not ask to use raster artwork; corrections must be applied to editable SVG paths and vector effects.`;
- const parsed=await request(key,instruction,fetcher,model,{temperature:.15,maxOutputTokens:3500,inlineImage});
+ const parsed=await request(key,instruction,fetcher,model,{temperature:.15,maxOutputTokens:3500,inlineImage,thinkingLevel:options.thinkingLevel,timeoutMs:options.timeoutMs});
  if(parsed?.version!==1||!Number.isFinite(parsed.overallScore)||parsed.overallScore<0||parsed.overallScore>10||typeof parsed.looksLike2DAnime!=="boolean"||!Array.isArray(parsed.issues)||!Array.isArray(parsed.criticalIssues)||typeof parsed.nextRevisionBrief!=="string")throw Error("تقرير النقد البصري غير صالح.");
  if(parsed.issues.length>12||parsed.criticalIssues.length>8||parsed.nextRevisionBrief.length>6000)throw Error("تقرير النقد البصري تجاوز الحدود.");
  return{...parsed,model,previewWasProvided:true};
