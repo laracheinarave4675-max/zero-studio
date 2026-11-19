@@ -67,7 +67,7 @@ export function buildBrushDabs(points,options={}){
   const steps=Math.max(1,Math.ceil(arcLength/spacing));
   for(let step=segment===0?0:1;step<=steps;step++){
    if(output.length>=30000)return output;
-   const t=step/steps,x=curve(p0.x,a.x,b.x,p3.x,t),y=curve(p0.y,a.y,b.y,p3.y,t),p=a.pressure+(b.pressure-a.pressure)*t;
+   const t=step/steps,x=curve(p0.x,a.x,b.x,p3.x,t),y=curve(p0.y,a.y,b.y,p3.y,t),p=curve(p0.pressure,a.pressure,b.pressure,p3.pressure,t);
    const dx=tangent(p0.x,a.x,b.x,p3.x,t),dy=tangent(p0.y,a.y,b.y,p3.y,t),angle=Math.atan2(dy,dx);
    if(last&&Math.hypot(x-last.x,y-last.y)<spacing*0.35&&segment===0&&step===0)continue;
    emit(x,y,p,angle,serial++);last={x,y};
