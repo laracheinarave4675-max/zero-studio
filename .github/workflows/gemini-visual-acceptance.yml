@@ -17,20 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install browser automation
-        run: |
-          npm install --no-save playwright
-          npx playwright install --with-deps chromium
-      - name: Start ZERO STUDIO
-        run: |
-          python3 -m http.server 4173 --directory app > /tmp/zero-studio-http.log 2>&1 &
-          for i in $(seq 1 30); do curl --fail http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
-      - name: Generate and visually critique three anime backgrounds
+      - name: Install SVG rasterizer
+        run: npm install --no-save @resvg/resvg-js
+      - name: Generate and visually critique three anime backgrounds with Gemini
         run: node scripts/gemini-visual-acceptance.mjs
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          ZERO_STUDIO_URL: http://127.0.0.1:4173
-      - name: Save PNG previews and critique reports
+      - name: Save SVG, PNG previews and critique reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
