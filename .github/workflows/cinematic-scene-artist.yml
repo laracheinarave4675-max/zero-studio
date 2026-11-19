@@ -20,7 +20,7 @@ on:
       - ".github/workflows/cinematic-scene-artist.yml"
 concurrency:
   group: zero-studio-cinematic-scene-artist
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   scene-artist:
     runs-on: ubuntu-latest
