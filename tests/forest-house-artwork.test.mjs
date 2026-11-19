@@ -15,6 +15,6 @@ test("forest-house study is a self-contained layered editable SVG", async () => 
     assert.match(svg, new RegExp('id="' + feature + '"'));
   }
   assert.ok((svg.match(/<path\b/g) || []).length >= 65, "scene should contain substantial authored path detail");
-  assert.doesNotMatch(svg, /https?:\/\//, "artwork must not depend on remote images or assets");
+  assert.doesNotMatch(svg, /(?:href|xlink:href|src)\s*=\s*["']https?:\/\//i, "artwork must not depend on remote images or assets");
   assert.match(svg, /Q\d+[^<]*Z|Q[^<]*Z/, "organic curved forms should be present");
 });
