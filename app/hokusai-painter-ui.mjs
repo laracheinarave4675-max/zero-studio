@@ -12,7 +12,7 @@ async function start(){
   byId("hokusaiColor").addEventListener("input",e=>painter.setColor(e.target.value));
   byId("hokusaiSize").addEventListener("input",e=>painter.setSize(Number(e.target.value)));
   byId("hokusaiClear").addEventListener("click",()=>painter.clear());
-  byId("hokusaiExport").addEventListener("click",async()=>{const blob=await painter.exportPng(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="zero-studio-hokusai-paint.png";a.click();URL.revokeObjectURL(url)});
+  byId("hokusaiExport").addEventListener("click",()=>{try{const src=canvas.toDataURL("image/png");document.dispatchEvent(new CustomEvent("zero-studio:raster-import",{detail:{src}}));status.textContent="أُرسل الرسم إلى طبقات المشروع؛ راجع الطبقة المحددة في مساحة العمل."}catch(error){status.textContent="تعذر استيراد الرسم: "+(error?.message||String(error))}});
   status.textContent="محرك Hokusai جاهز — ارسم على اللوحة أدناه";
  }catch(error){status.textContent="محرك Hokusai غير جاهز بعد: "+(error?.message||String(error));status.dataset.state="error"}
 }
