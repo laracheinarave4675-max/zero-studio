@@ -19,6 +19,12 @@ function cleanPoints(points){
   return{x,y,pressure:clamp(pressure,0.06,1)};
  });
 }
+export function resolveBrushPressure(pointerType,reportedPressure,fallback=0.55){
+ const pressure=Number(reportedPressure);
+ if(pointerType!=="mouse"&&Number.isFinite(pressure)&&pressure>0)return clamp(pressure,0.06,1);
+ const safeFallback=Number.isFinite(Number(fallback))?Number(fallback):0.55;
+ return clamp(safeFallback,0.06,1);
+}
 export function buildBrushDabs(points,options={}){
  const samples=cleanPoints(points),brush=String(options.brush||"gouache"),profile=RASTER_BRUSH_PRESETS[brush];
  if(!profile)throw Error("نوع الفرشاة النقطية غير معروف");
