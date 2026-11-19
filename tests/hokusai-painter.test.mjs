@@ -1,7 +1,7 @@
 import test from"node:test";
 import assert from"node:assert/strict";
 import{HOKUSAI_BRUSHES,createHokusaiPainter}from"../app/hokusai-painter.mjs";
-import{addRasterImageOperation,createProject,normalizeProject,frameSvg}from"../app/engine.mjs";
+import{addRasterImageOperation,createProject,normalizeProject,frameSvg,analyzeDrawingCadence}from"../app/engine.mjs";
 test("Hokusai brush catalog contains licensed local brush fixtures",()=>{
  assert.deepEqual(HOKUSAI_BRUSHES.map(x=>x.id),["charcoal","calligraphy","brush","marker"]);
  assert.ok(HOKUSAI_BRUSHES.every(x=>x.url.startsWith("./vendor/hokusai/brushes/")&&x.url.endsWith(".myb")));
@@ -36,4 +36,12 @@ test("raster project layers reject unsafe or oversized image sources",()=>{
  assert.throws(()=>addRasterImageOperation(layer,"https://example.com/image.png"),/PNG/);
  assert.throws(()=>addRasterImageOperation(layer,"data:image/jpeg;base64,AAAA"),/PNG/);
  assert.throws(()=>normalizeProject({...createProject(),frames:[{...createProject().frames[0],layers:[{...layer,operations:[{kind:"raster",src:"data:image/png;base64,AAAA"}]}]}]}),/PNG/);
+});
+
+test("raster image content contributes to independent drawing cadence",()=>{
+ const first=createProject(),second=createProject();
+ addRasterImageOperation(first.frames[0].layers[0],"data:image/png;base64,AAAA");
+ addRasterImageOperation(second.frames[0].layers[0],"data:image/png;base64,BBBB");
+ const result=analyzeDrawingCadence([first.frames[0],second.frames[0]],24);
+ assert.equal(result.uniqueDrawingCount,2);
 });
