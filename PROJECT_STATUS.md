@@ -412,3 +412,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Latest public static snapshot: Vercel `dpl_bqibHVJ4qU7daU2jgWA6fYmuLGes`, state `READY`, stable alias `https://zero-studio-three.vercel.app/`.
 - Source remains private and deployment remains manual; future commits require a new static upload.
 - Latest code/test milestone is committed on `feature/mobile-drawing-workspace`; PR #1 remains draft and unmerged.
+
+
+## 2026-11-19 — Hokusai WebAssembly integration experiment
+- Created branch feat/hokusai-wasm-brush-engine from the painterly Raster foundation.
+- Added an isolated natural-media painting panel and JavaScript adapter for Hokusai's WASM API.
+- Added charcoal, calligraphy, brush, and marker brush catalog paths; GitHub Actions builds the upstream WASM package and copies upstream MIT/Apache license notices and fixtures.
+- Added adapter tests and service-worker shell entries.
+- Not yet verified: workflow completion, generated WASM package, in-browser brush rendering, PNG interoperability with project layers, persistence/undo, or physical Android behavior.
+- This milestone is an integration test only; it does not establish professional anime illustration quality.
