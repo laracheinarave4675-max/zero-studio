@@ -12,7 +12,10 @@ test("native Raster pencil and paintbrush are wired into the mobile drawing work
  assert.match(app,/drawRasterBrushStroke\(context,mapped\.points/);
  assert.match(app,/rasterBrushTools\.has\(tool\)/);
  assert.match(app,/addRasterLayer\(frame\(\),\{name:tool==="raster-pencil"/);
- assert.match(html,/data-tool="raster-pencil"/);
+ assert.match(html,/class="tool active" data-tool="raster-pencil"/);
+ assert.match(app,/tool="raster-pencil"/);
+ assert.match(app,/مسار فرشاة متصل/);
+ assert.match(html,/id="legacyArtistControls" hidden/);
  assert.match(html,/data-tool="raster-brush"/);
  for(const id of ["rasterBrushPreset","rasterBrushOpacity","rasterBrushTexture"])assert.ok(html.includes(id),id);
  assert.ok(serviceWorker.includes("./raster-brushes.mjs"));

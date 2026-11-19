@@ -59,43 +59,30 @@ export function buildBrushDabs(points,options={}){
  }
  return output;
 }
+function colorVariant(color,amount){
+ const m=/^#([0-9a-f]{6})$/i.exec(color);if(!m)return color;
+ const n=parseInt(m[1],16),v=[n>>16&255,n>>8&255,n&255];
+ return "#"+v.map(c=>Math.round(clamp(c+(amount>=0?(255-c)*amount:c*amount),0,255)).toString(16).padStart(2,"0")).join("");
+}
+function paintRibbon(ctx,dabs,{color,opacity,seed,widthScale=1,roughness=.08,texture=.4,bristles=5}){
+ if(!dabs.length)return;
+ if(dabs.length===1){const d=dabs[0];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(d.angle);ctx.globalAlpha=opacity*d.alpha;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,d.radius*widthScale,d.radius*d.aspect,0,0,Math.PI*2);ctx.fill();ctx.restore();return;}
+ const stride=Math.max(1,Math.ceil(dabs.length/5000)),s=dabs.filter((_,i)=>i%stride===0||i===dabs.length-1),left=[],right=[];
+ for(let i=0;i<s.length;i++){const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)];let dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy);if(len<.001){dx=Math.cos(d.angle);dy=Math.sin(d.angle);len=1;}const nx=-dy/len,ny=dx/len,e=(hash(seed,d.index,31)-.5)*d.radius*roughness,h=Math.max(.25,d.radius*widthScale);left.push([d.x+nx*(h+e),d.y+ny*(h+e)]);right.push([d.x-nx*(h-e),d.y-ny*(h-e)]);}
+ ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(left[0][0],left[0][1]);for(let i=1;i<left.length;i++)ctx.lineTo(left[i][0],left[i][1]);for(let i=right.length-1;i>=0;i--)ctx.lineTo(right[i][0],right[i][1]);ctx.closePath();ctx.fill();ctx.restore();
+ if(texture<=0||bristles<=0)return;
+ const step=Math.max(1,Math.ceil(s.length/700));ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+ for(let strand=0;strand<bristles;strand++){const off=(strand/(Math.max(1,bristles-1))-.5)*.78;ctx.beginPath();for(let i=0;i<s.length;i+=step){const d=s[i],p=s[Math.max(0,i-1)],n=s[Math.min(s.length-1,i+1)],dx=n.x-p.x,dy=n.y-p.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,j=(hash(seed,d.index,strand+83)-.5)*d.radius*.12,x=d.x+nx*(off*d.radius+j),y=d.y+ny*(off*d.radius+j);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.strokeStyle=colorVariant(color,hash(seed,strand,71)>.5?.16:-.2);ctx.lineWidth=Math.max(.35,texture*(.55+hash(seed,strand,97)*1.15));ctx.globalAlpha=opacity*(.12+hash(seed,strand,113)*.24);ctx.stroke();}
+ ctx.restore();
+}
 export function drawRasterBrushStroke(context,points,options={}){
- if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
- const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348");
- const texture=clamp(Number(options.texture??0.55),0,1),dabs=buildBrushDabs(points,{...options,brush});
- context.save();
- context.globalCompositeOperation=options.erase?"destination-out":"source-over";
- for(const dab of dabs){
-  context.save();
-  context.translate(dab.x,dab.y);
-  context.rotate(dab.angle);
-  context.globalAlpha=clamp(dab.alpha*opacity,0,1);
-  context.fillStyle=color;
-  if(brush==="watercolor"&&typeof context.createRadialGradient==="function"){
-   const gradient=context.createRadialGradient(0,0,dab.radius*0.08,0,0,dab.radius);
-   gradient.addColorStop(0,color);gradient.addColorStop(0.62,color);gradient.addColorStop(1,"rgba(255,255,255,0)");
-   context.fillStyle=gradient;
-  }
-  context.beginPath();
-  context.ellipse(0,0,dab.radius,dab.radius*dab.aspect,0,0,Math.PI*2);
-  context.fill();
-  if(texture>0&&dab.grain>0){
-   const marks=brush==="graphite"?3:brush==="gouache"?4:brush==="foliage"?1:0;
-   context.globalAlpha=clamp(dab.alpha*opacity*texture*dab.grain*0.42,0,0.48);
-   context.fillStyle=brush==="graphite"?"#18212c":color;
-   for(let mark=0;mark<marks;mark++){
-    const angle=hash(Number(options.seed)||1,dab.index,mark+8)*Math.PI*2;
-    const distance=dab.radius*(0.18+hash(Number(options.seed)||1,dab.index,mark+13)*0.62);
-    const r=Math.max(0.18,dab.radius*(brush==="graphite"?0.055:0.09));
-    context.beginPath();
-    context.ellipse(Math.cos(angle)*distance,Math.sin(angle)*distance,r,r*0.65,angle,0,Math.PI*2);
-    context.fill();
-   }
-  }
-  context.restore();
- }
- context.restore();
- return{dabCount:dabs.length,brush};
+ if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
+ const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
+ context.save();context.globalCompositeOperation=options.erase?"destination-out":"source-over";
+ if(brush==="watercolor"){for(const d of dabs){context.save();context.translate(d.x,d.y);context.rotate(d.angle);context.globalAlpha=clamp(d.alpha*opacity*.62,0,.32);context.fillStyle=color;if(typeof context.createRadialGradient==="function"){const g=context.createRadialGradient(0,0,d.radius*.1,0,0,d.radius*1.3);g.addColorStop(0,color);g.addColorStop(.72,color);g.addColorStop(1,"rgba(255,255,255,0)");context.fillStyle=g;}context.beginPath();context.ellipse(0,0,d.radius*1.18,d.radius*d.aspect*1.24,0,0,Math.PI*2);context.fill();context.restore();}}
+ else if(brush==="foliage"){for(const d of dabs){context.save();context.translate(d.x,d.y);context.rotate(d.angle);context.globalAlpha=clamp(d.alpha*opacity,0,1);context.fillStyle=color;context.beginPath();context.moveTo(-d.radius*.95,0);context.quadraticCurveTo(-d.radius*.25,-d.radius*d.aspect*1.85,d.radius,0);context.quadraticCurveTo(-d.radius*.25,d.radius*d.aspect*1.85,-d.radius*.95,0);context.fill();if(texture>0){context.globalAlpha*=.42;context.strokeStyle=colorVariant(color,.32);context.lineWidth=Math.max(.35,d.radius*.07);context.beginPath();context.moveTo(-d.radius*.72,0);context.lineTo(d.radius*.8,0);context.stroke();}context.restore();}}
+ else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
+ context.restore();return{dabCount:dabs.length,brush,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
 }
 export function mapPointsToRaster(points,canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize){
  const values=[canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize].map(Number);

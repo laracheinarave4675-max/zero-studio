@@ -30,12 +30,13 @@ test("brush rasterizer paints through a Canvas2D-compatible context",()=>{
  const calls=[];
  const context={
   save(){calls.push("save")},restore(){calls.push("restore")},
-  translate(){},rotate(){},beginPath(){},ellipse(){calls.push("dab")},
-  fill(){calls.push("fill")},
+  translate(){},rotate(){},beginPath(){calls.push("begin")},ellipse(){calls.push("dab")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},quadraticCurveTo(){calls.push("quad")},stroke(){calls.push("stroke")},
+  fill(){calls.push("fill")},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){},
   createRadialGradient(){return{addColorStop(){}}}
  };
  const result=drawRasterBrushStroke(context,[{x:0,y:0},{x:40,y:10}],{brush:"watercolor",size:8,color:"#345678",seed:7});
  assert.equal(result.brush,"watercolor");
+ assert.equal(result.renderMode,"wash");
  assert.ok(result.dabCount>1);
  assert.ok(calls.includes("dab")&&calls.includes("fill"));
 });
@@ -44,4 +45,10 @@ test("painting over imported art maps stage coordinates into letterboxed source 
  assert.equal(mapped.scale,2);
  assert.deepEqual(mapped.points,[{x:480,y:270,pressure:.8}]);
  assert.equal(mapped.size,10);
+});
+
+test("gouache and graphite use continuous pressure-shaped ribbons instead of chains of oval stamps",()=>{
+ const calls=[],ctx={save(){},restore(){},beginPath(){calls.push("begin")},moveTo(){calls.push("move")},lineTo(){calls.push("line")},closePath(){calls.push("close")},fill(){calls.push("fill")},stroke(){calls.push("stroke")},ellipse(){calls.push("ellipse")},quadraticCurveTo(){},translate(){},rotate(){},set fillStyle(v){},set globalAlpha(v){},set globalCompositeOperation(v){},set lineCap(v){},set lineJoin(v){},set strokeStyle(v){},set lineWidth(v){}};
+ const r=drawRasterBrushStroke(ctx,[{x:0,y:0,pressure:.2},{x:35,y:8,pressure:.7},{x:80,y:24,pressure:1}],{brush:"gouache",size:18,color:"#52764b",texture:.8,seed:13});
+ assert.equal(r.renderMode,"continuous-ribbon");assert.ok(calls.includes("close")&&calls.includes("fill")&&calls.includes("stroke"));assert.equal(calls.includes("ellipse"),false);
 });
