@@ -60,3 +60,10 @@ The repository includes an editable one-second, 24-frame vector waving/blinking 
 ## Current state
 
 The repository remains the durable project record. The deployed workspace is still a test build; the earlier external v0.1 prototype has not been imported, and physical Android behavior remains unverified. See PROJECT_STATUS.md for the exact implementation status and remaining work.
+
+
+## Approved hybrid art architecture — 2026-11-19
+
+The current approved direction is **human-painted raster as the primary final-art path, with native SVG retained as an optional first-class editable path**. ZERO STUDIO must support mixed raster/vector layers, preserve source files and layer metadata, and never silently flatten an imported project. Existing SVG projects remain supported. This supersedes the older vector-first requirement recorded in the historical D-022 paragraph above; D-023 is the current governing decision. PSD, OpenRaster, and PNG-layer bundles remain unverified candidates until a real Android round-trip succeeds. The animation target remains 24 independently authored moving-art drawings per second. See [Hybrid Art Architecture](docs/HYBRID_ART_ARCHITECTURE.md), [Layered Asset Interchange Plan](docs/LAYERED_ASSET_INTERCHANGE.md), and [D-023](DECISIONS.md).
+
+The first code foundation now includes a typed raster/vector asset-manifest validator and a mixed-layer structural cadence signature in app/hybrid-assets.mjs, with tests in tests/hybrid-assets.test.mjs. This is not yet a PSD/ORA importer, raster compositor, or complete animation integration.
