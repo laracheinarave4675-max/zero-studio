@@ -527,3 +527,6 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Refined `paintFoliageLeaves` to create deterministic companion leaves with actual scaled geometry, branch offsets, and contrasting green tones. Removed an unused scale calculation from the previous implementation. Commit: `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6`.
 - The corrected test has not yet been confirmed by a new successful CI run. Do not mark CI green until a run for the updated branch is visible.
 - Artistic limitation remains: these are brush-renderer improvements and an editable SVG study, not yet a visually accepted, painterly raster reproduction of the user's reference.
+
+- Follow-up GitHub Actions run `44586260671` on commit `19b6b9ae30e8f48eead3855abaccb4449ba584a5` completed successfully: syntax checks passed and all 214 native tests passed (0 failures).
+- Subsequent foliage-cluster refinement commit `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6` and added cluster-shape assertion `28eb47fed11f2a99edbccc116c1ebbc8107d2e56` are newer than that green run. No CI run for those later commits is currently visible; latest foliage changes therefore still need a fresh CI confirmation.
