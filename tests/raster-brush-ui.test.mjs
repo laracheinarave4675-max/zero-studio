@@ -22,6 +22,19 @@ test("native Raster pencil and paintbrush are wired into the mobile drawing work
  for(const id of ["rasterBrushPreset","rasterBrushOpacity","rasterBrushTexture"])assert.ok(html.includes(id),id);
  assert.ok(serviceWorker.includes("./raster-brushes.mjs"));
 });
+test("live raster brush preview is rendered as real Canvas2D pixels during pointer input",async()=>{
+ const [app,html]=await Promise.all([
+  readFile(new URL("../app/app.js",import.meta.url),"utf8"),
+  readFile(new URL("../app/index.html",import.meta.url),"utf8")
+ ]);
+ assert.match(app,/function updateRasterPreview\(\)/);
+ assert.match(app,/drawRasterBrushStroke\(rasterPreviewContext,mapped\.points/);
+ assert.match(app,/rasterPreviewCanvas\.toDataURL\("image\/png"\)/);
+ assert.match(app,/samples\.forEach\(addPoint\);if\(rasterBrushTools\.has\(tool\).*?updateRasterPreview\(\)/);
+ assert.match(app,/clearRasterPreview\(\);rasterCommitPending=true/);
+ assert.match(app,/if\(rasterBrushTools\.has\(tool\).*?updateRasterPreview\(\);drawing=false/);
+ assert.match(html,/<image id="rasterStrokePreview"[^>]*pointer-events="none"[^>]*visibility="hidden"\/>/);
+});
 test("Raster paint commit preserves source dimensions and keeps vector authoring distinct",async()=>{
  const app=await readFile(new URL("../app/app.js",import.meta.url),"utf8");
  assert.match(app,/mapPointsToRaster\(strokePoints,WIDTH,HEIGHT,target\.width,target\.height/);
