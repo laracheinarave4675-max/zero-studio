@@ -543,3 +543,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Work remains isolated on `feat/hybrid-human-art-pipeline`; no merge to main and no production deployment.
 
 - CI verification for the application changes completed successfully in GitHub Actions run `44587978596` (#79): syntax checks passed and all `216/216` native tests passed, 0 failures. This run includes the brush compositing implementation and Arabic UI control. The subsequent status/decision documentation commits do not change application code.
+
+
+## New hybrid anime production direction approved — 2026-11-20
+
+- User approved a fundamental shift to a hybrid studio architecture: a specialist image-generation model/service may create anime character, background, prop, and scene artwork; ZERO STUDIO remains responsible for character identity/continuity, scene preparation, asset management, animation planning and control, compositing, audio, and final delivery.
+- Recorded the full governing plan in `docs/NEW_HYBRID_PRODUCTION_DIRECTION.md` and decision D-026 in `DECISIONS.md`. The README now points to this as the current direction and labels older no-generation restrictions as historical/superseded.
+- No provider has been selected or connected yet. LoRA training and wholesale engine rewrites are deferred pending codebase audit and provider evaluation.
+- The 24 independently drawn images/second target remains unchanged. Android-first workflow, free-first evaluation, visual acceptance, source preservation, and no merge/deployment without explicit approval remain in force.
+- Next implementation milestone: audit existing code and provider research, compare specialist models/services (quality, reference control, API, Android workflow, quotas/cost, rights, privacy), then build a small visual proof before integrating further.
