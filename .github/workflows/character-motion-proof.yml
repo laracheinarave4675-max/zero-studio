@@ -1,0 +1,37 @@
+name: ZERO STUDIO — referenced anime character motion proof
+on:
+  push:
+    branches: ["feat/anime-character-motion-proof"]
+    paths:
+      - ".github/workflows/character-motion-proof.yml"
+      - "scripts/run-character-motion-proof.mjs"
+      - "app/gemini-animation.mjs"
+      - "app/animation-production.mjs"
+      - "app/animation-worker.mjs"
+      - "tests/gemini-animation.test.mjs"
+permissions:
+  contents: read
+jobs:
+  one-second-character-motion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run complete automated regression suite
+        run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
+      - name: Generate 24 reference-conditioned independent character drawings
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.1-flash-lite
+        run: node scripts/run-character-motion-proof.mjs
+      - name: Upload editable motion project and individual SVG frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-character-motion-proof
+          path: artifacts/character-motion/
+          if-no-files-found: warn
+          retention-days: 14
