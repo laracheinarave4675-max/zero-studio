@@ -27,6 +27,8 @@ function createBaseNori(){return applyNoriPalette(createNoriModel($("characterEx
 function characterModelSelection(){return rigModel||selectedCharacterModel||applyNoriRigPose(createBaseNori(),{})}
 function renderCharacterLibrary(){
  const assets=project.characterLibrary||[];
+ const animeLink=$("animeAnatomyLibrarySelect");
+ if(animeLink){const linked=animeLink.value;animeLink.replaceChildren();const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="هوية جديدة (غير مرتبطة بنموذج مكتبة)";animeLink.appendChild(placeholder);for(const asset of assets){const option=document.createElement("option");option.value=asset.id;option.textContent=asset.name;animeLink.appendChild(option)}if(assets.some(asset=>asset.id===linked))animeLink.value=linked;}
  const select=$("characterLibrarySelect"),selected=select.value;select.replaceChildren();
  const empty=document.createElement("option");empty.value="";empty.textContent="اختر شخصية محفوظة";select.appendChild(empty);
  for(const asset of assets){const option=document.createElement("option");option.value=asset.id;option.textContent=asset.name;select.appendChild(option)}
@@ -304,7 +306,11 @@ async function saveAnimeAnatomyDNA(){
  try{
   if(Object.keys(animeAnatomyPoints).length!==ANIME_ANATOMY_JOINTS.length)throw Error("أكمل تحديد جميع النقاط التشريحية أولاً.");
   if(animeAnatomyMode==="key"){await saveAnimeKeyDrawing();return;}
-  const id=uid("anime-character"),name=$("animeAnatomyName").value.trim()||"شخصية جديدة";
+  const linkedLibraryId=$("animeAnatomyLibrarySelect")?.value||"";
+  const linkedAsset=(project.characterLibrary||[]).find(item=>item.id===linkedLibraryId)||null;
+  if(linkedLibraryId&&!linkedAsset)throw Error("نموذج الشخصية المحدد لم يعد موجوداً في المكتبة.");
+  const id=linkedAsset?linkedAsset.id+"-anime-dna":uid("anime-character"),name=linkedAsset?.name||$("animeAnatomyName").value.trim()||"شخصية جديدة";
+  if((project.animeCharacterDNA||[]).some(item=>item.characterAssetId===id))throw Error("هذه الشخصية مرتبطة بهوية تشريحية محفوظة بالفعل؛ اخترها من قائمة الهويات أو اربط نموذجاً آخر.");
   const guide={
    view:$("animeAnatomyView").value,
    contacts:{footL:$("animeAnatomyLeftContact").value,footR:$("animeAnatomyRightContact").value},
@@ -314,8 +320,8 @@ async function saveAnimeAnatomyDNA(){
   const sourceFrame=sourceFrameWithoutAnimeRaster(frame());
   const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   const dna=createAnimeCharacterDNA({
-   characterAssetId:id,characterBibleId:id+"-bible",modelSheetAssetIds:[],anchorGuide:guide,
-   notes:"Calibrated on native project frame "+(current+1)+"; source frame ID "+frame().id
+   characterAssetId:id,characterBibleId:(linkedAsset?linkedAsset.id:id)+"-bible",modelSheetAssetIds:linkedAsset?[linkedAsset.id]:[],anchorGuide:guide,
+   notes:"Calibrated on native project frame "+(current+1)+"; source frame ID "+frame().id+(linkedAsset?"; linked character-library asset "+linkedAsset.id:"")
   });
   dna.name=name;dna.sourceFrameId=frame().id;dna.sourceFrameIndex=current;dna.sourceSignature=sourceSignature;
   snapshot(true);
