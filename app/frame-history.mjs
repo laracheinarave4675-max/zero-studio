@@ -1,5 +1,5 @@
 const clone=value=>JSON.parse(JSON.stringify(value));
-function metadata(project,includeCharacterLibrary=false){return{animationProduction:project.animationProduction?clone(project.animationProduction):null,fps:project.fps,includeCharacterLibrary, ...(includeCharacterLibrary?{characterLibrary:clone(project.characterLibrary||[])}:{})}}
+function metadata(project,includeCharacterLibrary=false){return{animationProduction:project.animationProduction?clone(project.animationProduction):null,fps:project.fps,includeCharacterLibrary, ...(includeCharacterLibrary?{characterLibrary:clone(project.characterLibrary||[]),animeCharacterDNA:clone(project.animeCharacterDNA||[])}:{})}}
 export function captureFrameHistory(project,index,{includeCharacterLibrary=false}={}){
  if(!project||!Array.isArray(project.frames)||!Number.isInteger(index)||index<0||index>=project.frames.length)throw Error("موضع سجل الإطار غير صالح.");
  return{kind:"zero-frame-history",mode:"before",index,frameCount:project.frames.length,frame:clone(project.frames[index]),...metadata(project,includeCharacterLibrary)};
@@ -31,6 +31,9 @@ export function applyFrameHistory(project,entry){
  }else throw Error("نوع عملية التراجع غير معروف.");
  project.animationProduction=entry.animationProduction?clone(entry.animationProduction):null;
  project.fps=entry.fps;
- if(entry.includeCharacterLibrary)project.characterLibrary=clone(entry.characterLibrary||[]);
+ if(entry.includeCharacterLibrary){
+  if(entry.characterLibrary!==undefined)project.characterLibrary=clone(entry.characterLibrary||[]);
+  if(entry.animeCharacterDNA!==undefined)project.animeCharacterDNA=clone(entry.animeCharacterDNA||[]);
+ }
  return project;
 }
