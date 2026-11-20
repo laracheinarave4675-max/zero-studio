@@ -1,58 +1,79 @@
-name: ZERO STUDIO first raster proof — connectivity
+name: ZERO STUDIO — first four raster key drawings
 on:
-  push:
-    branches:
-      - feat/anime-keyframe-raster-pipeline
-    paths:
-      - .github/workflows/anime-keyframe-first-raster-proof.yml
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  probe:
+  generate-four-keys:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
-      - name: Verify the existing ZERO STUDIO image gateway without inference
+      - name: Generate four full-character FLUX.2 key drawings and save them to the gallery
         env:
-          BASE_URL: https://zero-studio-flux2-preview-studio-37a2.vercel.app
-          MODEL_SHEET_ID: 4abf7811-41f8-4436-ba9f-6ca4e211fa80
-          SIDE_VIEW_ID: 83d6357f-4e5f-4f78-a603-0eb2c61ada6d
+          BASE_URL: https://zero-studio-flux2-preview-bj1ojsz5k-studio-37a2.vercel.app
+          CHARACTER_SHEET_ID: 4abf7811-41f8-4436-ba9f-6ca4e211fa80
         run: |
           node --input-type=module <<'NODE'
+          import fs from "node:fs/promises";
           const base = process.env.BASE_URL;
           const origin = base;
-          async function getJson(path, withOrigin = false) {
+          const characterId = process.env.CHARACTER_SHEET_ID;
+          async function jsonRequest(path, options = {}) {
             const response = await fetch(new URL(path, base), {
-              headers: withOrigin ? { Origin: origin, Accept: "application/json" } : { Accept: "application/json" },
-              redirect: "manual"
+              ...options,
+              headers: {
+                Accept: "application/json",
+                ...(options.body ? { "Content-Type": "application/json" } : {}),
+                Origin: origin,
+                ...(options.headers || {})
+              }
             });
-            const contentType = response.headers.get("content-type") || "";
-            if (!response.ok || !contentType.includes("application/json")) {
-              const body = (await response.text()).slice(0, 500);
-              throw new Error(`${path}: HTTP ${response.status}, content-type=${contentType}, body=${body}`);
+            const raw = await response.text();
+            let payload;
+            try { payload = JSON.parse(raw); } catch { throw new Error(path + " returned non-JSON HTTP " + response.status + ": " + raw.slice(0, 400)); }
+            if (!response.ok || payload.ok !== true) {
+              throw new Error(path + " failed HTTP " + response.status + ": " + JSON.stringify(payload).slice(0, 700));
             }
-            const payload = await response.json();
-            if (payload.ok !== true) throw new Error(`${path}: ${JSON.stringify(payload)}`);
             return payload;
           }
-          const gateway = await getJson("/api/images");
-          if (gateway.routeConfigured !== true || gateway.workerReachable !== true || gateway.tokenVerified !== true || gateway.inferenceStarted !== false) {
-            throw new Error("Image gateway probe did not confirm a configured Worker and valid token: " + JSON.stringify(gateway));
+          const source = await jsonRequest("/api/gallery-image?id=" + encodeURIComponent(characterId));
+          const match = /^data:image\/(?:jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(source.imageDataUrl || "");
+          if (!match) throw new Error("Character sheet was not returned as a valid raster image.");
+          const sourceBytes = Math.floor(match[1].length * 3 / 4);
+          if (sourceBytes < 1 || sourceBytes > 512 * 1024) throw new Error("Character sheet exceeds FLUX.2 reference limit: " + sourceBytes + " bytes.");
+          const common = [
+            "Create ONE complete finished 2D Japanese anime character drawing, not a model sheet and not a collage.",
+            "Use the supplied character sheet as the strict identity and costume reference. Draw the same young adult woman: same delicate face, large dark eyes, very long straight glossy black hair with the same fringe, same cream kimono top with red trim, same red waist sash, same red skirt with the same gold motifs, same proportions and shoes.",
+            "Full body from head to both shoes, clean side profile facing screen-right, entire silhouette visible, same camera height, same character scale and same centered placement in every frame.",
+            "Pure clean white studio background, polished high-quality anime key animation drawing, crisp stable ink contours, refined cel shading, detailed hair strands and fabric folds.",
+            "No text, no labels, no extra characters, no props, no background scene, no alternate costume, no front view, no three-quarter view."
+          ].join(" ");
+          const poses = [
+            { id: "key-00-contact-left", title: "Walk key 1 — left foot contact", pose: "Walking contact pose: the left leg reaches forward toward screen-right and the left shoe is firmly planted on the ground; the right leg trails behind with heel lifted. The pelvis is slightly forward. The right arm swings forward and left arm swings back in natural counter-swing. Head level and balanced. This is the clear first contact drawing." },
+            { id: "key-06-down-compression", title: "Walk key 2 — down and compression", pose: "Continue the same walk immediately after left-foot contact. The left foot remains firmly planted in exactly the same ground-contact area; the left knee bends and the whole body compresses slightly downward. The right heel rises behind. Pelvis and shoulders settle naturally, head lowers subtly, arms counter-swing. Preserve the exact side profile and costume." },
+            { id: "key-12-passing", title: "Walk key 3 — passing position", pose: "Continue the same walk at the passing position. Body rises toward neutral height. The right leg passes beneath the pelvis, with the right knee moving forward toward screen-right while the left leg supports the body. Feet remain close to the ground, no floating. Arms pass through their natural counter-swing. Hair trails slightly behind the motion." },
+            { id: "key-18-up-recovery", title: "Walk key 4 — up and recovery", pose: "Continue the same walk after passing. The body lifts into the up/recovery beat; the right leg reaches forward toward screen-right and prepares the next heel contact, while the left leg trails behind and pushes off. The pelvis shifts over the supporting leg, arms counter-swing, long hair and skirt follow through with a subtle delayed sway. Keep both shoes fully visible." }
+          ];
+          const saved = [];
+          for (const item of poses) {
+            const generated = await jsonRequest("/api/images", {
+              method: "POST",
+              body: JSON.stringify({ model: "flux-2-klein-4b", aspectRatio: "16:9", references: [source.imageDataUrl], prompt: common + " " + item.pose })
+            });
+            if (typeof generated.imageDataUrl !== "string" || !generated.imageDataUrl.startsWith("data:image/")) throw new Error(item.id + ": model response did not contain a raster image.");
+            const stored = await jsonRequest("/api/gallery", {
+              method: "POST",
+              body: JSON.stringify({
+                imageDataUrl: generated.imageDataUrl, title: item.title, prompt: item.pose,
+                model: generated.model || "@cf/black-forest-labs/flux-2-klein-4b",
+                width: generated.width || 1280, height: generated.height || 720
+              })
+            });
+            saved.push({ key: item.id, title: item.title, galleryId: stored.item.id, shareUrl: stored.item.shareUrl });
+            console.log("SAVED_KEY " + JSON.stringify(saved[saved.length - 1]));
           }
-          const refs = [];
-          for (const id of [process.env.MODEL_SHEET_ID, process.env.SIDE_VIEW_ID]) {
-            const image = await getJson("/api/gallery-image?id=" + encodeURIComponent(id), true);
-            const match = /^data:image\/(?:jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(image.imageDataUrl || "");
-            if (!match) throw new Error("Gallery reference response did not contain a supported image: " + id);
-            const bytes = Math.floor(match[1].length * 3 / 4);
-            if (bytes < 1 || bytes > 512 * 1024) throw new Error("Reference is outside the 512 KB model input limit: " + id);
-            refs.push({ id, mimeType: image.mimeType, bytes });
-          }
-          await import("node:fs/promises").then(fs => fs.appendFile(process.env.GITHUB_STEP_SUMMARY,
-            "## ZERO STUDIO image-gateway probe\n\n" +
-            "- Worker connectivity and bearer token: verified (no inference run).\n" +
-            "- Character model-sheet reference: " + refs[0].bytes + " bytes.\n" +
-            "- Character side-view reference: " + refs[1].bytes + " bytes.\n\n" +
-            "No image was generated and no model quota was consumed.\n"));
-          console.log(JSON.stringify({ gateway: "verified", inferenceStarted: false, references: refs }, null, 2));
+          await fs.appendFile(process.env.GITHUB_STEP_SUMMARY,
+            "## First raster key drawings\n\n" + saved.map(x => "- **" + x.title + "** — " + x.shareUrl).join("\n") +
+            "\n\nGenerated with the existing FLUX.2 Klein 4B gateway and saved to the ZERO STUDIO gallery. These are candidate keys pending visual identity/anatomy review; no inbetweens were generated.\n");
+          console.log("FOUR_KEYS_COMPLETE " + JSON.stringify(saved));
           NODE
