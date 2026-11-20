@@ -16,7 +16,7 @@ function isAllowedRequestOrigin(req, configuredOrigin) {
   if (!requestOrigin) {
     if (!requestHost) return false;
     const allowedPreviewHost =
-      /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\\.vercel\\.app$/.test(requestHost);
+      /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
     return allowedPreviewHost || "https://" + requestHost === configuredOrigin;
   }
   let parsed;
@@ -24,7 +24,7 @@ function isAllowedRequestOrigin(req, configuredOrigin) {
   if (parsed.protocol !== "https:" || parsed.origin !== requestOrigin) return false;
   if (requestHost && requestHost !== parsed.host.toLowerCase()) return false;
   const allowedPreviewHost =
-    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\\.vercel\\.app$/.test(parsed.hostname.toLowerCase());
+    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(parsed.hostname.toLowerCase());
   return requestOrigin === configuredOrigin || allowedPreviewHost;
 }
 
@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
 
   const appOrigin = String(process.env.ZERO_STUDIO_APP_ORIGIN || "").trim();
   const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
-  const workerBaseUrl = String(process.env.ZERO_STUDIO_IMAGE_WORKER_URL || DEFAULT_WORKER_BASE_URL).replace(/\\/+$/, "");
+  const workerBaseUrl = String(process.env.ZERO_STUDIO_IMAGE_WORKER_URL || DEFAULT_WORKER_BASE_URL).replace(/\/+$/, "");
 
   if (!appOrigin || !token) {
     return send(res, 503, { ok: false, error: "gallery_not_configured", message: "إعدادات معرض الصور غير مكتملة." });
