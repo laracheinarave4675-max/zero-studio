@@ -1,24 +1,24 @@
 # ZERO STUDIO
 
-> **Cloud inference prototype (2026-11-20):** A protected Cloudflare Workers AI adapter and mobile deployment guide now live in [cloudflare-worker](cloudflare-worker/DEPLOY_FROM_ANDROID.md). It is code-only until the user connects a free Cloudflare account and configures private runtime secrets. No deployment or inference has occurred.
+> **Cloud inference deployment (2026-11-20):** The protected Cloudflare Worker `zero-studio` is deployed with its Workers AI binding. The Vercel staging project `zero-studio-preview` now serves the hybrid studio UI and a server-side `/api/images` proxy from branch `feat/hybrid-human-art-pipeline`. The final bearer secret is not configured yet, so image inference is not enabled. See [deployment guide](cloudflare-worker/DEPLOY_FROM_ANDROID.md).
 >
 > **Android/cloud operating model (2026-11-20):** The phone is the control and review device; heavy model inference must run remotely. GitHub stores source code but does not host GPU inference. Static app hosting and GPU inference are separate services. The project has a hard $0 budget: no paid plan, paid API, GPU rental, credit-based fallback, or automatic upgrade. See [Cloud Inference Architecture](docs/CLOUD_INFERENCE_ARCHITECTURE.md). The old policy paragraphs below that prohibit generative image models are historical and superseded by D-026 and the new hybrid production direction.
 >
 > **Current governing direction (2026-11-20):** ZERO STUDIO follows the hybrid AI-assisted anime production architecture in [docs/NEW_HYBRID_PRODUCTION_DIRECTION.md](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md) and [D-026](DECISIONS.md#d-026--hybrid-ai-assisted-anime-production-studio-2026-11-20). A specialist image-generation service may produce character/background/scene artwork; ZERO STUDIO owns character identity and continuity, scene preparation, animation, compositing, and delivery. This supersedes older no-generation rules in the historical sections below. No provider has been selected. See the [initial image-provider evaluation](docs/IMAGE_PROVIDER_EVALUATION.md). Android-first workflow, free-first evaluation, visual acceptance, and the **24 independently drawn images per second** target remain in force.
 
-**ZERO STUDIO** is an ambitious, mobile-first anime production workspace. Its core principle is that artwork must be created through explicit drawing operations (vector paths, strokes, and frame-by-frame editing), not by asking an image/video generator to produce finished characters or scenes.
+**ZERO STUDIO** is an ambitious, mobile-first anime production workspace. Its approved direction is hybrid: specialist image models may create artwork assets, while ZERO STUDIO manages character identity, scene preparation, editable layers, animation, compositing, and delivery. Generated images are imported as raster layers; vector paths and hand-authored strokes remain available as editable tools.
 
 ## Non-negotiable project constraints
 
 - Primary working device: Android phone; do not assume a desktop computer.
 - Budget target: free-first; do not assume paid APIs, hosting, GPU, or subscriptions.
-- Artwork policy: no generative image/video models for final characters, backgrounds, scenes, or animation frames. The drawing system must create editable strokes/paths.
+- Artwork policy: hybrid AI-assisted image generation is allowed for artwork assets, with explicit review and import into editable raster layers. Do not treat a single generated still as completed animation.
 - Animation target: the creative goal is **24 independently drawn images per second**. This is not the same as displaying a smaller number of drawings at 24 FPS. Keep this requirement explicit in planning and explain its production cost.
 - Build honestly in testable stages. Do not describe prototypes as a finished professional studio.
 
 ## Public Android test copy
 
-Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The public test deployment was refreshed on 2026-11-18 and now includes the four vector background presets; it remains a manually uploaded snapshot, not an automatic Git-linked deployment. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
+Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The original public test deployment was refreshed on 2026-11-18 and remains a manually uploaded snapshot; the separate `zero-studio-preview` Vercel project now hosts the hybrid branch. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
 
 ## High-volume frame-by-frame animation
 
