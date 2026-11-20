@@ -1,16 +1,13 @@
-# Cloud inference Worker implementation milestone — 2026-11-20
+# Cloud inference Worker deployment milestone — 2026-11-20
 
-- Added `cloudflare-worker/src/index.js`: a protected Cloudflare Worker endpoint using the fixed FLUX.1 Schnell model.
-- Added `cloudflare-worker/wrangler.toml` with the Workers AI binding.
-- Added Node built-in tests for authentication, origin checks, model/step limits, quota handling, and error redaction.
-- Added `.github/workflows/cloudflare-worker-tests.yml` to run those tests on branch/PR changes.
-- Added `cloudflare-worker/DEPLOY_FROM_ANDROID.md` with mobile dashboard setup instructions.
-- Security: exact-origin allowlist, bearer secret, bounded JSON input, 4-step cap, no provider fallback, and generic inference errors.
-- Quota behavior: quota/rate-limit errors return HTTP 429 and instruct the app to retain the job; the Worker does not call another provider.
-- No Cloudflare account was connected; no secret was created or entered; no Worker deployed; no image request executed.
-- The app's actual deployed origin is still unknown and must be copied from its real deployment before setting STUDIO_ORIGIN.
-- GitHub Actions worker tests passed: run #2 (job worker-tests, conclusion success), including authentication, origin allowlist, model/step cap, quota handling, and error redaction.
-- No production app deployment or PR merge was performed. Budget remains $0; animation target remains 24 independently drawn images per second.
+- Deployed the real source from `cloudflare-worker/src/index.js` on branch `feat/hybrid-human-art-pipeline` to the existing Cloudflare Worker `zero-studio` through the connected Cloudflare account API. The earlier Dashboard Template `Hello world` implementation was replaced; the existing `workers.dev` service identity was preserved.
+- Added the Workers AI binding `AI` to the deployed Worker. Verified through the Cloudflare API that the binding is present and the active deployment source is `api`.
+- Added a public, non-secret `GET /health` response that reports whether the AI binding and private image endpoint configuration are present. The health check does not invoke image inference.
+- Aligned `cloudflare-worker/wrangler.toml` Worker name with the existing deployed Worker: `zero-studio`.
+- Added/updated tests for health behavior before private image credentials are configured. Latest Cloud inference worker tests passed on commit `7346da35`; Drawing engine tests also passed.
+- The image endpoint remains intentionally unavailable until exact `STUDIO_ORIGIN` and private `STUDIO_ACCESS_TOKEN` are configured. No secret has been created or exposed, and no image inference request has been made.
+- The known public test app URL in the README is `https://zero-studio-three.vercel.app/`, but it is a manually uploaded snapshot and the current app source does not yet call `/v1/images`. Do not assume the app integration is complete or expose a bearer secret in public client code.
+- No paid plan, card, credit purchase, or provider fallback was used. PR #6 remains open/unmerged; no production app deployment or PR merge was performed. Budget remains $0; animation target remains 24 independently drawn images per second.
 
 ---
 # Cloud inference architecture milestone — 2026-11-20
