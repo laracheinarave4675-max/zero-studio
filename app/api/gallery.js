@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
   const requestOrigin = String(req.headers.origin || "").trim();
   const requestHost = String(req.headers.host || "").toLowerCase();
   const sameHostOrigin = requestHost ? "https://" + requestHost : "";
-  const allowedPreviewHost = /^zero-studio-preview(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
+  const allowedPreviewHost = /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
   const sameOrigin = requestOrigin ? requestOrigin === sameHostOrigin : true;
   if (!appOrigin || !token) return send(res, 503, { ok: false, error: "gallery_not_configured", message: "إعدادات معرض الصور غير مكتملة." });
   if (!sameOrigin || (!allowedPreviewHost && sameHostOrigin !== appOrigin)) return send(res, 403, { ok: false, error: "origin_not_allowed" });
