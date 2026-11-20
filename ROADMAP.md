@@ -43,7 +43,9 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Prototype an AI-authored, scene-specific vector drawing program that emits a complete separate SVG document for every frame; retain the 24-unique-drawings/second acceptance test and reject static-image/tween shortcuts.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
-## Current animation direction — D-027 (approved 2026-11-20)
+## Historical prototype direction — D-027 (superseded by D-028, 2026-11-20)
+
+This section records the earlier per-frame still-image/raster prototype only. Its uncompleted generation tasks are not approved next steps for character animation; use D-028 below.
 
 - [x] Preserve the existing character/background generation departments and Character Bible; animation is a separate missing department.
 - [x] Approve motion direction/timing charts → spatial pose guides → complete 2D key drawings → individually reviewed raster in-betweens/cleanup → raster frame assembly.
@@ -146,6 +148,8 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [x] Make the anatomy renderer explicitly guide-only; never deform the source artwork or treat guide images as final art.
 - [x] Add 24 separate full-redraw tasks per second, independent transparent raster assets, duplicate-hash rejection, and frame-level review gates.
 - [x] Add regression tests for the new anatomy engine.
+- [x] Add mobile on-canvas Character DNA landmark calibration and save it in the native project.
+- [x] Preserve Character DNA through project reopen normalization and large-project undo history.
 - [ ] Run the new workflow on the user's actual approved character after annotating its joint landmarks and confirming its canonical view.
 - [ ] Connect the anatomy guide and per-frame drawing tasks to the Android animation editor and native project timeline.
 - [ ] Add artist-editable contour/silhouette correction overlays while preserving the original key drawings.
