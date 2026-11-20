@@ -562,3 +562,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Existing Canvas2D raster brushes, vector tools, project/layer model, timeline, compositor, and approval flow are potential reusable foundations. A deeper dependency and import/export audit is still required before modifying or retiring any module.
 - The former SVG provider research has been marked historical and points to the new evaluation. No image-generation API key has been added, no provider has been connected, and no image has been generated as part of this code audit.
 - Next: complete the repository dependency/security audit, verify each candidate's reference-image behavior and terms, then run the same background and character-sheet test brief against shortlisted models before choosing one.
+
+
+## Zero-budget constraint confirmed — 2026-11-20
+
+- User explicitly confirmed that ZERO STUDIO has a hard total budget of $0. Paid APIs, inference credits, subscriptions, GPU rentals, paid hosting, required payment cards, and automatic paid fallbacks are out of scope.
+- Updated the governing architecture and provider evaluation with a free-first strategy. Hugging Face ZeroGPU is a limited experimental route: official docs currently state 5 minutes/day for free accounts, shared queues, and free use of existing ZeroGPU Spaces. This is not unlimited production compute.
+- Anima is a promising anime-focused model for tests, but its model card shows a non-commercial license; do not use it for commercial production unless terms are separately cleared. Z-Image-Turbo is marked Apache-2.0 but is not yet shown to meet the anime quality target and still needs GPU compute.
+- No paid provider has been selected or connected. No account was created and no service was called to generate images. The next proof should use existing free public Spaces, if available, with a small repeatable background and character-sheet test.
+- The 24 independently drawn images/second goal remains unchanged; do not pretend limited free quotas can generate it continuously. Report constraints honestly and preserve the zero-dollar gate.
