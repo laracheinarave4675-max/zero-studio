@@ -182,7 +182,7 @@ function interpolateGuide(keys, segmentIndex, progress) {
   return { joints, contacts, view: from.guide.view };
 }
 
-function solveTwoBone(start, target, upperLength, lowerLength, bendSign) {
+function solveTwoBone(start, target, upperLength, lowerLength, bendSign, preserveTarget = false) {
   const dx = target.x - start.x, dy = target.y - start.y;
   const rawDistance = Math.hypot(dx, dy);
   const minReach = Math.abs(upperLength - lowerLength) + 0.0005;
@@ -190,7 +190,8 @@ function solveTwoBone(start, target, upperLength, lowerLength, bendSign) {
   const reach = clamp(rawDistance, minReach, maxReach);
   const ux = rawDistance > 1e-8 ? dx / rawDistance : 1;
   const uy = rawDistance > 1e-8 ? dy / rawDistance : 0;
-  const end = { x: start.x + ux * reach, y: start.y + uy * reach };
+  const reachableEnd = { x: start.x + ux * reach, y: start.y + uy * reach };
+  const end = preserveTarget ? { ...target } : reachableEnd;
   const along = (upperLength * upperLength - lowerLength * lowerLength + reach * reach) / (2 * reach);
   const height = Math.sqrt(Math.max(0, upperLength * upperLength - along * along));
   const sign = bendSign < 0 ? -1 : 1;
@@ -225,7 +226,7 @@ function applyAnatomicalConstraints(plan, guide, frameIndex) {
   const joints = Object.fromEntries(ANIME_ANATOMY_JOINTS.map(name => [name, { ...guide.joints[name] }]));
   const lengths = plan.characterDNA.boneLengths;
   const bend = plan.characterDNA.anchorGuide;
-  const lockedFeet = {};
+  const lockedFeet = {}, constraintWarnings = [];
   for (const side of ["L", "R"]) {
     for (const [upperName, lowerName, startName, middleName, endName] of [
       ["upperArm" + side, "lowerArm" + side, "shoulder" + side, "elbow" + side, "wrist" + side],
@@ -235,19 +236,23 @@ function applyAnatomicalConstraints(plan, guide, frameIndex) {
         const anchorId = lockPlantedFoot(plan.keyDrawings, frameIndex, side, joints);
         if (anchorId) lockedFeet["foot" + side] = anchorId;
       }
+      const planted = middleName === "knee" + side && !!lockedFeet["foot" + side];
       const solved = solveTwoBone(
         joints[startName], joints[endName], lengths[upperName], lengths[lowerName],
-        bendDirection(bend, startName, middleName, endName)
+        bendDirection(bend, startName, middleName, endName), planted
       );
       joints[middleName] = solved.middle;
-      joints[endName] = solved.end;
+      if (!planted) joints[endName] = solved.end;
+      if (planted && solved.reachAdjusted) {
+        constraintWarnings.push("foot" + side + " is anchored but the current body pose exceeds the measured leg reach; add or redraw a key pose.");
+      }
     }
   }
   const centerOfMass = {
     x: joints.root.x * 0.2 + joints.pelvis.x * 0.5 + joints.chest.x * 0.3,
     y: joints.root.y * 0.2 + joints.pelvis.y * 0.5 + joints.chest.y * 0.3
   };
-  return { joints, centerOfMass, lockedFeet };
+  return { joints, centerOfMass, lockedFeet, constraintWarnings };
 }
 
 export function getAnimeAnatomyFrameRole(plan, frameIndex) {
@@ -302,7 +307,8 @@ export function sampleAnimeAnatomyGuide(plan, frameIndex) {
     frameIndex, source: "anatomy-constrained-construction-guide",
     fromKeyDrawingId: from.id, toKeyDrawingId: to.id, progress: Number(progress.toFixed(6)),
     guide: { ...interpolated, joints: constrained.joints },
-    centerOfMass: constrained.centerOfMass, lockedFeet: constrained.lockedFeet
+    centerOfMass: constrained.centerOfMass, lockedFeet: constrained.lockedFeet,
+    constraintWarnings: constrained.constraintWarnings
   };
 }
 
@@ -326,7 +332,7 @@ export function buildAnimeAnatomyConstruction(plan, frameIndex) {
   return {
     frameIndex, guideOnly: true, characterAssetId: plan.characterAssetId,
     canonicalView: plan.characterDNA.canonicalView, centerOfMass: sampled.centerOfMass,
-    lockedFeet: sampled.lockedFeet, joints: j, segments
+    lockedFeet: sampled.lockedFeet, constraintWarnings: sampled.constraintWarnings || [], joints: j, segments
   };
 }
 
