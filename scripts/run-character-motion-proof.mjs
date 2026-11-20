@@ -33,7 +33,7 @@ beginAnimationProduction(project,plan);
 await mkdir("artifacts/character-motion/frames",{recursive:true});
 const saveCheckpoint=()=>writeFile("artifacts/character-motion/character-motion.zero",JSON.stringify(project));
 const provider=createGeminiAnimationProvider({apiKey,model,referenceImage:{mimeType,data:imageBytes.toString("base64")}});
-const result=await runAnimationProduction(project,provider,{maxBatches:4,maxRetries:0,onBatch:saveCheckpoint});
+const result=await runAnimationProduction(project,provider,{maxBatches:4,maxRetries:2,onBatch:saveCheckpoint});
 await saveCheckpoint();
 for(let index=0;index<project.frames.length;index++){
  const frame=project.frames[index];
