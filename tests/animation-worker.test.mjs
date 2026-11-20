@@ -25,6 +25,15 @@ test("worker retries a rejected batch without mutating the project",async()=>{
  const result=await runAnimationProduction(p,async request=>{attempts++;if(attempts===1)return "not json";return JSON.stringify(batchFor(p.animationProduction,request.batchIndex))},{maxBatches:1,maxRetries:1});
  assert.equal(attempts,2);assert.equal(result.completedFrames,6);assert.equal(p.frames.length,6);
 });
+test("worker retries Gemini 503 with exponential backoff and honors Retry-After",async()=>{
+ const p=project(),waits=[];let attempts=0;
+ const result=await runAnimationProduction(p,async request=>{
+  attempts++;
+  if(attempts<=2){const error=Error("Gemini 503: temporarily overloaded");error.status=503;error.retryable=true;error.retryAfterMs=attempts===1?1500:null;throw error;}
+  return JSON.stringify(batchFor(p.animationProduction,request.batchIndex));
+ },{maxBatches:1,maxRetries:2,retryBaseDelayMs:1000,retryMaxDelayMs:5000,sleep:async ms=>waits.push(ms)});
+ assert.equal(attempts,3);assert.deepEqual(waits,[1500,2000]);assert.equal(result.completedFrames,6);assert.equal(p.frames.length,6);
+});
 test("worker fails safely after retry limit and leaves rejected batch uncommitted",async()=>{
  const p=project();
  await assert.rejects(()=>runAnimationProduction(p,async()=>"{bad json",{maxBatches:1,maxRetries:2}),/3 محاولات/);
@@ -43,7 +52,7 @@ test("worker stops when the supplied signal is already aborted",async()=>{
 test("worker validates bounds for run size and retry count",async()=>{
  const p=project();
  await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxBatches:0}),/بين 1 و1000/);
- await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxRetries:4}),/بين 0 و3/);
+ await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxRetries:6}),/بين 0 و5/);
 });
 test("checkpoint callback failure does not regenerate a committed batch",async()=>{
  const p=project();let calls=0;
