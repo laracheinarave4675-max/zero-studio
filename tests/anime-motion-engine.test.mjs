@@ -1,6 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
-import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,attachAnimeRasterDrawing,validateAnimeMotionSequence,materializeAnimeRasterFrames}from"../app/anime-motion-engine.mjs";
+import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,createAnimeStillDrawingRequest,attachAnimeRasterDrawing,validateAnimeMotionSequence,materializeAnimeRasterFrames}from"../app/anime-motion-engine.mjs";
 const makeGuide=(shift=0)=>({
  view:"side",contacts:{footL:"planted",footR:"swing"},
  joints:Object.fromEntries(ANIME_POSE_JOINTS.map((name,index)=>[name,{x:Math.min(.98,.2+index*.025+shift),y:Math.min(.95,.12+index*.035),z:0}]))
@@ -22,6 +22,29 @@ test("anime motion plan fixes playback at 24 fps and keeps character/background 
 test("plan rejects non-24 fps and requires first and last drawings to be key poses",()=>{
  assert.throws(()=>plan({fps:12}),/24/);
  const p=plan();assert.throws(()=>createAnimeMotionPlan({...p,keyPoses:p.keyPoses.slice(1)}),/بداية اللقطة ونهايتها/);
+});
+const refImage=(mime="image/png")=>"data:"+mime+";base64,AAAA";
+test("key-drawing request calls the existing still-image API with identity, pose, previous drawing and model sheet references",()=>{
+ const p=plan();const req=createAnimeStillDrawingRequest(p,12,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage(),previousKeyDrawingDataUrl:refImage("image/webp"),modelSheetDataUrl:refImage("image/jpeg")});
+ assert.equal(req.endpoint,"/api/images");assert.equal(req.method,"POST");assert.equal(req.model,"flux-2-klein-4b");assert.equal(req.aspectRatio,"16:9");
+ assert.equal(req.frameKind,"key-drawing");assert.equal(req.frameNumber,13);assert.equal(req.references.length,4);
+ assert.deepEqual(req.referenceLabels,["هوية الشخصية المعتمدة","مرجع الوضعية","الرسمة المفتاحية السابقة","ورقة نموذج الشخصية"]);
+ assert.match(req.prompt,/Create exactly ONE complete/);assert.match(req.prompt,/Do not redesign the character/);assert.match(req.prompt,/Do not reproduce skeleton lines/);
+ assert.match(req.prompt,/chroma-blue background/);assert.ok(req.prompt.length<=1800);
+});
+test("in-between request receives the two adjacent approved key drawings and the exact target pose",()=>{
+ const req=createAnimeStillDrawingRequest(plan(),6,{characterReferenceDataUrl:refImage(),fromKeyDrawingDataUrl:refImage("image/jpeg"),toKeyDrawingDataUrl:refImage("image/webp"),poseGuideDataUrl:refImage()});
+ assert.equal(req.frameKind,"inbetween-drawing");assert.equal(req.frameNumber,7);
+ assert.deepEqual(req.referenceLabels,["هوية الشخصية المعتمدة","الرسمة المفتاحية السابقة","الرسمة المفتاحية التالية","دليل الوضعية المستهدف"]);
+ assert.equal(req.references.length,4);assert.match(req.prompt,/Do not blend, morph, ghost, or copy either reference/);
+});
+test("still drawing request rejects missing pose references, malformed images and over-limit references",()=>{
+ const p=plan();assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:refImage()}),/مرجع الوضعية مفقود/);
+ assert.throws(()=>createAnimeStillDrawingRequest(p,6,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage()}),/الرسمة المفتاحية السابقة مفقودة/);
+ assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:"data:image/svg+xml;base64,AAAA",poseGuideDataUrl:refImage()}),/ليست PNG أو JPEG أو WebP صالحة/);
+ const oversized="data:image/png;base64,"+"A".repeat(700000);
+ assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:oversized,poseGuideDataUrl:refImage()}),/تتجاوز حد 512 كيلوبايت/);
+ assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage(),aspectRatio:"4:3"}),/نسبة أبعاد الرسمة/);
 });
 test("key pose schedule identifies key drawings and intervening drawing tasks without holds",()=>{
  const schedule=createAnimeDrawingSchedule(plan());assert.equal(schedule.length,24);
