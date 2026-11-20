@@ -1,6 +1,6 @@
 import{writeFile,mkdir,rename,readFile}from"node:fs/promises";
 import{createProject,createLayer,frameSvg,normalizeProject}from"../app/engine.mjs";
-import{createAnimationPlan,beginAnimationProduction,validateAnimationCheckpoint}from"../app/animation-production.mjs";
+import{createAnimationPlan,beginAnimationProduction,validateAnimationCheckpoint,reconfigureAnimationCheckpointBatchSize}from"../app/animation-production.mjs";
 import{runAnimationProduction}from"../app/animation-worker.mjs";
 import{createGeminiAnimationProvider}from"../app/gemini-animation.mjs";
 
@@ -17,14 +17,15 @@ const description=[
  "Action: one small, natural walking step in place toward screen-left. Frames 0–5: subtle anticipation and weight transfer onto the supporting foot. Frames 6–11: the leading foot lifts and swings forward while the torso counterbalances and the sleeve begins to lag. Frames 12–17: the leading foot reaches and makes gentle ground contact; show believable ankle/knee geometry and stable balance. Frames 18–23: weight settles onto the new foot, the trailing foot follows slightly, and long hair and kimono fabric complete a restrained follow-through and settle.",
  "Keep the camera locked, full body visible from hair top to both feet, centered at the same scale on a plain transparent canvas. No camera motion, zoom, cuts, scene changes, new props, extra people, or background painting.",
  "Draw each timestamp as a genuinely new complete character pose using editable SVG paths, not a moved still image, not transforms of a single pose, not duplicated/held frames, and not a raster or video output. Preserve anatomy, silhouette, contact with the ground, cloth layering, hair continuity and consistent line weight.",
- "Use semantic layers in stable back-to-front order: rear hair, kimono/body, legs/feet, arms/sleeves, head/front hair/details. Every layer must be named consistently in all 24 frames. The output should look like polished 2D anime character key animation, not geometric stick figures or a wireframe."
+ "Use exactly these five named layers in this precise back-to-front order in every frame: rear_hair, kimono_body, legs_feet, arms_sleeves, head_front_hair. Each layer must contain at least two separate meaningful editable paths per frame; never leave a layer empty. Draw a separate silhouette contour and separate internal/detail paths rather than combining everything into one path. Aim for 15–25 paths per frame. The output should look like polished 2D anime character key animation, not geometric stick figures or a wireframe."
 ].join("\n");
 let project;
 const checkpointInput=String(process.env.MOTION_CHECKPOINT_PATH||"").trim();
 if(checkpointInput){
  const checkpointRaw=JSON.parse(await readFile(checkpointInput,"utf8"));
  project=normalizeProject(checkpointRaw);
- const checkpoint=validateAnimationCheckpoint(project);
+ const checkpoint=reconfigureAnimationCheckpointBatchSize(project,2);
+ validateAnimationCheckpoint(project,{durationSeconds:1,fps:24,batchSize:2});
  console.log("Restored checkpoint: "+checkpoint.completedFrames+"/"+checkpoint.totalFrames+" frames; next batch "+(checkpoint.nextBatchIndex+1)+" of "+checkpoint.batchCount+".");
 }else{
  project=createProject("ZERO STUDIO — One-second anime character motion proof");
@@ -32,7 +33,7 @@ if(checkpointInput){
  background.locked=true;
  background.operations=[{id:"motion-white-background",kind:"stroke",path:{d:"M 0 0 L 1920 0 L 1920 1080 L 0 1080 Z",stroke:"none",width:0,fill:"#ffffff"}}];
  project.animationBackground=[background];
- beginAnimationProduction(project,createAnimationPlan(description,{durationSeconds:1,fps:24,batchSize:6}));
+ beginAnimationProduction(project,createAnimationPlan(description,{durationSeconds:1,fps:24,batchSize:2}));
 }
 const saveCheckpoint=async()=>{
  const temporary=checkpointOutput+".tmp";
@@ -47,7 +48,7 @@ if(!["image/jpeg","image/png","image/webp"].includes(mimeType))throw Error("The 
 const imageBytes=Buffer.from(await imageResponse.arrayBuffer());
 if(!imageBytes.length||imageBytes.length>6*1024*1024)throw Error("Character reference is empty or exceeds 6 MiB.");
 const provider=createGeminiAnimationProvider({apiKey,model,referenceImage:{mimeType,data:imageBytes.toString("base64")}});
-const result=await runAnimationProduction(project,provider,{maxBatches:4,maxRetries:4,retryBaseDelayMs:5000,retryMaxDelayMs:60000,onBatch:saveCheckpoint});
+const result=await runAnimationProduction(project,provider,{maxBatches:12,maxRetries:4,retryBaseDelayMs:5000,retryMaxDelayMs:60000,onBatch:saveCheckpoint});
 await saveCheckpoint();
 for(let index=0;index<project.frames.length;index++){
  const frame=project.frames[index];
