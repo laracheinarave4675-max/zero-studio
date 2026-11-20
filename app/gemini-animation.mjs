@@ -1,5 +1,5 @@
-const DEFAULT_MODEL="gemini-3.5-flash-lite";
-const ALLOWED_MODELS=new Set(["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-3.8-flash"]);
+const DEFAULT_MODEL="gemini-3.1-flash-lite";
+const ALLOWED_MODELS=new Set(["gemini-3.1-flash-lite","gemini-3.1-flash-lite","gemini-3-flash-preview","gemini-3.8-flash"]);
 const REFERENCE_MIME_TYPES=new Set(["image/jpeg","image/png","image/webp"]);
 function normalizeReferenceImage(referenceImage){
  if(referenceImage===undefined||referenceImage===null)return null;
