@@ -68,7 +68,7 @@ test("character DNA locks one approved identity and measured anatomical proporti
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
   const base = guide();
-  assert.throws(() => createAnimeCharacterDNA({ anchorGuide:base }), /هوية الشخصية/);
+  assert.throws(() => createAnimeCharacterDNA({ anchorGuide:base }), /أصل الشخصية بكتاب هويتها/);
   const invalid = guide();
   delete invalid.joints.wristR;
   assert.throws(() => createAnimeCharacterDNA({
