@@ -19,7 +19,7 @@ function json(data, status = 200, headers = {}) {
 function corsHeaders(origin) {
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "authorization, content-type",
     "access-control-max-age": "600",
     vary: "Origin",
