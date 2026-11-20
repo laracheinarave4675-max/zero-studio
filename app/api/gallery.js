@@ -14,10 +14,12 @@ module.exports = async function handler(req, res) {
   const appOrigin = String(process.env.ZERO_STUDIO_APP_ORIGIN || "").trim();
   const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
   const requestOrigin = String(req.headers.origin || "").trim();
+  const requestHost = String(req.headers.host || "").toLowerCase();
+  const sameHostOrigin = requestHost ? "https://" + requestHost : "";
+  const allowedPreviewHost = /^zero-studio-preview(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
+  const sameOrigin = requestOrigin ? requestOrigin === sameHostOrigin : true;
   if (!appOrigin || !token) return send(res, 503, { ok: false, error: "gallery_not_configured", message: "إعدادات معرض الصور غير مكتملة." });
-  if (req.method === "POST" && requestOrigin !== appOrigin) return send(res, 403, { ok: false, error: "origin_not_allowed" });
-  if (req.method === "GET" && requestOrigin && requestOrigin !== appOrigin) return send(res, 403, { ok: false, error: "origin_not_allowed" });
-  if (req.method === "GET" && !requestOrigin && !String(req.headers.referer || "").startsWith(appOrigin + "/")) return send(res, 403, { ok: false, error: "same_origin_required" });
+  if (!sameOrigin || (!allowedPreviewHost && sameHostOrigin !== appOrigin)) return send(res, 403, { ok: false, error: "origin_not_allowed" });
   if (req.method !== "GET" && req.method !== "POST") {
     res.setHeader("Allow", "GET, POST");
     return send(res, 405, { ok: false, error: "method_not_allowed" });
@@ -50,3 +52,5 @@ module.exports = async function handler(req, res) {
     return send(res, 502, { ok: false, error: "gallery_unreachable", message: "تعذر الاتصال بمخزن معرض الصور." });
   }
 };
+
+module.exports.config = { api: { bodyParser: { sizeLimit: "4mb" } } };
