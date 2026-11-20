@@ -97,3 +97,8 @@ Animation quality criteria: believable timing and spacing, anticipation/action/f
 ## Explicit live motion-proof run request
 
 The project owner explicitly requested the free-tier-only 24-frame Gemini motion proof on 2026-11-20 after confirming the `GEMINI_API_KEY` Actions secret, no-billing Google project, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true` repository variable. This commit is the deliberate workflow trigger. Review the resulting Actions run and artifact; do not infer success from dispatch alone.
+
+
+## Explicit free-tier motion run authorization — 2026-11-20
+
+The project owner explicitly confirmed that `GEMINI_API_KEY` is configured as a GitHub Actions secret, the Google project is free-tier with no billing, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true` is configured as a repository Actions variable. This commit carries the explicit `[RUN_FREE_TIER_MOTION_PROOF]` marker to request the guarded one-second / 24-frame test. Do not interpret the request as permission to enable billing, use paid inference, switch providers, or deploy to production. Inspect the workflow run and artifact before making any visual-quality claims.
