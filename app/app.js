@@ -136,15 +136,19 @@ function renderAnimeAnatomyMarkers(){
  $("saveAnimeAnatomyDNABtn").disabled=!complete;
  if(complete){
   $("animeAnatomyStepTitle").textContent="اكتمل تحديد النقاط التشريحية";
-  $("animeAnatomyStepHint").textContent="راجع مواضع العلامات ثم احفظ هوية الشخصية";
+  $("animeAnatomyStepHint").textContent=animeAnatomyMode==="key"?"راجع المواضع ثم اعتمد الرسمة المفتاحية":"راجع مواضع العلامات ثم احفظ هوية الشخصية";
  }else{
   const item=ANIME_ANATOMY_LABELS[animeAnatomyStep];
   $("animeAnatomyStepTitle").textContent="النقطة "+(animeAnatomyStep+1)+" من "+ANIME_ANATOMY_LABELS.length;
   $("animeAnatomyStepHint").textContent="انقر على: "+item.label;
  }
 }
+function currentFrameHasDrawing(){
+ return frame().layers.some(entry=>entry.visible!==false&&(entry.type==="raster"?!!entry.dataUrl:Array.isArray(entry.operations)&&entry.operations.some(operation=>operation.kind==="stroke")));
+}
 function beginAnimeAnatomyCalibration(){
  if(!animeAnatomyCanvas||!animeAnatomySource)return;
+ if(!currentFrameHasDrawing()){animeAnatomyStatus("الإطار الحالي فارغ. ارسم الشخصية كاملة أو استورد رسمتها أولاً، ثم عاير المفاصل فوقها.",false);return}
  animeAnatomyActive=true;animeAnatomyStep=0;animeAnatomyPoints={};
  const background=[...(project.animationBackground||[]),...frame().layers];
  animeAnatomySource.replaceChildren();
@@ -180,6 +184,7 @@ function beginAnimeKeyDrawing(){
 function saveAnimeKeyDrawing(){
  const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===activeAnimeDNAId);
  if(!dna)throw Error("تعذر العثور على هوية الشخصية المحددة.");
+ if(!currentFrameHasDrawing())throw Error("لا يمكن اعتماد إطار فارغ؛ ارسم الشخصية كاملة في هذا الإطار أولاً.");
  if(current>=24)throw Error("الإطار الحالي خارج نطاق اختبار المشي الأول.");
  const guide={
   view:dna.canonicalView,
@@ -234,6 +239,7 @@ function buildAnimeMotionPlan(){
   dna.lastMotionAction=action;dna.lastMotionShotId=plan.shotId;
   download((dna.name||"character")+"-walk-24fps-plan.json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));
   $("animeMotionPlanStatus").textContent="نجحت الخطة: 24 مهمة رسم مستقلة، "+keys.length+" وضعيات مفتاحية، والإطار الحالي "+(currentFrame+1)+" هو "+(role.kind==="key-drawing"?"رسمة مفتاحية":"إطار وسيط يحتاج إعادة رسم كاملة")+".";
+  renderAnimeAnatomyConstructionOverlay();
   animeAnatomyStatus("تم إنشاء وتصدير خطة 24 رسمة مستقلة. هذه خطة إنتاج وليست فيديو أو رسومات نهائية جاهزة.");
  }catch(error){
   $("animeMotionPlanStatus").textContent="تعذر إنشاء الخطة: "+error.message;
@@ -262,7 +268,7 @@ function saveAnimeAnatomyDNA(){
   renderAnimeAnatomyDNASelect(id);
   cancelAnimeAnatomyCalibration();
   animeAnatomyStatus("حُفظت هوية "+name+" مع 19 نقطة تشريحية داخل المشروع .zero. لم تُعدّل الرسمة الأصلية.");
- }catch(error){animeAnatomyStatus("تعذر حفظ الهوية التشريحية: "+error.message,false)}
+ }catch(error){animeAnatomyStatus((animeAnatomyMode==="key"?"تعذر اعتماد الرسمة المفتاحية: ":"تعذر حفظ الهوية التشريحية: ")+error.message,false)}
 }
 function renderAnimeAnatomyConstructionOverlay(){
  if(!animeAnatomyConstructionLayer)return;
@@ -316,7 +322,7 @@ function wireAnimeAnatomyCalibration(){
  };
  $("cancelAnimeAnatomyBtn").onclick=cancelAnimeAnatomyCalibration;
  $("saveAnimeAnatomyDNABtn").onclick=saveAnimeAnatomyDNA;
- $("animeAnatomyDNASelect").onchange=()=>{const active=!!$("animeAnatomyDNASelect").value;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active};
+ $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction)$("animeMotionAction").value=dna.lastMotionAction};
  $("exportAnimeAnatomyDNABtn").onclick=()=>{
   const selected=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);
