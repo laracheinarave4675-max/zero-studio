@@ -56,8 +56,8 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 
 ## Safe execution and visual review
 
-- A push to this feature branch runs syntax checks and the complete automated test suite only. It does not call Gemini.
-- Live generation is an explicit manual GitHub Actions dispatch. Set `confirm_free_tier_only=true` only after verifying that the configured `GEMINI_API_KEY` belongs to a no-cost/free-tier project with billing disabled. This repository cannot inspect or guarantee the billing state of the Google AI account.
-- The model is pinned to `gemini-3.5-flash-lite` for the proof. There is no paid fallback, no automatic model switch, and no automatic retry of generation batches.
-- The artifact contains `index.html`: a 24 fps playback page and a 24-frame contact sheet. Open it locally after extracting the artifact to inspect the whole sequence and select individual drawings. The `.zero` project and each source SVG frame remain alongside the preview.
-- If the key is missing, free quota is unavailable, or the API returns a quota/rate-limit error, stop. Do not enable billing or switch providers to make the run pass.
+- A normal push to this feature branch runs syntax checks and the complete automated test suite only. It does not call Gemini.
+- Live generation requires all three conditions: (1) a repository Actions variable named `ZERO_STUDIO_FREE_TIER_CONFIRMED` set to the exact text `true`; (2) the commit message contains `[RUN_FREE_TIER_MOTION_PROOF]`; and (3) the repository Actions secret `GEMINI_API_KEY` is configured. The variable is a deliberate guard, not proof of Google billing status.
+- Set the variable in GitHub repository Settings → Secrets and variables → Actions → Variables. Keep the API key in Secrets, never in a file or chat. Set the guard only after verifying that the key belongs to a no-cost/free-tier project with paid billing disabled. This repository cannot inspect or guarantee the billing state of the Google AI account.
+- The model is pinned to `gemini-3.5-flash-lite`. There is no paid fallback, no automatic model switch, and no automatic retry of generation batches. If the key is missing, free quota is unavailable, or the API returns a quota/rate-limit error, stop; do not enable billing or switch providers.
+- The workflow artifact contains `index.html`: a 24 fps playback page and a 24-frame contact sheet. Open it locally after extracting the artifact to inspect the whole sequence and select individual drawings. The `.zero` project and each source SVG frame remain alongside the preview.
