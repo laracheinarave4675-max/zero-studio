@@ -185,6 +185,10 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /async function buildStoredAnimeRasterSequence\(\)/);
   assert.match(app, /await restoreAnimeMotionPlan\(selectedAnimeDNA\)/);
   assert.match(app, /await auditStoredAnimeRasterFrames\(false\)/);
+  assert.match(app, /function syncAnimeRasterReviewControls\(\)/);
+  assert.match(app, /syncAnimeRasterReviewControls\(\);renderFrame\(art,frame\(\)\)/);
+  assert.match(app, /frame-raster-status/);
+  assert.match(app, /review\.identity===true/);
   assert.match(app, /animeAnatomyDraggingKey=selectedJoint/);
   assert.match(app, /animeAnatomyCanvas\.addEventListener\("pointermove"/);
   assert.match(app, /label\.setAttribute\("data-anatomy-joint",item\.key\)/);
