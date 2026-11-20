@@ -61,12 +61,12 @@ jobs:
             exit 1
           fi
           echo "Free-tier guard is enabled and the Gemini secret is present. No Gemini request was made by this check."
-      - name: Restore the previously accepted six-frame checkpoint
+      - name: Restore the previously accepted twelve-frame checkpoint
         uses: actions/download-artifact@v4
         with:
           name: zero-studio-character-motion-proof
           path: artifacts/checkpoint
-          run-id: 44797885347
+          run-id: 44799441660
           github-token: ${{ github.token }}
       - name: Generate 24 reference-conditioned independent character drawings
         env:
