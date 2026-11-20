@@ -12,3 +12,7 @@ head_sampling_rate = 1
 
 [previews.ai]
 binding = "AI"
+
+[[kv_namespaces]]
+binding = "GALLERY"
+id = "1f604fc7958b491e8ac15bbb3e127de3"
