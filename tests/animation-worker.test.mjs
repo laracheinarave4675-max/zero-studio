@@ -25,6 +25,25 @@ test("worker retries a rejected batch without mutating the project",async()=>{
  const result=await runAnimationProduction(p,async request=>{attempts++;if(attempts===1)return "not json";return JSON.stringify(batchFor(p.animationProduction,request.batchIndex))},{maxBatches:1,maxRetries:1});
  assert.equal(attempts,2);assert.equal(result.completedFrames,6);assert.equal(p.frames.length,6);
 });
+test("worker retries Gemini 503 with exponential backoff and honors Retry-After",async()=>{
+ const p=project(),waits=[];let attempts=0;
+ const result=await runAnimationProduction(p,async request=>{
+  attempts++;
+  if(attempts<=2){const error=Error("Gemini 503: temporarily overloaded");error.status=503;error.retryable=true;error.retryAfterMs=attempts===1?1500:null;throw error;}
+  return JSON.stringify(batchFor(p.animationProduction,request.batchIndex));
+ },{maxBatches:1,maxRetries:2,retryBaseDelayMs:1000,retryMaxDelayMs:5000,sleep:async ms=>waits.push(ms)});
+ assert.equal(attempts,3);assert.deepEqual(waits,[1500,2000]);assert.equal(result.completedFrames,6);assert.equal(p.frames.length,6);
+});
+test("worker explains per-layer path minimum and retries the exact rejected character batch",async()=>{
+ const p=createProject();p.animationBackground=[{id:"bg",name:"Background",visible:true,locked:true,operations:[{id:"bg-op",kind:"stroke",path:{d:"M 0 0 L 1920 1080",stroke:"#172033",width:2,fill:"none"}}]}];
+ beginAnimationProduction(p,createAnimationPlan("شخصية أنمي تمشي",{durationSeconds:1,batchSize:2}));
+ let attempts=0;const prompts=[];
+ const result=await runAnimationProduction(p,async request=>{
+  attempts++;prompts.push(request.prompt);const payload=batchFor(p.animationProduction,request.batchIndex);payload.frames.forEach(frame=>{frame.layers.forEach(layer=>{layer.role="moving"});if(attempts>1){for(const layer of frame.layers){for(let i=0;i<4;i++){const x=30+frame.index*20+i*3;layer.operations.push({d:"M "+x+" 30 L "+(x+4)+" 35",stroke:"#172033",width:1,fill:"none"})}}}});return JSON.stringify(payload);
+ },{maxBatches:1,maxRetries:1});
+ assert.equal(attempts,2);assert.equal(result.addedFrames,2);assert.equal(result.completedFrames,2);
+ assert.match(prompts[1],/STRICT VECTOR-QUALITY REPAIR REQUIRED/);assert.match(prompts[1],/at least TEN paths total per frame/);assert.match(prompts[1],/الإطار 1 يحتوي 2 مسارات فقط/);
+});
 test("worker fails safely after retry limit and leaves rejected batch uncommitted",async()=>{
  const p=project();
  await assert.rejects(()=>runAnimationProduction(p,async()=>"{bad json",{maxBatches:1,maxRetries:2}),/3 محاولات/);
@@ -43,7 +62,7 @@ test("worker stops when the supplied signal is already aborted",async()=>{
 test("worker validates bounds for run size and retry count",async()=>{
  const p=project();
  await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxBatches:0}),/بين 1 و1000/);
- await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxRetries:4}),/بين 0 و3/);
+ await assert.rejects(()=>runAnimationProduction(p,async()=>"",{maxRetries:6}),/بين 0 و5/);
 });
 test("checkpoint callback failure does not regenerate a committed batch",async()=>{
  const p=project();let calls=0;

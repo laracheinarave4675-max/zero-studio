@@ -10,6 +10,10 @@ test("Gemini animation provider sends JSON mode request and returns parsed batch
  assert.equal(request.options.headers["x-goog-api-key"],"test-secret");
  assert.equal(JSON.parse(request.options.body).generationConfig.responseMimeType,"application/json");
 });
+test("Gemini 503 overload response exposes Retry-After metadata",async()=>{
+ const provider=createGeminiAnimationProvider({apiKey:"x",fetcher:async()=>({ok:false,status:503,headers:{get:name=>name==="retry-after"?"12":null},json:async()=>({error:{message:"temporarily overloaded"}})})});
+ await assert.rejects(()=>provider({prompt:"test"}),error=>error.status===503&&error.retryable===true&&error.retryAfterMs===12000&&/temporarily overloaded/.test(error.message));
+});
 test("Gemini animation provider requires key and rejects unsupported models",()=>{
  assert.throws(()=>createGeminiAnimationProvider({apiKey:""}),/GEMINI_API_KEY/);
  assert.throws(()=>createGeminiAnimationProvider({apiKey:"x",model:"unknown"}),/Unsupported/);
@@ -22,3 +26,18 @@ test("Gemini animation provider reports HTTP quota errors without hiding status"
 test("Gemini 3 Flash Preview is accepted as the documented API model ID",async()=>{const provider=createGeminiAnimationProvider({apiKey:"x",model:"gemini-3-flash-preview",fetcher:async(url)=>{assert.match(url,/gemini-3-flash-preview:generateContent$/);return{ok:true,json:async()=>({candidates:[{content:{parts:[{text:'{"version":1,"frames":[]}' }]}}]})}}});assert.deepEqual(await provider({prompt:"test"}),{version:1,frames:[]});});
 
 test("Gemini 3.8 Flash is accepted as a supported model",async()=>{const provider=createGeminiAnimationProvider({apiKey:"x",model:"gemini-3.8-flash",fetcher:async(url)=>{assert.match(url,/gemini-3\.8-flash:generateContent$/);return{ok:true,json:async()=>({candidates:[{content:{parts:[{text:'{"version":1,"frames":[]}' }]}}]})}}});assert.deepEqual(await provider({prompt:"test"}),{version:1,frames:[]});});
+
+test("Gemini animation provider attaches the approved character reference as multimodal input",async()=>{
+ let request;
+ const referenceImage={mimeType:"image/jpeg",data:"/9j/4AAQSkZJRgABAQAAAQABAAD/"};
+ const provider=createGeminiAnimationProvider({apiKey:"test-secret",model:"gemini-3.1-flash-lite",referenceImage,fetcher:async(url,options)=>{request={url,options};return{ok:true,json:async()=>({candidates:[{content:{parts:[{text:'{"version":1,"frames":[]}' }]}}]})}}});
+ await provider({prompt:"draw the next six frames"});
+ const payload=JSON.parse(request.options.body);
+ assert.equal(payload.contents[0].parts[0].text,"draw the next six frames");
+ assert.match(payload.contents[0].parts[1].text,/approved visual reference/);
+ assert.deepEqual(payload.contents[0].parts[2].inline_data,{mime_type:"image/jpeg",data:referenceImage.data});
+});
+test("Gemini animation provider rejects unsupported or malformed character references",()=>{
+ assert.throws(()=>createGeminiAnimationProvider({apiKey:"x",referenceImage:{mimeType:"image/gif",data:"AAAA"}}),/JPEG, PNG, or WebP/);
+ assert.throws(()=>createGeminiAnimationProvider({apiKey:"x",referenceImage:{mimeType:"image/png",data:"not base64"}}),/invalid or exceeds/);
+});

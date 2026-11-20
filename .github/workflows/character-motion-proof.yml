@@ -1,0 +1,97 @@
+name: ZERO STUDIO — referenced anime character motion proof
+on:
+  push:
+    branches: ["feat/anime-character-motion-proof"]
+    paths:
+      - ".github/workflows/character-motion-proof.yml"
+      - "scripts/run-character-motion-proof.mjs"
+      - "app/gemini-animation.mjs"
+      - "app/animation-production.mjs"
+      - "app/animation-worker.mjs"
+      - "tests/gemini-animation.test.mjs"
+      - "tests/animation-worker.test.mjs"
+      - "tests/animation-production.test.mjs"
+      - "docs/ANIME_CHARACTER_MOTION_PROOF.md"
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  regression-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check the motion adapter and runner
+        run: node --check app/gemini-animation.mjs && node --check scripts/run-character-motion-proof.mjs
+      - name: Diagnose free-tier motion gate (never print secret values)
+        env:
+          FREE_TIER_GUARD: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED }}
+          GEMINI_KEY_PRESENT: ${{ secrets.GEMINI_API_KEY != '' }}
+        run: |
+          if [ "$FREE_TIER_GUARD" = "true" ]; then echo "Free-tier repository variable: true"; else echo "Free-tier repository variable: missing or not exactly true"; fi
+          if [ "$GEMINI_KEY_PRESENT" = "true" ]; then echo "Gemini API secret: configured"; else echo "Gemini API secret: missing"; fi
+      - name: Run complete automated regression suite
+        run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
+  one-second-character-motion:
+    needs: regression-tests
+    if: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED == 'true' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[RUN_FREE_TIER_MOTION_PROOF]'))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify free-tier gates before any model request
+        env:
+          FREE_TIER_GUARD: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -eu
+          if [ "$FREE_TIER_GUARD" != "true" ]; then
+            echo "::error::Set repository Actions variable ZERO_STUDIO_FREE_TIER_CONFIRMED to exactly true."
+            exit 1
+          fi
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Add the Gemini API key as Actions secret GEMINI_API_KEY."
+            exit 1
+          fi
+          echo "Free-tier guard is enabled and the Gemini secret is present. No Gemini request was made by this check."
+      - name: Locate the newest saved motion checkpoint for this branch
+        id: latest-checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          checkpoint_run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" --jq '.artifacts | map(select(.name == "zero-studio-character-motion-proof" and .expired == false and .workflow_run.head_branch == "feat/anime-character-motion-proof")) | sort_by(.created_at) | last | .workflow_run.id // empty')
+          if [ -z "$checkpoint_run_id" ] || [ "$checkpoint_run_id" = "$GITHUB_RUN_ID" ]; then
+            echo "::error::No previous saved motion checkpoint was found for this branch."
+            exit 1
+          fi
+          echo "Restoring checkpoint from workflow run $checkpoint_run_id"
+          echo "run_id=$checkpoint_run_id" >> "$GITHUB_OUTPUT"
+      - name: Restore the latest saved motion checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: zero-studio-character-motion-proof
+          path: artifacts/checkpoint
+          run-id: ${{ steps.latest-checkpoint.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Generate 24 reference-conditioned independent character drawings
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.1-flash-lite
+          MOTION_CHECKPOINT_PATH: artifacts/checkpoint/character-motion.zero
+        run: node scripts/run-character-motion-proof.mjs
+      - name: Upload editable motion project, frames, and visual review page
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-character-motion-proof
+          path: artifacts/character-motion/
+          if-no-files-found: warn
+          retention-days: 14
