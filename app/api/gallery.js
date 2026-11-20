@@ -15,7 +15,9 @@ module.exports = async function handler(req, res) {
   const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
   const requestOrigin = String(req.headers.origin || "").trim();
   if (!appOrigin || !token) return send(res, 503, { ok: false, error: "gallery_not_configured", message: "إعدادات معرض الصور غير مكتملة." });
-  if (requestOrigin !== appOrigin) return send(res, 403, { ok: false, error: "origin_not_allowed" });
+  if (req.method === "POST" && requestOrigin !== appOrigin) return send(res, 403, { ok: false, error: "origin_not_allowed" });
+  if (req.method === "GET" && requestOrigin && requestOrigin !== appOrigin) return send(res, 403, { ok: false, error: "origin_not_allowed" });
+  if (req.method === "GET" && !requestOrigin && !String(req.headers.referer || "").startsWith(appOrigin + "/")) return send(res, 403, { ok: false, error: "same_origin_required" });
   if (req.method !== "GET" && req.method !== "POST") {
     res.setHeader("Allow", "GET, POST");
     return send(res, 405, { ok: false, error: "method_not_allowed" });
