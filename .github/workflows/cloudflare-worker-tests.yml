@@ -2,7 +2,7 @@ name: Cloud inference worker tests
 
 on:
   push:
-    branches: [feat/hybrid-human-art-pipeline, feat/production-gallery]
+    branches: [feat/hybrid-human-art-pipeline, feat/production-gallery, feat/flux2-wide-backgrounds]
     paths:
       - "cloudflare-worker/**"
       - ".github/workflows/cloudflare-worker-tests.yml"

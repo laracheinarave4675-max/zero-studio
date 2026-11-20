@@ -26,6 +26,32 @@ function request(path = "/v1/images", body = { prompt: "anime forest house" }, h
   });
 }
 
+test("uses the primary Worker as a no-inference token verifier when no local secret exists", async () => {
+  const originalFetch = globalThis.fetch;
+  let verificationCalls = 0;
+  let inferenceCalls = 0;
+  globalThis.fetch = async (url, options) => {
+    verificationCalls++;
+    assert.equal(url, "https://zero-studio.9test4675a26.workers.dev/v1/images");
+    assert.equal(options.method, "POST");
+    assert.equal(options.headers.Authorization, "Bearer " + TOKEN);
+    assert.equal(options.headers.Origin, ORIGIN);
+    assert.equal(JSON.parse(options.body).prompt, "");
+    return Response.json({ error: "invalid_prompt" }, { status: 400 });
+  };
+  try {
+    const response = await worker.fetch(request(), {
+      STUDIO_ORIGIN: ORIGIN,
+      AI: { run: async () => { inferenceCalls++; return { image: "aGVsbG8=" }; } },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(verificationCalls, 1);
+    assert.equal(inferenceCalls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("rejects a missing or invalid bearer token before inference", async () => {
   let calls = 0;
   const req = request("/v1/images", { prompt: "test" }, { Authorization: "Bearer wrong" });
@@ -57,6 +83,80 @@ test("valid request calls only the fixed model with at most four steps", async (
   assert.equal(payload.ok, true);
   assert.equal(payload.mimeType, "image/jpeg");
   assert.match(payload.imageDataUrl, /^data:image\/jpeg;base64,/);
+});
+
+test("FLUX.2 Klein 4B receives explicit 16:9 dimensions using multipart input", async () => {
+  let captured;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "wide anime background",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+  }), env(async (model, input) => {
+    const multipartResponse = new Response(input.multipart.body, {
+      headers: { "content-type": input.multipart.contentType },
+    });
+    const form = await multipartResponse.formData();
+    captured = {
+      model,
+      prompt: form.get("prompt"),
+      width: form.get("width"),
+      height: form.get("height"),
+      contentType: input.multipart.contentType,
+    };
+    return { image: "iVBORw0KGgo=" };
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(captured.model, "@cf/black-forest-labs/flux-2-klein-4b");
+  assert.equal(captured.prompt, "wide anime background");
+  assert.equal(captured.width, "1280");
+  assert.equal(captured.height, "720");
+  assert.match(captured.contentType, /^multipart\/form-data; boundary=/);
+  const payload = await response.json();
+  assert.equal(payload.width, 1280);
+  assert.equal(payload.height, 720);
+  assert.equal(payload.aspectRatio, "16:9");
+  assert.equal(payload.mimeType, "image/png");
+  assert.match(payload.imageDataUrl, /^data:image\/png;base64,/);
+});
+
+test("rejects unknown image models without calling inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "test",
+    model: "@cf/attacker/unknown-model",
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_model");
+  assert.equal(calls, 0);
+});
+
+test("rejects unsupported FLUX.2 aspect ratios without calling inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "test",
+    model: "flux-2-klein-4b",
+    aspectRatio: "32:9",
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_aspect_ratio");
+  assert.equal(calls, 0);
+});
+
+test("does not switch models when FLUX.2 Klein 4B quota or capacity is exhausted", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "test",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+  }), env(async () => {
+    calls++;
+    throw new Error("Workers AI out of capacity");
+  }));
+  assert.equal(response.status, 429);
+  assert.equal(calls, 1);
+  const payload = await response.json();
+  assert.equal(payload.error, "free_quota_exhausted");
+  assert.equal(payload.retryable, true);
 });
 
 test("rejects steps above the free-safe cap without inference", async () => {
