@@ -84,6 +84,53 @@ export function createAnimeDrawingSchedule(plan){
  validPlan(plan);
  return Array.from({length:plan.totalFrames},(_,frameIndex)=>({...getAnimeFrameRole(plan,frameIndex),guide:sampleAnimePoseGuide(plan,frameIndex),requirement:"independent-raster-drawing",exposureFrames:1,backgroundAssetId:plan.backgroundAssetId}));
 }
+const POSE_GUIDE_BONES=Object.freeze([
+ ["root","pelvis"],["pelvis","chest"],["chest","neck"],["neck","head"],
+ ["chest","shoulderL"],["shoulderL","elbowL"],["elbowL","wristL"],
+ ["chest","shoulderR"],["shoulderR","elbowR"],["elbowR","wristR"],
+ ["pelvis","hipL"],["hipL","kneeL"],["kneeL","ankleL"],
+ ["pelvis","hipR"],["hipR","kneeR"],["kneeR","ankleR"]
+]);
+/**
+ * Paints a temporary raster pose reference into a supplied browser Canvas.
+ * It is only a spatial guide for a separate full 2D drawing request.
+ * The canvas image is never accepted as a final character frame.
+ */
+export function renderAnimePoseGuidePng(canvas,plan,frameIndex,{width=512,height=512}={}){
+ if(!canvas||typeof canvas.getContext!=="function"||typeof canvas.toDataURL!=="function")fail("لوحة Canvas غير متاحة لرسم دليل الوضعية.");
+ if(!Number.isInteger(width)||!Number.isInteger(height)||width<256||height<256||width>2048||height>2048)fail("أبعاد دليل الوضعية غير مدعومة.");
+ const sampled=sampleAnimePoseGuide(plan,frameIndex),guide=sampled.guide;
+ canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext("2d");
+ if(!ctx)fail("تعذر تهيئة سطح Canvas ثنائي الأبعاد.");
+ const point=name=>({x:guide.joints[name].x*width,y:guide.joints[name].y*height,z:guide.joints[name].z});
+ ctx.clearRect(0,0,width,height);
+ ctx.fillStyle="#F5F7FA";ctx.fillRect(0,0,width,height);
+ ctx.strokeStyle="#A8B2C0";ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(0,height*.9);ctx.lineTo(width,height*.9);ctx.stroke();ctx.setLineDash([]);
+ ctx.lineCap="round";ctx.lineJoin="round";
+ for(const [from,to] of POSE_GUIDE_BONES){
+  const a=point(from),b=point(to),depth=(a.z+b.z)/2;
+  ctx.strokeStyle=depth>.25?"#B65C43":depth<-.25?"#5478A8":"#25364C";
+  ctx.lineWidth=Math.max(3,Math.min(13,8+depth*2));
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+ }
+ const head=point("head"),neck=point("neck");
+ ctx.strokeStyle="#25364C";ctx.lineWidth=4;ctx.beginPath();ctx.arc(head.x,head.y,Math.max(10,width*.028),0,Math.PI*2);ctx.stroke();
+ for(const name of ANIME_POSE_JOINTS){
+  const p=point(name),radius=Math.max(3,Math.min(8,5+p.z*1.5));
+  ctx.fillStyle=name==="root"||name==="pelvis"?"#D68A39":"#F9FAFB";
+  ctx.strokeStyle="#25364C";ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,radius,0,Math.PI*2);ctx.fill();ctx.stroke();
+ }
+ for(const [side,foot] of [["L","footL"],["R","footR"]]){
+  const ankle=point("ankle"+side),contact=guide.contacts[foot],ground=height*.9;
+  ctx.strokeStyle=contact==="planted"?"#2D8B67":"#C58A36";ctx.lineWidth=3;
+  if(contact==="planted"){ctx.beginPath();ctx.ellipse(ankle.x,ground,Math.max(9,width*.035),Math.max(3,height*.009),0,0,Math.PI*2);ctx.stroke();}
+  else if(contact==="swing"||contact==="airborne"){ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(ankle.x,ankle.y);ctx.lineTo(ankle.x,ground);ctx.stroke();ctx.setLineDash([]);}
+ }
+ const dataUrl=canvas.toDataURL("image/png");
+ if(typeof dataUrl!=="string"||!dataUrl.startsWith("data:image/png;base64,"))fail("تعذر تصدير دليل الوضعية كصورة PNG.");
+ return{dataUrl,width,height,mimeType:"image/png",frameIndex,source:sampled.source,guideOnly:true};
+}
 function normalizeAnimeReferenceDataUrl(dataUrl,label){
  if(typeof dataUrl!=="string")fail("الصورة المرجعية "+label+" مفقودة.");
  const match=/^data:image\/(?:png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(dataUrl);
