@@ -7,7 +7,7 @@ import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
   createAnimeAnatomyPlan, sampleAnimeAnatomyGuide, buildAnimeAnatomyConstruction,
   createAnimeFrameDrawingTasks, createAnimeAnatomySequence, attachAnimeFrameDrawing,
-  reviewAnimeFrame, auditAnimeAnatomySequence, renderAnimeAnatomyGuide, validateAnimeFrameRasterAsset, validateAnimeFrameRasterAsset
+  reviewAnimeFrame, auditAnimeAnatomySequence, renderAnimeAnatomyGuide, validateAnimeFrameRasterAsset
 } from "../app/anime-anatomy-engine.mjs";
 
 function guide(shift = 0, contacts = { footL: "planted", footR: "swing" }) {
