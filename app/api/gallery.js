@@ -1,3 +1,8 @@
+"use strict";
+
+const DEFAULT_WORKER_BASE_URL = "https://zero-studio.9test4675a26.workers.dev";
+const MAX_BODY_BYTES = 4 * 1024 * 1024;
+
 function send(res, status, payload) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -6,16 +11,58 @@ function send(res, status, payload) {
 }
 
 function isAllowedRequestOrigin(req, configuredOrigin) {
-  if (!appOrigin || !token) return send(res, 503, { ok: false, error: "gallery_not_configured", message: "إعدادات معرض الصور غير مكتملة." });
-  if (!isAllowedRequestOrigin(req, appOrigin)) return send(res, 403, { ok: false, error: "origin_not_allowed" });
+  const requestOrigin = String(req.headers.origin || "").trim();
+  const requestHost = String(req.headers.host || "").toLowerCase();
+
+  if (!requestOrigin) {
+    if (!requestHost) return false;
+    const allowedPreviewHost =
+      /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
+    return allowedPreviewHost || "https://" + requestHost === configuredOrigin;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(requestOrigin);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:" || parsed.origin !== requestOrigin) return false;
+  if (requestHost && requestHost !== parsed.host.toLowerCase()) return false;
+
+  const allowedPreviewHost =
+    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(parsed.hostname.toLowerCase());
+  return requestOrigin === configuredOrigin || allowedPreviewHost;
+}
+
+module.exports = async function handler(req, res) {
+  const appOrigin = String(process.env.ZERO_STUDIO_APP_ORIGIN || "").trim();
+  const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
+  const workerBaseUrl = String(process.env.ZERO_STUDIO_IMAGE_WORKER_URL || DEFAULT_WORKER_BASE_URL).replace(/\/+$/, "");
+  const workerUrl = workerBaseUrl + "/v1/gallery";
+
+  if (!appOrigin || !token) {
+    return send(res, 503, {
+      ok: false,
+      error: "gallery_not_configured",
+      message: "إعدادات معرض الصور غير مكتملة.",
+    });
+  }
+  if (!isAllowedRequestOrigin(req, appOrigin)) {
+    return send(res, 403, { ok: false, error: "origin_not_allowed" });
+  }
+
   if (req.method !== "GET" && req.method !== "POST") {
     res.setHeader("Allow", "GET, POST");
     return send(res, 405, { ok: false, error: "method_not_allowed" });
   }
+
   let body;
   if (req.method === "POST") {
     const rawLength = Number(req.headers["content-length"] || 0);
-    if (rawLength > MAX_BODY_BYTES) return send(res, 413, { ok: false, error: "image_too_large" });
+    if (rawLength > MAX_BODY_BYTES) {
+      return send(res, 413, { ok: false, error: "image_too_large" });
+    }
     body = req.body && typeof req.body === "object" ? req.body : {};
     const serialized = JSON.stringify(body);
     if (Buffer.byteLength(serialized, "utf8") > MAX_BODY_BYTES) {
@@ -26,6 +73,7 @@ function isAllowedRequestOrigin(req, configuredOrigin) {
       });
     }
   }
+
   try {
     const upstream = await fetch(workerUrl, {
       method: req.method,
