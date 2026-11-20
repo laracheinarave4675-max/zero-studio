@@ -45,6 +45,7 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 
 - The complete local regression suite passes **268/268** tests, including two new tests for multimodal reference attachment and malformed reference rejection.
 - The workflow and runner have been added to the isolated motion branch.
+- The retry and recovery path is covered by automated tests for transient HTTP 503 responses, exponential backoff, `Retry-After`, and restoring a validated six-frame checkpoint.
 - **The live model-generated frames have not yet been reviewed or accepted.** Automated structural validation cannot establish artistic quality or true motion readability.
 - If the free Gemini quota is exhausted, stop and report it. Do not switch to a paid model or service.
 
