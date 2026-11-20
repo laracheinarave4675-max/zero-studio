@@ -176,10 +176,10 @@ function interpolateGuide(keys, segmentIndex, progress) {
     };
   }
   const contacts = {
-    footL: from.guide.contacts.footL,
-    footR: from.guide.contacts.footR
+    footL: from.contacts.footL,
+    footR: from.contacts.footR
   };
-  return { joints, contacts, view: from.guide.view };
+  return { joints, contacts, view: from.view };
 }
 
 function solveTwoBone(start, target, upperLength, lowerLength, bendSign, preserveTarget = false) {
