@@ -12,7 +12,9 @@ Last updated: 2026-11-20 (UTC)
 - Added tests/anime-anatomy-engine.test.mjs for identity locking, proportion measurement, key-drawing approval, interpolation, foot anchoring, guide-only rendering, duplicate prevention, and the 24-approved-unique-drawings audit.
 - The geometry is reference material only. It does not deform the source character, generate final character pixels, or substitute for artist-authored drawings.
 - The prior per-frame still-image request builder is legacy-only for this animation direction and must not be used to produce final motion frames.
-- **Not yet verified:** latest GitHub Actions result, Android UI integration, annotation of the user's approved real character, an artist-authored 24-frame walk, visual identity/anatomy/line review, mobile performance, save/recovery, and export.
+- Added a mobile-first on-canvas Character DNA calibration panel: annotate 19 anatomical landmarks over the current drawing, set view/foot contact, save the identity into the native .zero project, and export the DNA record.
+- Extended native project normalization and large-project undo metadata to preserve Character DNA records.
+- **Not yet verified:** latest post-calibration GitHub Actions result, annotation of the user's approved real character, key-drawing registration/shot plan UI, an artist-authored 24-frame walk, visual identity/anatomy/line review, Android-device touch/performance, save/recovery and export.
 - No Vercel deployment, Cloudflare deployment, production alias, paid service, or merge to main was initiated by this change.
 
 dation — 2026-11-20
