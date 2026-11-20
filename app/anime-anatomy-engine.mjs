@@ -104,6 +104,46 @@ export function validateAnimeCharacterDNA(dna) {
   return JSON.parse(JSON.stringify(dna));
 }
 
+
+export function validateAnimeFrameRasterAsset(asset) {
+  if (!asset || typeof asset !== "object") fail("سجل رسمة الإطار النقطية غير صالح.");
+  const assetId = clean(asset.assetId, 160);
+  const contentHash = String(asset.contentHash || "").toLowerCase();
+  const sourceSignature = String(asset.sourceSignature || "").toLowerCase();
+  const mimeType = String(asset.mimeType || "");
+  const width = Number(asset.width), height = Number(asset.height);
+  const dataUrl = asset.dataUrl;
+  if (!assetId || !/^[a-f0-9]{64}$/.test(contentHash) ||
+      !/^[a-f0-9]{64}$/.test(sourceSignature) ||
+      !["image/png", "image/webp"].includes(mimeType) ||
+      !Number.isInteger(width) || !Number.isInteger(height) ||
+      width < 1 || height < 1 || width > 8192 || height > 8192 || asset.alpha !== true) {
+    fail("بيانات رسمة Raster المستقلة أو بصمتها غير صالحة.");
+  }
+  const prefix = "data:" + mimeType + ";base64,";
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith(prefix) ||
+      dataUrl.length > 44 * 1024 * 1024 ||
+      !/^[A-Za-z0-9+/]*={0,2}$/.test(dataUrl.slice(prefix.length))) {
+    fail("بيانات PNG/WebP للإطار غير صالحة أو تتجاوز 32 ميغابايت.");
+  }
+  const review = asset.review;
+  if (!review || !["pending", "approved", "rejected"].includes(review.status) ||
+      !["identity", "anatomy", "lineQuality", "timing"].every(key => typeof review[key] === "boolean")) {
+    fail("مراجعة إطار Raster غير مكتملة.");
+  }
+  const allApproved = ["identity", "anatomy", "lineQuality", "timing"].every(key => review[key] === true);
+  if (review.status === "approved" && !allApproved) fail("لا يمكن اعتماد رسمة لم تجتز جميع فحوص المراجعة.");
+  return {
+    assetId, contentHash, sourceSignature, mimeType, width, height, alpha: true, dataUrl,
+    review: {
+      status: allApproved ? "approved" : review.status === "pending" ? "pending" : "rejected",
+      identity: review.identity, anatomy: review.anatomy,
+      lineQuality: review.lineQuality, timing: review.timing,
+      note: clean(review.note, 600)
+    }
+  };
+}
+
 function normalizeKeyDrawing(item, index, totalFrames, dna) {
   if (!item || typeof item !== "object") fail("إحدى الرسومات المفتاحية غير صالحة.");
   const id = clean(item.id, 100), frame = Number(item.frame);
