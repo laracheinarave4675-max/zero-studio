@@ -348,7 +348,7 @@ async function normalizeCharacterReference(source,name){
   context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
   for(const quality of [.88,.82,.76,.7,.64]){
    const dataUrl=canvas.toDataURL("image/jpeg",quality);
-   if(dataUrl.length<=700000)return{name:String(name||"مرجع شخصية").slice(0,100),dataUrl,mimeType:"image/jpeg",width:canvas.width,height:canvas.height};
+   if(dataUrl.length<=699000)return{name:String(name||"مرجع شخصية").slice(0,100),dataUrl,mimeType:"image/jpeg",width:canvas.width,height:canvas.height};
   }
   scale*=.82;
  }
