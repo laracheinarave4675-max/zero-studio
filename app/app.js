@@ -303,6 +303,26 @@ $("animationBatchFile").onchange=async event=>{
  finally{event.target.value=""}
 };
 let generatedRasterAsset=null;
+let confirmedGalleryItems=[];
+const GALLERY_LOCAL_CACHE_KEY="zero-studio-gallery-confirmed-v1";
+function readConfirmedGalleryItems(){
+ const cutoff=Date.now()-30*24*60*60*1000;
+ let stored=[];
+ try{const parsed=JSON.parse(localStorage.getItem(GALLERY_LOCAL_CACHE_KEY)||"[]");if(Array.isArray(parsed))stored=parsed}catch{}
+ const merged=new Map();
+ for(const item of [...confirmedGalleryItems,...stored]){
+  if(!item||typeof item.id!=="string"||typeof item.shareUrl!=="string")continue;
+  const created=Date.parse(item.createdAt||"");
+  if(!Number.isFinite(created)||created<cutoff)continue;
+  merged.set(item.id,item);
+ }
+ return [...merged.values()];
+}
+function rememberConfirmedGalleryItem(item){
+ if(!item||typeof item.id!=="string"||typeof item.shareUrl!=="string")return;
+ confirmedGalleryItems=[item,...confirmedGalleryItems.filter(entry=>entry.id!==item.id)].slice(0,100);
+ try{localStorage.setItem(GALLERY_LOCAL_CACHE_KEY,JSON.stringify(readConfirmedGalleryItems().slice(0,100)))}catch{}
+}
 async function refreshProductionGallery(){
  const list=$("productionGalleryList"),status=$("productionGalleryStatus");
  if(!list||!status)return;
@@ -311,8 +331,12 @@ async function refreshProductionGallery(){
   const response=await fetch("/api/gallery",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
   const payload=await response.json().catch(()=>({}));
   if(!response.ok||payload.ok!==true)throw Error(payload.message||payload.error||"تعذر تحميل المعرض.");
+  const merged=new Map();
+  for(const item of payload.items||[])if(item&&typeof item.id==="string"&&typeof item.shareUrl==="string")merged.set(item.id,item);
+  for(const item of readConfirmedGalleryItems())if(!merged.has(item.id))merged.set(item.id,item);
+  const items=[...merged.values()].sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
   list.replaceChildren();
-  for(const item of payload.items||[]){
+  for(const item of items){
    const card=document.createElement("article");card.className="gallery-item";
    const link=document.createElement("a");link.href=item.shareUrl;link.target="_blank";link.rel="noopener noreferrer";link.className="gallery-image-link";
    const image=document.createElement("img");image.src=item.shareUrl;image.alt=item.title||"صورة محفوظة";image.loading="lazy";link.appendChild(image);
@@ -323,14 +347,31 @@ async function refreshProductionGallery(){
    const copy=document.createElement("button");copy.type="button";copy.textContent="نسخ رابط المراجعة";copy.onclick=async()=>{try{await navigator.clipboard.writeText(item.shareUrl);status.textContent="نُسخ رابط الصورة. أرسله في المحادثة لأتمكن من مراجعتها."}catch{status.textContent=item.shareUrl}};
    actions.append(share,copy);card.append(link,title,date,actions);list.appendChild(card);
   }
-  status.textContent=(payload.items||[]).length+" صورة محفوظة. تنتهي صلاحية الصور تلقائياً بعد 30 يوماً.";
- }catch(error){status.textContent=error.message||"تعذر تحميل المعرض."}
+  status.textContent=items.length+" صورة محفوظة. قد تتأخر قائمة Cloudflare KV العامة حتى 60 ثانية؛ الصور التي أكد الخادم حفظها تظهر هنا فوراً.";
+ }catch(error){
+  const confirmed=readConfirmedGalleryItems();
+  if(confirmed.length){
+   const merged=new Map(confirmed.map(item=>[item.id,item]));
+   list.replaceChildren();
+   for(const item of merged.values()){
+    const card=document.createElement("article");card.className="gallery-item";
+    const link=document.createElement("a");link.href=item.shareUrl;link.target="_blank";link.rel="noopener noreferrer";link.className="gallery-image-link";
+    const image=document.createElement("img");image.src=item.shareUrl;image.alt=item.title||"صورة محفوظة";image.loading="lazy";link.appendChild(image);
+    const title=document.createElement("strong");title.textContent=item.title||"صورة مولدة";
+    const actions=document.createElement("div");actions.className="gallery-item-actions";
+    const share=document.createElement("a");share.href=item.shareUrl;share.target="_blank";share.rel="noopener noreferrer";share.textContent="فتح رابط الصورة";share.className="gallery-share-link";
+    actions.append(share);card.append(link,title,actions);list.appendChild(card);
+   }
+   status.textContent=confirmed.length+" صورة أكد الخادم حفظها. تعذر تحديث القائمة العامة مؤقتاً.";
+  }else status.textContent=error.message||"تعذر تحميل المعرض.";
+ }
 }
 async function saveGeneratedImageToGallery(asset,prompt,model){
  const response=await fetch("/api/gallery",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({imageDataUrl:asset.dataUrl,title:asset.name,prompt,model})});
  const payload=await response.json().catch(()=>({}));
  if(!response.ok||payload.ok!==true||!payload.item?.shareUrl)throw Error(payload.message||payload.error||"تعذر حفظ الصورة في المعرض.");
  asset.galleryItem=payload.item;
+ rememberConfirmedGalleryItem(payload.item);
  const share=$("imageGenerationShareLink");
  if(share){share.href=payload.item.shareUrl;share.hidden=false}
  await refreshProductionGallery();
