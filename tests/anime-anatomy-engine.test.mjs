@@ -7,7 +7,7 @@ import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
   createAnimeAnatomyPlan, sampleAnimeAnatomyGuide, buildAnimeAnatomyConstruction,
   createAnimeFrameDrawingTasks, createAnimeAnatomySequence, attachAnimeFrameDrawing,
-  reviewAnimeFrame, auditAnimeAnatomySequence, renderAnimeAnatomyGuide
+  reviewAnimeFrame, auditAnimeAnatomySequence, renderAnimeAnatomyGuide, validateAnimeFrameRasterAsset
 } from "../app/anime-anatomy-engine.mjs";
 
 function guide(shift = 0, contacts = { footL: "planted", footR: "swing" }) {
@@ -87,6 +87,35 @@ test("Character DNA survives native ZERO project save/open normalization", () =>
   }), /قياسات الشخصية الثابتة/);
 });
 
+
+
+function finalRasterRecord(index=0, patch={}) {
+  return {
+    assetId: "final-frame-" + index,
+    contentHash: (index+1).toString(16).padStart(64,"0"),
+    sourceSignature: (index+101).toString(16).padStart(64,"0"),
+    mimeType: "image/png", width:1920, height:1080, alpha:true,
+    dataUrl:"data:image/png;base64,AAAA",
+    review:{status:"approved",identity:true,anatomy:true,lineQuality:true,timing:true,note:"Reviewed"},
+    ...patch
+  };
+}
+
+test("independent transparent final raster drawings are validated and persisted in native project files", () => {
+  const project=createProject("Raster frame proof");
+  project.frames[0].animeRaster=finalRasterRecord(0);
+  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(reopened.frames[0].animeRaster.assetId,"final-frame-0");
+  assert.equal(reopened.frames[0].animeRaster.review.status,"approved");
+  assert.equal(reopened.frames[0].animeRaster.width,1920);
+  assert.equal(reopened.frames[0].animeRaster.alpha,true);
+  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{sourceSignature:"bad"})),/بصمتها غير صالحة/);
+  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{alpha:false})),/بصمتها غير صالحة/);
+  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{review:{status:"approved",identity:true,anatomy:true,lineQuality:false,timing:true}})),/لا يمكن اعتماد رسمة/);
+  assert.throws(()=>normalizeProject({
+    ...project,frames:[project.frames[0],{...createProject().frames[0],animeRaster:finalRasterRecord(0)}]
+  }),/مكررة بين إطارات المشروع/);
+});
 
 test("large-project undo metadata preserves anatomy identity records", () => {
   const { dna } = createFixture();
