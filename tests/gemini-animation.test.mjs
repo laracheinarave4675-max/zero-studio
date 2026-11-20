@@ -10,6 +10,10 @@ test("Gemini animation provider sends JSON mode request and returns parsed batch
  assert.equal(request.options.headers["x-goog-api-key"],"test-secret");
  assert.equal(JSON.parse(request.options.body).generationConfig.responseMimeType,"application/json");
 });
+test("Gemini 503 overload response exposes Retry-After metadata",async()=>{
+ const provider=createGeminiAnimationProvider({apiKey:"x",fetcher:async()=>({ok:false,status:503,headers:{get:name=>name==="retry-after"?"12":null},json:async()=>({error:{message:"temporarily overloaded"}})})});
+ await assert.rejects(()=>provider({prompt:"test"}),error=>error.status===503&&error.retryable===true&&error.retryAfterMs===12000&&/temporarily overloaded/.test(error.message));
+});
 test("Gemini animation provider requires key and rejects unsupported models",()=>{
  assert.throws(()=>createGeminiAnimationProvider({apiKey:""}),/GEMINI_API_KEY/);
  assert.throws(()=>createGeminiAnimationProvider({apiKey:"x",model:"unknown"}),/Unsupported/);
