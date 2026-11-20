@@ -10,6 +10,26 @@ function send(res, status, payload) {
   res.status(status).json(payload);
 }
 
+function isAllowedRequestOrigin(req, configuredOrigin) {
+  const requestOrigin = String(req.headers.origin || "").trim();
+  if (!requestOrigin || !configuredOrigin) return false;
+
+  let parsed;
+  try {
+    parsed = new URL(requestOrigin);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:" || parsed.origin !== requestOrigin) return false;
+
+  const requestHost = String(req.headers.host || "").toLowerCase();
+  if (requestHost && requestHost !== parsed.host.toLowerCase()) return false;
+
+  const allowedPreviewHost =
+    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\\.vercel\\.app$/.test(parsed.hostname.toLowerCase());
+  return requestOrigin === configuredOrigin || allowedPreviewHost;
+}
+
 async function readPayload(response) {
   return response.json().catch(() => ({}));
 }
@@ -102,12 +122,7 @@ module.exports = async function handler(req, res) {
     return send(res, 405, { error: "method_not_allowed" });
   }
 
-  const requestOrigin = String(req.headers.origin || "").trim();
-  const requestHost = String(req.headers.host || "").toLowerCase();
-  const sameHostOrigin = requestHost ? "https://" + requestHost : "";
-  const allowedPreviewHost = /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
-  const sameOrigin = requestOrigin && requestOrigin === sameHostOrigin;
-  if (!appOrigin || !sameOrigin || (!allowedPreviewHost && sameHostOrigin !== appOrigin)) {
+  if (!isAllowedRequestOrigin(req, appOrigin)) {
     return send(res, 403, { error: "origin_not_allowed", message: "مصدر الطلب غير مسموح." });
   }
   if (!token) {
