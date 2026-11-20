@@ -5,7 +5,7 @@ import{runAnimationProduction}from"../app/animation-worker.mjs";
 import{createGeminiAnimationProvider}from"../app/gemini-animation.mjs";
 
 const apiKey=process.env.GEMINI_API_KEY;
-const model=process.env.GEMINI_MODEL||"gemini-3.1-flash-lite";
+const model=process.env.GEMINI_MODEL||"gemini-3.5-flash-lite";
 const referenceUrl=process.env.CHARACTER_REFERENCE_URL||"https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/83d6357f-4e5f-4f78-a603-0eb2c61ada6d";
 if(!apiKey)throw Error("GEMINI_API_KEY is not configured.");
 const imageResponse=await fetch(referenceUrl,{signal:AbortSignal.timeout(30000)});
@@ -39,5 +39,57 @@ for(let index=0;index<project.frames.length;index++){
  const frame=project.frames[index];
  await writeFile("artifacts/character-motion/frames/frame-"+String(index).padStart(2,"0")+".svg",frameSvg(frame,"motion-"+index,project.animationBackground));
 }
-await writeFile("artifacts/character-motion/summary.json",JSON.stringify({model,referenceUrl,mimeType,referenceBytes:imageBytes.length,...result,frameCount:project.frames.length,fps:project.fps},null,2));
+
+const frameCards=project.frames.map((_,index)=>'<button class="thumb" type="button" data-frame="'+index+'" aria-label="Frame '+(index+1)+'"><img loading="lazy" src="frames/frame-'+String(index).padStart(2,"0")+'.svg" alt="Frame '+(index+1)+'"><span>'+String(index+1).padStart(2,"0")+'</span></button>').join("");
+const frameNames=project.frames.map((_,index)=>"frames/frame-"+String(index).padStart(2,"0")+".svg");
+const previewHtml=`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZERO STUDIO — 24-frame character motion proof</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui,sans-serif;background:#111827;color:#f3f4f6}
+*{box-sizing:border-box}body{margin:0 auto;padding:18px;max-width:1100px}
+h1{font-size:1.2rem;margin:0 0 6px}.meta{color:#aab5c5;font-size:.9rem;margin:0 0 18px}
+.stage{background:#fff;border-radius:10px;overflow:hidden;width:100%;aspect-ratio:16/9;display:grid;place-items:center}
+.stage img{display:block;width:100%;height:100%;object-fit:contain}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+button{font:inherit;color:#f8fafc;background:#263449;border:1px solid #50617b;border-radius:8px;padding:9px 13px}
+button:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+#frameNumber{margin-left:auto;color:#cbd5e1;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:18px}
+.thumb{padding:3px;min-width:0;display:grid;gap:4px}.thumb img{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#fff;border-radius:4px}.thumb span{font-size:.75rem;color:#cbd5e1}
+.thumb[aria-pressed="true"]{border-color:#93c5fd;background:#334155}
+@media(max-width:560px){body{padding:10px}.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.controls button{padding:8px 10px}}
+</style>
+</head>
+<body>
+<h1>ZERO STUDIO — Anime Character Motion Proof</h1>
+<p class="meta">24 separately drawn SVG frames · 24 drawings per second · 1 second · Gemini model: ${model}</p>
+<div class="stage"><img id="current" src="${frameNames[0]}" alt="Motion frame 1"></div>
+<div class="controls">
+<button id="play" type="button">Play at 24 fps</button><button id="pause" type="button">Pause</button>
+<button id="previous" type="button">Previous</button><button id="next" type="button">Next</button>
+<span id="frameNumber">Frame 01 / 24</span>
+</div>
+<div class="grid" id="frames">${frameCards}</div>
+<script>
+const sources=${JSON.stringify(frameNames)};
+const current=document.getElementById("current");
+const label=document.getElementById("frameNumber");
+const thumbs=[...document.querySelectorAll("[data-frame]")];
+let frame=0,playing=false,last=0,elapsed=0;
+function show(index){frame=(index+sources.length)%sources.length;current.src=sources[frame];current.alt="Motion frame "+(frame+1);label.textContent="Frame "+String(frame+1).padStart(2,"0")+" / "+sources.length;thumbs.forEach((thumb,i)=>thumb.setAttribute("aria-pressed",String(i===frame)));}
+function tick(now){if(!playing)return;if(!last)last=now;elapsed+=now-last;last=now;const interval=1000/24;while(elapsed>=interval){frame=(frame+1)%sources.length;elapsed-=interval;}show(frame);requestAnimationFrame(tick);}
+document.getElementById("play").addEventListener("click",()=>{if(!playing){playing=true;last=0;requestAnimationFrame(tick);}});
+document.getElementById("pause").addEventListener("click",()=>{playing=false;last=0;});
+document.getElementById("previous").addEventListener("click",()=>show(frame-1));
+document.getElementById("next").addEventListener("click",()=>show(frame+1));
+thumbs.forEach(thumb=>thumb.addEventListener("click",()=>show(Number(thumb.dataset.frame))));
+show(0);
+</script>
+</body></html>`;
+await writeFile("artifacts/character-motion/index.html",previewHtml);
+
+await writeFile("artifacts/character-motion/summary.json",JSON.stringify({model,referenceUrl,mimeType,referenceBytes:imageBytes.length,...result,frameCount:project.frames.length,fps:project.fps,preview:"index.html"},null,2));
 console.log(JSON.stringify({model,...result,frameCount:project.frames.length,artifact:"artifacts/character-motion/character-motion.zero"}));
