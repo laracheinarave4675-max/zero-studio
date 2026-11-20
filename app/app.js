@@ -348,11 +348,11 @@ async function normalizeCharacterReference(source,name){
   context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
   for(const quality of [.88,.82,.76,.7,.64]){
    const dataUrl=canvas.toDataURL("image/jpeg",quality);
-   if(dataUrl.length<=699000)return{name:String(name||"مرجع شخصية").slice(0,100),dataUrl,mimeType:"image/jpeg",width:canvas.width,height:canvas.height};
+   if(dataUrl.length<=349000)return{name:String(name||"مرجع شخصية").slice(0,100),dataUrl,mimeType:"image/jpeg",width:canvas.width,height:canvas.height};
   }
   scale*=.82;
  }
- throw Error("تعذر ضغط المرجع إلى أقل من 512 كيلوبايت.");
+ throw Error("تعذر ضغط المرجع إلى الحجم الآمن البالغ نحو 256 كيلوبايت.");
 }
 async function setPrimaryCharacterReference(source,name){
  const reference=await normalizeCharacterReference(source,name);
@@ -521,12 +521,16 @@ $("generateRasterImageBtn").onclick=async()=>{
  const promptText=$("imageGenerationPrompt").value.trim(),button=$("generateRasterImageBtn"),statusNode=$("imageGenerationStatus");
  const model=$("imageGenerationModel")?.value||"flux-1-schnell";
  const aspectRatio=$("imageGenerationAspectRatio")?.value||"16:9";
- const references=model==="flux-2-klein-4b"?characterReferenceImages.map(reference=>reference.dataUrl):[];
+ const referenceCount=model==="flux-2-klein-4b"?characterReferenceImages.length:0;
  if(!promptText){statusNode.textContent="اكتب وصف الصورة أولاً.";return}
  button.disabled=true;$("importGeneratedRasterBtn").disabled=true;generatedRasterAsset=null;$("imageGenerationResult").hidden=true;
- statusNode.textContent=references.length?"يرسل طلب FLUX.2 مع "+references.length+" صور مرجعية للحفاظ على هوية الشخصية…":"يرسل طلب التوليد إلى Cloudflare Workers AI…";
+ statusNode.textContent=referenceCount?"يضغط المراجع لتقليل حجم الطلب، ثم يرسل FLUX.2 مع "+referenceCount+" صور مرجعية…":"يرسل طلب التوليد إلى Cloudflare Workers AI…";
  try{
-  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio,...(references.length?{references}:{})}:{})})});
+  const references=model==="flux-2-klein-4b"?await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name).then(normalized=>normalized.dataUrl))):[];
+  if(references.length){characterReferenceImages=await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name)));persistCharacterReferences();renderCharacterReferences()}
+  const requestBody=JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio,...(references.length?{references}:{})}:{})});
+  if(new TextEncoder().encode(requestBody).byteLength>2*1024*1024)throw Error("حجم المراجع لا يزال كبيراً. أزل بعض المراجع وأعد المحاولة.");
+  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
   const payload=await response.json().catch(()=>({}));
   if(!response.ok)throw Error(payload.message||payload.error||("تعذر توليد الصورة (HTTP "+response.status+")."));
   if(payload.ok!==true||typeof payload.imageDataUrl!=="string"||!payload.imageDataUrl.startsWith("data:image/"))throw Error("استجابة محرك الصور غير صالحة.");
