@@ -4,8 +4,8 @@
 - New workflow: motion/timing chart → spatial pose blocking guide → complete 2D key drawings → individually reviewed raster in-between/cleanup drawings → raster frame assembly.
 - 3D pose rigs are references only. Puppet deformation, single-image warping, SVG path animation, held copies, and generic text-to-video output are not accepted as final animation.
 - Added `docs/ANIME_KEYFRAME_MOTION_ENGINE.md` and D-027 in `DECISIONS.md`.
-- Added `app/anime-motion-engine.mjs`: validated 24 FPS plan, ordered key-pose schedule, guide-only joint sampling, independent PNG/WebP drawing records, and duplicate-raster rejection.
-- Added `tests/anime-motion-engine.test.mjs` for schedule, guide interpolation, image identity/hash uniqueness, missing-frame accounting and input validation.
+- Added `app/anime-motion-engine.mjs`: validated 24 FPS plan, ordered key-pose schedule, guide-only joint sampling, independent PNG/WebP drawing records, duplicate-raster rejection, and materialization into native ZERO STUDIO raster layers.
+- Added `tests/anime-motion-engine.test.mjs` for schedule, guide interpolation, image identity/hash uniqueness, missing-frame accounting, native Raster project-frame materialization and input validation.
 - Existing character/background generation, FLUX.2 reference conditioning, raster surface, SVG, and character assets are unchanged.
 - The old SVG frame-generation proof is marked as a visually rejected historical experiment; it is preserved, not deleted.
 - Branch: `feat/anime-raster-keyframe-motion-engine`. Automated tests must pass before this foundation is considered code-verified. The key drawing provider, in-between model, visual result, UI integration, and Android test are not yet implemented.
