@@ -62,6 +62,8 @@ A passing unit test is only a software-contract result. It is not a claim of pro
 
 - The anatomy engine is implemented as a tested module and the mobile-first Character DNA calibration panel is connected to the Android-oriented editor. It can annotate 19 landmarks over the current drawing and save the validated identity into the native .zero project.
 - Key-drawing capture is connected to timeline frames and records an SHA-256 signature of the original drawing. Motion-plan creation and restoration reject changed key drawings.
+- The Character DNA anchor itself is now protected by a SHA-256 signature of the originating timeline drawing. The editor checks this signature before key-drawing approval, motion-plan creation, and plan restoration.
+- The mobile history manager counts saved animation PNG bytes. Heavy projects switch to frame-local undo snapshots while preserving shared animation-background state.
 - Final PNG capture is connected to the native timeline. Each frame can store its unique transparent raster, image hash, source signature, and four review results inside the .zero project. The audit checks current source, PNG byte hash, uniqueness, approval state, and 24-frame coverage before ZIP export.
 - The ZIP export contains 24 PNG frames, a motion-plan JSON, a manifest, and (when present) a separate static background PNG. It does not render the geometry guide into the final images.
 - No artist-authored 24-frame animation has been produced by this engine yet; the editor now contains the workflow and integrity gates, but they still need to be exercised with the user's actual character.
