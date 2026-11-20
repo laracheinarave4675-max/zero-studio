@@ -118,18 +118,6 @@ test("independent transparent final raster drawings are validated and persisted 
 });
 
 
-function finalRasterRecord(index=0, patch={}) {
-  return {
-    assetId:"final-frame-"+index,
-    contentHash:(index+1).toString(16).padStart(64,"0"),
-    sourceSignature:(index+101).toString(16).padStart(64,"0"),
-    mimeType:"image/png",width:1920,height:1080,alpha:true,
-    dataUrl:"data:image/png;base64,AAAA",
-    review:{status:"approved",identity:true,anatomy:true,lineQuality:true,timing:true,note:"Reviewed"},
-    ...patch
-  };
-}
-
 test("independent transparent raster frame assets survive ZERO project round-trip", () => {
   const project=createProject("Raster frame persistence");
   project.frames[0].animeRaster=finalRasterRecord(0);
