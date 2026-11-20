@@ -67,11 +67,6 @@ async function handle(request, env) {
     return new Response(null, { status: 204, headers: cors });
   }
 
-  const url = new URL(request.url);
-  if (request.method === "GET" && url.pathname === "/health") {
-    return json({ ok: true, provider: "cloudflare-workers-ai", model: MODEL }, 200, cors);
-  }
-
   if (request.method !== "POST" || url.pathname !== "/v1/images") {
     return json({ error: "not_found" }, 404, cors);
   }
