@@ -19,7 +19,7 @@ This document is the current motion direction after the vector/SVG motion proof.
 3. No skeleton, mesh, or 2D rig deformation is rendered as the final character artwork. A rig may be used only as an invisible motion/layout reference.
 4. No SVG-path generation, path-count targets, or topology-matched SVG interpolation is used as a substitute for anime drawings.
 5. No copied/held/stretched raster frame counts as a new drawing.
-6. The old \`feat/anime-character-motion-proof\` SVG batch workflow is archived as a failed visual experiment. Its 24-frame structural output did not meet character-design consistency or anime drawing quality; it is not an approved motion result.
+6. The old `feat/anime-character-motion-proof` SVG batch workflow is archived as a failed visual experiment. Its 24-frame structural output did not meet character-design consistency or anime drawing quality; it is not an approved motion result.
 
 ## 3. New pipeline: anime production drawings
 
@@ -113,12 +113,13 @@ The first code milestone is deliberately provider-neutral:
 - a 24 FPS drawing schedule that marks key drawings and in-between drawings;
 - per-timepoint independent raster asset records with content hashes;
 - a strict cadence audit rejecting duplicate raster drawings;
+- materialization of approved PNG/WebP drawings into the existing ZERO STUDIO native Raster frame-layer structure;
 - no pixel tween, vector-path output, puppet deformation, video output, or model provider selected yet.
 
 Next: connect this contract to the existing character-reference and raster compositor, prepare a real three-to-five-key-pose walk study using the existing approved character, and benchmark the least expensive viable key/in-between technique before scaling to all 24 drawings.
 
 ## 7. Branch and change-control
 
-- Development branch: \`feat/anime-raster-keyframe-motion-engine\`
-- Base: \`feat/anime-character-motion-proof\` (existing art-generation and character-reference work preserved).
+- Development branch: `feat/anime-raster-keyframe-motion-engine`
+- Base: `feat/anime-character-motion-proof` (existing art-generation and character-reference work preserved).
 - No merge, production deployment, paid service, GPU rental, or provider fallback is authorized by this architecture decision.
