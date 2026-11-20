@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { createProject, normalizeProject } from "../app/engine.mjs";
+import { createProject, normalizeProject, appendOperation, frameSvg } from "../app/engine.mjs";
 import { captureFrameHistory, applyFrameHistory } from "../app/frame-history.mjs";
 import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
@@ -103,14 +103,18 @@ function finalRasterRecord(index=0, patch={}) {
 
 test("independent transparent final raster drawings are validated and persisted in native project files", () => {
   const project=createProject("Raster frame proof");
+  appendOperation(project.frames[0].layers[0],"stroke",{d:"M 10 10 L 60 60",stroke:"#172033",width:5,fill:"none"});
+  const beforeSvg=frameSvg(project.frames[0],"stable-signature",[]);
   project.frames[0].animeRaster=finalRasterRecord(0);
   const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(frameSvg(reopened.frames[0],"stable-signature",[]),beforeSvg,"frame SVG source signature must survive native .zero reopen");
   assert.equal(reopened.frames[0].animeRaster.assetId,"final-frame-0");
   assert.equal(reopened.frames[0].animeRaster.review.status,"approved");
   assert.equal(reopened.frames[0].animeRaster.width,1920);
   assert.equal(reopened.frames[0].animeRaster.alpha,true);
   assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{sourceSignature:"bad"})),/بصمتها غير صالحة/);
   assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{alpha:false})),/بصمتها غير صالحة/);
+  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{dataUrl:"data:image/png;base64,%%%"})),/بيانات PNG\/WebP/);
   assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{review:{status:"approved",identity:true,anatomy:true,lineQuality:false,timing:true}})),/لا يمكن اعتماد رسمة/);
   assert.throws(()=>normalizeProject({
     ...project,frames:[project.frames[0],{...createProject().frames[0],animeRaster:finalRasterRecord(0)}]
@@ -118,24 +122,7 @@ test("independent transparent final raster drawings are validated and persisted 
 });
 
 
-test("independent transparent raster frame assets survive ZERO project round-trip", () => {
-  const project=createProject("Raster frame persistence");
-  project.frames[0].animeRaster=finalRasterRecord(0);
-  const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
-  assert.equal(reopened.frames[0].animeRaster.assetId,"final-frame-0");
-  assert.equal(reopened.frames[0].animeRaster.contentHash,"1".padStart(64,"0"));
-  assert.equal(reopened.frames[0].animeRaster.review.status,"approved");
-  assert.equal(reopened.frames[0].animeRaster.alpha,true);
-  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{sourceSignature:"bad"})),/بصمتها غير صالحة/);
-  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{alpha:false})),/بصمتها غير صالحة/);
-  assert.throws(()=>validateAnimeFrameRasterAsset(finalRasterRecord(0,{
-    review:{status:"approved",identity:true,anatomy:true,lineQuality:false,timing:true}
-  })),/لا يمكن اعتماد رسمة/);
-  assert.throws(()=>normalizeProject({
-    ...project,
-    frames:[project.frames[0],{...createProject().frames[0],animeRaster:finalRasterRecord(0)}]
-  }),/مكررة بين إطارات المشروع/);
-});
+
 
 test("large-project undo metadata preserves anatomy identity records", () => {
   const { dna } = createFixture();
@@ -166,6 +153,11 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /createAnimeCharacterDNA\(/);
   assert.match(app, /renderAnimeAnatomyDNASelect\(\)/);
   assert.match(app, /project\.animeCharacterDNA\.push\(dna\)/);
+  assert.match(app, /async function saveCurrentAnimeRasterFrame\(\)/);
+  assert.match(app, /async function buildStoredAnimeRasterSequence\(\)/);
+  assert.match(app, /async function auditStoredAnimeRasterFrames\(exportZip=false\)/);
+  assert.match(app, /crypto\.subtle\.digest\("SHA-256"/);
+  assert.match(app, /if\(signature!==stored\.sourceSignature\)/);
 });
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
