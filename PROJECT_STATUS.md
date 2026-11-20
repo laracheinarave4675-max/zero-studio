@@ -9,7 +9,7 @@
 - Quota behavior: quota/rate-limit errors return HTTP 429 and instruct the app to retain the job; the Worker does not call another provider.
 - No Cloudflare account was connected; no secret was created or entered; no Worker deployed; no image request executed.
 - The app's actual deployed origin is still unknown and must be copied from its real deployment before setting STUDIO_ORIGIN.
-- GitHub Actions worker test run was triggered by the branch push; its result is pending verification.
+- GitHub Actions worker tests passed: run #2 (job worker-tests, conclusion success), including authentication, origin allowlist, model/step cap, quota handling, and error redaction.
 - No production app deployment or PR merge was performed. Budget remains $0; animation target remains 24 independently drawn images per second.
 
 ---
