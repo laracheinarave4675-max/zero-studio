@@ -347,7 +347,7 @@ test("anime foreground segmentation returns a transparent PNG using Cloudflare I
   };
   try {
     const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
-      ...env(), GALLERY: gallery,
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
     });
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("content-type"), "image/png");
@@ -355,6 +355,27 @@ test("anime foreground segmentation returns a transparent PNG using Cloudflare I
     assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [137, 80, 78, 71]);
     assert.equal(captured.url, "https://worker.example/gallery/" + id);
     assert.deepEqual(captured.image, { segment: "foreground", format: "png" });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("anime foreground segmentation refuses to run until the Images Free tier is explicitly confirmed", async () => {
+  const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const gallery = { async get() { return JSON.stringify({
+    imageDataUrl: "data:image/png;base64,aGVsbG8=", mimeType: "image/png", bytes: 5,
+  }); } };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response(new Uint8Array([137,80,78,71]), { status: 200, headers: { "content-type": "image/png" } }); };
+  try {
+    const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery,
+    });
+    assert.equal(response.status, 503);
+    const payload = await response.json();
+    assert.equal(payload.error, "free_tier_not_confirmed");
+    assert.equal(calls, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -387,7 +408,7 @@ test("anime foreground segmentation stops safely at the free transformation limi
   globalThis.fetch = async () => { calls++; return new Response("9422: image transformations free limit exceeded", { status: 400 }); };
   try {
     const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
-      ...env(), GALLERY: gallery,
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
     });
     assert.equal(response.status, 429);
     const payload = await response.json();
@@ -409,7 +430,7 @@ test("anime foreground segmentation rejects failed or non-PNG model output", asy
   globalThis.fetch = async () => new Response("model temporarily unavailable", { status: 503 });
   try {
     const failed = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
-      ...env(), GALLERY: gallery,
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
     });
     assert.equal(failed.status, 502);
     assert.equal((await failed.json()).error, "segmentation_failed");
@@ -419,7 +440,7 @@ test("anime foreground segmentation rejects failed or non-PNG model output", asy
   globalThis.fetch = async () => new Response("not a png", { status: 200, headers: { "content-type": "image/jpeg" } });
   try {
     const invalid = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
-      ...env(), GALLERY: gallery,
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
     });
     assert.equal(invalid.status, 502);
     assert.equal((await invalid.json()).error, "invalid_segmentation_output");
