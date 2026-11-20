@@ -1,6 +1,7 @@
 name = "zero-studio"
 main = "src/index.js"
 compatibility_date = "2026-11-20"
+preview_urls = true
 
 [ai]
 binding = "AI"
@@ -8,8 +9,6 @@ binding = "AI"
 [observability]
 enabled = true
 head_sampling_rate = 1
-
-preview_urls = true
 
 [previews.ai]
 binding = "AI"
