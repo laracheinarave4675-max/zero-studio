@@ -302,15 +302,28 @@ $("animationBatchFile").onchange=async event=>{
  finally{event.target.value=""}
 };
 let generatedRasterAsset=null;
+async function checkImageProviderConnection(){
+ const statusNode=$("imageGenerationStatus");
+ if(!statusNode)return;
+ statusNode.textContent="يفحص اتصال الاستوديو بخدمة الصور دون توليد صورة…";
+ try{
+  const response=await fetch("/api/images",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok||payload.ok!==true)throw Error(payload.message||payload.error||("فشل فحص الاتصال ("+response.status+")."));
+  statusNode.textContent="الاتصال جاهز: Vercel وCloudflare متصلان ورمز الوصول صحيح. فحص الاتصال لم يستهلك حصة التوليد.";
+ }catch(error){
+  statusNode.textContent="تعذر تهيئة محرك الصور: "+(error.message||"خطأ اتصال غير معروف.")+" يمكنك إعادة تحميل الصفحة بعد إصلاح الإعداد.";
+ }
+}
 $("generateRasterImageBtn").onclick=async()=>{
  const promptText=$("imageGenerationPrompt").value.trim(),button=$("generateRasterImageBtn"),statusNode=$("imageGenerationStatus");
  if(!promptText){statusNode.textContent="اكتب وصف الصورة أولاً.";return}
  button.disabled=true;$("importGeneratedRasterBtn").disabled=true;generatedRasterAsset=null;$("imageGenerationResult").hidden=true;
- statusNode.textContent="يتصل بمحرك الصور المجاني… قد يستغرق التوليد بعض الوقت.";
+ statusNode.textContent="يرسل طلب التوليد إلى Cloudflare Workers AI…";
  try{
-  const response=await fetch("/api/images",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:promptText})});
+  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({prompt:promptText})});
   const payload=await response.json().catch(()=>({}));
-  if(!response.ok)throw Error(payload.message||(payload.error==="free_quota_exhausted"?"انتهت الحصة المجانية اليومية. أعد المحاولة بعد تجددها.":"تعذر توليد الصورة ("+response.status+")."));
+  if(!response.ok)throw Error(payload.message||payload.error||("تعذر توليد الصورة (HTTP "+response.status+")."));
   if(payload.ok!==true||typeof payload.imageDataUrl!=="string"||!payload.imageDataUrl.startsWith("data:image/"))throw Error("استجابة محرك الصور غير صالحة.");
   const image=new Image();
   await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر تحميل معاينة الصورة."));image.src=payload.imageDataUrl});
@@ -331,6 +344,7 @@ $("importGeneratedRasterBtn").onclick=()=>{
   $("imageGenerationStatus").textContent="أُدخلت الصورة كطبقة Raster مستقلة. احفظ المشروع للاحتفاظ بها.";
  }catch(error){$("imageGenerationStatus").textContent="تعذر إدخال الصورة: "+error.message}
 };
+checkImageProviderConnection();
 $("ai2dGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصف المشهد أولاً.",false);return}const button=$("ai2dGenerateBtn");button.disabled=true;$("aiGenerateBtn").disabled=true;$("ai3dGenerateBtn").disabled=true;aiStatus("المخرج الفني يخطط الكاميرا والمنظور ثم يرسم سبع طبقات 2D…");clearProposal();try{let result,critique,revisionBrief="";for(let pass=1;pass<=2;pass++){result=await generateAnimeVectorBackground(key,promptText,fetch,"gemini-3.5-flash-lite",{fallbackModels:["gemini-3.1-flash-lite"],revisionBrief,onProgress:info=>aiStatus("الجولة "+pass+" — "+info.message)});aiStatus("يعرض المراجع الفني معاينة الرسم ويفحص المنظور والخامات والإضاءة…");const png=await animeLayersPreviewPng(result.layers);try{critique=await reviewAnimeVectorPreview(key,promptText,png,fetch,result.model,{fallbackModels:["gemini-3.1-flash-lite"]})}catch(reviewError){throw Error("لم يجتز الرسم مراجعة الجودة لأن الفحص البصري فشل: "+reviewError.message+". لم يُعرض زر الاعتماد.");}if(critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0)break;if(pass===1){revisionBrief=critique.nextRevisionBrief||critique.issues.map(item=>item.area+": "+item.problem+" — "+item.correction).join("\n");aiStatus("كشف الفحص نقاطاً تحتاج تحسيناً (التقييم "+critique.overallScore+"/10). يعيد الفنان رسمها الآن…")} }proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-2d-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-2d-proposal-"+index)});$("aiReview").hidden=false;const passed=Boolean(critique&&critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0);$("aiApproveBtn").disabled=!passed;const quality=critique?" التقييم البصري: "+critique.overallScore+"/10.":"";const issues=critique?.issues?.length?" أبرز الملاحظات: "+critique.issues.slice(0,2).map(item=>item.problem).join("؛ "):"";aiStatus((passed?"اجتاز بوابة الجودة. ":"لم يجتز بوابة الجودة؛ يلزم تحسين الرسم قبل اعتماده. ")+"اقتراح الخلفية 2D: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً."+quality+issues)}catch(error){aiStatus(error.message||"تعذر إنتاج الخلفية ثنائية الأبعاد.",false)}finally{button.disabled=false;$("aiGenerateBtn").disabled=false;$("ai3dGenerateBtn").disabled=false}};
 $("aiGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصفاً للرسم أولاً.",false);return}const button=$("aiGenerateBtn");button.disabled=true;$("ai3dGenerateBtn").disabled=true;$("ai2dGenerateBtn").disabled=true;aiStatus("يرسم الاقتراح المتجهي الآن…");clearProposal();try{const result=await generateSceneProposal(key,promptText);proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-proposal-"+index)});$("aiReview").hidden=false;aiStatus("اكتمل اقتراح المشهد: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً. راجعه ثم اعتمده أو ارفضه.")}catch(error){aiStatus(error.message||"تعذر إنشاء الاقتراح.",false)}finally{button.disabled=false;$("ai3dGenerateBtn").disabled=false;$("ai2dGenerateBtn").disabled=false}};
 $("ai3dGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصف البيئة أولاً.",false);return}const button=$("ai3dGenerateBtn");button.disabled=true;$("aiGenerateBtn").disabled=true;$("ai2dGenerateBtn").disabled=true;aiStatus("يبني الفنان المشهد ثلاثي الأبعاد ويحوّله إلى SVG…");clearProposal();try{const result=await generateMeshEnvironmentProposal(key,promptText);proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-3d-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-3d-proposal-"+index)});$("aiReview").hidden=false;aiStatus("اكتمل المشهد ثلاثي الأبعاد: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً. راجعه قبل الاعتماد.")}catch(error){aiStatus(error.message||"تعذر إنشاء البيئة ثلاثية الأبعاد.",false)}finally{button.disabled=false;$("aiGenerateBtn").disabled=false;$("ai2dGenerateBtn").disabled=false}};

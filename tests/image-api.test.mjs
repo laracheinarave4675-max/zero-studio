@@ -112,3 +112,57 @@ test("image API preserves free-quota exhaustion without a paid fallback", async 
     else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
   }
 });
+
+
+test("GET diagnostic verifies the Worker bearer token without starting inference", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  let observed;
+  globalThis.fetch = async (url, options) => {
+    observed = { url, options };
+    return new Response(JSON.stringify({ error: "invalid_prompt" }), { status: 400 });
+  };
+  try {
+    const res = responseRecorder();
+    await handler(request({ method: "GET" }), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.ok, true);
+    assert.equal(res.body.tokenVerified, true);
+    assert.equal(res.body.inferenceStarted, false);
+    assert.equal(observed.url, "https://zero-studio.9test4675a26.workers.dev/v1/images");
+    assert.equal(observed.options.headers.Authorization, "Bearer unit-test-secret");
+    assert.equal(JSON.parse(observed.options.body).prompt, "");
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
+
+test("GET diagnostic identifies a mismatched bearer token without inference", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "wrong-unit-test-secret";
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+  try {
+    const res = responseRecorder();
+    await handler(request({ method: "GET" }), res);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.body.error, "worker_token_mismatch");
+    assert.equal(res.body.tokenVerified, false);
+    assert.equal(res.body.inferenceStarted, false);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
