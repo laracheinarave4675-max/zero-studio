@@ -1,18 +1,24 @@
 # ZERO STUDIO
 
-**ZERO STUDIO** is an ambitious, mobile-first anime production workspace. Its core principle is that artwork must be created through explicit drawing operations (vector paths, strokes, and frame-by-frame editing), not by asking an image/video generator to produce finished characters or scenes.
+> **Cloud inference deployment (2026-11-20):** The protected Cloudflare Worker `zero-studio` is deployed with its Workers AI binding. The Vercel staging project `zero-studio-preview` now serves the hybrid studio UI and a server-side `/api/images` proxy from branch `feat/hybrid-human-art-pipeline`. The final bearer secret is not configured yet, so image inference is not enabled. See [deployment guide](cloudflare-worker/DEPLOY_FROM_ANDROID.md).
+>
+> **Android/cloud operating model (2026-11-20):** The phone is the control and review device; heavy model inference must run remotely. GitHub stores source code but does not host GPU inference. Static app hosting and GPU inference are separate services. The project has a hard $0 budget: no paid plan, paid API, GPU rental, credit-based fallback, or automatic upgrade. See [Cloud Inference Architecture](docs/CLOUD_INFERENCE_ARCHITECTURE.md). The old policy paragraphs below that prohibit generative image models are historical and superseded by D-026 and the new hybrid production direction.
+>
+> **Current governing direction (2026-11-20):** ZERO STUDIO follows the hybrid AI-assisted anime production architecture in [docs/NEW_HYBRID_PRODUCTION_DIRECTION.md](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md) and [D-026](DECISIONS.md#d-026--hybrid-ai-assisted-anime-production-studio-2026-11-20). A specialist image-generation service may produce character/background/scene artwork; ZERO STUDIO owns character identity and continuity, scene preparation, animation, compositing, and delivery. This supersedes older no-generation rules in the historical sections below. No provider has been selected. See the [initial image-provider evaluation](docs/IMAGE_PROVIDER_EVALUATION.md). Android-first workflow, free-first evaluation, visual acceptance, and the **24 independently drawn images per second** target remain in force.
+
+**ZERO STUDIO** is an ambitious, mobile-first anime production workspace. Its approved direction is hybrid: specialist image models may create artwork assets, while ZERO STUDIO manages character identity, scene preparation, editable layers, animation, compositing, and delivery. Generated images are imported as raster layers; vector paths and hand-authored strokes remain available as editable tools.
 
 ## Non-negotiable project constraints
 
 - Primary working device: Android phone; do not assume a desktop computer.
 - Budget target: free-first; do not assume paid APIs, hosting, GPU, or subscriptions.
-- Artwork policy: no generative image/video models for final characters, backgrounds, scenes, or animation frames. The drawing system must create editable strokes/paths.
+- Artwork policy: hybrid AI-assisted image generation is allowed for artwork assets, with explicit review and import into editable raster layers. Do not treat a single generated still as completed animation.
 - Animation target: the creative goal is **24 independently drawn images per second**. This is not the same as displaying a smaller number of drawings at 24 FPS. Keep this requirement explicit in planning and explain its production cost.
 - Build honestly in testable stages. Do not describe prototypes as a finished professional studio.
 
 ## Public Android test copy
 
-Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The public test deployment was refreshed on 2026-11-18 and now includes the four vector background presets; it remains a manually uploaded snapshot, not an automatic Git-linked deployment. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
+Open the currently published test build: https://zero-studio-three.vercel.app/ . The GitHub source repository remains private. This is a manually uploaded snapshot of `feature/mobile-drawing-workspace`; it is not automatically synchronized with later GitHub commits. The 2026-11-18 source now also includes four editable vector background starters (day city, forest, interior room, night city). The original public test deployment was refreshed on 2026-11-18 and remains a manually uploaded snapshot; the separate `zero-studio-preview` Vercel project now hosts the hybrid branch. Existing build features include constrained limb IK, rig-aware pose blending, the project character library, proportion guides, and the unique-drawing cadence audit. Physical Android testing is still pending.
 
 ## High-volume frame-by-frame animation
 
@@ -30,9 +36,9 @@ The development branch includes four original SVG-path background presets, inser
 
 The development workspace includes a freehand SVG pen, optional stylus-pressure outlines, vector eraser, line/rectangle/ellipse tools, shape fill, item selection/move/style/duplicate/delete, mobile pan/zoom, layer controls, topology-matched path in-betweens, and a unique-drawing cadence audit. Character tools include Nori with 12 editable parts, three starter views, four poses, four facial expressions, customizable palette, validated `.zchar` import/export, an 11-cell editable SVG model-sheet export, a project-local character library, constrained two-bone IK for four limb chains, head/neck rotation and whole-body lean, rig-aware pose blending, linked character instances, and conversion of hand-drawn vector frames into reusable character models. Background tools include four editable vector scene starters: daytime city, forest, interior room, and night city. These are useful foundations, not a completed professional full-body rig, model-sheet editor, animation suite, or background/layout department. Physical Android testing and artist review remain pending. GitHub Actions run #698 passed 112 tests with 0 failures; syntax checks include the background module.
 
-## SVG is a protected core capability (2026-11-19)
+## Canvas-first artist engine (2026-11-19)
 
-SVG is not being abandoned in favour of bitmap-only painting. ZERO STUDIO preserves native editable SVG paths, vector layers, freehand drawing, gradients, patterns, masks, filters, vector lighting/texture marks, animation and SVG export as strategic core capabilities. Hand-painted layered assets from professional drawing apps are a complementary import path; they must not silently flatten, rasterize, or replace native SVG artwork. Temporary PNG previews are disposable review outputs, not source artwork. The studio is hybrid-capable: native vector art remains editable alongside clearly identified imported raster layers. Any proposal to remove or demote SVG requires explicit user approval. See D-022 in [Architecture Decisions](DECISIONS.md).
+The approved direction is a native Canvas2D raster painting engine. New drawing work prioritizes pressure-sensitive brush strokes, natural-media rendering, editable stroke records, raster layers, compositing, deterministic replay, and mobile-safe storage. SVG is no longer the planned foundation or an artist-engine development priority; existing vector projects are legacy compatibility during migration. No generative image/video model may create or modify final artwork. The 24 independently drawn images-per-second target remains unchanged. See [Native Artist Engine Plan](docs/NATIVE_ARTIST_ENGINE_PLAN.md) and [D-025](DECISIONS.md).
 
 ## Human-authored anime production direction (2026-11-19)
 
@@ -60,3 +66,10 @@ The repository includes an editable one-second, 24-frame vector waving/blinking 
 ## Current state
 
 The repository remains the durable project record. The deployed workspace is still a test build; the earlier external v0.1 prototype has not been imported, and physical Android behavior remains unverified. See PROJECT_STATUS.md for the exact implementation status and remaining work.
+
+
+## Approved hybrid art architecture — 2026-11-19
+
+The current approved direction is **human-painted raster as the primary final-art path, with native SVG retained as an optional first-class editable path**. ZERO STUDIO must support mixed raster/vector layers, preserve source files and layer metadata, and never silently flatten an imported project. Existing SVG projects remain supported. This supersedes the older vector-first requirement recorded in the historical D-022 paragraph above; D-023 is the current governing decision. PSD, OpenRaster, and PNG-layer bundles remain unverified candidates until a real Android round-trip succeeds. The animation target remains 24 independently authored moving-art drawings per second. See [Hybrid Art Architecture](docs/HYBRID_ART_ARCHITECTURE.md), [Layered Asset Interchange Plan](docs/LAYERED_ASSET_INTERCHANGE.md), and [D-023](DECISIONS.md).
+
+The first code foundation now includes a typed raster/vector asset-manifest validator and a mixed-layer structural cadence signature in app/hybrid-assets.mjs, with tests in tests/hybrid-assets.test.mjs. This is not yet a PSD/ORA importer, raster compositor, or complete animation integration.

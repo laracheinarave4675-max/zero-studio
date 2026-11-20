@@ -104,3 +104,14 @@ tests/animation-production.test.mjs covers 10-second planning, 24 drawings/secon
 The provider returns either a JSON string or an object with a `text` property containing the .zbatch JSON. The worker validates and appends each approved batch, performs bounded retry after invalid output, supports cancellation, and calls `onBatch` after each successful commit so an integration can save a checkpoint. If checkpoint saving fails, it reports that the batch was already accepted and does not call the provider again for the same batch.
 
 This is an adapter seam, not a live model integration. API keys, provider-specific response parsing, rate limits, billing, and model choice remain deliberately outside the engine until the user chooses a service.
+
+
+## Hybrid raster/vector frame model — approved direction (2026-11-19)
+
+The existing batch importer currently validates SVG path operations. That is the implemented legacy vector batch contract, not the final hybrid contract. Do not describe raster animation interchange as implemented until a tested importer exists.
+
+The target architecture allows each frame to contain ordered named layers of either raster or vector type, plus mixed composites. Raster layers must reference lossless source assets with dimensions, MIME type, alpha and provenance; vector layers retain editable path data. A frame may contain both. Layer identity/order/visibility/opacity and supported blend modes must survive save/open/export. Raster previews and flattened composites are derived outputs only.
+
+The user requirement remains exactly 24 independently authored moving-art drawings per second. Raster or vector artwork can satisfy a drawing slot, but duplicate holds, tween-only motion, transformations of a still, or generated video cannot. The fixed background remains a separately identified reusable asset when camera/layout is fixed. The cadence audit must evolve to compare canonical mixed-layer artwork signatures, while clearly reporting that automated signatures cannot prove human authorship or visual quality.
+
+Implementation status: the existing vector-only batch path remains implemented and tested; the hybrid frame schema, layered raster interchange, raster-aware compositing/export, and mixed-format cadence audit are planned until each receives code and regression coverage. See HYBRID_ART_ARCHITECTURE.md and LAYERED_ASSET_INTERCHANGE.md.

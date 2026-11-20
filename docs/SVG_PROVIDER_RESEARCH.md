@@ -1,3 +1,5 @@
+> **Historical research note (2026-11-20):** This document was written under the former SVG-only/no-image-generation policy. That policy has been superseded by D-026 and [the new hybrid production direction](NEW_HYBRID_PRODUCTION_DIRECTION.md). Keep this document only as background research into structured SVG/text providers; do not treat its prohibition on image models as current policy or its old quotas/prices as current. See [Image Provider Evaluation](IMAGE_PROVIDER_EVALUATION.md) for the current image-model shortlist.
+
 # ZERO STUDIO — Free SVG production research
 
 Research date: 2026-11-18  

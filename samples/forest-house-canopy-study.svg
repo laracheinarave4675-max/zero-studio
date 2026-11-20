@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<title>ZERO STUDIO — The old house beneath the cedar canopy</title>
+<desc>Original layered, editable anime-background study: a weathered Japanese timber house in a deep green forest, hand-authored paths, curved tiled roof, layered foliage, stone wall, warm late-afternoon light and atmospheric depth. No generative image model used.</desc>
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#8baeb0"/><stop offset=".48" stop-color="#c5c9a8"/><stop offset="1" stop-color="#e6c58e"/></linearGradient>
+ <linearGradient id="mist" x2="0" y2="1"><stop stop-color="#d7dfc1" stop-opacity="0"/><stop offset="1" stop-color="#e8d6ad" stop-opacity=".72"/></linearGradient>
+ <linearGradient id="plaster" x2=".2" y2="1"><stop stop-color="#e7d9b8"/><stop offset=".55" stop-color="#c8b58f"/><stop offset="1" stop-color="#927e67"/></linearGradient>
+ <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#92704c"/><stop offset=".35" stop-color="#6c5039"/><stop offset="1" stop-color="#382f2a"/></linearGradient>
+ <linearGradient id="roof" x2=".15" y2="1"><stop stop-color="#596665"/><stop offset=".4" stop-color="#3e4c4c"/><stop offset="1" stop-color="#202f34"/></linearGradient>
+ <linearGradient id="tileLight" x2="0" y2="1"><stop stop-color="#92958a"/><stop offset="1" stop-color="#424e4c"/></linearGradient>
+ <linearGradient id="glass" x2="1" y2="1"><stop stop-color="#d6dfc0"/><stop offset=".4" stop-color="#91b3a7"/><stop offset="1" stop-color="#486b68"/></linearGradient>
+ <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#b5a98f"/><stop offset=".45" stop-color="#827e6c"/><stop offset="1" stop-color="#4e5952"/></linearGradient>
+ <linearGradient id="path" x2="0" y2="1"><stop stop-color="#a99c7d"/><stop offset="1" stop-color="#59645a"/></linearGradient>
+ <radialGradient id="sun"><stop stop-color="#fff5d4" stop-opacity=".92"/><stop offset=".4" stop-color="#f3d49b" stop-opacity=".42"/><stop offset="1" stop-color="#f3d49b" stop-opacity="0"/></radialGradient>
+ <radialGradient id="leaf"><stop stop-color="#b7c47b"/><stop offset=".52" stop-color="#64885a"/><stop offset="1" stop-color="#294b3d"/></radialGradient>
+ <pattern id="roofTiles" width="54" height="31" patternUnits="userSpaceOnUse"><path d="M0 0 Q13 7 27 0 Q40 7 54 0 M-27 15 Q0 23 27 15 Q54 23 81 15" fill="none" stroke="#b2b5a1" stroke-opacity=".45" stroke-width="2"/><path d="M27 0v15M0 15v16M54 15v16" stroke="#202f34" stroke-opacity=".5" stroke-width="2"/><path d="M4 5q9 5 17 1" fill="none" stroke="#d1c9a9" stroke-opacity=".22" stroke-width="2"/></pattern>
+ <pattern id="woodgrain" width="120" height="42" patternUnits="userSpaceOnUse"><path d="M0 9q25-8 48 0t72-2M0 28q32-7 57 0t63-3" fill="none" stroke="#d2ae7c" stroke-opacity=".2" stroke-width="2"/><path d="M18 0q-5 18 3 42M91 0q-8 20 2 42" stroke="#302b28" stroke-opacity=".18" fill="none"/></pattern>
+ <pattern id="stonegrain" width="74" height="48" patternUnits="userSpaceOnUse"><path d="M5 12l13-4 9 7-5 8-16-2zM42 5l19 2 5 9-13 8-12-7zM24 34l15-5 10 8-7 9-18-2z" fill="none" stroke="#e0d5b9" stroke-opacity=".24" stroke-width="2"/></pattern>
+ <filter id="blur"><feGaussianBlur stdDeviation="22"/></filter>
+ <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+ <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="2" seed="8" result="n"/><feColorMatrix in="n" type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .09"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/></filter>
+ <g id="leafCluster"><path d="M0 24Q24-8 54 4Q83-12 103 18Q132 20 124 48Q143 68 113 82Q93 109 67 88Q35 106 21 79Q-9 70 0 24Z" fill="url(#leaf)"/><g fill="none" stroke-linecap="round"><path d="M8 52q38-33 98-27M32 77q27-31 65-48M61 89q8-33 39-59" stroke="#d4d19a" stroke-opacity=".35" stroke-width="3"/><path d="M16 33q14-18 29-15m35 8q14-17 26-8M30 65q12-17 25-13m35 16q13-18 24-10" stroke="#d8d79f" stroke-opacity=".35" stroke-width="5"/></g><g fill="#d4d69a" opacity=".42"><ellipse cx="25" cy="23" rx="12" ry="5" transform="rotate(-28 25 23)"/><ellipse cx="82" cy="15" rx="15" ry="5" transform="rotate(18 82 15)"/><ellipse cx="100" cy="56" rx="13" ry="5" transform="rotate(-30 100 56)"/><ellipse cx="48" cy="78" rx="15" ry="5" transform="rotate(12 48 78)"/></g></g>
+</defs>
+<!-- 01: sky, distant ridges and atmospheric forest -->
+<g id="01-atmosphere">
+ <rect width="1920" height="1080" fill="url(#sky)"/>
+ <circle cx="1365" cy="250" r="360" fill="url(#sun)"/>
+ <path d="M0 500Q180 390 350 470T700 450T1040 470T1420 415T1920 455V800H0Z" fill="#81917a" opacity=".55"/>
+ <path d="M0 590Q240 470 470 545T900 520T1340 555T1920 510V850H0Z" fill="#536f5d" opacity=".68"/>
+ <path d="M0 670Q250 565 490 625T940 590T1390 645T1920 590V900H0Z" fill="#3b5b4d"/>
+ <g fill="#294b40" opacity=".78"><path d="M80 660l-24-180 31 49 20-96 18 111 35-44-17 165zM330 620l-16-150 26 40 18-91 19 108 30-38-9 143zM1510 620l-20-180 30 55 19-105 22 120 33-43-8 153zM1770 635l-23-195 33 60 20-110 23 123 35-45-11 167z"/></g>
+ <rect y="490" width="1920" height="440" fill="url(#mist)"/>
+</g>
+<!-- 02: deep trunks -->
+<g id="02-forest-trunks" fill="none" stroke-linecap="round">
+ <path d="M-35 0Q20 210 4 430T-40 820M90 0Q145 170 115 340T140 650M1860 0Q1790 230 1830 430T1880 760M1990 0Q1900 240 1940 470T1980 800" stroke="#35483c" stroke-width="78"/>
+ <path d="M-20 130q90 80 170 35M65 315q-30-100-85-140M1850 210q-80 70-140 45M1890 390q30-85 95-125" stroke="#4e6048" stroke-width="25"/>
+ <path d="M22 0q34 230 7 520M1860 0q-45 240-10 480" stroke="#a5a078" stroke-opacity=".28" stroke-width="9"/>
+</g>
+<!-- 03: distant foliage masses -->
+<g id="03-distant-canopy" opacity=".9">
+ <use href="#leafCluster" x="35" y="110" transform="translate(20 110) scale(2.8 2.3)"/>
+ <use href="#leafCluster" transform="translate(250 90) scale(2.4 2)"/>
+ <use href="#leafCluster" transform="translate(620 65) scale(2.5 1.8)"/>
+ <use href="#leafCluster" transform="translate(1110 85) scale(2.3 2)"/>
+ <use href="#leafCluster" transform="translate(1450 60) scale(3 2.2)"/>
+ <use href="#leafCluster" transform="translate(1690 190) scale(2.2 2.3)"/>
+ <use href="#leafCluster" transform="translate(80 430) scale(1.9 1.7)"/>
+ <use href="#leafCluster" transform="translate(1540 420) scale(2.2 1.6)"/>
+</g>
+<!-- 04: garden ground and stone retaining wall -->
+<g id="04-ground-and-stone-wall">
+ <path d="M0 760Q250 690 480 735T930 710T1390 735T1920 680V1080H0Z" fill="#52634e"/>
+ <path d="M0 850Q300 805 570 835T1080 820T1510 830T1920 790V1080H0Z" fill="#394d42"/>
+ <path d="M0 822Q260 780 470 804L570 900Q290 940 0 920Z" fill="url(#stone)" stroke="#4d554b" stroke-width="12"/>
+ <path d="M0 822Q260 780 470 804L570 900Q290 940 0 920Z" fill="url(#stonegrain)" opacity=".7"/>
+ <g fill="#a99e83" stroke="#51594f" stroke-width="8"><path d="M-20 840l130-17 45 49-24 47-148 6z"/><path d="M140 817l145-8 36 50-25 54-153-4-26-42z"/><path d="M320 808l142 4 32 55-26 44-154-10-24-48z"/></g>
+ <g fill="none" stroke="#e4d5b5" stroke-opacity=".48" stroke-width="4"><path d="M15 858l76-10m-15 46l63-9m42-50l82-8m-46 67l71-7m42-59l78 3m-45 43l65 2"/></g>
+ <path d="M0 922Q280 940 560 902" fill="none" stroke="#d2c3a0" stroke-width="12" opacity=".55"/>
+</g>
+<!-- 05: house shadow and main plaster body -->
+<g id="05-house-structure" stroke-linejoin="round">
+ <path d="M520 825V470Q790 330 1100 395L1460 500V850L520 930Z" fill="#263c36" opacity=".45" filter="url(#blur)"/>
+ <path d="M560 790V475L945 355L1405 490V850L560 910Z" fill="url(#plaster)" stroke="#51483c" stroke-width="13"/>
+ <path d="M585 495L945 385L1380 510V570L945 460L585 570Z" fill="#eadbb9" opacity=".42"/>
+ <path d="M590 580L945 470L1370 580" fill="none" stroke="#f3e4c3" stroke-width="10" opacity=".48"/>
+ <path d="M560 790V475L945 355L1405 490V850L560 910Z" fill="url(#woodgrain)" opacity=".24"/>
+ <path d="M590 790V535M1380 815V545M950 430V855" stroke="#715d47" stroke-width="18" opacity=".68"/>
+ <path d="M600 780V540M1370 810V555" stroke="#e8d7b4" stroke-width="5" opacity=".45"/>
+ <path d="M580 785Q970 820 1390 790" fill="none" stroke="#4b4035" stroke-width="18"/>
+</g>
+<!-- 06: upper windows, timber lattice and balcony -->
+<g id="06-upper-story">
+ <path d="M760 490L955 430L1150 490V645L760 670Z" fill="#4b4135" stroke="#3e3931" stroke-width="13"/>
+ <path d="M785 500L955 450L1125 505V615L785 642Z" fill="url(#glass)" stroke="#8b7455" stroke-width="12"/>
+ <path d="M900 465V630M1015 470V630M785 558L1125 545" stroke="#4c463a" stroke-width="12"/>
+ <path d="M805 515l80-24v105l-80 9zM1030 500l75 22v88l-75 6z" fill="#d9e1c5" opacity=".16"/>
+ <path d="M740 660L1160 635L1190 680L730 710Z" fill="url(#wood)" stroke="#332f2b" stroke-width="12"/>
+ <path d="M750 670L1170 650M770 700L1150 678" stroke="#c5a477" stroke-width="5" opacity=".6"/>
+ <g stroke="#4b382c" stroke-width="12"><path d="M785 665l-2 90m78-95v90m80-95v90m82-96v90m80-96v90m-410-15l440-27"/></g>
+ <g stroke="#b58d5e" stroke-width="4" opacity=".65"><path d="M790 674v68m80-74v70m80-76v70m80-76v70m80-82v70"/></g>
+ <path d="M735 755Q950 775 1190 730" fill="none" stroke="#332e29" stroke-width="18"/>
+</g>
+<!-- 07: ground floor engawa and sliding doors -->
+<g id="07-ground-floor">
+ <path d="M650 710L1345 690V840L650 875Z" fill="#4a3c31" stroke="#3b342e" stroke-width="13"/>
+ <path d="M675 720L1320 702V815L675 846Z" fill="url(#glass)" stroke="#927653" stroke-width="12"/>
+ <path d="M780 716V835M890 712V830M1000 710V825M1110 706V820M1220 703V817" stroke="#54483a" stroke-width="10"/>
+ <path d="M680 770L1315 750" stroke="#4d493c" stroke-width="8"/>
+ <path d="M695 733l70-4v92l-70 4zM1018 724l82-3v90l-82 4z" fill="#d9e6ca" opacity=".2"/>
+ <path d="M625 858L1370 823L1425 872L610 918Z" fill="url(#wood)" stroke="#342e29" stroke-width="12"/>
+ <path d="M660 873l710-33m-670 55l670-32" stroke="#d1aa76" stroke-width="5" opacity=".55"/>
+ <path d="M720 916l-4 40m610-69l8 43" stroke="#46382d" stroke-width="16"/>
+</g>
+<!-- 08: broad curved tiled roof -->
+<g id="08-curved-roof" stroke-linejoin="round">
+ <path d="M430 520Q650 330 935 270Q1200 305 1510 525L1465 590Q1190 425 935 400Q675 435 470 590Z" fill="#1f3032" opacity=".45" filter="url(#soft)"/>
+ <path d="M405 500Q650 285 935 245Q1225 280 1535 500Q1480 530 1455 570Q1185 390 935 365Q670 400 470 575Z" fill="url(#roof)" stroke="#263335" stroke-width="18"/>
+ <path d="M420 496Q665 300 935 267Q1210 300 1517 505" fill="none" stroke="#b1ad94" stroke-width="13" opacity=".7"/>
+ <path d="M440 510Q680 335 935 295Q1200 325 1490 520L1455 554Q1190 390 935 382Q675 415 470 565Z" fill="url(#roofTiles)" opacity=".9"/>
+ <path d="M405 500Q650 285 935 245Q1225 280 1535 500" fill="none" stroke="#a5a18d" stroke-width="12"/>
+ <path d="M465 565Q690 410 935 380Q1200 400 1460 565" fill="none" stroke="#222e30" stroke-width="24"/>
+ <path d="M440 535Q680 375 935 340Q1200 370 1495 540" fill="none" stroke="#899084" stroke-width="7" opacity=".55"/>
+ <path d="M430 500Q650 285 935 245Q1225 280 1535 500" fill="none" stroke="#c4b99c" stroke-width="5" opacity=".55"/>
+ <path d="M465 565Q690 410 935 380Q1200 400 1460 565" fill="none" stroke="#c0b69b" stroke-width="6"/>
+ <g fill="url(#tileLight)" stroke="#263235" stroke-width="5"><path d="M402 497q-28 15-24 49q36 16 72-2q12-23-3-46z"/><path d="M1490 500q35-4 58 22q-5 34-43 38q-25-18-15-60z"/></g>
+ <g fill="none" stroke="#c2b99f" stroke-width="4" opacity=".58"><path d="M545 452q20-23 43-34m34-33q22-19 47-30m73-35q28-12 52-18m500 151q-24-22-51-34m-76-47q-28-17-55-23"/></g>
+</g>
+<!-- 09: roof timber rafters and eaves -->
+<g id="09-eaves-and-timber">
+ <path d="M470 566Q700 410 935 382Q1200 400 1460 565L1448 594Q1190 445 935 420Q685 447 485 594Z" fill="#5a4634" stroke="#342f29" stroke-width="10"/>
+ <path d="M485 579Q710 435 935 415Q1200 430 1448 580" fill="none" stroke="#d0a875" stroke-width="9"/>
+ <g stroke="#3b3029" stroke-width="13"><path d="M600 493l-8 75m104-124l-6 74m108-112l-3 75m113-91v73m114-63l7 74m107-53l11 77m103-36l18 80"/></g>
+ <g stroke="#b48b5d" stroke-width="4" opacity=".7"><path d="M602 508l-5 50m104-96l-4 50m108-83l-2 50m113-66v48m114-39l5 50m107-26l9 52"/></g>
+ <path d="M485 600Q940 430 1448 600" fill="none" stroke="#302e2a" stroke-width="16"/>
+</g>
+<!-- 10: shrubs, moss and stepping-stone path -->
+<g id="10-garden">
+ <path d="M780 900Q940 850 1100 890Q1270 950 1320 1080H700Q735 980 780 900Z" fill="url(#path)" opacity=".75"/>
+ <g fill="#b1aa88" stroke="#57604e" stroke-width="7"><path d="M820 960q55-25 112 3l18 27-118 18-38-22z"/><path d="M1020 925q58-20 105 12l20 26-120 10-28-23z"/><path d="M1190 990q45-22 88 4l15 27-100 10-24-23z"/></g>
+ <g fill="#2e5945"><path d="M100 870q-30-95 50-115q55-78 120-12q80 2 65 100q-30 75-115 55q-80 25-120-28z"/><path d="M1440 880q-10-80 55-100q45-85 115-30q85-10 95 85q-25 90-110 75q-95 25-155-30z"/></g>
+ <g fill="#a7b56e" opacity=".75"><ellipse cx="170" cy="800" rx="28" ry="12" transform="rotate(-28 170 800)"/><ellipse cx="260" cy="842" rx="34" ry="13" transform="rotate(20 260 842)"/><ellipse cx="1510" cy="820" rx="31" ry="13" transform="rotate(-18 1510 820)"/><ellipse cx="1640" cy="850" rx="38" ry="14" transform="rotate(22 1640 850)"/></g>
+ <g fill="none" stroke="#c0c08a" stroke-width="4" opacity=".5"><path d="M75 900q90-40 180-10m-120 30q85-30 150-5m1170-10q110-35 210-4m-160 36q75-26 140-5"/></g>
+</g>
+<!-- 11: foreground canopy framing the house -->
+<g id="11-foreground-canopy">
+ <path d="M0 0Q150 10 235 130Q325 210 270 325Q220 420 95 385Q-20 330 0 180Z" fill="#243f36"/>
+ <path d="M0 0Q150 10 235 130Q325 210 270 325" fill="none" stroke="#70805a" stroke-width="16" opacity=".55"/>
+ <use href="#leafCluster" transform="translate(-35 80) scale(2.5 2.3)"/>
+ <use href="#leafCluster" transform="translate(110 260) scale(1.9 1.7)"/>
+ <use href="#leafCluster" transform="translate(1580 -25) scale(2.8 2.4)"/>
+ <use href="#leafCluster" transform="translate(1710 190) scale(2.2 2)"/>
+ <use href="#leafCluster" transform="translate(1780 430) scale(1.7 1.7)"/>
+ <g fill="#d2d18e" opacity=".55"><ellipse cx="215" cy="150" rx="25" ry="8" transform="rotate(-30 215 150)"/><ellipse cx="1690" cy="135" rx="27" ry="8" transform="rotate(24 1690 135)"/><ellipse cx="1810" cy="370" rx="22" ry="7" transform="rotate(-18 1810 370)"/></g>
+</g>
+<!-- 12: sunlight shafts, painterly accents and foreground grass -->
+<g id="12-light-and-brush-accents" fill="none" stroke-linecap="round">
+ <path d="M1320 190L1080 780M1410 220L1250 790M1190 250L1010 690" stroke="#fff0c5" stroke-opacity=".12" stroke-width="54" filter="url(#soft)"/>
+ <path d="M1250 330q-85 160-130 290m210-240q-60 130-95 240m-720-50q65-38 105-42m-75 65q75-24 128-20" stroke="#fff1ce" stroke-width="5" opacity=".36"/>
+ <path d="M20 1040q120-75 230-40m-175 63q90-45 160-30m1250 15q130-75 260-42m-180 64q100-45 190-22" stroke="#b2b47a" stroke-width="8" opacity=".48"/>
+ <path d="M500 955l-25 70m48-64l-5 82m870-100l26 75m-55-80l-8 92" stroke="#263f35" stroke-width="8" opacity=".65"/>
+</g>
+<!-- fine paper grain -->
+<rect width="1920" height="1080" fill="#f1e4c8" opacity=".1" filter="url(#paper)"/>
+</svg>

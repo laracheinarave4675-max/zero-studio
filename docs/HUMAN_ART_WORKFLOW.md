@@ -9,15 +9,12 @@ ZERO STUDIO is a human-led anime production studio, not an automatic picture gen
 
 ## Department split
 
-### 1. Professional painting workspace
-Use a purpose-built raster painting application on Android for the actual background and character painting. It must provide:
-- natural-media and textured brushes, pressure/tilt where supported;
-- layers, alpha lock, clipping/masks and blend modes;
-- perspective rulers/guides and selection/transformation tools;
-- high-resolution canvas and lossless export;
-- a dependable interchange route that can be tested on the target phone.
+### 1. Native human painting workspace
+The active ZERO STUDIO canvas is the primary in-app painting surface. Raster pencil/brush input creates editable pixel layers from actual touch or stylus gestures. Multi-point brush rendering must preserve pressure changes, continuous stroke contours, material texture and tapered marks rather than approximating every stroke with circular stamps.
 
-Do not pretend that a minimal in-app Canvas brush is equivalent to a mature painting application. The experimental raster brush module is not the final art engine and must not be used to claim painterly quality.
+The current implementation remains a foundation, not a mature natural-media engine: wet pigment mixing, brush-tip dynamics, smudge, alpha-lock/clipping, masks, tilt response and long-session Android performance are not yet accepted. Imported PNG/WebP/JPEG layers are optional; an external painting app is not a prerequisite. Native SVG remains optional and editable.
+
+Do not claim painterly quality until a complete scene is painted with the active in-app tools and visually compared against the approved reference.
 
 ### 2. ZERO STUDIO production management
 ZERO STUDIO remains responsible for:
@@ -38,11 +35,11 @@ Do not choose an interchange format based on assumptions. Prototype and test:
 Every import must validate dimensions, file sizes, layer count, names, ordering and alpha. Preserve source files unchanged. Never silently flatten an editable layered source. Record unsupported blend modes or metadata as warnings.
 
 ### 4. Art pipeline
-1. Artist establishes composition, perspective and value grouping.
-2. Artist paints rough color and silhouette masses.
-3. Artist refines architecture, foliage, materials, lighting and atmosphere.
-4. Artist reviews at full size and at shot scale.
-5. Approved artwork is imported as named layers into ZERO STUDIO.
+1. Artist establishes composition, perspective and value grouping on native Raster layers.
+2. Artist paints rough color and silhouette masses with continuous human-operated strokes.
+3. Artist separates architecture, roof, foliage, stonework, lighting and atmosphere into named layers.
+4. Artist reviews at full size and at shot scale; failed scenes are revised, not excused by path counts.
+5. Optional artist-authored external layers may be imported without flattening.
 6. Characters and moving foreground are drawn independently for each required frame.
 7. ZERO STUDIO composites each drawing with the fixed background and audits continuity and unique drawing count.
 
@@ -53,12 +50,11 @@ The user's target remains 24 independently drawn images per second. This is not 
 AI may assist with non-art production tasks only when useful: script breakdown, shot lists, continuity checklists, naming, metadata, technical validation and critique notes. It may not generate, inpaint, outpaint, upscale-generatively, or otherwise synthesize final visual pixels or drawing strokes. Human artist decides and executes all final visual marks.
 
 ## Immediate implementation sequence
-1. Stop expanding procedural SVG scene painters as a route to painterly quality.
-2. Select one Android painting app only after confirming actual phone compatibility and required features.
-3. Build an interchange proof using a tiny test document with three named transparent layers, opacity changes and alpha.
-4. Import that proof into ZERO STUDIO without flattening; verify layer order and dimensions.
-5. Build shot/asset browser and continuity metadata around the validated interchange.
-6. Only then plan the full background and animation workflow.
+1. Make the native Raster stroke engine the primary drawing route; do not expose prompt-to-art generators in the active workflow.
+2. Validate real touch/stylus input, pressure response, undo/save/reopen and canvas memory on Android.
+3. Produce one detailed reference-matched still using only in-app human-operated painting tools.
+4. Preserve mixed Raster/SVG source data in project save/open; validate optional imports separately.
+5. Refine only defects demonstrated by the still-art review before returning to animation integration.
 
 ## Acceptance gates
 - A human can paint a detailed background in the selected app on the target Android phone.
@@ -66,3 +62,12 @@ AI may assist with non-art production tasks only when useful: script breakdown, 
 - A saved project reopens with all layer metadata and previews intact.
 - The final composite is visually inspected by the artist; no AI score substitutes for artistic approval.
 - Animation reports playback FPS and unique drawings/second separately.
+
+
+## Hybrid architecture update — 2026-11-19
+
+The approved production model is now **raster-primary, vector-optional, hybrid-capable**. Human-painted layered raster artwork is the default route for painterly backgrounds, characters, props, and painted animation drawings. SVG remains a first-class optional format for editable vector line art, graphic elements, reusable assets, and artwork for which vectors are the better tool. Existing SVG projects and the native vector editor/export must remain usable; this is not a bitmap-only migration.
+
+Earlier language describing a raster app as the only art department is superseded where it conflicts with the hybrid decision. ZERO STUDIO must eventually support both in-app human painting and verified import from an Android painting app; neither path may silently flatten or discard the other. The experimental Canvas brush remains only a low-level input primitive, not a professional painting engine.
+
+For animation, raster and vector frames are both valid if human-authored and independently distinct. The requirement remains 24 unique moving-art drawings per second. Static backgrounds may be reused only while the camera/layout remains fixed. See HYBRID_ART_ARCHITECTURE.md and D-023.

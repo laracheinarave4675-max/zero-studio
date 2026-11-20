@@ -136,3 +136,63 @@ This file records decisions that must not be changed silently. Add dated entries
 **Relationship to D-021:** Human-authored final art and native SVG are compatible. Artists may draw directly in ZERO STUDIO's vector tools or import layered hand-painted assets. The project remains a hybrid-capable, vector-first production system with optional human-painted raster assets—not a raster-only replacement.
 
 **Acceptance gate:** Any architecture proposal that removes native SVG editing/export, silently flattens SVG, or makes vector assets non-editable requires explicit user approval before implementation.
+
+
+## D-023 — Human-painted raster is the primary art path; SVG remains optional and first-class (2026-11-19)
+
+**Decision:** Adopt a hybrid production architecture. Human-authored layered raster painting is the primary path for final anime backgrounds, characters, props, and painted animation drawings. Native SVG remains a supported, editable, first-class optional path for artwork that benefits from vectors. Neither representation is mandatory for every asset. This decision supersedes the vector-first/mandatory-vector implications of D-012, D-020, and D-022 where they conflict; it does not delete or invalidate existing SVG projects, tools, exports, or assets.
+
+**Human-art boundary:** Raster pixels and vector marks in final artwork must be authored by a human artist. Generative image/video models may not create, modify, inpaint, outpaint, or synthesize final visual content. AI may assist with planning, metadata, technical validation, and critique text, but not make final visual marks.
+
+**Layer and source preservation:** A project may contain raster layers, SVG/vector layers, and mixed composites. Preserve layer identity, source files, dimensions, pixel density, color profile when available, alpha, names, order, visibility, opacity, supported blend modes, and provenance. Never silently flatten, discard unsupported layers, convert SVG source destructively, or replace a layered source with a preview. Any flattened composite or PNG preview is derived output, clearly marked and reproducible where possible.
+
+**Interchange:** PSD, OpenRaster (.ora), and lossless PNG-layer bundles are candidates, not declared supported formats, until round-trip tests prove layer fidelity on Android. The first verified interchange must include at least three named transparent layers, differing opacity/visibility, alpha, and known ordering. Preserve the original imported package unchanged alongside normalized project metadata. Report unsupported blend modes, color profiles, masks, and effects explicitly.
+
+**Animation:** Preserve the user's requirement of 24 independently authored moving-art drawings per second. Raster and vector drawings both count when each is a genuinely distinct human-authored drawing. A static approved background may be reused while the camera/layout remains fixed. Do not satisfy the target through duplicated frames, tween-only motion, transforms of a still, or generated video. Audit unique drawings independently from playback FPS; structural uniqueness does not prove human authorship or artistic quality.
+
+**Architecture:** ZERO STUDIO is the production, asset, timeline, continuity, compositing, and delivery workspace. A professional Android painting app may be the primary painting surface initially, but it must not become a mandatory runtime dependency. Native vector editing/export remains available. The asset model and compositor must support mixed raster/vector layers without forcing either format into the other.
+
+**Acceptance gates:** (1) lossless layered import/export round-trip on Android; (2) mixed raster/vector project save/open and composite tests; (3) no silent flattening or source loss; (4) distinct 24-drawing/second moving-art cadence remains measurable; (5) human visual approval remains mandatory. No claim of professional painting quality until a real artist workflow is tested.
+
+
+## D-024 — Absolutely no generative image models in ZERO STUDIO artwork (2026-11-19)
+
+**User confirmation:** The user explicitly confirmed that image-generation models are prohibited entirely for this project.
+
+**Binding rule:** No generative image or video model may create, alter, inpaint, outpaint, extend, stylize, upscale-generatively, or synthesize any final artwork, background, character, prop, texture, animation frame, or visual mark. This prohibition also applies to hidden workflows, API integrations, external services, and "assistant-only" image generation. Do not add a generator toggle or offer a generator-based fallback.
+
+**Allowed assistance:** Text-only planning, art-direction checklists, perspective/material analysis, technical debugging, code generation for deterministic drawing tools, test authoring, metadata, and non-generative critique. All final pixels and vector marks must result from human drawing input or explicit deterministic editing operations controlled by the artist.
+
+**Implementation requirements:** Remove generator controls from the active drawing workflow; audit and isolate legacy generator modules so they cannot be invoked from the final-art UI or project pipeline; add regression checks for the no-generation boundary; preserve existing SVG and Raster authoring paths. No destructive bulk deletion of legacy code or existing artwork without review.
+
+**Quality requirement:** Do not imply that deterministic procedural marks equal professional painting. The project must prove quality through a human-painted full-scene study, reviewed on the target Android device. Passing tests is not artistic acceptance.
+
+
+## D-025 — Canvas-first artist engine
+
+**Status:** Approved by user, 2026-11-19.
+
+ZERO STUDIO's primary drawing medium is a native Canvas2D raster engine, following the agreed Claude recommendation. SVG is no longer the planned foundation or a development priority. Existing SVG content is legacy compatibility during migration only. The artist engine must support real brush rendering, pressure/velocity dynamics, natural-media texture, blend modes, editable stroke records, deterministic replay, raster layers, masks, and mobile-safe undo/storage. No generative image or video model may create or modify final artwork. The 24 independently drawn images-per-second target remains unchanged.
+
+
+## D-026 — Hybrid AI-assisted anime production studio (2026-11-20)
+
+**Status:** Explicitly approved by the user. This is the current governing direction.
+
+**Decision:** ZERO STUDIO will use a specialized image-generation model/service as an integrated art-production department for anime characters, backgrounds, props, and scene assets. ZERO STUDIO remains the production and creative-control studio responsible for character identity, reference management, scene preparation, asset/layer organization, animation planning, timing, camera, cleanup workflow, compositing, audio, and final delivery. A video generator must not replace the studio's animation and episode-production pipeline.
+
+**Architecture:** (1) provider-neutral specialist art-generation adapter; (2) project Character Bible and approved Model Sheets/reference images; (3) scene and asset preparation with source/provenance preservation; (4) animation engine for key poses, timing, holds, inbetween/cleanup workflow, camera and compositing; (5) final episode assembly and delivery.
+
+**Character continuity:** Every generation task must use approved visual references and character metadata. Model Sheets, palettes, clothing, proportions, expressions, and pose references are persistent project assets. Automated consistency checks are advisory; human visual approval is mandatory. LoRA/fine-tuning is deferred until a base provider, rights, dataset, cost, hosting, and measurable benefit are evaluated.
+
+**Provider selection:** No model/provider is selected by this decision. Compare visual quality, reference control, pose/composition control, API access, Android workflow, cost/quotas, latency, privacy/data retention, commercial rights, and stability. Keep credentials secure and provider integrations replaceable.
+
+**Animation target:** Preserve the user's target of **24 independently drawn images per second**. Do not replace it with 8–12 drawings/second, repeated drawings at 24 FPS, generated video, or tween-only animation without explicit user approval. Generated stills may serve as approved assets or keyframe references; they do not automatically constitute the required independently drawn moving-art frames.
+
+**Quality gates:** Procedural geometry and increased path counts are not substitutes for professional anime art. Passing software tests does not prove artistic quality. No milestone is accepted without a real visual result and human review. Character continuity across scenes is mandatory.
+
+**Migration:** This decision supersedes prior no-generative-image restrictions in D-021, D-023, and D-024, and the no-generation clause in D-025, wherever they conflict. Historical entries remain for auditability, not as current policy. Do not destructively delete old drawing engines, vector/raster tools, assets, or tests; audit dependencies and reuse valuable components. No PR merge or production deployment without explicit user permission.
+
+**First milestone:** Audit the existing code and provider research, then compare current specialist models/services and produce a small representative character-sheet/background proof. Do not start LoRA training or a wholesale engine rewrite before this evaluation.
+
+See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).

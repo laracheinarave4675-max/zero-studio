@@ -1,18 +1,59 @@
+# Hybrid image-generation integration milestone — 2026-11-20
+
+- Deployed the hybrid application branch to the separate Vercel staging project `zero-studio-preview`, domain `https://zero-studio-preview.vercel.app/`. The primary `zero-studio` project was not changed.
+- Set Vercel project root directory to `app`; the live app root returns HTTP 200.
+- Added visible image-generation prompt/preview/import UI. Generated results are imported only after user review as an actual Raster layer using the existing `addRasterLayer` engine path.
+- Added `app/api/images.js`, a server-side Vercel proxy. The browser never receives the bearer token. GET `/api/images` returns the expected 405; the endpoint accepts POST only.
+- Added Cloudflare Worker `STUDIO_ORIGIN` binding set to `https://zero-studio-preview.vercel.app`; Workers AI `AI` binding remains present.
+- Added Vercel `ZERO_STUDIO_APP_ORIGIN` environment variable for the staging project.
+- **Security gate remains incomplete:** the matching `STUDIO_ACCESS_TOKEN` Cloudflare secret and `ZERO_STUDIO_ACCESS_TOKEN` Vercel sensitive environment variable have not been created. The image API intentionally returns 503 until both are set to the same random value. Do not put the token in source code, GitHub, or chat.
+- The latest Vercel staging deployment is READY at commit `c858ff98`; live checks confirmed HTTP 200 for the app root, the new image panel and Raster import controls are present, and GET `/api/images` returns the expected 405 (POST-only route).
+- No paid plan, payment method, credit purchase, GPU rental, or fallback provider was used. PR #6 remains open/unmerged; no primary production deployment or merge was performed. The 24 independently drawn images/second target is unchanged.
+
+---
+
+# Cloud inference Worker deployment milestone — 2026-11-20
+
+- Deployed the real source from `cloudflare-worker/src/index.js` on branch `feat/hybrid-human-art-pipeline` to the existing Cloudflare Worker `zero-studio` through the connected Cloudflare account API. The earlier Dashboard Template `Hello world` implementation was replaced; the existing `workers.dev` service identity was preserved.
+- Added the Workers AI binding `AI` to the deployed Worker. Verified through the Cloudflare API that the binding is present and the active deployment source is `api`.
+- Added a public, non-secret `GET /health` response that reports whether the AI binding and private image endpoint configuration are present. The health check does not invoke image inference.
+- Aligned `cloudflare-worker/wrangler.toml` Worker name with the existing deployed Worker: `zero-studio`.
+- Added/updated tests for health behavior before private image credentials are configured. Latest Cloud inference worker tests passed on commit `7346da35`; Drawing engine tests also passed.
+- The image endpoint remains intentionally unavailable until exact `STUDIO_ORIGIN` and private `STUDIO_ACCESS_TOKEN` are configured. No secret has been created or exposed, and no image inference request has been made.
+- The known public test app URL in the README is `https://zero-studio-three.vercel.app/`, but it is a manually uploaded snapshot and the current app source does not yet call `/v1/images`. Do not assume the app integration is complete or expose a bearer secret in public client code.
+- No paid plan, card, credit purchase, or provider fallback was used. PR #6 remains open/unmerged; no production app deployment or PR merge was performed. Budget remains $0; animation target remains 24 independently drawn images per second.
+
+---
+# Cloud inference architecture milestone — 2026-11-20
+
+- Confirmed the active development branch is `feat/hybrid-human-art-pipeline`; PR #6 remains open/draft and unmerged.
+- Added `docs/CLOUD_INFERENCE_ARCHITECTURE.md`: Android is the control/review device; GitHub is source control, not GPU inference; static hosting and remote inference are separate services.
+- Added current provider research to `docs/IMAGE_PROVIDER_EVALUATION.md`.
+- Cloudflare Workers AI FLUX.1 Schnell is the first candidate for a secured API feasibility prototype: official docs list 10,000 free Neurons/day on Workers Free, with model-specific image-generation charges. It is general-purpose, not accepted as anime-quality yet.
+- Hugging Face Anima ZeroGPU remains a limited non-commercial anime visual benchmark only; the model's non-commercial license is separate from the Space code license.
+- Colab/Kaggle are classified as manual experiment/training workspaces, not stable production endpoints.
+- Clarified the README that old no-generation restrictions are historical and superseded by D-026.
+- No Cloudflare/Hugging Face account was created or connected; no API token/secret was entered; no model request was run; no provider was selected; no app code or production deployment was changed.
+- Next gate: verify Cloudflare account prerequisites and free-plan setup, then build and test a quota-safe Worker prototype before connecting the studio UI.
+- Budget remains exactly $0. No paid plan, credit purchase, GPU rental, trial-based dependency, or automatic paid fallback is allowed.
+- Animation target remains 24 independently drawn images per second; free daily inference quotas do not make continuous 24-image/second generation feasible.
+
+---
+
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-19 (UTC)
 
-## Human-authored studio direction — 2026-11-19
+## Human-authored Raster-first studio direction — 2026-11-19
 
-- The user explicitly confirmed that ZERO STUDIO must be a **human-art studio**, not an AI image-generation studio.
-- Final visual artwork (backgrounds, characters, props and animation drawings) must be drawn/painted by a human in a professional drawing application. No generative image/video model may create, inpaint, outpaint, modify, or synthesize final artwork.
-- The architecture is now reframed: a professional Android painting app is the art department; ZERO STUDIO manages production, scene/shot organization, asset layers, continuity, timeline, 24-fps playback, unique-drawing audits, compositing and delivery.
-- Added `docs/HUMAN_ART_WORKFLOW.md` and decision D-021. Updated README to make this the approved product direction.
-- PSD, OpenRaster and lossless PNG-layer bundles are candidate interchange formats only. None is declared supported until a real three-layer round-trip is tested on the Android workflow.
-- The existing procedural SVG scene painter and experimental Canvas brush are not accepted as a route to painterly quality. They remain prototypes/tools only; do not claim they can replace a professional painting application.
-- The animation target remains 24 independently drawn images per second for moving artwork. Fixed backgrounds may be reused.
-- **Next implementation gate:** choose/verify a professional painting app compatible with the user's Android phone, then prove a lossless layered import into ZERO STUDIO. Physical-device compatibility and interchange remain unverified.
-- No production deployment or merge to `main` was performed.
+- Final backgrounds, characters, props and animation drawings must be authored through human pointer/stylus input. Generative image/video models are not allowed to create, alter, inpaint, or synthesize final artwork.
+- The active drawing workspace opens in native Raster pencil mode. Gouache/ink/graphite multi-point strokes use a continuous pressure-shaped ribbon with variable edges and bristle tracks; watercolor remains a translucent wash and foliage uses directional leaf marks. These are foundational brush algorithms, not a professional natural-media engine.
+- Old Gemini/SVG and mesh scene-generation controls are removed from the visible art department. Their legacy modules and hidden compatibility wiring remain temporarily, but they are not an approved final-art path.
+- Native SVG remains optional, editable and first-class. Raster/vector layers coexist; imported images remain optional and no external painting app is a prerequisite.
+- The immediate visual acceptance target is the user-supplied Japanese forest house: layered curved tile roof, timber/eaves, windows and balcony, dense varied foliage, stone retaining wall, sunlight and atmospheric depth. Path counts and passing unit tests do not constitute artistic acceptance.
+- The animation target remains 24 independently drawn moving-art drawings per second. Fixed backgrounds may be reused while the camera remains fixed.
+- Physical Android stylus/touch testing, natural-media simulation, visual acceptance, memory benchmarks and lossless package round-trip remain unverified. No PSD/ORA support is claimed.
+- Work remains on PR #6's isolated branch; no merge to `main` and no production deployment.
 
 Last updated: 2026-11-19 (UTC)
 
@@ -412,3 +453,163 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Latest public static snapshot: Vercel `dpl_bqibHVJ4qU7daU2jgWA6fYmuLGes`, state `READY`, stable alias `https://zero-studio-three.vercel.app/`.
 - Source remains private and deployment remains manual; future commits require a new static upload.
 - Latest code/test milestone is committed on `feature/mobile-drawing-workspace`; PR #1 remains draft and unmerged.
+
+
+## Approved hybrid raster/vector direction — 2026-11-19
+
+- The user approved a new hybrid architecture: human-painted layered Raster is the primary route for final art; native SVG remains optional, editable, and first-class. Existing SVG projects/tools/exports must continue to work; no bitmap-only replacement is authorized.
+- D-023 was added and supersedes the vector-first requirements of D-012, D-020, and D-022 where they conflict. Earlier decisions remain historical context; D-023 governs current architecture.
+- Added docs/HYBRID_ART_ARCHITECTURE.md and docs/LAYERED_ASSET_INTERCHANGE.md. Updated the human art workflow and animation production contract to describe mixed raster/vector assets.
+- Created isolated branch feat/hybrid-human-art-pipeline from commit 1e533c13f0e5524a3c63f4d9b6ac6580487b0bfb. No merge to main and no production deployment were performed.
+- First code foundation: app/hybrid-assets.mjs validates typed raster/vector layer manifests, source references, dimensions, sizes, opacity, blend modes and mixed layers; it also computes mixed-layer structural frame signatures and enforces the 24 FPS cadence setting. tests/hybrid-assets.test.mjs covers this contract.
+- **Not yet implemented:** actual PSD/ORA/PNG-layer archive decoding/import, preservation of source package bytes, raster layer storage inside .zero, mixed raster/vector rendering/compositing/export, integration with the existing frame/batch importer, and physical Android round-trip.
+- **Next gate:** identify the painting app actually available on the target Android phone, create the three-layer proof document, inspect its real exported package, then implement only the proven interchange format. Do not claim format support until tests pass.
+- The 24 independently authored moving-art drawings/second target is unchanged. Raster and vector can both represent a drawing; duplicates, tween-only motion and transformed stills do not count.
+- Current code tests have not yet been run on this branch after these changes. No test result is claimed in this status entry.
+
+## First raster-layer engine integration — 2026-11-19
+
+- Added native raster layer support to the existing .zero frame engine while preserving the existing vector layer representation and SVG tools.
+- Raster layers store an embedded PNG/WebP/JPEG data URL, pixel dimensions, visibility, opacity, blend mode, lock state, and a stable layer ID. The project normalizer validates the payload and preserves it across JSON save/open normalization.
+- The existing SVG compositor now emits an embedded SVG image element for raster layers; vector layers continue through the original path/mask renderer. Mixed frames therefore remain layered rather than being flattened.
+- Added createRasterLayer and addRasterLayer engine APIs.
+- Added tests/raster-layer-engine.test.mjs for mixed-layer persistence, SVG compositing, and invalid raster input rejection.
+- Latest implementation commit: 145fa6704a4cc47ee26ee2f005618bdf835de837.
+- NOT YET VERIFIED: CI on this commit, actual image-file picker/import UI, large-image memory behavior, Android save/open on-device, PSD/ORA decoding, and a visual human-painted sample. No image-generation model creates or modifies the artwork.
+- No merge to main and no production deployment were performed.
+
+## Raster import UI integration — 2026-11-19
+
+- Connected the raster engine to the Arabic mobile workspace: the Layers panel now includes an image import control accepting PNG, WebP, and JPEG up to 16 MiB. The browser reads the selected file, validates its decoded dimensions and type, and inserts it as a separate editable/reorderable raster layer.
+- Mixed raster/vector frames persist through the existing .zero JSON project save/open path and are composited into SVG output without flattening the source layer records.
+- Updated the PWA shell cache from v31 to v32 so Android browsers fetch the new controller and engine modules.
+- Current branch head at this update: 55e2e4b6bd3152df0c31d1a853e13e7333124e45.
+- Added engine regression tests, but GitHub Actions results for this exact head have not yet been returned by the available commit-run query. Treat automated test execution as pending; do not claim green CI.
+- PSD/ORA archive decoding, high-resolution memory optimization, image crop/transform UI, physical Android testing, and artist-supplied sample review remain pending. No merge or production deployment.
+
+## Raster editing safety and regression workflow — 2026-11-19
+
+- Corrected raster preview scaling to preserve source image aspect ratio inside the 1920×1080 canvas.
+- Layer list now visibly distinguishes raster image layers from SVG/vector drawing layers.
+- When the selected active layer is raster and the user begins a pen/shape/eraser gesture, the editor creates a new vector layer above it before recording operations. This prevents invisible/lost vector operations from being appended to a raster layer. Command-based path insertion follows the same rule.
+- Added an assertion that raster SVG output preserves aspect ratio.
+- Added `.github/workflows/hybrid-raster-tests.yml`: Node 22 syntax checks and the full native Node test suite run on pushes to this feature branch and pull requests.
+- Latest branch head at this update: c31320bc155cd00ddf41aea64590c8367891d4e8.
+- GitHub commit-run/status queries currently return no run/status records for this head; CI execution is therefore **unconfirmed**, not green.
+- A Vercel preview creation was attempted twice but the Vercel API returned HTTP 429 (GitHub API rate limit exceeded); no new preview deployment was created. Existing production aliases were not changed.
+- Still pending: PSD/ORA decoding, raster transform/crop controls, memory/performance testing on large images, real Android save/open, and human-art visual acceptance. No merge to main and no production deployment.
+
+## First authored visual sample and CI failure fixes — 2026-11-19
+
+- Added `samples/first-hand-authored-anime-background.svg`: a 1920×1080 layered SVG illustration of a Japanese old-bookshop street at blue hour. The source is manually authored SVG geometry, gradients, and grouped editable elements; no image-generation model was used to create or modify its artwork.
+- Corrected three test assertions discovered in workflow run 44552956563: update the expected PWA cache version from v31 to v32, assert legacy vector-layer operations are preserved (the existing vector schema does not carry `type: vector`), and match the actual Arabic dimension-validation message.
+- The run had 200 tests: 197 passed and 3 failed, all three failures were assertion/schema expectation mismatches. The corrected test commit is `7e46510851e1365a0c11dc2354224311d305de9d`; the sample artwork commit is `fde10e87c895d50d8591a7838e791e677be0d8f2`.
+- No subsequent successful run has been confirmed yet. The sample is an initial authored scene, not yet artist-approved final anime quality; physical Android preview and raster-import round-trip remain unverified.
+
+## Verified CI result — 2026-11-19
+
+- GitHub Actions run `44553810365` on commit `f23ae88c0205a03359d5ffb8417582e17ae26f2c` completed successfully.
+- Node 22 syntax checks passed for application modules and `app/app.js`.
+- Full native test suite: **200 tests passed, 0 failed** (run duration about 6.7 seconds).
+- A new Vercel preview deployment was retried for this verified commit, but Vercel again returned HTTP 429 rate limiting. No preview deployment was created and production was not changed.
+- The authored sample SVG is available at `samples/first-hand-authored-anime-background.svg`.
+
+
+## Native Raster brush engineering — 2026-11-19
+
+- Added `app/raster-brushes.mjs`: deterministic dab interpolation and Canvas2D pixel rendering for graphite, ink, gouache-like, watercolor-like and foliage brushes.
+- Added dedicated Arabic UI controls for Raster pencil/Raster brush, brush material, opacity and texture; existing vector pen remains unchanged.
+- Raster brush gestures now create a transparent PNG layer when needed and commit painted pixels into the selected Raster layer rather than SVG paths.
+- Imported images are painted in their true pixel coordinates while respecting aspect-ratio letterboxing.
+- Large Raster document undo history is bounded to reduce memory exhaustion; a 16-megapixel working-area guard prevents unsafe canvas allocation.
+- Automated regression tests cover brush dab determinism, pressure response, invalid inputs, pathological stroke caps, canvas context drawing and source-image coordinate mapping.
+- Important limitation: these are textured dab brushes, not yet simulated wet pigment or a professional paint engine. Android hardware testing and visual artist acceptance are still pending.
+
+
+## Diagnostic follow-up — 2026-11-19
+
+- GitHub access diagnosis: PR #6 and branch `feat/hybrid-human-art-pipeline` are present and readable. Both the branch ref and exact prior head SHA `b8423635588cd1d6aa19d96b6cbbf47dfd27a589` now successfully resolve `samples/first-hand-authored-anime-background.svg` and `app/raster-brushes.mjs`. Therefore the earlier 404 was transient or caused by the earlier request/path context; the available evidence does not isolate a more specific root cause. It was not evidence that the repository or branch had disappeared.
+- Current PR #6 head remains `b8423635588cd1d6aa19d96b6cbbf47dfd27a589`; PR remains open, draft, and unmerged.
+- Confirmed GitHub Actions run `44568385952` completed successfully. Its `node-tests` job passed both application syntax checks and the complete native Node test command. This is code-level validation only, not visual or Android acceptance.
+- Visual diagnosis: the committed sample `samples/first-hand-authored-anime-background.svg` is an evening Japanese bookshop street, not the requested forest-house reference. Its tree crowns use a small number of circles and the architecture is largely broad filled polygons. It therefore cannot be treated as the requested detailed painterly forest-house result.
+- The current Raster brush module is a foundational Canvas2D stroke renderer (pressure-shaped ribbons, bristle tracks, wash and leaf marks), not a full natural-media engine. The existence of the brush module and passing unit tests does not prove a professional painterly result.
+- Next acceptance gate: create and inspect the actual forest-house scene against the user's reference; verify organic foliage, curved layered roof tiles, timber construction, glazing, balcony, stone retaining wall, light and depth. Do not mark the artwork accepted based on source complexity, path counts, or test results. Keep PR isolated; no merge or production deployment.
+
+## Forest-house artwork study — 2026-11-19
+
+- Added `samples/forest-house-canopy-study.svg` on the isolated hybrid branch. It is a new 1920×1080, self-contained, editable SVG study composed of twelve named scene groups: atmosphere, forest trunks, distant canopy, stone wall, house structure, upper story, ground floor, curved roof, timber eaves, garden, foreground canopy, and light accents.
+- The authored scene includes a curved layered tile roof, timber framing, upper glazing and balcony rails, sliding ground-floor doors, varied foliage clusters, stone retaining wall, garden path, sunlight and atmospheric depth.
+- Added `tests/forest-house-artwork.test.mjs` to check scene dimensions, required named groups/material definitions, self-contained assets, and minimum path detail.
+- Artwork commit: `c576f50dd6b9e5df0256f39be80741a7bb837cfb`. Structural test commit: `22c518e9a54382e69ca65a98d8509b88858e6306`.
+- This is a hand-authored vector study, not a raster-painted final background and not yet visually rendered/inspected on an Android device. It does not establish professional painterly quality or artist acceptance. The native raster brush remains a foundational tool.
+- CI for these latest commits has not yet been confirmed. No merge to main and no production deployment.
+
+
+## Natural-media stroke refinement — 2026-11-19
+
+- Updated `app/raster-brushes.mjs` on the isolated PR #6 branch (commit `62fbcf00df8f44699bf5f2c75c817022c6f5ad42`). The pressure-shaped ribbon now uses correlated edge variation rather than only a smooth two-edge contour, adds restrained pigment-edge accumulation, and renders broken, irregular bristle lanes to suggest dry-pigment skips and directional brush loading.
+- This is a focused improvement to the human-operated raster stroke primitive. It does not establish wet-pigment mixing, true watercolor diffusion, professional brush-tip dynamics, or reference-level anime painting quality.
+- The commit was confirmed on `feat/hybrid-human-art-pipeline`. A new automated test result and visual Android inspection have not yet been confirmed; do not report this refinement as accepted until both code regression tests and an actual painted study are reviewed.
+- Next drawing-only gate: refine the watercolor and foliage material behavior, then paint the forest-house reference as a complete layered still and inspect the rendered result at full resolution. No animation, production-management, or deployment work is included in this milestone.
+
+## Watercolor and foliage material pass — 2026-11-19
+
+- Reworked the watercolor brush to lay down a connected translucent wash with irregular edge pigment, overlapping blooms and sparse deterministic granulation instead of relying only on a sequence of round stamps.
+- Reworked foliage marks into varied directional leaf shapes with per-leaf color variation, central veins, and occasional companion leaves for clustered canopy texture.
+- Added regression tests for connected watercolor wash behavior and deterministic foliage variation.
+- Corrected pigment-edge accumulation so the two sides of a stroke are rendered independently rather than joined by a zig-zag line.
+- Commits: `c2ff78d989a58b06864bf2be4b12ffa550b1c93e`, `9196c338397abd85dbb1784ba85041635cb176e5`, `1567e6355021572ba041420d9a7e6039c7357a9a`.
+- The changes are committed to the isolated `feat/hybrid-human-art-pipeline` branch. GitHub Actions results for these exact commits and visual inspection on Android have not yet been confirmed. These are brush-engine improvements, not evidence that the reference-level forest-house painting has been achieved.
+- Next art-only gate: inspect actual rendered watercolor and canopy strokes at full size, tune material behavior against the forest-house reference, and build a complete layered background study before expanding scope.
+
+## CI diagnosis and foliage cluster refinement — 2026-11-19
+
+- Inspected failed GitHub Actions run `44585994842`: syntax checks passed; 213 of 214 native tests passed. The sole failure was a false-positive assertion in `tests/forest-house-artwork.test.mjs`: it rejected the standard SVG namespace URI `http://www.w3.org/2000/svg` as a remote asset.
+- Corrected the assertion to reject only external `href`, `xlink:href`, or `src` references. Commit: `19b6b9ae30e8f48eead3855abaccb4449ba584a5`.
+- Refined `paintFoliageLeaves` to create deterministic companion leaves with actual scaled geometry, branch offsets, and contrasting green tones. Removed an unused scale calculation from the previous implementation. Commit: `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6`.
+- The corrected test has not yet been confirmed by a new successful CI run. Do not mark CI green until a run for the updated branch is visible.
+- Artistic limitation remains: these are brush-renderer improvements and an editable SVG study, not yet a visually accepted, painterly raster reproduction of the user's reference.
+
+- Follow-up GitHub Actions run `44586260671` on commit `19b6b9ae30e8f48eead3855abaccb4449ba584a5` completed successfully: syntax checks passed and all 214 native tests passed (0 failures).
+- Subsequent foliage-cluster refinement commit `3be9e4d0f767dbb2fa8bc97142e91472e92b40b6` and added cluster-shape assertion `28eb47fed11f2a99edbccc116c1ebbc8107d2e56` are newer than that green run. No CI run for those later commits is currently visible; latest foliage changes therefore still need a fresh CI confirmation.
+
+## Native Artist Engine — absolute no-generation confirmation (2026-11-19)
+
+- User explicitly reconfirmed: **generative image and video models are prohibited entirely**, including helper-only or hidden generation paths. Binding decision recorded as D-024 in `DECISIONS.md`.
+- Added `docs/NATIVE_ARTIST_ENGINE_PLAN.md` with staged implementation and visual acceptance gates: stroke dynamics, brush materials, layer compositing/masks, Android memory/input reliability, and a complete human-painted forest-house proof.
+- Implemented deterministic per-stroke blend modes in `app/raster-brushes.mjs`: normal, multiply, screen, overlay, darken, lighten. The Raster brush panel now exposes the choice in Arabic; the selected mode is passed to the actual Canvas2D stroke renderer. Erasing always overrides blend mode with destination-out.
+- Added regression tests for all supported stroke blend modes, invalid modes, and eraser precedence.
+- Commits: `cacd5b7d0849d21d0098e778b1043ccbbb20067d`, `7652f365a49cc4c8a8bee8b6721a8f7b7f276079`, `7c1a29f6315577df89b8800fd58f884ef4606f67`, `a9cd7d6e3de6897052442bd62204e79509d2bc5e`, `bcc3994f39f2afb04e6f113191ec6be069f73966`, `491010a654dc2de71d442771487b1062efdf2840`.
+- GitHub Actions has not yet returned a run for the latest application commit; do not claim the new tests are green until that run is inspected.
+- Artistic acceptance remains open. These blend modes are compositing primitives, not pigment simulation or proof of reference-level painting. Physical Android testing and full-scene human-painted review remain required.
+- Work remains isolated on `feat/hybrid-human-art-pipeline`; no merge to main and no production deployment.
+
+- CI verification for the application changes completed successfully in GitHub Actions run `44587978596` (#79): syntax checks passed and all `216/216` native tests passed, 0 failures. This run includes the brush compositing implementation and Arabic UI control. The subsequent status/decision documentation commits do not change application code.
+
+
+## New hybrid anime production direction approved — 2026-11-20
+
+- User approved a fundamental shift to a hybrid studio architecture: a specialist image-generation model/service may create anime character, background, prop, and scene artwork; ZERO STUDIO remains responsible for character identity/continuity, scene preparation, asset management, animation planning and control, compositing, audio, and final delivery.
+- Recorded the full governing plan in `docs/NEW_HYBRID_PRODUCTION_DIRECTION.md` and decision D-026 in `DECISIONS.md`. The README now points to this as the current direction and labels older no-generation restrictions as historical/superseded.
+- No provider has been selected or connected yet. LoRA training and wholesale engine rewrites are deferred pending codebase audit and provider evaluation.
+- The 24 independently drawn images/second target remains unchanged. Android-first workflow, free-first evaluation, visual acceptance, source preservation, and no merge/deployment without explicit approval remain in force.
+- Next implementation milestone: audit existing code and provider research, compare specialist models/services (quality, reference control, API, Android workflow, quotas/cost, rights, privacy), then build a small visual proof before integrating further.
+
+
+## Initial image-provider and codebase audit — 2026-11-20
+
+- Added `docs/IMAGE_PROVIDER_EVALUATION.md` with an initial, source-linked comparison of OpenAI GPT Image 2.6, Google Gemini 3.1 Flash Image, and Black Forest Labs FLUX 3 / FLUX 3 Klein. No provider is selected or connected.
+- Initial published 1K output prices vary materially: FLUX 3 Klein $0.009/image, GPT Image 2.6 sample calculator estimate $0.02469/image, FLUX 3 Image $0.048/image, and Gemini 3.1 Flash Image $0.067/image. Under a literal 24-new-images/second assumption, a 20-minute sequence of 28,800 outputs would cost approximately $259, $711, $1,382, or $1,930 respectively before retries and input-reference charges. This is a cost model, not an approved production plan.
+- First code inspection: `app/scene-production.mjs` uses Gemini `generateContent` to request editable SVG operations; it is not a native image-generation adapter. `app/app.js` currently presents this as an SVG proposal workflow with approval/rejection. `app/anime-background-painter.mjs` remains a procedural path/shape scene painter.
+- Existing Canvas2D raster brushes, vector tools, project/layer model, timeline, compositor, and approval flow are potential reusable foundations. A deeper dependency and import/export audit is still required before modifying or retiring any module.
+- The former SVG provider research has been marked historical and points to the new evaluation. No image-generation API key has been added, no provider has been connected, and no image has been generated as part of this code audit.
+- Next: complete the repository dependency/security audit, verify each candidate's reference-image behavior and terms, then run the same background and character-sheet test brief against shortlisted models before choosing one.
+
+
+## Zero-budget constraint confirmed — 2026-11-20
+
+- User explicitly confirmed that ZERO STUDIO has a hard total budget of $0. Paid APIs, inference credits, subscriptions, GPU rentals, paid hosting, required payment cards, and automatic paid fallbacks are out of scope.
+- Updated the governing architecture and provider evaluation with a free-first strategy. Hugging Face ZeroGPU is a limited experimental route: official docs currently state 5 minutes/day for free accounts, shared queues, and free use of existing ZeroGPU Spaces. This is not unlimited production compute.
+- Anima is a promising anime-focused model for tests, but its model card shows a non-commercial license; do not use it for commercial production unless terms are separately cleared. Z-Image-Turbo is marked Apache-2.0 but is not yet shown to meet the anime quality target and still needs GPU compute.
+- No paid provider has been selected or connected. No account was created and no service was called to generate images. The next proof should use existing free public Spaces, if available, with a small repeatable background and character-sheet test.
+- The 24 independently drawn images/second goal remains unchanged; do not pretend limited free quotas can generate it continuously. Report constraints honestly and preserve the zero-dollar gate.
