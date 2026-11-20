@@ -143,6 +143,8 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /dna\.sourceSignature=sourceSignature/);
   assert.match(app, /async function verifyAnimeCharacterAnchor\(dna\)/);
   assert.match(app, /await verifyAnimeCharacterAnchor\(dna\)/);
+  assert.match(app, /f\.animeRaster\?\.dataUrl\?\.length\|\|0/);
+  assert.match(app, /const compactHistory=!forceFull&&\(project\.frames\.length>600\|\|rasterBytes>2\*1024\*1024\)/);
   for (const id of [
     "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers",
     "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect",
