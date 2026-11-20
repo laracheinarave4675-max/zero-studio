@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createProject, normalizeProject } from "../app/engine.mjs";
 import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
   createAnimeAnatomyPlan, sampleAnimeAnatomyGuide, buildAnimeAnatomyConstruction,
@@ -64,6 +65,24 @@ test("character DNA locks one approved identity and measured anatomical proporti
   assert.ok(Math.abs(dna.boneLengths.upperArmL - Math.hypot(.08,.10)) < 1e-6);
   assert.ok(Math.abs(dna.boneLengths.shinR - Math.hypot(.01,.16)) < 1e-6);
   assert.deepEqual(dna.modelSheetAssetIds, ["model-front-01","model-side-01"]);
+});
+
+
+test("Character DNA survives native ZERO project save/open normalization", () => {
+  const { dna } = createFixture();
+  const project = createProject("Anatomy proof");
+  const storedDNA = { ...dna, name: "Nori", sourceFrameId: project.frames[0].id };
+  project.animeCharacterDNA.push(storedDNA);
+  const reopened = normalizeProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(reopened.animeCharacterDNA.length, 1);
+  assert.equal(reopened.animeCharacterDNA[0].characterAssetId, dna.characterAssetId);
+  assert.equal(reopened.animeCharacterDNA[0].sourceFrameId, project.frames[0].id);
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA: [storedDNA, storedDNA]
+  }), /مكررة/);
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA: [{ ...storedDNA, boneLengths: {} }]
+  }), /قياسات الشخصية الثابتة/);
 });
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
