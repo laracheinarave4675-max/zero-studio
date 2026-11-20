@@ -92,3 +92,8 @@ Animation quality criteria: believable timing and spacing, anticipation/action/f
 - The motion workflow has been made safe: normal pushes run regression tests only. Live Gemini generation requires repository Actions variable `ZERO_STUDIO_FREE_TIER_CONFIRMED=true`, the `GEMINI_API_KEY` Actions secret, and a commit message containing `[RUN_FREE_TIER_MOTION_PROOF]`. Do not enable the flag until the Google API project is confirmed to have no paid billing. The repository cannot verify the external billing state.
 - **No live Gemini motion generation has been run and no generated frame artifact exists yet.** The actual motion, character continuity, and Android playback are not visually accepted. No paid fallback or automatic retry is allowed.
 - Latest Vercel status on PR head is success for preview only. No production deployment; PR #9 and PR #10 remain unmerged.
+
+
+## Explicit live motion-proof run request
+
+The project owner explicitly requested the free-tier-only 24-frame Gemini motion proof on 2026-11-20 after confirming the `GEMINI_API_KEY` Actions secret, no-billing Google project, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true` repository variable. This commit is the deliberate workflow trigger. Review the resulting Actions run and artifact; do not infer success from dispatch alone.
