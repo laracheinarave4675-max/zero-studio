@@ -77,4 +77,4 @@ module.exports = async function handler(req, res) {
   }
 };
 
-module.exports.config = { api: { responseLimit: "5mb" } };
+module.exports.config = { api: { responseLimit: "6mb" } };
