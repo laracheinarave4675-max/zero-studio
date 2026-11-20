@@ -1,6 +1,6 @@
 "use strict";
 
-const WORKER_URL = "https://zero-studio.9test4675a26.workers.dev/v1/gallery";
+const DEFAULT_WORKER_BASE_URL = "https://zero-studio.9test4675a26.workers.dev";
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 
 function send(res, status, payload) {
@@ -13,6 +13,8 @@ function send(res, status, payload) {
 module.exports = async function handler(req, res) {
   const appOrigin = String(process.env.ZERO_STUDIO_APP_ORIGIN || "").trim();
   const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
+  const workerBaseUrl = String(process.env.ZERO_STUDIO_IMAGE_WORKER_URL || DEFAULT_WORKER_BASE_URL).replace(/\/+$/, "");
+  const workerUrl = workerBaseUrl + "/v1/gallery";
   const requestOrigin = String(req.headers.origin || "").trim();
   const requestHost = String(req.headers.host || "").toLowerCase();
   const sameHostOrigin = requestHost ? "https://" + requestHost : "";
@@ -39,7 +41,7 @@ module.exports = async function handler(req, res) {
     }
   }
   try {
-    const upstream = await fetch(WORKER_URL, {
+    const upstream = await fetch(workerUrl, {
       method: req.method,
       headers: {
         "Authorization": "Bearer " + token,
