@@ -1,6 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
-import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,createAnimeStillDrawingRequest,attachAnimeRasterDrawing,validateAnimeMotionSequence,materializeAnimeRasterFrames}from"../app/anime-motion-engine.mjs";
+import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,createAnimeStillDrawingRequest,renderAnimePoseGuidePng,attachAnimeRasterDrawing,validateAnimeMotionSequence,materializeAnimeRasterFrames}from"../app/anime-motion-engine.mjs";
 const makeGuide=(shift=0)=>({
  view:"side",contacts:{footL:"planted",footR:"swing"},
  joints:Object.fromEntries(ANIME_POSE_JOINTS.map((name,index)=>[name,{x:Math.min(.98,.2+index*.025+shift),y:Math.min(.95,.12+index*.035),z:0}]))
@@ -24,6 +24,19 @@ test("plan rejects non-24 fps and requires first and last drawings to be key pos
  const p=plan();assert.throws(()=>createAnimeMotionPlan({...p,keyPoses:p.keyPoses.slice(1)}),/بداية اللقطة ونهايتها/);
 });
 const refImage=(mime="image/png")=>"data:"+mime+";base64,AAAA";
+test("pose blocking creates a temporary full-body raster PNG guide, not a final animation frame",()=>{
+ let draws=0;const ctx={clearRect(){draws++},fillRect(){draws++},setLineDash(){draws++},beginPath(){draws++},moveTo(){draws++},lineTo(){draws++},stroke(){draws++},arc(){draws++},fill(){draws++},ellipse(){draws++}};
+ const canvas={width:0,height:0,getContext(type){assert.equal(type,"2d");return ctx},toDataURL(type){assert.equal(type,"image/png");return"data:image/png;base64,AAAA"}};
+ const output=renderAnimePoseGuidePng(canvas,plan(),6,{width:512,height:640});
+ assert.equal(canvas.width,512);assert.equal(canvas.height,640);assert.equal(output.width,512);assert.equal(output.height,640);
+ assert.equal(output.mimeType,"image/png");assert.equal(output.guideOnly,true);assert.equal(output.frameIndex,6);
+ assert.ok(draws>ANIME_POSE_JOINTS.length);assert.match(output.dataUrl,/^data:image\/png;base64,/);
+});
+test("pose-guide renderer rejects unavailable Canvas and unsafe raster dimensions",()=>{
+ assert.throws(()=>renderAnimePoseGuidePng(null,plan(),0),/Canvas غير متاحة/);
+ const canvas={getContext(){return{}},toDataURL(){return"data:image/png;base64,AAAA"}};
+ assert.throws(()=>renderAnimePoseGuidePng(canvas,plan(),0,{width:100,height:100}),/أبعاد دليل الوضعية/);
+});
 test("key-drawing request calls the existing still-image API with identity, pose, previous drawing and model sheet references",()=>{
  const p=plan();const req=createAnimeStillDrawingRequest(p,12,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage(),previousKeyDrawingDataUrl:refImage("image/webp"),modelSheetDataUrl:refImage("image/jpeg")});
  assert.equal(req.endpoint,"/api/images");assert.equal(req.method,"POST");assert.equal(req.model,"flux-2-klein-4b");assert.equal(req.aspectRatio,"16:9");
