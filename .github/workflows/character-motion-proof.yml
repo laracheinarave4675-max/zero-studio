@@ -9,9 +9,12 @@ on:
       - "app/animation-production.mjs"
       - "app/animation-worker.mjs"
       - "tests/gemini-animation.test.mjs"
+      - "tests/animation-worker.test.mjs"
+      - "tests/animation-production.test.mjs"
       - "docs/ANIME_CHARACTER_MOTION_PROOF.md"
   workflow_dispatch:
 permissions:
+  actions: read
   contents: read
 jobs:
   regression-tests:
@@ -58,10 +61,18 @@ jobs:
             exit 1
           fi
           echo "Free-tier guard is enabled and the Gemini secret is present. No Gemini request was made by this check."
+      - name: Restore the previously accepted six-frame checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: zero-studio-character-motion-proof
+          path: artifacts/checkpoint
+          run-id: 44796181630
+          github-token: ${{ github.token }}
       - name: Generate 24 reference-conditioned independent character drawings
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3.5-flash-lite
+          MOTION_CHECKPOINT_PATH: artifacts/checkpoint/character-motion.zero
         run: node scripts/run-character-motion-proof.mjs
       - name: Upload editable motion project, frames, and visual review page
         if: always()
