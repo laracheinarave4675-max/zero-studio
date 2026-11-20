@@ -26,18 +26,21 @@ function providerRetryAfterMs(response,body){
  const retryInfo=details.find(item=>String(item?.["@type"]||"").includes("RetryInfo"));
  return retryDelayFrom(retryInfo?.retryDelay);
 }
-export function createGeminiAnimationProvider({apiKey,model=DEFAULT_MODEL,fetcher=fetch,referenceImage}={}){
+export function createGeminiAnimationProvider({apiKey,model=DEFAULT_MODEL,fetcher=fetch,referenceImage,thinkingLevel="high"}={}){
  const key=String(apiKey??"").trim();
  if(!key)throw Error("GEMINI_API_KEY is missing.");
  if(!ALLOWED_MODELS.has(model))throw Error("Unsupported Gemini model.");
+ if(!["low","medium","high"].includes(thinkingLevel))throw Error("Unsupported Gemini thinking level.");
  const reference=normalizeReferenceImage(referenceImage);
  return async function generateBatch({prompt,signal}={}){
   if(typeof prompt!=="string"||!prompt.trim())throw Error("Animation batch prompt is required.");
   const parts=[{text:prompt}];
   if(reference)parts.push({text:"CHARACTER IDENTITY REFERENCE: The attached image is the approved visual reference for the character. Match the same face profile, long dark hairstyle, pale kimono with pink shading, red waist sash, proportions, silhouette, and palette. Use it only as a visual design reference. Redraw every requested frame as fresh editable SVG path geometry on the transparent moving-art canvas. Do not embed, trace as a single bitmap, or reuse the raster image as an animation frame. Preserve the character identity while changing pose and anatomy coherently."},{inline_data:{mime_type:reference.mimeType,data:reference.data}});
+  const generationConfig={responseMimeType:"application/json",temperature:0.2,maxOutputTokens:32768};
+  if(model==="gemini-3.8-flash")generationConfig.thinkingConfig={thinkingLevel};
   const response=await fetcher("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{
    method:"POST",signal,headers:{"Content-Type":"application/json","x-goog-api-key":key},
-   body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2,maxOutputTokens:32768}})
+   body:JSON.stringify({contents:[{role:"user",parts}],generationConfig})
   });
   let body;try{body=await response.json()}catch{throw Error("Gemini returned a non-JSON HTTP response.")}
   if(!response.ok){const message=body?.error?.message||"HTTP "+response.status;const retryAfterMs=providerRetryAfterMs(response,body);const retryable=[500,502,503,504].includes(response.status)||(response.status===429&&retryAfterMs!==null);const error=Error("Gemini "+response.status+": "+message);error.status=response.status;error.retryAfterMs=retryAfterMs;error.retryable=retryable;throw error;}
