@@ -8,7 +8,7 @@ const IMAGE_PRESETS = Object.freeze({
   "1:1": Object.freeze({ width: 1024, height: 1024 }),
 });
 const MAX_BODY_BYTES = 3 * 1024 * 1024;
-const MAX_PROMPT_LENGTH = 2048;
+const MAX_PROMPT_LENGTH = 2600;
 const MAX_REFERENCE_COUNT = 4;
 const MAX_REFERENCE_IMAGE_BYTES = 512 * 1024;
 const MAX_IMAGE_BASE64_LENGTH = 8 * 1024 * 1024;
