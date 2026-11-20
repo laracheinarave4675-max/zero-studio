@@ -14,7 +14,11 @@ Last updated: 2026-11-20 (UTC)
 - The prior per-frame still-image request builder is legacy-only for this animation direction and must not be used to produce final motion frames.
 - Added a mobile-first on-canvas Character DNA calibration panel: annotate 19 anatomical landmarks over the current drawing, set view/foot contact, save the identity into the native .zero project, and export the DNA record.
 - Extended native project normalization and large-project undo metadata to preserve Character DNA records.
-- GitHub Actions is green on branch HEAD `4221ec7664ebd3bc6e360b528cd5594c1067b76b`: syntax checks passed and 290/290 tests passed.
+- Character DNA now stores a SHA-256 signature of its originating timeline drawing. Key-drawing approval, motion-plan creation, and plan restoration refuse to proceed if that original drawing is missing or changed.
+- Corrected a malformed async declaration in the motion-plan restoration path and added a regression assertion.
+- Android history budgeting now counts final animation PNG payloads as well as raster-layer images. Once heavy raster assets exceed 2 MiB, history uses frame-local snapshots; shared animation-background state is preserved by undo/redo.
+- Added regression coverage for the immutable character anchor, raster-aware history selection, and shared-background undo/redo.
+- GitHub Actions is green on branch HEAD `fd9ee5c92393f99f41c6551d804cac6274b13d70`: syntax checks passed and 291/291 tests passed (0 failures).
 - **Not yet verified:** annotate the user's approved real character, create and approve 24 real artist drawings, play the completed walk on Android, and obtain visual identity/anatomy/line-quality approval from the user.
 - The latest READY Vercel preview currently points to older commit `072b27c0`; the newer drawing workflow is not yet deployed. Vercel reported its free-tier deployment rate limit (>100/day). No production deployment, Cloudflare deployment, paid service, or merge to main was initiated.
 
