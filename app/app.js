@@ -8,7 +8,7 @@ import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrar
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -166,7 +166,7 @@ function renderAnimeAnatomyMarkers(){
   animeAnatomyMarkers.appendChild(circle);
   const label=document.createElementNS(NS,"text");
   label.setAttribute("x",point.x*WIDTH+32);label.setAttribute("y",point.y*HEIGHT-24);
-  label.textContent=String(index+1);animeAnatomyMarkers.appendChild(label);
+  label.textContent=String(index+1);label.setAttribute("data-anatomy-joint",item.key);label.style.pointerEvents="auto";animeAnatomyMarkers.appendChild(label);
  });
  const complete=Object.keys(animeAnatomyPoints).length===ANIME_ANATOMY_LABELS.length;
  $("undoAnimeAnatomyPointBtn").disabled=!animeAnatomyStep;
@@ -186,7 +186,7 @@ function currentFrameHasDrawing(){
 function beginAnimeAnatomyCalibration(){
  if(!animeAnatomyCanvas||!animeAnatomySource)return;
  if(!currentFrameHasDrawing()){animeAnatomyStatus("الإطار الحالي فارغ. ارسم الشخصية كاملة أو استورد رسمتها أولاً، ثم عاير المفاصل فوقها.",false);return}
- animeAnatomyActive=true;animeAnatomyStep=0;animeAnatomyPoints={};
+ animeAnatomyActive=true;animeAnatomyStep=0;animeAnatomyPoints={};animeAnatomyDraggingKey=null;
  const background=[...(project.animationBackground||[]),...frame().layers];
  animeAnatomySource.replaceChildren();
  background.forEach((entry,index)=>renderLayerInto(animeAnatomySource,entry,index,"anime-dna-source"));
@@ -203,7 +203,7 @@ function animeAnatomyCoords(event){
  return{x:Math.max(0,Math.min(1,transformed.x/WIDTH)),y:Math.max(0,Math.min(1,transformed.y/HEIGHT))};
 }
 function cancelAnimeAnatomyCalibration(){
- animeAnatomyActive=false;animeAnatomyStep=0;animeAnatomyPoints={};animeAnatomyMode="dna";activeAnimeDNAId=null;
+ animeAnatomyActive=false;animeAnatomyStep=0;animeAnatomyPoints={};animeAnatomyDraggingKey=null;animeAnatomyMode="dna";activeAnimeDNAId=null;
  $("animeAnatomyView").disabled=false;$("saveAnimeAnatomyDNABtn").textContent="حفظ هوية الشخصية";
  $("animeAnatomyAnnotator").hidden=true;animeAnatomyMarkers.replaceChildren();
 }
@@ -537,13 +537,32 @@ function wireAnimeAnatomyCalibration(){
  $("auditAnimeRasterFramesBtn").onclick=()=>{auditStoredAnimeRasterFrames(false).catch(()=>{})};
  $("exportAnimeRasterSequenceBtn").onclick=()=>{auditStoredAnimeRasterFrames(true).catch(()=>{})};
  animeAnatomyCanvas.addEventListener("pointerdown",event=>{
-  if(!animeAnatomyActive||animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
+  if(!animeAnatomyActive)return;
+  const selectedJoint=event.target?.getAttribute?.("data-anatomy-joint");
+  if(selectedJoint&&animeAnatomyPoints[selectedJoint]){
+   animeAnatomyDraggingKey=selectedJoint;
+   try{animeAnatomyCanvas.setPointerCapture?.(event.pointerId)}catch{}
+   event.preventDefault();return;
+  }
+  if(animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
   try{
    const point=animeAnatomyCoords(event);
    animeAnatomyPoints[ANIME_ANATOMY_LABELS[animeAnatomyStep].key]=point;
    animeAnatomyStep++;renderAnimeAnatomyMarkers();event.preventDefault();
   }catch(error){animeAnatomyStatus(error.message,false)}
  });
+ animeAnatomyCanvas.addEventListener("pointermove",event=>{
+  if(!animeAnatomyActive||!animeAnatomyDraggingKey)return;
+  try{animeAnatomyPoints[animeAnatomyDraggingKey]=animeAnatomyCoords(event);renderAnimeAnatomyMarkers();event.preventDefault()}
+  catch(error){animeAnatomyStatus(error.message,false)}
+ });
+ const finishAnimeLandmarkDrag=event=>{
+  if(!animeAnatomyDraggingKey)return;
+  animeAnatomyDraggingKey=null;
+  try{if(animeAnatomyCanvas.hasPointerCapture?.(event.pointerId))animeAnatomyCanvas.releasePointerCapture(event.pointerId)}catch{}
+ };
+ animeAnatomyCanvas.addEventListener("pointerup",finishAnimeLandmarkDrag);
+ animeAnatomyCanvas.addEventListener("pointercancel",finishAnimeLandmarkDrag);
  $("undoAnimeAnatomyPointBtn").onclick=()=>{
   if(!animeAnatomyStep)return;
   animeAnatomyStep--;delete animeAnatomyPoints[ANIME_ANATOMY_LABELS[animeAnatomyStep].key];
