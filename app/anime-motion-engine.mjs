@@ -1,3 +1,6 @@
+// LEGACY ONLY (D-028, 2026-11-20): this earlier keyframe/raster pipeline may remain for historical compatibility,
+// but must not be used to request or assemble generated still images as final character motion.
+// Use anime-anatomy-engine.mjs for identity-locked anatomy guides and full independent artist redraws.
 import{createFrame,createRasterLayer}from"./engine.mjs";
 // ZERO STUDIO anime motion planning: pose guides direct drawing, never deform final artwork.
 // Final frames are independent raster drawings. No SVG path tween or puppet transform is emitted here.
