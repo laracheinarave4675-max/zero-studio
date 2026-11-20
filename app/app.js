@@ -204,7 +204,7 @@ function beginAnimeKeyDrawing(){
  beginAnimeAnatomyCalibration();
  animeAnatomyStatus("حدد مفاصل الوضعية الحالية للشخصية "+(dna.name||"المحفوظة")+". سيُسجل الإطار الحالي رقم "+(current+1)+" كرسمة مفتاحية كاملة.");
 }
-function saveAnimeKeyDrawing(){
+async function saveAnimeKeyDrawing(){
  const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===activeAnimeDNAId);
  if(!dna)throw Error("تعذر العثور على هوية الشخصية المحددة.");
  if(!currentFrameHasDrawing())throw Error("لا يمكن اعتماد إطار فارغ؛ ارسم الشخصية كاملة في هذا الإطار أولاً.");
@@ -214,8 +214,10 @@ function saveAnimeKeyDrawing(){
   contacts:{footL:$("animeAnatomyLeftContact").value,footR:$("animeAnatomyRightContact").value},
   joints:Object.fromEntries(ANIME_ANATOMY_LABELS.map(item=>[item.key,animeAnatomyPoints[item.key]]))
  };
+ const sourceFrame=sourceFrameWithoutAnimeRaster(frame());
+ const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
  const key={
-  id:uid("anime-key"),frame:current,drawingAssetId:frame().id,approved:true,
+  id:uid("anime-key"),frame:current,drawingAssetId:frame().id,sourceSignature,approved:true,
   phase:$("animeKeyDrawingPhase").value,easeToNext:$("animeKeyDrawingEase").value,
   guide,note:"Artist-approved complete drawing from native timeline frame "+(current+1)
  };
@@ -237,7 +239,7 @@ function saveAnimeKeyDrawing(){
  $("animeMotionPlanStatus").textContent="تم اعتماد وضعية مفتاحية للإطار "+(current+1)+" للشخصية "+name+". عدد الرسومات المفتاحية المحفوظة: "+count+".";
  animeAnatomyStatus("حُفظت الوضعية المفتاحية الكاملة وربطت بالإطار الأصلي. لا تُنتج هذه العملية رسمة جديدة.");
 }
-function buildAnimeMotionPlan(){
+async function buildAnimeMotionPlan(){
  try{
   const id=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===id);
@@ -245,6 +247,16 @@ function buildAnimeMotionPlan(){
   if(project.frames.length<24)throw Error("أنشئ 24 إطاراً في الخط الزمني أولاً، ثم سجّل رسومات البداية والنهاية.");
   const action=$("animeMotionAction").value.trim();
   const keys=(dna.keyDrawings||[]).filter(item=>item.frame>=0&&item.frame<24);
+  for(const key of keys){
+   const keyFrame=project.frames[key.frame];
+   if(!keyFrame||keyFrame.id!==key.drawingAssetId||!/^[a-f0-9]{64}$/.test(key.sourceSignature||"")){
+    throw Error("إحدى الوضعيات المفتاحية لم تعد مرتبطة برسم كامل محفوظ. أعد تسجيلها.");
+   }
+   const currentSignature=await sha256Hex(frameSvg(sourceFrameWithoutAnimeRaster(keyFrame),"anime-final-"+keyFrame.id,[]));
+   if(currentSignature!==key.sourceSignature){
+    throw Error("تغير الرسم بعد اعتماده كرسمة مفتاحية في الإطار "+(key.frame+1)+". أعد تسجيل الوضعية المفتاحية.");
+   }
+  }
   const plan=createAnimeAnatomyPlan({
    shotId:uid("anime-walk"),action,characterDNA:dna,durationSeconds:1,fps:24,keyDrawings:keys,
    backgroundAssetId:(project.animationBackground||[]).map(item=>item.id).join("+")||null,
@@ -379,7 +391,7 @@ async function saveCurrentAnimeRasterFrame(){
   if(!currentFrameHasDrawing())throw Error("الإطار الحالي فارغ؛ ارسم الشخصية كاملة قبل حفظه.");
   animeRasterStatus("يتم تصدير الرسم الحالي إلى PNG شفاف وفحص بصمته…");
   const frameIndex=current,sourceFrame=sourceFrameWithoutAnimeRaster(frame());
-  const sourceSignature=await sha256Hex(JSON.stringify(sourceFrame));
+  const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   const blob=await exportFrameToTransparentPng(sourceFrame);
   const contentHash=await sha256Hex(blob);
   if(project.frames.some((entry,index)=>index!==frameIndex&&entry.animeRaster?.contentHash===contentHash)){
@@ -411,7 +423,8 @@ async function buildStoredAnimeRasterSequence(){
  for(let index=0;index<24;index++){
   const stored=project.frames[index]?.animeRaster;
   if(!stored)continue;
-  const sourceSignature=await sha256Hex(JSON.stringify(sourceFrameWithoutAnimeRaster(project.frames[index])));
+  const sourceFrame=sourceFrameWithoutAnimeRaster(project.frames[index]);
+  const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   if(sourceSignature!==stored.sourceSignature){staleFrames.push(index);continue}
   const drawing={
    assetId:stored.assetId,contentHash:stored.contentHash,mimeType:stored.mimeType,
