@@ -552,3 +552,13 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - No provider has been selected or connected yet. LoRA training and wholesale engine rewrites are deferred pending codebase audit and provider evaluation.
 - The 24 independently drawn images/second target remains unchanged. Android-first workflow, free-first evaluation, visual acceptance, source preservation, and no merge/deployment without explicit approval remain in force.
 - Next implementation milestone: audit existing code and provider research, compare specialist models/services (quality, reference control, API, Android workflow, quotas/cost, rights, privacy), then build a small visual proof before integrating further.
+
+
+## Initial image-provider and codebase audit — 2026-11-20
+
+- Added `docs/IMAGE_PROVIDER_EVALUATION.md` with an initial, source-linked comparison of OpenAI GPT Image 2.6, Google Gemini 3.1 Flash Image, and Black Forest Labs FLUX 3 / FLUX 3 Klein. No provider is selected or connected.
+- Initial published 1K output prices vary materially: FLUX 3 Klein $0.009/image, GPT Image 2.6 sample calculator estimate $0.02469/image, FLUX 3 Image $0.048/image, and Gemini 3.1 Flash Image $0.067/image. Under a literal 24-new-images/second assumption, a 20-minute sequence of 28,800 outputs would cost approximately $259, $711, $1,382, or $1,930 respectively before retries and input-reference charges. This is a cost model, not an approved production plan.
+- First code inspection: `app/scene-production.mjs` uses Gemini `generateContent` to request editable SVG operations; it is not a native image-generation adapter. `app/app.js` currently presents this as an SVG proposal workflow with approval/rejection. `app/anime-background-painter.mjs` remains a procedural path/shape scene painter.
+- Existing Canvas2D raster brushes, vector tools, project/layer model, timeline, compositor, and approval flow are potential reusable foundations. A deeper dependency and import/export audit is still required before modifying or retiring any module.
+- The former SVG provider research has been marked historical and points to the new evaluation. No image-generation API key has been added, no provider has been connected, and no image has been generated as part of this code audit.
+- Next: complete the repository dependency/security audit, verify each candidate's reference-image behavior and terms, then run the same background and character-sheet test brief against shortlisted models before choosing one.
