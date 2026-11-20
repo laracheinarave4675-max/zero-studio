@@ -103,7 +103,7 @@ function animeAnatomyStatus(message,ok=true){
  const node=$("animeAnatomyStatus");if(!node)return;
  node.textContent=message;node.style.color=ok?"var(--accent)":"#ff9999";
 }
-async function restoreAnimeMotionPlan(dna){
+async async function restoreAnimeMotionPlan(dna){
  if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2)return false;
  try{
   const keys=dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24);
