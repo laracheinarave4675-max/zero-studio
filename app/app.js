@@ -723,7 +723,7 @@ $("inbetweenBtn").onclick=()=>{if(current>=project.frames.length-1){status("اخ
 $("duplicateFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();const copy=JSON.parse(JSON.stringify(frame()));copy.id=uid("frame");delete copy.animeRaster;copy.layers.forEach(l=>l.id=uid("layer"));project.frames.splice(current+1,0,copy);current++;activeLayerId=frame().layers[0].id;render()};
 $("deleteFrameBtn").onclick=()=>{
  if(project.frames.length===1)return alert("يجب إبقاء إطار واحد على الأقل");
- const protectedDNA=(project.animeCharacterDNA||[]).filter(dna=>dna.sourceFrameId===frame().id);
+ const protectedDNA=(project.animeCharacterDNA||[]).filter(dna=>dna.sourceFrameId===frame().id||(dna.keyDrawings||[]).some(key=>key.drawingAssetId===frame().id));
  if(protectedDNA.length)return alert("لا يمكن حذف هذا الإطار لأنه الرسم المرجعي الأصلي لهوية الشخصية: "+protectedDNA.map(dna=>dna.name||dna.characterAssetId).join("، ")+". احذف الهوية التشريحية أولاً أو احتفظ بالإطار.");
  snapshot();project.frames.splice(current,1);current=Math.max(0,current-1);activeLayerId=frame().layers[0].id;render()
 };
