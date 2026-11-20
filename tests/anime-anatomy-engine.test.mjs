@@ -175,7 +175,7 @@ test("duplicate image hashes, non-transparent artwork and unreviewed frames are 
   const { plan } = createFixture();
   const sequence = createAnimeAnatomySequence(plan);
   attachAnimeFrameDrawing(sequence, 0, raster(0));
-  assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),contentHash:raster(0).contentHash}), /مكررة/);
+  assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),contentHash:raster(0).contentHash}), /الرسمة نفسها مرتين/);
   assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),alpha:false}), /قناة شفافية/);
   assert.throws(() => auditAnimeAnatomySequence(sequence), /لم يجتز المراجعة الفنية/);
   reviewAnimeFrame(sequence,0,{identity:true,anatomy:true,lineQuality:false,timing:true});
