@@ -55,10 +55,10 @@ Do not expose the bearer token in a URL. Do not test image generation until the 
 - This Worker does not promise unlimited or 24-images-per-second inference.
 
 ## Current deployment state (2026-11-20)
-- The Cloudflare account is connected to ChatGPT's Cloudflare integration.
-- The real Worker source from this repository branch has been deployed to the existing Worker `zero-studio`; the Dashboard Template Hello World code was replaced.
-- The Workers AI binding `AI` is present.
-- The non-secret `GET /health` route reports worker and binding readiness without requiring private image credentials.
-- `STUDIO_ORIGIN` and `STUDIO_ACCESS_TOKEN` are not yet configured. The image endpoint remains locked until they are configured.
-- The public app snapshot URL in the README is `https://zero-studio-three.vercel.app/`, but the current branch app code does not yet call `/v1/images`; a safe client integration is still required. Do not put the bearer token in public source code.
-- No image inference has been run. No paid plan, payment method, credit purchase, or fallback provider has been used.
+- The Cloudflare account is connected and the real source is deployed to the existing Worker `zero-studio`; the Dashboard Template Hello World code was replaced.
+- The Workers AI binding `AI` is present, and `STUDIO_ORIGIN` is set to `https://zero-studio-preview.vercel.app`.
+- The hybrid app branch is deployed to the separate Vercel staging project `zero-studio-preview` at `https://zero-studio-preview.vercel.app/`. The primary `zero-studio` project was not changed.
+- The visible app includes a prompt panel, a preview step, and import into a real Raster layer. The server-side `/api/images` function proxies requests to the Worker; the bearer token is not exposed in browser code.
+- Vercel's `ZERO_STUDIO_APP_ORIGIN` is set to the exact staging origin. The private `STUDIO_ACCESS_TOKEN` Worker secret and matching Vercel `ZERO_STUDIO_ACCESS_TOKEN` environment variable are still missing, so the API intentionally remains disabled (503) until the same random value is added to both secret stores.
+- The app root and API route were checked on the live Vercel staging deployment (HTTP 200 for `/`, HTTP 405 for GET `/api/images`, as expected because the route accepts POST only).
+- No image inference has been run. No paid plan, payment method, credit purchase, or provider fallback has been used. PR #6 remains unmerged.
