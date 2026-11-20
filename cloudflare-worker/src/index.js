@@ -222,7 +222,7 @@ async function handle(request, env) {
 
   const declaredLength = Number(request.headers.get("Content-Length") || 0);
   if (declaredLength > MAX_BODY_BYTES) {
-    return json({ error: "request_too_large" }, 413, cors);
+    return json({ error: "request_too_large", message: "The image request exceeds the Worker 3 MiB payload limit. Remove some reference images or reduce their size." }, 413, cors);
   }
 
   let raw;
@@ -232,7 +232,7 @@ async function handle(request, env) {
     return json({ error: "invalid_request_body" }, 400, cors);
   }
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
-    return json({ error: "request_too_large" }, 413, cors);
+    return json({ error: "request_too_large", message: "The image request exceeds the Worker 3 MiB payload limit. Remove some reference images or reduce their size." }, 413, cors);
   }
 
   let input;
