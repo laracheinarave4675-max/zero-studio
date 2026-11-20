@@ -526,8 +526,9 @@ $("generateRasterImageBtn").onclick=async()=>{
  button.disabled=true;$("importGeneratedRasterBtn").disabled=true;generatedRasterAsset=null;$("imageGenerationResult").hidden=true;
  statusNode.textContent=referenceCount?"يضغط المراجع لتقليل حجم الطلب، ثم يرسل FLUX.2 مع "+referenceCount+" صور مرجعية…":"يرسل طلب التوليد إلى Cloudflare Workers AI…";
  try{
-  const references=model==="flux-2-klein-4b"?await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name).then(normalized=>normalized.dataUrl))):[];
-  if(references.length){characterReferenceImages=await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name)));persistCharacterReferences();renderCharacterReferences()}
+  const normalizedReferences=model==="flux-2-klein-4b"?await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name))):[];
+  if(normalizedReferences.length){characterReferenceImages=normalizedReferences;persistCharacterReferences();renderCharacterReferences()}
+  const references=normalizedReferences.map(reference=>reference.dataUrl);
   const requestBody=JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio,...(references.length?{references}:{})}:{})});
   if(new TextEncoder().encode(requestBody).byteLength>2*1024*1024)throw Error("حجم المراجع لا يزال كبيراً. أزل بعض المراجع وأعد المحاولة.");
   const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
