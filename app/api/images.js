@@ -26,7 +26,7 @@ function isAllowedRequestOrigin(req, configuredOrigin) {
   if (requestHost && requestHost !== parsed.host.toLowerCase()) return false;
 
   const allowedPreviewHost =
-    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\\.vercel\\.app$/.test(parsed.hostname.toLowerCase());
+    /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(parsed.hostname.toLowerCase());
   return requestOrigin === configuredOrigin || allowedPreviewHost;
 }
 
