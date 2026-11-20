@@ -84,3 +84,21 @@ The immediate next milestone is **not** LoRA training and not a wholesale engine
 - A representative scene is reviewed visually; test success alone is insufficient.
 - The animation system preserves the 24 independently drawn images/second target unless the user explicitly changes it.
 - A complete short shot can be assembled and reviewed inside the ZERO STUDIO production workflow.
+
+
+## Zero-budget operating constraint (user-confirmed 2026-11-20)
+
+**Hard requirement:** ZERO STUDIO must remain a $0 project. Do not introduce paid image APIs, paid inference credits, subscriptions, GPU rental, paid hosting, or required payment cards. A free trial or promotional credit is not a sustainable solution and must not be presented as permanently free.
+
+Allowed routes, subject to verification:
+- Use existing public community Hugging Face Spaces with free ZeroGPU access for limited experiments and asset generation. Current Hugging Face documentation states free users have a 5-minute daily ZeroGPU quota, queues are shared, and existing ZeroGPU Spaces can be used free. This is a constrained manual/experimental route, not an unlimited production backend.
+- If the user's account is eligible, evaluate hosting a personal ZeroGPU Space at no charge (Hugging Face currently documents up to two Spaces for qualifying free personal accounts; eligibility and quotas apply). Do not assume the user has an eligible account or create one without permission.
+- Prefer genuinely open-weight models with licenses compatible with the intended use, but remember model weights still require compute. The Android phone is the control device, not the inference machine. No paid GPU rental may be introduced.
+- Use local/browser-side lightweight tools only where they genuinely run on the Android device and do not silently degrade the visual target.
+- Reuse approved backgrounds, character sheets, props, and scene assets across shots where appropriate, while preserving source layers and the independent-drawing animation requirement.
+
+Important license caveat: the Hugging Face Anima model page currently shows a non-commercial license. It may be useful for non-commercial quality experiments only if the exact license permits the intended use; do not adopt it for commercial production without explicit license review. Z-Image-Turbo model cards are marked Apache-2.0, but that does not supply free hosted GPU compute and its anime suitability must be tested.
+
+No provider should be selected solely because a demo is free. Verify actual free quota, queue behavior, API/embedding permissions, image export, privacy, model license, and whether programmatic access is permitted. Do not scrape or automate a public Space in ways that violate its terms or overload it.
+
+**Budget gate:** If a proposed feature requires any payment to function, it is out of scope unless the user explicitly changes the $0 constraint. The application must fail gracefully when a free quota is exhausted and must never fall back to a paid service automatically.
