@@ -5,7 +5,7 @@ import{runAnimationProduction}from"../app/animation-worker.mjs";
 import{createGeminiAnimationProvider}from"../app/gemini-animation.mjs";
 
 const apiKey=process.env.GEMINI_API_KEY;
-const model=process.env.GEMINI_MODEL||"gemini-3.5-flash-lite";
+const model=process.env.GEMINI_MODEL||"gemini-3.1-flash-lite";
 const referenceUrl=process.env.CHARACTER_REFERENCE_URL||"https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/83d6357f-4e5f-4f78-a603-0eb2c61ada6d";
 if(!apiKey)throw Error("GEMINI_API_KEY is not configured.");
 const outputDirectory="artifacts/character-motion";
