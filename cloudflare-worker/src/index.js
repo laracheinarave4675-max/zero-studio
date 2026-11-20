@@ -206,7 +206,11 @@ async function handleAnimeSegmentation(request, env, url) {
     return json({ error: "invalid_source_asset" }, 400, cors);
   }
 
-  if (String(env.ANIME_SEGMENTATION_FREE_TIER_CONFIRMED || "") !== "true") {\n    return json({ error: "free_tier_not_confirmed", message: "يجب تأكيد أن حساب Cloudflare يستخدم خطة Images Free قبل تشغيل أي تحويل." }, 503, cors);\n  }\n\n  // Cloudflare Images uses BiRefNet to create a PNG foreground cutout.
+  if (String(env.ANIME_SEGMENTATION_FREE_TIER_CONFIRMED || "") !== "true") {
+    return json({ error: "free_tier_not_confirmed", message: "يجب تأكيد أن حساب Cloudflare يستخدم خطة Images Free قبل تشغيل أي تحويل." }, 503, cors);
+  }
+
+  // Cloudflare Images uses BiRefNet to create a PNG foreground cutout.
   // The Images Free plan includes 5,000 unique transformations/month; after
   // the limit the platform returns an error. Never switch to a paid remover.
   const sourceUrl = new URL("/gallery/" + id, url.origin).toString();
