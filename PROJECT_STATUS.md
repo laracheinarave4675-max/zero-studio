@@ -1,3 +1,18 @@
+# Anime key-drawing motion foundation — 2026-11-20
+
+- User-approved decision D-027: preserve the existing character and background generation departments; focus development on the missing anime animation department.
+- New workflow: motion/timing chart → spatial pose blocking guide → complete 2D key drawings → individually reviewed raster in-between/cleanup drawings → raster frame assembly.
+- 3D pose rigs are references only. Puppet deformation, single-image warping, SVG path animation, held copies, and generic text-to-video output are not accepted as final animation.
+- Added `docs/ANIME_KEYFRAME_MOTION_ENGINE.md` and D-027 in `DECISIONS.md`.
+- Added `app/anime-motion-engine.mjs`: validated 24 FPS plan, ordered key-pose schedule, guide-only joint sampling, independent PNG/WebP drawing records, and duplicate-raster rejection.
+- Added `tests/anime-motion-engine.test.mjs` for schedule, guide interpolation, image identity/hash uniqueness, missing-frame accounting and input validation.
+- Existing character/background generation, FLUX.2 reference conditioning, raster surface, SVG, and character assets are unchanged.
+- The old SVG frame-generation proof is marked as a visually rejected historical experiment; it is preserved, not deleted.
+- Branch: `feat/anime-raster-keyframe-motion-engine`. Automated tests must pass before this foundation is considered code-verified. The key drawing provider, in-between model, visual result, UI integration, and Android test are not yet implemented.
+- No merge, production deployment, paid endpoint, or GPU rental.
+
+---
+
 # Production gallery milestone — 2026-11-20
 
 - Added a Cloudflare Workers KV namespace named `ZERO STUDIO Production Gallery` (free Workers KV tier; namespace ID is configured in `cloudflare-worker/wrangler.toml`).
