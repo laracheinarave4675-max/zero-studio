@@ -71,6 +71,27 @@ No technique is selected until it passes the same side-by-side identity, anatomy
 Each accepted frame is stored as an independent PNG or lossless WebP drawing with its own asset ID and content hash. The compositor places the drawing over the separately approved background. It does not modify the source character image to fabricate movement.
 
 The review screen must show a contact sheet, frame-by-frame playback, key-pose markers, missing-frame warnings, and per-frame approve/reject/regenerate states. Every approved frame retains the reference asset IDs, pose-guide ID, model/adapter version, generation parameters, and review state.
+ 
+### F. Transparent character cutout — non-generative segmentation
+ 
+The current still-image department typically returns a full rectangular image. To place an independently drawn character frame over the already-approved background, the frame must have a real alpha channel; a white matte, checkerboard simulation, or opaque background is not sufficient.
+
+A protected Worker endpoint now has an **experimental** Cloudflare Images foreground-segmentation adapter:
+- Input: the ID of a previously saved, approved gallery still (never an arbitrary URL).
+- Cloudflare Images applies `segment: "foreground"` with its BiRefNet segmentation model and requests a PNG result.
+- Output is verified as PNG and returned through a same-origin Vercel proxy; the Cloudflare bearer token remains server-side.
+- The segmentation is a mask/cutout operation, not a new drawing or video generator. The original still remains unchanged in the gallery.
+- Each cutout is still a draft: fine hair, sleeve gaps, motion blur, translucent edges and detached accessories must be visually checked; bad mattes are rejected rather than composited into the shot.
+
+**Free-tier guard:** Cloudflare documents an Images Free allowance of 5,000 unique transformations/month. After the limit, new transforms return an error and are not charged; this code stops and reports the limit, with no paid background-removal fallback. At one transformation for every distinct frame, 5,000 cutouts cover about 208 seconds (3 minutes 28 seconds) of 24-drawing-per-second material per month before regeneration/review retries. Treat this as a bounded proof budget, not unlimited episode capacity.
+
+Current code:
+- `cloudflare-worker/src/index.js`: authenticated `POST /v1/anime/segment`.
+- `app/api/anime-segment.js`: same-origin proxy, no client-side token.
+- Tests cover access controls, source validation, PNG response, and free-tier stop behavior.
+
+The adapter is **unit-tested only**. It has not been deployed or run against a live Cloudflare Images transformation yet. Free-tier availability, account-level enablement, transparent edge quality on actual anime frames, and the complete end-to-end mobile flow still require a separate staging proof.
+
 
 ## 4. Current model research and constraints
 
