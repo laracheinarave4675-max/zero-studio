@@ -46,6 +46,18 @@
 <p class="note">لإثبات المشي الأول: جهّز 24 إطاراً في الخط الزمني، ثم سجّل رسمة مفتاحية معتمدة في الإطار 1 والإطار 24، ويمكن إضافة وضعيات بينهما. كل إطار وسيط سيبقى رسمة كاملة مستقلة مطلوب رسمها يدوياً.</p>
 <div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button">تهيئة خط زمني من 24 إطاراً مستقلاً</button>
 <label class="toggle" id="animeAnatomyGuideToggleLabel" hidden><input id="animeAnatomyGuideToggle" type="checkbox" checked> عرض دليل المفاصل فوق لوحة الرسم أثناء الرسم</label>
+<div class="anime-raster-review" id="animeRasterReviewPanel">
+<strong>اعتماد الرسم النقطي النهائي للإطار الحالي</strong>
+<p class="note">يحوّل الرسم الذي أنجزته في الإطار الحالي إلى PNG شفاف مستقل 1920×1080، ثم يحفظه داخل ملف المشروع. لا يتم إنشاء أو توليد أي رسم جديد.</p>
+<label class="toggle"><input id="animeReviewIdentity" type="checkbox"> ثبات هوية الشخصية</label>
+<label class="toggle"><input id="animeReviewAnatomy" type="checkbox"> سلامة التشريح واليدين والقدمين</label>
+<label class="toggle"><input id="animeReviewLineQuality" type="checkbox"> جودة الخطوط والتفاصيل</label>
+<label class="toggle"><input id="animeReviewTiming" type="checkbox"> صحة الوضعية والتوقيت</label>
+<button id="saveAnimeRasterFrameBtn" class="primary full" type="button" disabled>حفظ رسمة الإطار الحالية ومراجعتها</button>
+<button id="auditAnimeRasterFramesBtn" class="secondary full" type="button" disabled>فحص الرسومات الـ24</button>
+<button id="exportAnimeRasterSequenceBtn" class="primary full" type="button" disabled>تصدير تسلسل PNG بعد اجتياز الفحص</button>
+<div id="animeRasterAuditStatus" class="status" role="status" aria-live="polite">لم يتم حفظ رسومات Raster نهائية.</div>
+</div>
 </div><button id="exportAnimeAnatomyDNABtn" class="secondary full" type="button" disabled>تصدير بيانات هوية الشخصية</button>
 <div id="animeAnatomyStatus" class="status" role="status" aria-live="polite"></div>
 </details>
