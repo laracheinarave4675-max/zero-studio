@@ -1,6 +1,11 @@
 name: ZERO STUDIO — first four raster key drawings
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/anime-keyframe-raster-pipeline
+    paths:
+      - .github/workflows/anime-keyframe-first-raster-proof.yml
 permissions:
   contents: read
 jobs:
