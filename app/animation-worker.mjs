@@ -21,11 +21,11 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
   const job=project.animationProduction;
   if(job.completedFrames>=job.totalFrames)break;
   const range=getAnimationBatchRange(job);
-  let lastError=null,done=false;
+  let lastError=null,lastErrorTransient=false,done=false;
   for(let attempt=0;attempt<=maxRetries&&!done;attempt++){
    abort(signal);
    const prompt=createAnimationBatchPrompt(job);
-   const correction=lastError?"\n\nCORRECTION REQUIRED AFTER THE LAST REJECTED RESPONSE: "+lastError+" Return the entire exact next batch again, with all required full-scene frames and the continuityNote. Do not omit frames or change their indexes.": "";
+   const correction=lastError&&!lastErrorTransient?"\n\nCORRECTION REQUIRED AFTER THE LAST REJECTED RESPONSE: "+lastError+" Return the entire exact next batch again, with all required full-scene frames and the continuityNote. Do not omit frames or change their indexes.": "";
    let result;
    try{
     const response=await provider({prompt:prompt+correction,jobId:job.id,batchIndex:range.batchIndex,startFrame:range.startFrame,frameCount:range.frameCount,fps:job.fps,responseFormat:"json",attempt:attempt+1,signal});
@@ -37,7 +37,13 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
    }catch(error){
     if(error?.name==="AbortError"||signal?.aborted)throw error;
     lastError=String(error?.message||error).slice(0,1000);
+    lastErrorTransient=/\\b(?:429|500|502|503|504)\\b/.test(lastError);
     if(attempt===maxRetries)throw Error("تعذر إنتاج الدفعة "+(range.batchIndex+1)+" بعد "+(attempt+1)+" محاولات: "+lastError);
+    if(lastErrorTransient){
+     const delayMs=Math.min(20000,5000*(2**attempt));
+     await new Promise(resolve=>setTimeout(resolve,delayMs));
+     abort(signal);
+    }
    }
    if(done&&typeof onBatch==="function"){
     try{await onBatch({jobId:job.id,...result})}
