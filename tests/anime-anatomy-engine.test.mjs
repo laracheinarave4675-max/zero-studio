@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createProject, normalizeProject } from "../app/engine.mjs";
 import { captureFrameHistory, applyFrameHistory } from "../app/frame-history.mjs";
 import {
@@ -96,6 +97,21 @@ test("large-project undo metadata preserves anatomy identity records", () => {
   applyFrameHistory(project, before);
   assert.equal(project.animeCharacterDNA.length, 1);
   assert.equal(project.animeCharacterDNA[0].name, "Nori");
+});
+
+
+test("mobile Character DNA calibration panel is connected to the drawing project", () => {
+  const html = readFileSync(new URL("../app/index.html", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../app/app.js", import.meta.url), "utf8");
+  for (const id of [
+    "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers",
+    "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect"
+  ]) assert.ok(html.includes('id="' + id + '"'), "missing UI element: " + id);
+  assert.match(app, /function beginAnimeAnatomyCalibration\(\)/);
+  assert.match(app, /function saveAnimeAnatomyDNA\(\)/);
+  assert.match(app, /createAnimeCharacterDNA\(/);
+  assert.match(app, /renderAnimeAnatomyDNASelect\(\)/);
+  assert.match(app, /project\.animeCharacterDNA\.push\(dna\)/);
 });
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
