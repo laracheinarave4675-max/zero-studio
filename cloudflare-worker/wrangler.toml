@@ -16,3 +16,6 @@ binding = "AI"
 [[kv_namespaces]]
 binding = "GALLERY"
 id = "1f604fc7958b491e8ac15bbb3e127de3"
+
+[vars]
+STUDIO_ALLOWED_ORIGINS = "https://zero-studio-preview.vercel.app,https://zero-studio-preview-git-feat-production-gallery-studio-37a2.vercel.app"
