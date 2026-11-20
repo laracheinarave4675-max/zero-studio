@@ -62,8 +62,8 @@ test("character DNA locks one approved identity and measured anatomical proporti
   const { dna } = createFixture();
   assert.equal(dna.format, "zero-studio-character-dna");
   assert.equal(dna.characterAssetId, "character-approved-01");
-  assert.ok(Math.abs(dna.boneLengths.upperArmL - Math.hypot(.08,.10)) < 1e-6);
-  assert.ok(Math.abs(dna.boneLengths.shinR - Math.hypot(.01,.16)) < 1e-6);
+  assert.ok(Math.abs(dna.boneLengths.upperArmL - Math.hypot(.08*1920/1080,.10)) < 1e-6);
+  assert.ok(Math.abs(dna.boneLengths.shinR - Math.hypot(.01*1920/1080,.16)) < 1e-6);
   assert.deepEqual(dna.modelSheetAssetIds, ["model-front-01","model-side-01"]);
 });
 
