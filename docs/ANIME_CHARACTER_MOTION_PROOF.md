@@ -24,7 +24,7 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 ## Technical implementation
 
 - `app/gemini-animation.mjs` accepts an optional validated JPEG/PNG/WebP reference image and sends it as Gemini multimodal `inline_data`.
-- `scripts/run-character-motion-proof.mjs` retrieves the gallery reference, creates or restores a validated 1-second / 24-frame project, and requests only the remaining ordered batches of six drawings.
+- `scripts/run-character-motion-proof.mjs` retrieves the gallery reference, creates or restores a validated 1-second / 24-frame project, and restores the 12 accepted drawings and completes the remaining 12 as six sequential two-frame requests to reduce response truncation and sparse-frame errors.
 - Each accepted batch is validated and atomically checkpointed into the native `.zero` project.
 - A later workflow run can restore that exact `.zero` checkpoint, validate its frame count and batch index, then continue at the next uncompleted batch without regenerating accepted frames.
 - Individual SVG frame exports and the project are uploaded as a GitHub Actions artifact.
@@ -43,9 +43,10 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 
 ## Current validation status
 
-- The complete local regression suite passes **268/268** tests, including two new tests for multimodal reference attachment and malformed reference rejection.
+- The complete local regression suite passes the full regression suite, including two new tests for multimodal reference attachment and malformed reference rejection.
 - The workflow and runner have been added to the isolated motion branch.
-- The retry and recovery path is covered by automated tests for transient HTTP 503 responses, exponential backoff, `Retry-After`, and restoring a validated six-frame checkpoint.
+- The retry and recovery path is covered by automated tests for transient HTTP 503 responses, exponential backoff, `Retry-After`, restoring a validated 12-frame checkpoint, and migrating its remaining work to two-frame batches.
+- For character motion, each new frame now requires at least 10 meaningful editable paths across five non-empty layers, with at least two paths per layer; rejected frames are retried with a validator-specific correction.
 - **The live model-generated frames have not yet been reviewed or accepted.** Automated structural validation cannot establish artistic quality or true motion readability.
 - If the free Gemini quota is exhausted, stop and report it. Do not switch to a paid model or service.
 
