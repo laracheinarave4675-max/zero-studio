@@ -105,7 +105,7 @@ module.exports = async function handler(req, res) {
   const requestOrigin = String(req.headers.origin || "").trim();
   const requestHost = String(req.headers.host || "").toLowerCase();
   const sameHostOrigin = requestHost ? "https://" + requestHost : "";
-  const allowedPreviewHost = /^zero-studio-preview(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
+  const allowedPreviewHost = /^zero-studio-(?:preview|flux2-preview)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
   const sameOrigin = requestOrigin && requestOrigin === sameHostOrigin;
   if (!appOrigin || !sameOrigin || (!allowedPreviewHost && sameHostOrigin !== appOrigin)) {
     return send(res, 403, { error: "origin_not_allowed", message: "مصدر الطلب غير مسموح." });
