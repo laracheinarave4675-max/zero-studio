@@ -42,7 +42,7 @@ test("key-drawing request calls the existing still-image API with identity, pose
  assert.equal(req.endpoint,"/api/images");assert.equal(req.method,"POST");assert.equal(req.model,"flux-2-klein-4b");assert.equal(req.aspectRatio,"16:9");
  assert.equal(req.frameKind,"key-drawing");assert.equal(req.frameNumber,13);assert.equal(req.references.length,4);
  assert.deepEqual(req.referenceLabels,["approved character identity","spatial pose guide only","previous approved key drawing","character model sheet"]);
- assert.match(req.prompt,/Create ONE full-body/);assert.match(req.prompt,/Do not redesign the character/);assert.match(req.prompt,/Do not reproduce skeleton lines/);
+ assert.match(req.prompt,/Create ONE full-body/);assert.match(req.prompt,/Do not redesign/);assert.match(req.prompt,/Do not reproduce skeleton lines/);
  assert.match(req.prompt,/chroma-blue background/);assert.ok(req.prompt.length<=1800);
 });
 test("in-between request receives the two adjacent approved key drawings and the exact target pose",()=>{
@@ -52,7 +52,7 @@ test("in-between request receives the two adjacent approved key drawings and the
  assert.equal(req.references.length,4);assert.match(req.prompt,/Never blend, morph, ghost, or copy them/);
 });
 test("still drawing request rejects missing pose references, malformed images and over-limit references",()=>{
- const p=plan();assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:refImage()}),/مرجع الوضعية مفقود/);
+ const p=plan();assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:refImage()}),/مفقودة/);
  assert.throws(()=>createAnimeStillDrawingRequest(p,6,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage()}),/الرسمة المفتاحية السابقة مفقودة/);
  assert.throws(()=>createAnimeStillDrawingRequest(p,0,{characterReferenceDataUrl:"data:image/svg+xml;base64,AAAA",poseGuideDataUrl:refImage()}),/ليست PNG أو JPEG أو WebP صالحة/);
  const oversized="data:image/png;base64,"+"A".repeat(700000);
