@@ -49,6 +49,7 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [x] Approve motion direction/timing charts → spatial pose guides → complete 2D key drawings → individually reviewed raster in-betweens/cleanup → raster frame assembly.
 - [x] Explicitly restrict 3D skeletons/rigs to pose-blocking references; do not render puppet deformation as final artwork.
 - [x] Add provider-neutral anime motion plan, key-pose schedule, pose-guide sampler, independent PNG/WebP frame records, and duplicate-raster cadence audit (`app/anime-motion-engine.mjs`).
+- [x] Materialize approved PNG/WebP drawings into native ZERO STUDIO project frames through the existing Raster layer engine.
 - [ ] Connect key-pose requests to the existing still-image/reference-conditioning art department.
 - [ ] Benchmark identity-preserving key drawing on the existing approved character; check angle changes, face, hair, costume, silhouette and line quality.
 - [ ] Evaluate dedicated cartoon keyframe-in-between and frame-specific still-image approaches under the $0 compute rule; no model is selected yet.
