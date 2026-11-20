@@ -41,3 +41,10 @@ Anime-specific interpolation research (including trajectory-guided anime synthes
 ## Status
 
 Architecture decision recorded and isolated on `feat/anime-keyframe-raster-pipeline`. No new key drawings or inbetween frames have been accepted yet. The next implementation step is a motion-sheet/key-pose proof using the approved character reference, followed by raster interpolation experiments.
+
+## First implementation slice
+
+- Added `app/anime-motion-sheet.mjs`: deterministic one-second walk timing with four complete-raster key-pose slots at frames 0, 6, 12, and 18, plus all 24 distinct frame slots.
+- Added `tests/anime-motion-sheet.test.mjs` to enforce the 24 FPS/24 distinct-frame contract, key-pose order, and rejection of SVG/rig keyframe sources.
+- Added an isolated GitHub Actions workflow that runs only these proof-contract tests. It does not call an image model, consume model quota, deploy the app, or merge anything.
+- This is the first motion-planning foundation, not a generated animation. The four raster key drawings and the 20 raster inbetweens have not yet been produced. The next stage is to feed the approved gallery character reference and four pose guides through the existing FLUX.2 reference-conditioned image-edit path, inspect the resulting full-character keys, then test anime-aware raster inbetweening only after the keys pass review.
