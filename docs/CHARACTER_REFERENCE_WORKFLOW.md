@@ -29,3 +29,7 @@ The browser resizes each selected reference to a maximum side of 511 px and JPEG
 Cloudflare documents up to four multi-reference images for FLUX.2 Klein 4B, with each input image smaller than 512×512. This integration enforces up to four images and a 512 KB file-size cap; the browser resizes the image dimensions below 512 px. Reference conditioning is not a mathematical identity lock. Facial details, exact costume seams, small accessories, perspective and anatomy may still drift. A stable model sheet still requires iterative approval, careful reference selection, and potentially a separately trained character adapter/model if a truly production-grade identity lock becomes necessary. No LoRA training or identity guarantee is claimed here.
 
 This branch is isolated from the published production Worker and is not merged or deployed to production by this change.
+
+## Isolated preview wiring
+
+The `feat/character-reference-conditioning` Vercel Preview branch has its own branch-scoped environment variables and uses the separate `zero-studio-flux2-preview` Worker/KV namespace. The preview Worker bearer secret was rotated and synchronized only across the two FLUX.2 preview branches so the earlier widescreen preview remains operational. The production Worker, production Vercel environment, and production app are not part of this setup.
