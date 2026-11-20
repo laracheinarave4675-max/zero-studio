@@ -178,7 +178,7 @@ async function handle(request, env) {
   const configuredOrigin = String(env.STUDIO_ORIGIN || "").trim();
   const requestOrigin = request.headers.get("Origin") || "";
 
-  if (!configuredOrigin || !env.STUDIO_ACCESS_TOKEN || !env.AI) {
+  if (!configuredOrigin || !env.AI) {
     return json({ error: "worker_not_configured", message: "Worker configuration is incomplete." }, 503);
   }
 
