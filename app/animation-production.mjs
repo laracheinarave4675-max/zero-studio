@@ -36,6 +36,14 @@ export function beginAnimationProduction(project,plan){
  project.animationProduction={format:"zero-studio-animation-job",version:1,id:plan.id,description:plan.description,fps:plan.fps,durationSeconds:plan.durationSeconds,totalFrames:plan.totalFrames,batchSize:plan.batchSize,batchCount:plan.batchCount,completedFrames:0,nextBatchIndex:0,baseFrameCount,layerNames:null,continuityNote:"",frameSignatures:[],backgroundMode:Array.isArray(project.animationBackground)&&project.animationBackground.length>0};
  return project.animationProduction;
 }
+export function validateAnimationCheckpoint(project,{durationSeconds=1,fps=24,batchSize=6}={}){
+ const job=validJob(project?.animationProduction);
+ if(project?.format!=="zero-studio"||project?.fps!==fps||job.fps!==fps||job.durationSeconds!==durationSeconds||job.totalFrames!==durationSeconds*fps||job.batchSize!==batchSize)fail("ملف الاستكمال لا يطابق اختبار الحركة المحدد (ثانية واحدة، 24 إطاراً، ودفعات من ستة).");
+ if(job.completedFrames!==0&&job.completedFrames!==job.totalFrames&&job.completedFrames%job.batchSize!==0)fail("نقطة الاستكمال لا تنتهي عند حد دفعة محفوظة.");
+ if(!Array.isArray(project.frames)||project.frames.length!==Math.max(1,job.baseFrameCount+job.completedFrames))fail("عدد الرسومات المحفوظة لا يطابق سجل نقطة الاستكمال.");
+ if(job.backgroundMode&&(!Array.isArray(project.animationBackground)||project.animationBackground.length===0))fail("طبقة الخلفية الثابتة مفقودة من ملف الاستكمال.");
+ return job;
+}
 export function getAnimationBatchRange(job,batchIndex=job?.nextBatchIndex){
  validJob(job);
  if(!Number.isInteger(batchIndex)||batchIndex<0||batchIndex>=job.batchCount)fail("لا توجد دفعة بهذا الرقم.");
