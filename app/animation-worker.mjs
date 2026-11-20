@@ -10,11 +10,13 @@ function extractPayload(response){
  if(!response||typeof response!=="object"||Array.isArray(response))fail("استجابة مزوّد الرسم يجب أن تكون كائن دفعة JSON.");
  return response;
 }
-export async function runAnimationProduction(project,provider,{maxBatches=1,maxRetries=1,signal,onBatch}={}){
+export async function runAnimationProduction(project,provider,{maxBatches=1,maxRetries=1,signal,onBatch,sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),retryBaseDelayMs=5000,retryMaxDelayMs=60000}={}){
  if(!project||!project.animationProduction)fail("ابدأ خطة إنتاج الحركة داخل المشروع أولاً.");
  if(typeof provider!=="function")fail("يجب توفير موصل رسم متوافق مع واجهة ZERO STUDIO.");
  if(!Number.isInteger(maxBatches)||maxBatches<1||maxBatches>1000)fail("عدد الدفعات في التشغيل الواحد يجب أن يكون بين 1 و1000.");
- if(!Number.isInteger(maxRetries)||maxRetries<0||maxRetries>3)fail("عدد المحاولات الإضافية يجب أن يكون بين 0 و3.");
+ if(!Number.isInteger(maxRetries)||maxRetries<0||maxRetries>5)fail("عدد المحاولات الإضافية يجب أن يكون بين 0 و5.");
+ if(!Number.isInteger(retryBaseDelayMs)||retryBaseDelayMs<1||retryBaseDelayMs>60000||!Number.isInteger(retryMaxDelayMs)||retryMaxDelayMs<retryBaseDelayMs||retryMaxDelayMs>120000)fail("إعدادات تأخير إعادة المحاولة غير صالحة.");
+ if(typeof sleep!=="function")fail("وظيفة الانتظار لإعادة المحاولة غير صالحة.");
  const accepted=[];
  for(let count=0;count<maxBatches;count++){
   abort(signal);
@@ -37,11 +39,13 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
    }catch(error){
     if(error?.name==="AbortError"||signal?.aborted)throw error;
     lastError=String(error?.message||error).slice(0,1000);
-    lastErrorTransient=/\b(?:429|500|502|503|504)\b/.test(lastError);
+    const status=Number(error?.status);lastErrorTransient=error?.retryable===true||(error?.retryable!==false&&([500,502,503,504].includes(status)||/\b(?:500|502|503|504)\b/.test(lastError)||/fetch failed|network error|ECONNRESET|ETIMEDOUT|EAI_AGAIN/i.test(lastError)));
     if(attempt===maxRetries)throw Error("تعذر إنتاج الدفعة "+(range.batchIndex+1)+" بعد "+(attempt+1)+" محاولات: "+lastError);
     if(lastErrorTransient){
-     const delayMs=Math.min(20000,5000*(2**attempt));
-     await new Promise(resolve=>setTimeout(resolve,delayMs));
+     const exponentialDelay=Math.min(retryMaxDelayMs,retryBaseDelayMs*(2**attempt));
+     const retryAfterMs=Number(error?.retryAfterMs);
+     const delayMs=Math.min(retryMaxDelayMs,Math.max(exponentialDelay,Number.isFinite(retryAfterMs)&&retryAfterMs>0?retryAfterMs:0));
+     await sleep(delayMs);
      abort(signal);
     }
    }
