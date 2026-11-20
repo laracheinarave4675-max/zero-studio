@@ -307,6 +307,7 @@ function saveAnimeAnatomyDNA(){
    contacts:{footL:$("animeAnatomyLeftContact").value,footR:$("animeAnatomyRightContact").value},
    joints:Object.fromEntries(ANIME_ANATOMY_LABELS.map(item=>[item.key,animeAnatomyPoints[item.key]]))
   };
+  if(!currentFrameHasDrawing())throw Error("الإطار الحالي فارغ؛ ارسم الشخصية كاملة قبل حفظ هويتها.");
   const dna=createAnimeCharacterDNA({
    characterAssetId:id,characterBibleId:id+"-bible",modelSheetAssetIds:[],anchorGuide:guide,
    notes:"Calibrated on native project frame "+(current+1)+"; source frame ID "+frame().id
@@ -316,6 +317,9 @@ function saveAnimeAnatomyDNA(){
   if(!Array.isArray(project.animeCharacterDNA))project.animeCharacterDNA=[];
   if(project.animeCharacterDNA.length>=100)throw Error("بلغت مكتبة هويات الشخصيات حد 100.");
   project.animeCharacterDNA.push(dna);
+  activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;
+  $("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();
+  updateAnimeRasterControls();
   renderAnimeAnatomyDNASelect(id);
   cancelAnimeAnatomyCalibration();
   animeAnatomyStatus("حُفظت هوية "+name+" مع 19 نقطة تشريحية داخل المشروع .zero. لم تُعدّل الرسمة الأصلية.");
@@ -436,6 +440,8 @@ async function buildStoredAnimeRasterSequence(){
   const sourceFrame=sourceFrameWithoutAnimeRaster(project.frames[index]);
   const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   if(sourceSignature!==stored.sourceSignature){staleFrames.push(index);continue}
+  const actualHash=await sha256Hex(blobFromBase64DataUrl(stored.dataUrl,stored.mimeType));
+  if(actualHash!==stored.contentHash){staleFrames.push(index);continue}
   const drawing={
    assetId:stored.assetId,contentHash:stored.contentHash,mimeType:stored.mimeType,
    width:stored.width,height:stored.height,alpha:stored.alpha
@@ -445,6 +451,13 @@ async function buildStoredAnimeRasterSequence(){
  }
  const audit=auditAnimeAnatomySequence(sequence,{requireApproved:false});
  return{sequence,audit,staleFrames};
+}
+function blobFromBase64DataUrl(dataUrl,mimeType){
+ const prefix="data:"+mimeType+";base64,";
+ if(typeof dataUrl!=="string"||!dataUrl.startsWith(prefix))throw Error("بيانات PNG المخزنة غير صالحة.");
+ const binary=atob(dataUrl.slice(prefix.length)),bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return new Blob([bytes],{type:mimeType});
 }
 async function auditStoredAnimeRasterFrames(exportZip=false){
  try{
