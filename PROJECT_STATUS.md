@@ -1,3 +1,18 @@
+# Cloud inference Worker implementation milestone — 2026-11-20
+
+- Added `cloudflare-worker/src/index.js`: a protected Cloudflare Worker endpoint using the fixed FLUX.1 Schnell model.
+- Added `cloudflare-worker/wrangler.toml` with the Workers AI binding.
+- Added Node built-in tests for authentication, origin checks, model/step limits, quota handling, and error redaction.
+- Added `.github/workflows/cloudflare-worker-tests.yml` to run those tests on branch/PR changes.
+- Added `cloudflare-worker/DEPLOY_FROM_ANDROID.md` with mobile dashboard setup instructions.
+- Security: exact-origin allowlist, bearer secret, bounded JSON input, 4-step cap, no provider fallback, and generic inference errors.
+- Quota behavior: quota/rate-limit errors return HTTP 429 and instruct the app to retain the job; the Worker does not call another provider.
+- No Cloudflare account was connected; no secret was created or entered; no Worker deployed; no image request executed.
+- The app's actual deployed origin is still unknown and must be copied from its real deployment before setting STUDIO_ORIGIN.
+- GitHub Actions worker test run was triggered by the branch push; its result is pending verification.
+- No production app deployment or PR merge was performed. Budget remains $0; animation target remains 24 independently drawn images per second.
+
+---
 # Cloud inference architecture milestone — 2026-11-20
 
 - Confirmed the active development branch is `feat/hybrid-human-art-pipeline`; PR #6 remains open/draft and unmerged.
