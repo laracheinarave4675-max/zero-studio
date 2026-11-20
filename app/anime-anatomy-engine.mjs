@@ -21,7 +21,10 @@ const BONE_PAIRS = Object.freeze({
 const clean = (value, max = 160) => String(value ?? "").trim().replace(/[\u0000-\u001f]/g, "").slice(0, max);
 const fail = message => { throw new Error(message); };
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const distance = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
+const DRAWING_ASPECT = 1920 / 1080;
+const toMotionSpace = point => ({ x: point.x * DRAWING_ASPECT, y: point.y });
+const fromMotionSpace = point => ({ x: point.x / DRAWING_ASPECT, y: point.y });
+const distance = (a, b) => Math.hypot((b.x - a.x) * DRAWING_ASPECT, b.y - a.y);
 
 function normalizePoint(point, label) {
   const x = Number(point?.x), y = Number(point?.y);
@@ -243,11 +246,12 @@ function applyAnatomicalConstraints(plan, guide, frameIndex) {
       }
       const planted = middleName === "knee" + side && !!lockedFeet["foot" + side];
       const solved = solveTwoBone(
-        joints[startName], joints[endName], lengths[upperName], lengths[lowerName],
+        toMotionSpace(joints[startName]), toMotionSpace(joints[endName]),
+        lengths[upperName], lengths[lowerName],
         bendDirection(bend, startName, middleName, endName), planted
       );
-      joints[middleName] = solved.middle;
-      if (!planted) joints[endName] = solved.end;
+      joints[middleName] = fromMotionSpace(solved.middle);
+      if (!planted) joints[endName] = fromMotionSpace(solved.end);
       if (planted && solved.reachAdjusted) {
         constraintWarnings.push("foot" + side + " is anchored but the current body pose exceeds the measured leg reach; add or redraw a key pose.");
       }
@@ -459,7 +463,7 @@ export function renderAnimeAnatomyGuide(canvas, plan, frameIndex, { width = 512,
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   for (const part of construction.segments) {
     ctx.strokeStyle = "#8B9BAD";
-    ctx.lineWidth = Math.max(2, part.width * width * 0.3);
+    ctx.lineWidth = Math.max(2, part.width * height * 0.3);
     ctx.beginPath(); ctx.moveTo(part.from.x * width, part.from.y * height);
     ctx.lineTo(part.to.x * width, part.to.y * height); ctx.stroke();
   }
