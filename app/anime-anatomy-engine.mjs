@@ -96,6 +96,11 @@ function validateDNA(dna) {
   return dna;
 }
 
+export function validateAnimeCharacterDNA(dna) {
+  validateDNA(dna);
+  return JSON.parse(JSON.stringify(dna));
+}
+
 function normalizeKeyDrawing(item, index, totalFrames, dna) {
   if (!item || typeof item !== "object") fail("إحدى الرسومات المفتاحية غير صالحة.");
   const id = clean(item.id, 100), frame = Number(item.frame);
