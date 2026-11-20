@@ -285,6 +285,12 @@ export function normalizeProject(p){
    throw Error("الرسم الأصلي المرتبط بهوية الشخصية غير موجود في الخط الزمني.");
   }
  }
+ const characterLibraryIds=new Set(characterLibrary.map(item=>item.id));
+ for(const dna of animeCharacterDNA){
+  if(dna.characterModelAssetId!==undefined&&!characterLibraryIds.has(dna.characterModelAssetId)){
+   throw Error("نموذج الشخصية المرتبط بالهوية التشريحية غير موجود في مكتبة الشخصيات.");
+  }
+ }
  const dnaIds=animeCharacterDNA.map(item=>item.characterAssetId);
  if(new Set(dnaIds).size!==dnaIds.length)throw Error("معرّفات هويات الأنمي التشريحية مكررة");
  const animationProduction=normalizeAnimationProduction(p.animationProduction);
