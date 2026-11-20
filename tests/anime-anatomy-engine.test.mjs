@@ -105,7 +105,9 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   const app = readFileSync(new URL("../app/app.js", import.meta.url), "utf8");
   for (const id of [
     "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers",
-    "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect"
+    "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect",
+    "startAnimeKeyDrawingBtn", "buildAnimeMotionPlanBtn", "prepareAnime24FrameBtn",
+    "animeAnatomyConstructionLayer", "animeAnatomyGuideToggle"
   ]) assert.ok(html.includes('id="' + id + '"'), "missing UI element: " + id);
   assert.match(app, /function beginAnimeAnatomyCalibration\(\)/);
   assert.match(app, /function saveAnimeAnatomyDNA\(\)/);
