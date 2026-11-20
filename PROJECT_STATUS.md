@@ -7,7 +7,7 @@
 - Added Cloudflare Worker `STUDIO_ORIGIN` binding set to `https://zero-studio-preview.vercel.app`; Workers AI `AI` binding remains present.
 - Added Vercel `ZERO_STUDIO_APP_ORIGIN` environment variable for the staging project.
 - **Security gate remains incomplete:** the matching `STUDIO_ACCESS_TOKEN` Cloudflare secret and `ZERO_STUDIO_ACCESS_TOKEN` Vercel sensitive environment variable have not been created. The image API intentionally returns 503 until both are set to the same random value. Do not put the token in source code, GitHub, or chat.
-- No image inference has been executed; no anime-quality acceptance claim is made. FLUX.1 Schnell remains a general image model under evaluation.
+- The latest Vercel staging deployment is READY at commit `c858ff98`; live checks confirmed HTTP 200 for the app root, the new image panel and Raster import controls are present, and GET `/api/images` returns the expected 405 (POST-only route).
 - No paid plan, payment method, credit purchase, GPU rental, or fallback provider was used. PR #6 remains open/unmerged; no primary production deployment or merge was performed. The 24 independently drawn images/second target is unchanged.
 
 ---
