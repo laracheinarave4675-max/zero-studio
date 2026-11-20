@@ -139,3 +139,57 @@ A literal 24 independently generated images per second is not feasible to promis
 
 ### Immediate experiment
 Run a small visual comparison through existing public ZeroGPU Spaces using the same Japanese forest-house reference and one character-sheet brief. Save only user-approved outputs into the studio asset library with provenance and license metadata. Measure wait time, usable daily quota, visual quality, reference adherence, and export/reuse behavior. No API integration or account creation until the free service's terms and reliability are verified.
+
+
+## Cloud-hosting research update — 2026-11-20
+
+### D. Cloudflare Workers AI — FLUX.1 Schnell (first API feasibility candidate; not selected)
+
+The current official Cloudflare model catalog lists `@cf/black-forest-labs/flux-1-schnell` as a hosted text-to-image model. The current Workers AI pricing page states that Workers AI is included in the Workers Free plan with **10,000 Neurons per day**, resetting at 00:00 UTC. The published FLUX.1 Schnell rate is **4.8 Neurons per 512×512 tile plus 9.6 Neurons per inference step**.
+
+**Why it is worth testing**
+- A documented server-side API and Cloudflare Worker binding provide a route to keep the provider credential out of the public browser app.
+- The free daily allocation is concrete and is not described as a trial.
+- It avoids installing model weights on the Android phone.
+
+**Limitations**
+- FLUX.1 Schnell is a general-purpose model, not an anime-specialist guarantee. It must pass the same visual benchmark as every other candidate.
+- The free quota is finite. It cannot support continuous 24 independently generated drawings per second.
+- The number of images per day depends on output tile count and inference steps; do not advertise a fixed image allowance.
+- Confirm account setup, region, card requirements, current model availability, and terms before deployment.
+- Do not move the account to Workers Paid, buy credits, or configure a paid fallback. On the Free plan, requests beyond the daily allocation should fail and be checkpointed.
+
+Official references:
+- https://developers.cloudflare.com/workers-ai/models/
+- https://developers.cloudflare.com/workers-ai/platform/pricing/
+
+### E. Hugging Face Anima ZeroGPU Space — anime-focused quality benchmark (not selected)
+
+The public Space `ADGNSGNJKS/Anima` was shown as running during this research. Its current README describes a Gradio ZeroGPU application built around CircleStone Labs Anima, with a base checkpoint, Qwen3-0.6B text encoder, and VAE totalling roughly 5.6 GB before optional LoRA/upscaler caches. The Space README metadata shows Apache-2.0 for the Space code, but the underlying Anima model card has a non-commercial restriction. These are separate licenses; the Space code license does not grant commercial rights to the model weights.
+
+Hugging Face's current documentation states:
+- Existing public ZeroGPU Spaces can be used for free.
+- Free accounts receive 5 minutes of daily GPU quota, with shared queue priority.
+- Eligible free personal accounts (verified email, account older than 30 days, in good standing) can host up to two ZeroGPU Spaces.
+- Gradio Spaces expose documented HTTP queue APIs and an OpenAPI schema.
+
+**Decision:** retain this as a manual anime-quality benchmark only, subject to the Anima model's non-commercial terms. Do not adopt it for commercial work. Its limited daily quota and public Space availability make it unsuitable as a continuous production backend.
+
+Official references:
+- https://huggingface.co/spaces/ADGNSGNJKS/Anima
+- https://huggingface.co/docs/hub/spaces-zerogpu
+- https://huggingface.co/docs/hub/spaces-api-endpoints
+- https://huggingface.co/circlestone-labs/Anima
+
+### F. Google Colab Free and Kaggle Notebooks — experiment/training workspaces only
+
+Google's current Colab FAQ says free GPU resources are not guaranteed, usage limits fluctuate, idle timeouts apply, and free runtimes may run for at most 12 hours depending on availability and usage. Kaggle documents free GPU notebook sessions with availability queues and weekly quota limits. These are useful for manual experiments or training runs, not stable always-on inference APIs.
+
+Official references:
+- https://research.google.com/colaboratory/faq.html
+- https://www.kaggle.com/docs/notebooks
+- https://www.kaggle.com/docs/efficient-gpu-usage
+
+### Current provider decision
+
+No image provider is selected or connected. Cloudflare Workers AI is the first candidate for a secured API prototype because it has a documented free daily inference allocation and a server-side integration path. Hugging Face Anima is retained only for a non-commercial anime-quality comparison. The next implementation gate is to verify Cloudflare account prerequisites and build a quota-safe Worker prototype; no account creation, secret entry, deployment, or paid upgrade is authorized by this research.
