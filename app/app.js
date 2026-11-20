@@ -103,13 +103,23 @@ function animeAnatomyStatus(message,ok=true){
  const node=$("animeAnatomyStatus");if(!node)return;
  node.textContent=message;node.style.color=ok?"var(--accent)":"#ff9999";
 }
-function restoreAnimeMotionPlan(dna){
+async function restoreAnimeMotionPlan(dna){
  if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2)return false;
  try{
+  const keys=dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24);
+  for(const key of keys){
+   const keyFrame=project.frames[key.frame];
+   if(!keyFrame||keyFrame.id!==key.drawingAssetId||!/^[a-f0-9]{64}$/.test(key.sourceSignature||"")){
+    throw Error("الوضعية المفتاحية في الإطار "+(key.frame+1)+" لا ترتبط برسم محفوظ صالح؛ أعد تسجيلها.");
+   }
+   const signature=await sha256Hex(frameSvg(sourceFrameWithoutAnimeRaster(keyFrame),"anime-final-"+keyFrame.id,[]));
+   if(signature!==key.sourceSignature)throw Error("تغير الرسم المفتاحي في الإطار "+(key.frame+1)+" بعد اعتماده؛ أعد تسجيله.");
+  }
   activeAnimeMotionPlan=createAnimeAnatomyPlan({
    shotId:dna.lastMotionShotId||"restored-walk-proof",
    action:dna.lastMotionAction,characterDNA:dna,durationSeconds:1,fps:24,
-   keyDrawings:dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24),
+   keyDrawings:keys,
+   backgroundAssetId:(project.animationBackground||[]).map(item=>item.id).join("+")||null,
    motionNotes:"Restored from the native ZERO STUDIO project; D-028 independent artist redraw workflow."
   });
   activeAnimeAnatomySequence=createAnimeAnatomySequence(activeAnimeMotionPlan);
