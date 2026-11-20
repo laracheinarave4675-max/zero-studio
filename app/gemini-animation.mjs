@@ -9,6 +9,23 @@ function normalizeReferenceImage(referenceImage){
  if(!data||data.length>8*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(data))throw Error("Character reference image data is invalid or exceeds 6 MiB.");
  return{mimeType,data};
 }
+function retryDelayFrom(value){
+ if(value===null||value===undefined||value==="")return null;
+ const text=String(value).trim();
+ if(/^\\d+(?:\\.\\d+)?$/.test(text))return Math.max(0,Number(text)*1000);
+ const duration=text.match(/^(\\d+(?:\\.\\d+)?)s$/i);
+ if(duration)return Math.max(0,Number(duration[1])*1000);
+ const date=Date.parse(text);
+ return Number.isFinite(date)?Math.max(0,date-Date.now()):null;
+}
+function providerRetryAfterMs(response,body){
+ let delay=null;
+ try{delay=retryDelayFrom(response.headers?.get?.("retry-after"))}catch{}
+ if(delay!==null)return delay;
+ const details=Array.isArray(body?.error?.details)?body.error.details:[];
+ const retryInfo=details.find(item=>String(item?.["@type"]||"").includes("RetryInfo"));
+ return retryDelayFrom(retryInfo?.retryDelay);
+}
 export function createGeminiAnimationProvider({apiKey,model=DEFAULT_MODEL,fetcher=fetch,referenceImage}={}){
  const key=String(apiKey??"").trim();
  if(!key)throw Error("GEMINI_API_KEY is missing.");
@@ -23,7 +40,7 @@ export function createGeminiAnimationProvider({apiKey,model=DEFAULT_MODEL,fetche
    body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{responseMimeType:"application/json",temperature:0.2,maxOutputTokens:32768}})
   });
   let body;try{body=await response.json()}catch{throw Error("Gemini returned a non-JSON HTTP response.")}
-  if(!response.ok){const message=body?.error?.message||"HTTP "+response.status;const error=Error("Gemini "+response.status+": "+message);error.status=response.status;throw error;}
+  if(!response.ok){const message=body?.error?.message||"HTTP "+response.status;const retryAfterMs=providerRetryAfterMs(response,body);const retryable=[500,502,503,504].includes(response.status)||(response.status===429&&retryAfterMs!==null);const error=Error("Gemini "+response.status+": "+message);error.status=response.status;error.retryAfterMs=retryAfterMs;error.retryable=retryable;throw error;}
   const text=body?.candidates?.[0]?.content?.parts?.map(part=>part.text||"").join("").trim();
   if(!text)throw Error("Gemini returned no candidate text; finish reason: "+(body?.candidates?.[0]?.finishReason||"unknown"));
   let parsed;try{parsed=JSON.parse(text)}catch{throw Error("Gemini response was not valid JSON.")}
