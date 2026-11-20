@@ -169,24 +169,24 @@ export function createAnimeStillDrawingRequest(plan,frameIndex,{
  }
  if(references.length>4)fail("يتجاوز عدد الصور المرجعية الحد المدعوم.");
  const poseDescription=pose.description||plan.keyPoses.find(item=>item.id===role.fromKeyPoseId)?.description||"";
- const action=clean(plan.action,360),motionNotes=clean(plan.motionNotes,240);
+ const action=clean(plan.action,220),motionNotes=clean(plan.motionNotes,120);
  const referenceGuide=labels.map((label,index)=>"Image "+(index+1)+": "+label+".").join(" ");
  const frameBrief=role.kind==="key-drawing"
-  ? "This is a storytelling KEY DRAWING. Design a strong, clean, readable anime pose with intentional line of action and silhouette."
-  : "This is one IN-BETWEEN DRAWING at a specific timestamp. Create a new complete drawing that respects both adjacent approved drawings and the target pose guide. Do not blend, morph, ghost, or copy either reference.";
+  ? "KEY DRAWING: choose a readable story pose and strong silhouette."
+  : "IN-BETWEEN: draw a NEW complete pose at this exact time, respecting both adjacent approved drawings. Never blend, morph, ghost, or copy them.";
  const prompt=[
-  "Create exactly ONE complete, standalone, high-quality Japanese 2D anime production drawing for frame "+(frameIndex+1)+" of "+plan.totalFrames+" at "+(frameIndex/24).toFixed(4)+" seconds.",
+  "Create ONE finished, full-body 2D Japanese anime production drawing for frame "+(frameIndex+1)+"/"+plan.totalFrames+" at "+(frameIndex/24).toFixed(4)+"s.",
   frameBrief,
   referenceGuide,
-  "Identity reference is authoritative for the same character: preserve the face/profile, eye design, hairstyle, hair accessories, costume construction, palette, proportions, and all distinctive details. Do not redesign the character.",
-  "Pose description: "+clean(poseDescription,400),
-  "Shot action: "+action,
-  motionNotes?"Motion continuity: "+motionNotes:"",
-  "Draw the entire character, including head, hands, legs and feet, with convincing anatomy, perspective, foreshortening, clean confident anime linework, deliberate cel-shading and carefully drawn hair and cloth folds.",
-  "Use the pose guide only for spatial joint positions, body orientation, foot contact and silhouette direction. Do not reproduce skeleton lines, guide marks, construction lines, labels, grids, or mannequin shapes in the final drawing.",
-  "Show one full-body character only. No panels, contact sheets, multiple poses, motion blur, speed-line replacement, text, logos, scenery, or other characters.",
-  "Use a perfectly flat, uniform chroma-blue background (#00AEEF) with no gradient or cast shadow; keep all hair strands, sleeves and accessories clearly separated from the background for later alpha segmentation.",
-  "The output must be a new static raster illustration for this exact frame, never a video, sprite sheet, vector drawing, or transformed copy."
+  "Keep the exact same character identity: face/profile, eyes, hairstyle, accessories, costume, colours, proportions and distinctive details. Do not redesign.",
+  "Pose: "+clean(poseDescription,220),
+  "Action: "+action,
+  motionNotes?"Motion note: "+motionNotes:"",
+  "Draw head, hands, legs and feet with correct anatomy, perspective, foreshortening, clean anime linework, cel shading and detailed hair/cloth folds.",
+  "Use the pose guide only for body position, orientation and foot contact. Never draw its skeleton, mannequin, guide marks or labels.",
+  "One character only. No panels, extra poses, text, logos, scenery, motion blur or speed-line substitutes.",
+  "Flat uniform chroma-blue (#00AEEF) background, no gradient or cast shadow; separate every hair strand, sleeve and accessory cleanly for alpha cutout.",
+  "Return one new static raster drawing, never a video, sprite sheet, vector or transformed copy."
  ].filter(Boolean).join(" ");
  if(prompt.length>1800)fail("تعليمات الرسمة تتجاوز حد محرك الصور.");
  return{endpoint:"/api/images",method:"POST",model:"flux-2-klein-4b",aspectRatio,prompt,references,frameIndex,frameNumber:frameIndex+1,frameKind:role.kind,fromKeyPoseId:role.fromKeyPoseId,toKeyPoseId:role.toKeyPoseId,referenceLabels:labels};
