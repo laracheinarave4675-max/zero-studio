@@ -1,3 +1,5 @@
+> **SUPERSEDED FOR CHARACTER ANIMATION BY D-028 (2026-11-20).** This document describes the earlier key-drawing/raster-in-between experiment. Do not use its per-frame still-image request route to create motion. The current approved architecture is anatomy-guided complete independent drawings, recorded in docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. The old implementation is retained for history and compatibility only.
+
 # ZERO STUDIO — Anime Key-Drawings and Raster In-Between Engine
 
 Status: **Approved architecture; first planning/data-contract foundation implemented. Visual animation quality is not yet proven.**
