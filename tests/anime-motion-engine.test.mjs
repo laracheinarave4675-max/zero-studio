@@ -1,6 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
-import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,attachAnimeRasterDrawing,validateAnimeMotionSequence}from"../app/anime-motion-engine.mjs";
+import{ANIME_MOTION_FPS,ANIME_POSE_JOINTS,createAnimeMotionPlan,createAnimeMotionSequence,createAnimeDrawingSchedule,sampleAnimePoseGuide,attachAnimeRasterDrawing,validateAnimeMotionSequence,materializeAnimeRasterFrames}from"../app/anime-motion-engine.mjs";
 const makeGuide=(shift=0)=>({
  view:"side",contacts:{footL:"planted",footR:"swing"},
  joints:Object.fromEntries(ANIME_POSE_JOINTS.map((name,index)=>[name,{x:Math.min(.98,.2+index*.025+shift),y:Math.min(.95,.12+index*.035),z:0}]))
@@ -57,6 +57,18 @@ test("incomplete sequences report remaining raster drawings instead of pretendin
 test("raster frame contract rejects vector-only payloads and invalid frame sizes",()=>{
  const seq=createAnimeMotionSequence(plan());assert.throws(()=>attachAnimeRasterDrawing(seq,0,{assetId:"x",contentHash:"1234567890abcdef",mimeType:"image/svg+xml",width:1920,height:1080}),/غير مكتملة أو غير مدعومة/);
  assert.throws(()=>attachAnimeRasterDrawing(seq,0,{...drawing(0),width:20000}),/غير مكتملة أو غير مدعومة/);
+});
+test("approved anime drawings materialize as independent native ZERO STUDIO raster frames",()=>{
+ const seq=createAnimeMotionSequence(plan());for(let i=0;i<24;i++)attachAnimeRasterDrawing(seq,i,{...drawing(i),dataUrl:"data:image/png;base64,AAAA"});
+ const frames=materializeAnimeRasterFrames(seq,{layerNamePrefix:"Nori"});
+ assert.equal(frames.length,24);assert.ok(frames.every(frame=>frame.layers.length===1&&frame.layers[0].type==="raster"));
+ assert.equal(frames[0].layers[0].name,"Nori — 01");assert.equal(frames[23].layers[0].name,"Nori — 24");
+ assert.ok(frames.every(frame=>frame.layers[0].dataUrl==="data:image/png;base64,AAAA"));
+ assert.ok(frames.every(frame=>frame.layers[0].operations.length===0));
+});
+test("raster materialization refuses frames whose full image bytes are not present",()=>{
+ const seq=createAnimeMotionSequence(plan());for(let i=0;i<24;i++)attachAnimeRasterDrawing(seq,i,drawing(i));
+ assert.throws(()=>materializeAnimeRasterFrames(seq),/غير متاح للاستيراد/);
 });
 test("raster frame data URLs are checked against their declared image format",()=>{
  const seq=createAnimeMotionSequence(plan());assert.throws(()=>attachAnimeRasterDrawing(seq,0,{...drawing(0),dataUrl:"data:image/jpeg;base64,AAAA"}),/محتوى رسمة Raster غير صالح/);
