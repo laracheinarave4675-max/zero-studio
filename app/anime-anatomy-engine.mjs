@@ -88,6 +88,10 @@ function validateDNA(dna) {
       dna.anatomyVersion !== 1 || !dna.characterAssetId || !dna.characterBibleId) {
     fail("سجل هوية الشخصية التشريحي غير صالح.");
   }
+  if (dna.characterModelAssetId !== undefined &&
+      (typeof dna.characterModelAssetId !== "string" || !dna.characterModelAssetId.trim() || dna.characterModelAssetId.length > 160)) {
+    fail("مرجع نموذج الشخصية المرتبط بالهوية التشريحية غير صالح.");
+  }
   const hasSourceFrame = dna.sourceFrameId !== undefined;
   const hasSourceSignature = dna.sourceSignature !== undefined;
   if (hasSourceFrame !== hasSourceSignature ||
