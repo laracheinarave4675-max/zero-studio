@@ -90,14 +90,15 @@ test("does not reveal provider exception details", async () => {
   assert.doesNotMatch(await response.text(), /sensitive provider internals/);
 });
 
-test("supports a non-secret health check but requires configured bindings", async () => {
-  const response = await worker.fetch(new Request("https://worker.example/health", {
-    headers: { Origin: ORIGIN },
-  }), env());
+test("health remains available before private image credentials are configured", async () => {
+  const response = await worker.fetch(new Request("https://worker.example/health"), {
+    AI: { run: async () => ({ image: "aGVsbG8=" }) },
+  });
   assert.equal(response.status, 200);
-  assert.equal((await response.json()).ok, true);
-  const unconfigured = await worker.fetch(new Request("https://worker.example/health", {
-    headers: { Origin: ORIGIN },
-  }), { STUDIO_ORIGIN: ORIGIN });
-  assert.equal(unconfigured.status, 503);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.equal(payload.aiBindingConfigured, true);
+  assert.equal(payload.imageEndpointConfigured, false);
+  const noAi = await worker.fetch(new Request("https://worker.example/health"), {});
+  assert.equal((await noAi.json()).aiBindingConfigured, false);
 });
