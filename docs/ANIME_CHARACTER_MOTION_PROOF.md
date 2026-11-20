@@ -27,6 +27,7 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 - `scripts/run-character-motion-proof.mjs` retrieves the gallery reference, creates or restores a validated 1-second / 24-frame project, and restores the 12 accepted drawings and completes the remaining 12 as six sequential two-frame requests to reduce response truncation and sparse-frame errors.
 - Each accepted batch is validated and atomically checkpointed into the native `.zero` project.
 - A later workflow run can restore that exact `.zero` checkpoint, validate its frame count and batch index, then continue at the next uncompleted batch without regenerating accepted frames.
+- The workflow discovers the newest non-expired checkpoint artifact for this feature branch at runtime, so every subsequent retry resumes from the latest saved partial project rather than a hard-coded historical run.
 - Individual SVG frame exports and the project are uploaded as a GitHub Actions artifact.
 - The workflow is isolated to branch `feat/anime-character-motion-proof`; it does not deploy the application.
 
@@ -68,4 +69,4 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 
 ## Live run authorization
 
-The project owner explicitly authorized the one-second / 24-frame free-tier-only motion proof on 2026-11-20 and confirmed that the GitHub Actions `GEMINI_API_KEY` secret is configured, Google billing is disabled, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true`. This commit intentionally touches a workflow-watched path to trigger the gated run. The workflow must still pass its regression job before live generation starts.
+The project owner explicitly authorized the one-second / 24-frame free-tier-only motion proof on 2026-11-20 and confirmed that the GitHub Actions `GEMINI_API_KEY` secret is configured, Google billing is disabled, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true`. This commit intentionally touches a workflow-watched path to trigger the gated run. The next attempt uses six sequential two-frame requests with the validated 12-frame project as its starting point. The workflow must still pass its regression job before live generation starts.
