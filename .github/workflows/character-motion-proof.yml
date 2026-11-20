@@ -10,6 +10,7 @@ on:
       - "app/animation-worker.mjs"
       - "tests/gemini-animation.test.mjs"
       - "docs/ANIME_CHARACTER_MOTION_PROOF.md"
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -34,7 +35,7 @@ jobs:
         run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
   one-second-character-motion:
     needs: regression-tests
-    if: ${{ contains(github.event.head_commit.message, '[RUN_FREE_TIER_MOTION_PROOF]') && vars.ZERO_STUDIO_FREE_TIER_CONFIRMED == 'true' }}
+    if: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED == 'true' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[RUN_FREE_TIER_MOTION_PROOF]'))) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,6 +43,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Verify free-tier gates before any model request
+        env:
+          FREE_TIER_GUARD: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -eu
+          if [ "$FREE_TIER_GUARD" != "true" ]; then
+            echo "::error::Set repository Actions variable ZERO_STUDIO_FREE_TIER_CONFIRMED to exactly true."
+            exit 1
+          fi
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Add the Gemini API key as Actions secret GEMINI_API_KEY."
+            exit 1
+          fi
+          echo "Free-tier guard is enabled and the Gemini secret is present. No Gemini request was made by this check."
       - name: Generate 24 reference-conditioned independent character drawings
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
