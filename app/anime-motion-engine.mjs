@@ -84,6 +84,66 @@ export function createAnimeDrawingSchedule(plan){
  validPlan(plan);
  return Array.from({length:plan.totalFrames},(_,frameIndex)=>({...getAnimeFrameRole(plan,frameIndex),guide:sampleAnimePoseGuide(plan,frameIndex),requirement:"independent-raster-drawing",exposureFrames:1,backgroundAssetId:plan.backgroundAssetId}));
 }
+function normalizeAnimeReferenceDataUrl(dataUrl,label){
+ if(typeof dataUrl!=="string")fail("الصورة المرجعية "+label+" مفقودة.");
+ const match=/^data:image\/(?:png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(dataUrl);
+ if(!match)fail("الصورة المرجعية "+label+" ليست PNG أو JPEG أو WebP صالحة.");
+ const estimatedBytes=Math.floor(match[1].length*3/4);
+ if(estimatedBytes<1||estimatedBytes>512*1024)fail("الصورة المرجعية "+label+" تتجاوز حد 512 كيلوبايت.");
+ return dataUrl;
+}
+/**
+ * Builds a single-still request for the existing FLUX.2 image department.
+ * It never calls a provider and never asks for a video or frame interpolation.
+ * Reference order is explicit because the current Worker accepts four inputs.
+ */
+export function createAnimeStillDrawingRequest(plan,frameIndex,{
+ characterReferenceDataUrl,
+ modelSheetDataUrl,
+ poseGuideDataUrl,
+ previousKeyDrawingDataUrl,
+ fromKeyDrawingDataUrl,
+ toKeyDrawingDataUrl,
+ aspectRatio="16:9"
+}={}){
+ const role=getAnimeFrameRole(plan,frameIndex),pose=sampleAnimePoseGuide(plan,frameIndex);
+ if(!["16:9","1:1"].includes(aspectRatio))fail("نسبة أبعاد الرسمة غير مدعومة.");
+ const references=[],labels=[];
+ const add=(dataUrl,label)=>{references.push(normalizeAnimeReferenceDataUrl(dataUrl,label));labels.push(label)};
+ add(characterReferenceDataUrl,"هوية الشخصية المعتمدة");
+ if(role.kind==="key-drawing"){
+  add(poseGuideDataUrl,"مرجع الوضعية");
+  if(previousKeyDrawingDataUrl)add(previousKeyDrawingDataUrl,"الرسمة المفتاحية السابقة");
+  if(modelSheetDataUrl)add(modelSheetDataUrl,"ورقة نموذج الشخصية");
+ }else{
+  add(fromKeyDrawingDataUrl,"الرسمة المفتاحية السابقة");
+  add(toKeyDrawingDataUrl,"الرسمة المفتاحية التالية");
+  add(poseGuideDataUrl,"دليل الوضعية المستهدف");
+ }
+ if(references.length>4)fail("يتجاوز عدد الصور المرجعية الحد المدعوم.");
+ const poseDescription=pose.description||plan.keyPoses.find(item=>item.id===role.fromKeyPoseId)?.description||"";
+ const action=clean(plan.action,360),motionNotes=clean(plan.motionNotes,240);
+ const referenceGuide=labels.map((label,index)=>"Image "+(index+1)+": "+label+".").join(" ");
+ const frameBrief=role.kind==="key-drawing"
+  ? "This is a storytelling KEY DRAWING. Design a strong, clean, readable anime pose with intentional line of action and silhouette."
+  : "This is one IN-BETWEEN DRAWING at a specific timestamp. Create a new complete drawing that respects both adjacent approved drawings and the target pose guide. Do not blend, morph, ghost, or copy either reference.";
+ const prompt=[
+  "Create exactly ONE complete, standalone, high-quality Japanese 2D anime production drawing for frame "+(frameIndex+1)+" of "+plan.totalFrames+" at "+(frameIndex/24).toFixed(4)+" seconds.",
+  frameBrief,
+  referenceGuide,
+  "Identity reference is authoritative for the same character: preserve the face/profile, eye design, hairstyle, hair accessories, costume construction, palette, proportions, and all distinctive details. Do not redesign the character.",
+  "Pose description: "+clean(poseDescription,400),
+  "Shot action: "+action,
+  motionNotes?"Motion continuity: "+motionNotes:"",
+  "Draw the entire character, including head, hands, legs and feet, with convincing anatomy, perspective, foreshortening, clean confident anime linework, deliberate cel-shading and carefully drawn hair and cloth folds.",
+  "Use the pose guide only for spatial joint positions, body orientation, foot contact and silhouette direction. Do not reproduce skeleton lines, guide marks, construction lines, labels, grids, or mannequin shapes in the final drawing.",
+  "Show one full-body character only. No panels, contact sheets, multiple poses, motion blur, speed-line replacement, text, logos, scenery, or other characters.",
+  "Use a perfectly flat, uniform chroma-blue background (#00AEEF) with no gradient or cast shadow; keep all hair strands, sleeves and accessories clearly separated from the background for later alpha segmentation.",
+  "The output must be a new static raster illustration for this exact frame, never a video, sprite sheet, vector drawing, or transformed copy."
+ ].filter(Boolean).join(" ");
+ if(prompt.length>1800)fail("تعليمات الرسمة تتجاوز حد محرك الصور.");
+ return{endpoint:"/api/images",method:"POST",model:"flux-2-klein-4b",aspectRatio,prompt,references,frameIndex,frameNumber:frameIndex+1,frameKind:role.kind,fromKeyPoseId:role.fromKeyPoseId,toKeyPoseId:role.toKeyPoseId,referenceLabels:labels};
+}
 export function createAnimeMotionSequence(plan){
  validPlan(plan);
  return{format:"zero-studio-anime-raster-sequence",version:1,shotId:plan.shotId,fps:24,durationSeconds:plan.durationSeconds,backgroundAssetId:plan.backgroundAssetId,characterAssetId:plan.characterAssetId,plan,frames:createAnimeDrawingSchedule(plan).map(item=>({...item,drawing:null}))};
