@@ -1,7 +1,7 @@
 import test from"node:test";
 import assert from"node:assert/strict";
 import{createProject,normalizeProject,MAX_FRAMES}from"../app/engine.mjs";
-import{createAnimationPlan,beginAnimationProduction,getAnimationBatchRange,createAnimationBatchPrompt,validateAnimationBatch,appendAnimationBatch}from"../app/animation-production.mjs";
+import{createAnimationPlan,beginAnimationProduction,getAnimationBatchRange,createAnimationBatchPrompt,validateAnimationBatch,appendAnimationBatch,validateAnimationCheckpoint}from"../app/animation-production.mjs";
 function batchFor(job,batchIndex=job.nextBatchIndex){
  const range=getAnimationBatchRange(job,batchIndex);
  return{version:1,jobId:job.id,batchIndex,startFrame:range.startFrame,continuityNote:"نفس الشارع والمباني والسيارات الحمراء، الكاميرا ثابتة، السيارة الأولى تتجه يميناً والثانية يساراً.",frames:Array.from({length:range.frameCount},(_,offset)=>{
@@ -50,6 +50,16 @@ test("batches must be imported in order and cannot be imported twice",()=>{
  const second=batchFor(job,1);assert.throws(()=>appendAnimationBatch(project,second),/الدفعة التالية/);
  const first=batchFor(job);const result=appendAnimationBatch(project,first);assert.equal(result.completedFrames,6);
  assert.throws(()=>appendAnimationBatch(project,first),/الدفعة التالية/);
+});
+test("a saved six-frame checkpoint can be normalized and resumed without losing frames",()=>{
+ const project=createProject("checkpoint");beginAnimationProduction(project,createAnimationPlan("مشهد", {durationSeconds:1,batchSize:6}));
+ appendAnimationBatch(project,batchFor(project.animationProduction));
+ const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
+ const checkpoint=validateAnimationCheckpoint(reopened);
+ assert.equal(checkpoint.completedFrames,6);assert.equal(checkpoint.nextBatchIndex,1);assert.equal(reopened.frames.length,6);
+ assert.equal(getAnimationBatchRange(checkpoint).startFrame,6);
+ const invalid=JSON.parse(JSON.stringify(reopened));invalid.frames.pop();
+ assert.throws(()=>validateAnimationCheckpoint(invalid),/عدد الرسومات المحفوظة/);
 });
 test("completed batches append real editable frames and survive project save/open",()=>{
  const project=createProject("اختبار");beginAnimationProduction(project,createAnimationPlan("سيارات تعبر الشارع",{durationSeconds:1,batchSize:6}));
