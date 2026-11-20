@@ -11,6 +11,7 @@ const MAX_BODY_BYTES = 8 * 1024;
 const MAX_PROMPT_LENGTH = 2048;
 const MAX_IMAGE_BASE64_LENGTH = 8 * 1024 * 1024;
 const MAX_STEPS = 4;
+const AUTH_VERIFIER_URL = "https://zero-studio.9test4675a26.workers.dev/v1/images";
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -47,6 +48,36 @@ function isAllowedOrigin(origin, env) {
   return String(env.STUDIO_ALLOWED_ORIGINS || "").split(",").map(value => value.trim()).filter(Boolean).includes(origin);
 }
 
+async function isAuthorized(request, env) {
+  const authorization = request.headers.get("Authorization") || "";
+  const suppliedToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  if (!suppliedToken) return false;
+
+  // Use a local secret when configured; the isolated preview Worker delegates
+  // credential validation to the existing Worker without triggering inference.
+  if (env.STUDIO_ACCESS_TOKEN) {
+    return constantTimeEqual(suppliedToken, env.STUDIO_ACCESS_TOKEN);
+  }
+  if (!env.STUDIO_ORIGIN) return false;
+
+  try {
+    const verification = await fetch(AUTH_VERIFIER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authorization,
+        "Origin": String(env.STUDIO_ORIGIN).trim(),
+      },
+      body: JSON.stringify({ prompt: "" }),
+    });
+    if (verification.status !== 400) return false;
+    const payload = await verification.json().catch(() => ({}));
+    return payload.error === "invalid_prompt";
+  } catch {
+    return false;
+  }
+}
+
 function isQuotaError(error) {
   const message = String(error?.message || error || "").toLowerCase();
   return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit|capacity|resource.?limit/.test(message);
@@ -81,7 +112,7 @@ async function handleGallery(request, env, url) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   const auth = request.headers.get("Authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!constantTimeEqual(token, env.STUDIO_ACCESS_TOKEN)) return json({ error: "unauthorized" }, 401, cors);
+  if (!(await isAuthorized(request, env))) return json({ error: "unauthorized" }, 401, cors);
   if (request.method === "GET") {
     const listed = await env.GALLERY.list({ prefix: "gallery:", limit: 100 });
     const items = (listed.keys || []).map(entry => ({ id: entry.name.slice(8), ...(entry.metadata || {}), shareUrl: new URL("/gallery/" + entry.name.slice(8), url.origin).toString() })).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
@@ -139,7 +170,8 @@ async function handle(request, env) {
       provider: "cloudflare-workers-ai",
       model: DEFAULT_MODEL,
       aiBindingConfigured: Boolean(env.AI),
-      imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN && env.STUDIO_ACCESS_TOKEN),
+      imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN),
+      authVerifierConfigured: Boolean(env.STUDIO_ACCESS_TOKEN || env.STUDIO_ORIGIN),
     });
   }
 
@@ -164,9 +196,7 @@ async function handle(request, env) {
     return json({ error: "not_found" }, 404, cors);
   }
 
-  const authorization = request.headers.get("Authorization") || "";
-  const suppliedToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
-  if (!constantTimeEqual(suppliedToken, env.STUDIO_ACCESS_TOKEN)) {
+  if (!(await isAuthorized(request, env))) {
     return json({ error: "unauthorized" }, 401, cors);
   }
 
