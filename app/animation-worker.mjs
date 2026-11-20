@@ -37,7 +37,7 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
    }catch(error){
     if(error?.name==="AbortError"||signal?.aborted)throw error;
     lastError=String(error?.message||error).slice(0,1000);
-    lastErrorTransient=/\\b(?:429|500|502|503|504)\\b/.test(lastError);
+    lastErrorTransient=/\b(?:429|500|502|503|504)\b/.test(lastError);
     if(attempt===maxRetries)throw Error("تعذر إنتاج الدفعة "+(range.batchIndex+1)+" بعد "+(attempt+1)+" محاولات: "+lastError);
     if(lastErrorTransient){
      const delayMs=Math.min(20000,5000*(2**attempt));
