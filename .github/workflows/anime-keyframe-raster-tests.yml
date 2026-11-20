@@ -1,0 +1,21 @@
+name: ZERO STUDIO — anime keyframe raster proof checks
+on:
+  push:
+    branches: ["feat/anime-keyframe-raster-pipeline"]
+    paths:
+      - ".github/workflows/anime-keyframe-raster-tests.yml"
+      - "app/anime-motion-sheet.mjs"
+      - "tests/anime-motion-sheet.test.mjs"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  motion-sheet-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate anime motion sheet and raster frame contract
+        run: node --test tests/anime-motion-sheet.test.mjs
