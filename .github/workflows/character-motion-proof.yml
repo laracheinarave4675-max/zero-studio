@@ -61,12 +61,25 @@ jobs:
             exit 1
           fi
           echo "Free-tier guard is enabled and the Gemini secret is present. No Gemini request was made by this check."
-      - name: Restore the previously accepted twelve-frame checkpoint
+      - name: Locate the newest saved motion checkpoint for this branch
+        id: latest-checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          checkpoint_run_id=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" --jq '.artifacts | map(select(.name == "zero-studio-character-motion-proof" and .expired == false and .workflow_run.head_branch == "feat/anime-character-motion-proof")) | sort_by(.created_at) | last | .workflow_run.id // empty')
+          if [ -z "$checkpoint_run_id" ] || [ "$checkpoint_run_id" = "$GITHUB_RUN_ID" ]; then
+            echo "::error::No previous saved motion checkpoint was found for this branch."
+            exit 1
+          fi
+          echo "Restoring checkpoint from workflow run $checkpoint_run_id"
+          echo "run_id=$checkpoint_run_id" >> "$GITHUB_OUTPUT"
+      - name: Restore the latest saved motion checkpoint
         uses: actions/download-artifact@v4
         with:
           name: zero-studio-character-motion-proof
           path: artifacts/checkpoint
-          run-id: 44799441660
+          run-id: ${{ steps.latest-checkpoint.outputs.run_id }}
           github-token: ${{ github.token }}
       - name: Generate 24 reference-conditioned independent character drawings
         env:
