@@ -1,5 +1,7 @@
 # ZERO STUDIO — High-volume frame-by-frame production
 
+> **Current direction (D-027):** This document describes the legacy SVG/vector batch experiment and remains for compatibility, historical comparison, and its existing tests. It is not the approved character-animation output path. The current direction is the anime key-drawing + individually reviewed raster in-between pipeline in [ANIME_KEYFRAME_MOTION_ENGINE.md](ANIME_KEYFRAME_MOTION_ENGINE.md). Do not treat SVG path counts or the old batch workflow as proof of anime-quality movement. Existing SVG features and files are preserved.
+
 ## Purpose
 
 This module is the provider-independent production contract for genuine frame-by-frame animation. It separates the scene brief, production plan, individual vector drawings, and batch import from any particular AI service. No generated raster image, video, image tween, or reused still is accepted as a substitute for the drawings.
