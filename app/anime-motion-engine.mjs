@@ -1,3 +1,4 @@
+import{createFrame,createRasterLayer}from"./engine.mjs";
 // ZERO STUDIO anime motion planning: pose guides direct drawing, never deform final artwork.
 // Final frames are independent raster drawings. No SVG path tween or puppet transform is emitted here.
 export const ANIME_MOTION_FPS=24;
@@ -110,4 +111,22 @@ export function validateAnimeMotionSequence(sequence,{requireComplete=true}={}){
   hashes.add(frame.drawing.contentHash);assets.add(frame.drawing.assetId);completed++;
  }
  return{frameCount:sequence.frames.length,completedDrawings:completed,missingDrawings:sequence.frames.length-completed,uniqueDrawingCount:hashes.size,uniqueDrawingsPerSecond:Number((hashes.size/sequence.durationSeconds).toFixed(3)),meets24UniqueDrawingsPerSecond:completed===sequence.frames.length&&hashes.size===sequence.frames.length};
+}
+
+/**
+ * Converts a fully approved sequence into native ZERO STUDIO frame records.
+ * Each timestamp becomes its own Canvas/Raster-compatible layer; no pixel
+ * tween, vector path, or character transform is created.
+ */
+export function materializeAnimeRasterFrames(sequence,{layerNamePrefix="Character"}={}){
+ validateAnimeMotionSequence(sequence);
+ const prefix=clean(layerNamePrefix,60)||"Character";
+ return sequence.frames.map((frame,index)=>{
+  const drawing=frame.drawing;
+  if(!drawing?.dataUrl)fail("ملف الصورة النقطية للإطار "+(index+1)+" غير متاح للاستيراد إلى مشروع ZERO STUDIO.");
+  const layer=createRasterLayer({name:prefix+" — "+String(index+1).padStart(2,"0"),dataUrl:drawing.dataUrl,mimeType:drawing.mimeType,width:drawing.width,height:drawing.height,opacity:1,blendMode:"normal"});
+  const projectFrame=createFrame();
+  projectFrame.layers=[layer];
+  return projectFrame;
+ });
 }
