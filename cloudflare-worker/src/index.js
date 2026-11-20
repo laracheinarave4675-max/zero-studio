@@ -33,13 +33,20 @@ function constantTimeEqual(left, right) {
   return mismatch === 0;
 }
 
+function isAllowedOrigin(origin, env) {
+  if (!origin) return false;
+  if (origin === String(env.STUDIO_ORIGIN || "").trim()) return true;
+  return String(env.STUDIO_ALLOWED_ORIGINS || "").split(",").map(value => value.trim()).filter(Boolean).includes(origin);
+}
+
 function isQuotaError(error) {
   const message = String(error?.message || error || "").toLowerCase();
   return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit/.test(message);
 }
 
 async function handleGallery(request, env, url) {
-  const cors = corsHeaders(env.STUDIO_ORIGIN || "*");
+  const requestOrigin = request.headers.get("Origin") || "";
+  const cors = corsHeaders(requestOrigin || env.STUDIO_ORIGIN || "*");
   if (!env.GALLERY) return json({ error: "gallery_storage_unavailable" }, 503, cors);
   if (url.pathname.startsWith("/gallery/") && request.method === "GET") {
     const id = url.pathname.slice(9);
@@ -55,7 +62,7 @@ async function handleGallery(request, env, url) {
   }
   if (url.pathname !== "/v1/gallery") return json({ error: "not_found" }, 404, cors);
   const origin = String(env.STUDIO_ORIGIN || "").trim();
-  if (request.headers.get("Origin") !== origin) return json({ error: "origin_not_allowed" }, 403);
+  if (!isAllowedOrigin(requestOrigin, env)) return json({ error: "origin_not_allowed" }, 403);
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   const auth = request.headers.get("Authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
@@ -98,11 +105,11 @@ async function handle(request, env) {
     return json({ error: "worker_not_configured", message: "Worker configuration is incomplete." }, 503);
   }
 
-  if (requestOrigin !== configuredOrigin) {
+  if (!isAllowedOrigin(requestOrigin, env)) {
     return json({ error: "origin_not_allowed" }, 403);
   }
 
-  const cors = corsHeaders(configuredOrigin);
+  const cors = corsHeaders(requestOrigin);
 
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: cors });
