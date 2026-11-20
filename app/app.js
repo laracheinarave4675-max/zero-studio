@@ -365,7 +365,7 @@ async function addCharacterReferenceFiles(files){
  const selected=Array.from(files||[]).slice(0,4-characterReferenceImages.length);
  if(!selected.length)throw Error(characterReferenceImages.length>=4?"اكتملت المراجع الأربعة. أزل مرجعاً أولاً.":"اختر صورة واحدة على الأقل.");
  for(const file of selected){
-  if(!/^image\\/(?:png|jpeg|webp)$/.test(file.type||""))throw Error("اختر صور PNG أو JPEG أو WebP فقط.");
+  if(!/^image\/(?:png|jpeg|webp)$/.test(file.type||""))throw Error("اختر صور PNG أو JPEG أو WebP فقط.");
   if(file.size>12*1024*1024)throw Error("حجم ملف الصورة الأصلي أكبر من 12 ميغابايت.");
   const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("تعذر قراءة ملف الصورة."));reader.readAsDataURL(file)});
   characterReferenceImages.push(await normalizeCharacterReference(source,file.name));
