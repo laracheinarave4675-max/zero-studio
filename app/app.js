@@ -297,10 +297,10 @@ async function buildAnimeMotionPlan(){
   $("animeMotionPlanStatus").style.color="#ff9999";
  }
 }
-function saveAnimeAnatomyDNA(){
+async function saveAnimeAnatomyDNA(){
  try{
   if(Object.keys(animeAnatomyPoints).length!==ANIME_ANATOMY_JOINTS.length)throw Error("أكمل تحديد جميع النقاط التشريحية أولاً.");
-  if(animeAnatomyMode==="key"){saveAnimeKeyDrawing();return;}
+  if(animeAnatomyMode==="key"){await saveAnimeKeyDrawing();return;}
   const id=uid("anime-character"),name=$("animeAnatomyName").value.trim()||"شخصية جديدة";
   const guide={
    view:$("animeAnatomyView").value,
@@ -529,7 +529,13 @@ function wireAnimeAnatomyCalibration(){
  };
  $("cancelAnimeAnatomyBtn").onclick=cancelAnimeAnatomyCalibration;
  $("saveAnimeAnatomyDNABtn").onclick=saveAnimeAnatomyDNA;
- $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction){$("animeMotionAction").value=dna.lastMotionAction;restoreAnimeMotionPlan(dna)}else updateAnimeRasterControls()};
+ $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction){
+  $("animeMotionAction").value=dna.lastMotionAction;
+  restoreAnimeMotionPlan(dna).catch(error=>{
+   activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;updateAnimeRasterControls();
+   animeRasterStatus("تحتاج بعض الرسومات المفتاحية إلى تسجيل جديد: "+error.message,false);
+  });
+ }else updateAnimeRasterControls()};
  $("exportAnimeAnatomyDNABtn").onclick=()=>{
   const selected=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);
