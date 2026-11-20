@@ -39,6 +39,17 @@ function isQuotaError(error) {
 }
 
 async function handle(request, env) {
+  const url = new URL(request.url);
+  if (request.method === "GET" && url.pathname === "/health") {
+    return json({
+      ok: true,
+      provider: "cloudflare-workers-ai",
+      model: MODEL,
+      aiBindingConfigured: Boolean(env.AI),
+      imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN && env.STUDIO_ACCESS_TOKEN),
+    });
+  }
+
   const configuredOrigin = String(env.STUDIO_ORIGIN || "").trim();
   const requestOrigin = request.headers.get("Origin") || "";
 
