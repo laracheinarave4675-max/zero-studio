@@ -1,4 +1,4 @@
-name = "zero-studio-image-worker"
+name = "zero-studio"
 main = "src/index.js"
 compatibility_date = "2026-11-20"
 
