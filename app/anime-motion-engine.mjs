@@ -157,36 +157,36 @@ export function createAnimeStillDrawingRequest(plan,frameIndex,{
  if(!["16:9","1:1"].includes(aspectRatio))fail("نسبة أبعاد الرسمة غير مدعومة.");
  const references=[],labels=[];
  const add=(dataUrl,label)=>{references.push(normalizeAnimeReferenceDataUrl(dataUrl,label));labels.push(label)};
- add(characterReferenceDataUrl,"هوية الشخصية المعتمدة");
+ add(characterReferenceDataUrl,"approved character identity");
  if(role.kind==="key-drawing"){
-  add(poseGuideDataUrl,"مرجع الوضعية");
-  if(previousKeyDrawingDataUrl)add(previousKeyDrawingDataUrl,"الرسمة المفتاحية السابقة");
-  if(modelSheetDataUrl)add(modelSheetDataUrl,"ورقة نموذج الشخصية");
+  add(poseGuideDataUrl,"spatial pose guide only");
+  if(previousKeyDrawingDataUrl)add(previousKeyDrawingDataUrl,"previous approved key drawing");
+  if(modelSheetDataUrl)add(modelSheetDataUrl,"character model sheet");
  }else{
-  add(fromKeyDrawingDataUrl,"الرسمة المفتاحية السابقة");
-  add(toKeyDrawingDataUrl,"الرسمة المفتاحية التالية");
-  add(poseGuideDataUrl,"دليل الوضعية المستهدف");
+  add(fromKeyDrawingDataUrl,"previous approved key drawing");
+  add(toKeyDrawingDataUrl,"next approved key drawing");
+  add(poseGuideDataUrl,"target spatial pose guide");
  }
  if(references.length>4)fail("يتجاوز عدد الصور المرجعية الحد المدعوم.");
  const poseDescription=pose.description||plan.keyPoses.find(item=>item.id===role.fromKeyPoseId)?.description||"";
- const action=clean(plan.action,220),motionNotes=clean(plan.motionNotes,120);
+ const action=clean(plan.action,160),motionNotes=clean(plan.motionNotes,60);
  const referenceGuide=labels.map((label,index)=>"Image "+(index+1)+": "+label+".").join(" ");
  const frameBrief=role.kind==="key-drawing"
   ? "KEY DRAWING: choose a readable story pose and strong silhouette."
-  : "IN-BETWEEN: draw a NEW complete pose at this exact time, respecting both adjacent approved drawings. Never blend, morph, ghost, or copy them.";
+  : "IN-BETWEEN: draw a NEW complete pose between both approved key drawings. Never blend, morph, ghost, or copy them.";
  const prompt=[
-  "Create ONE finished, full-body 2D Japanese anime production drawing for frame "+(frameIndex+1)+"/"+plan.totalFrames+" at "+(frameIndex/24).toFixed(4)+"s.",
+  "Create ONE full-body Japanese 2D anime still for frame "+(frameIndex+1)+"/"+plan.totalFrames+" at "+(frameIndex/24).toFixed(4)+"s.",
   frameBrief,
   referenceGuide,
-  "Keep the exact same character identity: face/profile, eyes, hairstyle, accessories, costume, colours, proportions and distinctive details. Do not redesign.",
-  "Pose: "+clean(poseDescription,220),
+  "Match the approved identity exactly: face, eyes, hair, accessories, costume, colours and proportions. Do not redesign.",
+  "Pose: "+clean(poseDescription,160),
   "Action: "+action,
-  motionNotes?"Motion note: "+motionNotes:"",
-  "Draw head, hands, legs and feet with correct anatomy, perspective, foreshortening, clean anime linework, cel shading and detailed hair/cloth folds.",
-  "Use the pose guide only for body position, orientation and foot contact. Never draw its skeleton, mannequin, guide marks or labels.",
-  "One character only. No panels, extra poses, text, logos, scenery, motion blur or speed-line substitutes.",
-  "Flat uniform chroma-blue (#00AEEF) background, no gradient or cast shadow; separate every hair strand, sleeve and accessory cleanly for alpha cutout.",
-  "Return one new static raster drawing, never a video, sprite sheet, vector or transformed copy."
+  motionNotes?"Motion: "+motionNotes:"",
+  "Draw every body part with correct anatomy and perspective, clean anime line art, cel shading, detailed hair and cloth.",
+  "Pose guide controls body position, orientation and foot contact only. Never reproduce its skeleton or guide marks.",
+  "One character, one pose; no panels, extra poses, text, scenery, blur or other characters.",
+  "Solid chroma-blue (#00AEEF) background; no gradient or cast shadow; separate hair and cloth edges for alpha cutout.",
+  "One new raster drawing only; no video, sprite sheet, vector or transformed copy."
  ].filter(Boolean).join(" ");
  if(prompt.length>1800)fail("تعليمات الرسمة تتجاوز حد محرك الصور.");
  return{endpoint:"/api/images",method:"POST",model:"flux-2-klein-4b",aspectRatio,prompt,references,frameIndex,frameNumber:frameIndex+1,frameKind:role.kind,fromKeyPoseId:role.fromKeyPoseId,toKeyPoseId:role.toKeyPoseId,referenceLabels:labels};
