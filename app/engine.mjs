@@ -1,4 +1,4 @@
-import{validateAnimeCharacterDNA}from"./anime-anatomy-engine.mjs";
+import{validateAnimeCharacterDNA,validateAnimeFrameRasterAsset}from"./anime-anatomy-engine.mjs";
 export const WIDTH=1920,HEIGHT=1080,MAX_FRAMES=30000,MAX_LAYERS=100,MAX_OPERATIONS=10000;
 const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
@@ -268,8 +268,12 @@ export function normalizeProject(p){
  const frames=p.frames.map(f=>{
   if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({id:uid("op"),kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}
   if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");
-  return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer)};
+  const animeRaster=f.animeRaster===undefined||f.animeRaster===null?null:validateAnimeFrameRasterAsset(f.animeRaster);
+  return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer),...(animeRaster?{animeRaster}:{})};
  });
+ const rasterHashes=frames.map(frame=>frame.animeRaster?.contentHash).filter(Boolean);
+ const rasterAssetIds=frames.map(frame=>frame.animeRaster?.assetId).filter(Boolean);
+ if(new Set(rasterHashes).size!==rasterHashes.length||new Set(rasterAssetIds).size!==rasterAssetIds.length)throw Error("رسومات Raster مستقلة مكررة بين إطارات المشروع");
  const rawLibrary=Array.isArray(p.characterLibrary)?p.characterLibrary:[];
  if(rawLibrary.length>100)throw Error("تحتوي مكتبة الشخصيات على أكثر من 100 نموذج");
  const characterLibrary=rawLibrary.map(normalizeCharacterAsset);
