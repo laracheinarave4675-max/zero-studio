@@ -41,14 +41,14 @@ test("key-drawing request calls the existing still-image API with identity, pose
  const p=plan();const req=createAnimeStillDrawingRequest(p,12,{characterReferenceDataUrl:refImage(),poseGuideDataUrl:refImage(),previousKeyDrawingDataUrl:refImage("image/webp"),modelSheetDataUrl:refImage("image/jpeg")});
  assert.equal(req.endpoint,"/api/images");assert.equal(req.method,"POST");assert.equal(req.model,"flux-2-klein-4b");assert.equal(req.aspectRatio,"16:9");
  assert.equal(req.frameKind,"key-drawing");assert.equal(req.frameNumber,13);assert.equal(req.references.length,4);
- assert.deepEqual(req.referenceLabels,["هوية الشخصية المعتمدة","مرجع الوضعية","الرسمة المفتاحية السابقة","ورقة نموذج الشخصية"]);
+ assert.deepEqual(req.referenceLabels,["approved character identity","spatial pose guide only","previous approved key drawing","character model sheet"]);
  assert.match(req.prompt,/Create exactly ONE complete/);assert.match(req.prompt,/Do not redesign the character/);assert.match(req.prompt,/Do not reproduce skeleton lines/);
  assert.match(req.prompt,/chroma-blue background/);assert.ok(req.prompt.length<=1800);
 });
 test("in-between request receives the two adjacent approved key drawings and the exact target pose",()=>{
  const req=createAnimeStillDrawingRequest(plan(),6,{characterReferenceDataUrl:refImage(),fromKeyDrawingDataUrl:refImage("image/jpeg"),toKeyDrawingDataUrl:refImage("image/webp"),poseGuideDataUrl:refImage()});
  assert.equal(req.frameKind,"inbetween-drawing");assert.equal(req.frameNumber,7);
- assert.deepEqual(req.referenceLabels,["هوية الشخصية المعتمدة","الرسمة المفتاحية السابقة","الرسمة المفتاحية التالية","دليل الوضعية المستهدف"]);
+ assert.deepEqual(req.referenceLabels,["approved character identity","previous approved key drawing","next approved key drawing","target spatial pose guide"]);
  assert.equal(req.references.length,4);assert.match(req.prompt,/Do not blend, morph, ghost, or copy either reference/);
 });
 test("still drawing request rejects missing pose references, malformed images and over-limit references",()=>{
