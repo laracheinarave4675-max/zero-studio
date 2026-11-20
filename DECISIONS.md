@@ -173,3 +173,26 @@ This file records decisions that must not be changed silently. Add dated entries
 **Status:** Approved by user, 2026-11-19.
 
 ZERO STUDIO's primary drawing medium is a native Canvas2D raster engine, following the agreed Claude recommendation. SVG is no longer the planned foundation or a development priority. Existing SVG content is legacy compatibility during migration only. The artist engine must support real brush rendering, pressure/velocity dynamics, natural-media texture, blend modes, editable stroke records, deterministic replay, raster layers, masks, and mobile-safe undo/storage. No generative image or video model may create or modify final artwork. The 24 independently drawn images-per-second target remains unchanged.
+
+
+## D-026 — Hybrid AI-assisted anime production studio (2026-11-20)
+
+**Status:** Explicitly approved by the user. This is the current governing direction.
+
+**Decision:** ZERO STUDIO will use a specialized image-generation model/service as an integrated art-production department for anime characters, backgrounds, props, and scene assets. ZERO STUDIO remains the production and creative-control studio responsible for character identity, reference management, scene preparation, asset/layer organization, animation planning, timing, camera, cleanup workflow, compositing, audio, and final delivery. A video generator must not replace the studio's animation and episode-production pipeline.
+
+**Architecture:** (1) provider-neutral specialist art-generation adapter; (2) project Character Bible and approved Model Sheets/reference images; (3) scene and asset preparation with source/provenance preservation; (4) animation engine for key poses, timing, holds, inbetween/cleanup workflow, camera and compositing; (5) final episode assembly and delivery.
+
+**Character continuity:** Every generation task must use approved visual references and character metadata. Model Sheets, palettes, clothing, proportions, expressions, and pose references are persistent project assets. Automated consistency checks are advisory; human visual approval is mandatory. LoRA/fine-tuning is deferred until a base provider, rights, dataset, cost, hosting, and measurable benefit are evaluated.
+
+**Provider selection:** No model/provider is selected by this decision. Compare visual quality, reference control, pose/composition control, API access, Android workflow, cost/quotas, latency, privacy/data retention, commercial rights, and stability. Keep credentials secure and provider integrations replaceable.
+
+**Animation target:** Preserve the user's target of **24 independently drawn images per second**. Do not replace it with 8–12 drawings/second, repeated drawings at 24 FPS, generated video, or tween-only animation without explicit user approval. Generated stills may serve as approved assets or keyframe references; they do not automatically constitute the required independently drawn moving-art frames.
+
+**Quality gates:** Procedural geometry and increased path counts are not substitutes for professional anime art. Passing software tests does not prove artistic quality. No milestone is accepted without a real visual result and human review. Character continuity across scenes is mandatory.
+
+**Migration:** This decision supersedes prior no-generative-image restrictions in D-021, D-023, and D-024, and the no-generation clause in D-025, wherever they conflict. Historical entries remain for auditability, not as current policy. Do not destructively delete old drawing engines, vector/raster tools, assets, or tests; audit dependencies and reuse valuable components. No PR merge or production deployment without explicit user permission.
+
+**First milestone:** Audit the existing code and provider research, then compare current specialist models/services and produce a small representative character-sheet/background proof. Do not start LoRA training or a wholesale engine rewrite before this evaluation.
+
+See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
