@@ -7,8 +7,8 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA}from"./anime-anatomy-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={};const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,getAnimeAnatomyFrameRole}from"./anime-anatomy-engine.mjs";
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -116,6 +116,7 @@ function renderAnimeAnatomyDNASelect(selectedId=""){
  }
  if(records.some(item=>item.characterAssetId===previous))select.value=previous;
  $("exportAnimeAnatomyDNABtn").disabled=!select.value;
+ $("startAnimeKeyDrawingBtn").disabled=!select.value;$("buildAnimeMotionPlanBtn").disabled=!select.value;
 }
 function renderAnimeAnatomyMarkers(){
  if(!animeAnatomyMarkers)return;
@@ -161,12 +162,86 @@ function animeAnatomyCoords(event){
  return{x:Math.max(0,Math.min(1,transformed.x/WIDTH)),y:Math.max(0,Math.min(1,transformed.y/HEIGHT))};
 }
 function cancelAnimeAnatomyCalibration(){
- animeAnatomyActive=false;animeAnatomyStep=0;animeAnatomyPoints={};
+ animeAnatomyActive=false;animeAnatomyStep=0;animeAnatomyPoints={};animeAnatomyMode="dna";activeAnimeDNAId=null;
+ $("animeAnatomyView").disabled=false;$("saveAnimeAnatomyDNABtn").textContent="حفظ هوية الشخصية";
  $("animeAnatomyAnnotator").hidden=true;animeAnatomyMarkers.replaceChildren();
+}
+function beginAnimeKeyDrawing(){
+ const id=$("animeAnatomyDNASelect").value;
+ const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===id);
+ if(!dna){animeAnatomyStatus("اختر هوية شخصية محفوظة أولاً.",false);return}
+ if(current>=24){animeAnatomyStatus("المشهد التجريبي الأول يستخدم الإطارات 1 إلى 24 فقط.",false);return}
+ animeAnatomyMode="key";activeAnimeDNAId=id;
+ $("animeAnatomyView").value=dna.canonicalView;$("animeAnatomyView").disabled=true;
+ $("saveAnimeAnatomyDNABtn").textContent="اعتماد الرسمة المفتاحية";
+ beginAnimeAnatomyCalibration();
+ animeAnatomyStatus("حدد مفاصل الوضعية الحالية للشخصية "+(dna.name||"المحفوظة")+". سيُسجل الإطار الحالي رقم "+(current+1)+" كرسمة مفتاحية كاملة.");
+}
+function saveAnimeKeyDrawing(){
+ const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===activeAnimeDNAId);
+ if(!dna)throw Error("تعذر العثور على هوية الشخصية المحددة.");
+ if(current>=24)throw Error("الإطار الحالي خارج نطاق اختبار المشي الأول.");
+ const guide={
+  view:dna.canonicalView,
+  contacts:{footL:$("animeAnatomyLeftContact").value,footR:$("animeAnatomyRightContact").value},
+  joints:Object.fromEntries(ANIME_ANATOMY_LABELS.map(item=>[item.key,animeAnatomyPoints[item.key]]))
+ };
+ const key={
+  id:uid("anime-key"),frame:current,drawingAssetId:frame().id,approved:true,
+  phase:$("animeKeyDrawingPhase").value,easeToNext:$("animeKeyDrawingEase").value,
+  guide,note:"Artist-approved complete drawing from native timeline frame "+(current+1)
+ };
+ snapshot(true);
+ const target=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===activeAnimeDNAId);
+ if(!target)throw Error("اختفت هوية الشخصية من المشروع.");
+ if(!Array.isArray(target.keyDrawings))target.keyDrawings=[];
+ const existing=target.keyDrawings.findIndex(item=>item.frame===current);
+ if(existing>=0)target.keyDrawings[existing]=key;else target.keyDrawings.push(key);
+ target.keyDrawings.sort((a,b)=>a.frame-b.frame);
+ const name=target.name||"الشخصية";
+ const count=target.keyDrawings.length;
+ cancelAnimeAnatomyCalibration();
+ renderAnimeAnatomyDNASelect(activeAnimeDNAId);
+ $("animeMotionPlanStatus").textContent="تم اعتماد وضعية مفتاحية للإطار "+(current+1)+" للشخصية "+name+". عدد الرسومات المفتاحية المحفوظة: "+count+".";
+ animeAnatomyStatus("حُفظت الوضعية المفتاحية الكاملة وربطت بالإطار الأصلي. لا تُنتج هذه العملية رسمة جديدة.");
+}
+function buildAnimeMotionPlan(){
+ try{
+  const id=$("animeAnatomyDNASelect").value;
+  const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===id);
+  if(!dna)throw Error("اختر هوية شخصية محفوظة أولاً.");
+  if(project.frames.length<24)throw Error("أنشئ 24 إطاراً في الخط الزمني أولاً، ثم سجّل رسومات البداية والنهاية.");
+  const action=$("animeMotionAction").value.trim();
+  const keys=(dna.keyDrawings||[]).filter(item=>item.frame>=0&&item.frame<24);
+  const plan=createAnimeAnatomyPlan({
+   shotId:uid("anime-walk"),action,characterDNA:dna,durationSeconds:1,fps:24,keyDrawings:keys,
+   motionNotes:"D-028: anatomy construction guides only; every output frame must be completely redrawn and reviewed by the artist."
+  });
+  const tasks=createAnimeFrameDrawingTasks(plan);
+  const currentFrame=Math.min(23,current);
+  const role=getAnimeAnatomyFrameRole(plan,currentFrame);
+  const bundle={
+   format:"zero-studio-anatomy-walk-proof",version:1,plan,
+   drawingTasks:tasks.map(task=>({
+    frameIndex:task.frameIndex,timeSeconds:task.timeSeconds,kind:task.kind,
+    keyDrawingId:task.keyDrawingId,fromKeyDrawingId:task.fromKeyDrawingId,
+    toKeyDrawingId:task.toKeyDrawingId,authoringMode:task.authoringMode,
+    drawingRequirement:task.drawingRequirement,construction:task.construction
+   }))
+  };
+  dna.lastMotionAction=action;dna.lastMotionShotId=plan.shotId;
+  download((dna.name||"character")+"-walk-24fps-plan.json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));
+  $("animeMotionPlanStatus").textContent="نجحت الخطة: 24 مهمة رسم مستقلة، "+keys.length+" وضعيات مفتاحية، والإطار الحالي "+(currentFrame+1)+" هو "+(role.kind==="key-drawing"?"رسمة مفتاحية":"إطار وسيط يحتاج إعادة رسم كاملة")+".";
+  animeAnatomyStatus("تم إنشاء وتصدير خطة 24 رسمة مستقلة. هذه خطة إنتاج وليست فيديو أو رسومات نهائية جاهزة.");
+ }catch(error){
+  $("animeMotionPlanStatus").textContent="تعذر إنشاء الخطة: "+error.message;
+  $("animeMotionPlanStatus").style.color="#ff9999";
+ }
 }
 function saveAnimeAnatomyDNA(){
  try{
   if(Object.keys(animeAnatomyPoints).length!==ANIME_ANATOMY_JOINTS.length)throw Error("أكمل تحديد جميع النقاط التشريحية أولاً.");
+  if(animeAnatomyMode==="key"){saveAnimeKeyDrawing();return;}
   const id=uid("anime-character"),name=$("animeAnatomyName").value.trim()||"شخصية جديدة";
   const guide={
    view:$("animeAnatomyView").value,
@@ -189,7 +264,9 @@ function saveAnimeAnatomyDNA(){
 }
 function wireAnimeAnatomyCalibration(){
  if(!animeAnatomyCanvas)return;
- $("startAnimeAnatomyBtn").onclick=beginAnimeAnatomyCalibration;
+ $("startAnimeAnatomyBtn").onclick=()=>{animeAnatomyMode="dna";activeAnimeDNAId=null;$("animeAnatomyView").disabled=false;beginAnimeAnatomyCalibration()};
+ $("startAnimeKeyDrawingBtn").onclick=beginAnimeKeyDrawing;
+ $("buildAnimeMotionPlanBtn").onclick=buildAnimeMotionPlan;
  animeAnatomyCanvas.addEventListener("pointerdown",event=>{
   if(!animeAnatomyActive||animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
   try{
@@ -205,7 +282,7 @@ function wireAnimeAnatomyCalibration(){
  };
  $("cancelAnimeAnatomyBtn").onclick=cancelAnimeAnatomyCalibration;
  $("saveAnimeAnatomyDNABtn").onclick=saveAnimeAnatomyDNA;
- $("animeAnatomyDNASelect").onchange=()=>{$("exportAnimeAnatomyDNABtn").disabled=!$("animeAnatomyDNASelect").value};
+ $("animeAnatomyDNASelect").onchange=()=>{const active=!!$("animeAnatomyDNASelect").value;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active};
  $("exportAnimeAnatomyDNABtn").onclick=()=>{
   const selected=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);
