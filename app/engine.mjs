@@ -280,6 +280,11 @@ export function normalizeProject(p){
  const rawAnimeDNA=Array.isArray(p.animeCharacterDNA)?p.animeCharacterDNA:[];
  if(rawAnimeDNA.length>100)throw Error("تحتوي مكتبة هويات الأنمي التشريحية على أكثر من 100 شخصية");
  const animeCharacterDNA=rawAnimeDNA.map(validateAnimeCharacterDNA);
+ for(const dna of animeCharacterDNA){
+  if(dna.sourceFrameId!==undefined&&!frames.some(item=>item.id===dna.sourceFrameId)){
+   throw Error("الرسم الأصلي المرتبط بهوية الشخصية غير موجود في الخط الزمني.");
+  }
+ }
  const dnaIds=animeCharacterDNA.map(item=>item.characterAssetId);
  if(new Set(dnaIds).size!==dnaIds.length)throw Error("معرّفات هويات الأنمي التشريحية مكررة");
  const animationProduction=normalizeAnimationProduction(p.animationProduction);
