@@ -1,7 +1,7 @@
 "use strict";
 
 const MAX_PROMPT_LENGTH = 1800;
-const WORKER_URL = "https://zero-studio.9test4675a26.workers.dev/v1/images";
+const DEFAULT_WORKER_BASE_URL = "https://zero-studio.9test4675a26.workers.dev";
 
 function send(res, status, payload) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -17,6 +17,8 @@ async function readPayload(response) {
 module.exports = async function handler(req, res) {
   const appOrigin = String(process.env.ZERO_STUDIO_APP_ORIGIN || "").trim();
   const token = String(process.env.ZERO_STUDIO_ACCESS_TOKEN || "").trim();
+  const workerBaseUrl = String(process.env.ZERO_STUDIO_IMAGE_WORKER_URL || DEFAULT_WORKER_BASE_URL).replace(/\/+$/, "");
+  const workerUrl = workerBaseUrl + "/v1/images";
 
   // A safe connectivity probe: the Worker validates origin and bearer auth first,
   // then rejects the empty prompt with 400. This deliberately never calls AI.run.
@@ -31,7 +33,7 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      const upstream = await fetch(WORKER_URL, {
+      const upstream = await fetch(workerUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +103,11 @@ module.exports = async function handler(req, res) {
   }
 
   const requestOrigin = String(req.headers.origin || "").trim();
-  if (!appOrigin || requestOrigin !== appOrigin) {
+  const requestHost = String(req.headers.host || "").toLowerCase();
+  const sameHostOrigin = requestHost ? "https://" + requestHost : "";
+  const allowedPreviewHost = /^zero-studio-preview(?:-[a-z0-9-]+)?\.vercel\.app$/.test(requestHost);
+  const sameOrigin = requestOrigin && requestOrigin === sameHostOrigin;
+  if (!appOrigin || !sameOrigin || (!allowedPreviewHost && sameHostOrigin !== appOrigin)) {
     return send(res, 403, { error: "origin_not_allowed", message: "مصدر الطلب غير مسموح." });
   }
   if (!token) {
@@ -116,9 +122,20 @@ module.exports = async function handler(req, res) {
   if (!prompt || prompt.length > MAX_PROMPT_LENGTH) {
     return send(res, 400, { error: "invalid_prompt", message: "اكتب وصفاً من 1 إلى 1800 حرف." });
   }
+  const model = input.model === undefined ? "flux-1-schnell" : input.model;
+  if (model !== "flux-1-schnell" && model !== "flux-2-klein-4b") {
+    return send(res, 400, { error: "invalid_model", message: "نموذج التوليد المحدد غير مدعوم." });
+  }
+  const aspectRatio = input.aspectRatio === undefined ? "16:9" : input.aspectRatio;
+  if (model === "flux-2-klein-4b" && aspectRatio !== "16:9" && aspectRatio !== "1:1") {
+    return send(res, 400, { error: "invalid_aspect_ratio", message: "اختر 16:9 أو 1:1." });
+  }
+  if (model === "flux-1-schnell" && input.aspectRatio !== undefined) {
+    return send(res, 400, { error: "aspect_ratio_requires_flux_2", message: "الأبعاد الصريحة متاحة مع FLUX.2 Klein 4B فقط." });
+  }
 
   try {
-    const upstream = await fetch(WORKER_URL, {
+    const upstream = await fetch(workerUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,7 +144,8 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         prompt: "Professional Japanese 2D anime illustration, polished anime art direction, clear composition, expressive hand-painted visual design. " + prompt,
-        steps: 4,
+        model,
+        ...(model === "flux-1-schnell" ? { steps: 4 } : { aspectRatio }),
       }),
     });
 
@@ -155,8 +173,11 @@ module.exports = async function handler(req, res) {
       ok: true,
       imageDataUrl: payload.imageDataUrl,
       mimeType: payload.mimeType || "image/jpeg",
-      model: payload.model || "@cf/black-forest-labs/flux-1-schnell",
+      model: payload.model || (model === "flux-2-klein-4b" ? "@cf/black-forest-labs/flux-2-klein-4b" : "@cf/black-forest-labs/flux-1-schnell"),
       seed: payload.seed ?? null,
+      width: payload.width ?? null,
+      height: payload.height ?? null,
+      aspectRatio: payload.aspectRatio ?? null,
     });
   } catch {
     return send(res, 502, {
