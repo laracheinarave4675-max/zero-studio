@@ -7,8 +7,10 @@ const IMAGE_PRESETS = Object.freeze({
   "16:9": Object.freeze({ width: 1280, height: 720 }),
   "1:1": Object.freeze({ width: 1024, height: 1024 }),
 });
-const MAX_BODY_BYTES = 8 * 1024;
-const MAX_PROMPT_LENGTH = 2048;
+const MAX_BODY_BYTES = 3 * 1024 * 1024;
+const MAX_PROMPT_LENGTH = 2600;
+const MAX_REFERENCE_COUNT = 4;
+const MAX_REFERENCE_IMAGE_BYTES = 512 * 1024;
 const MAX_IMAGE_BASE64_LENGTH = 8 * 1024 * 1024;
 const MAX_STEPS = 4;
 const AUTH_VERIFIER_URL = "https://zero-studio.9test4675a26.workers.dev/v1/images";
@@ -88,6 +90,19 @@ function detectImageMime(base64) {
   if (base64.startsWith("/9j/")) return "image/jpeg";
   if (base64.startsWith("UklGR")) return "image/webp";
   return "image/jpeg";
+}
+
+function decodeReferenceImage(dataUrl) {
+  if (typeof dataUrl !== "string") throw new Error("invalid_reference_image");
+  const match = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/i.exec(dataUrl);
+  if (!match) throw new Error("invalid_reference_image");
+  const estimatedBytes = Math.floor(match[2].length * 3 / 4);
+  if (estimatedBytes < 1 || estimatedBytes > MAX_REFERENCE_IMAGE_BYTES) throw new Error("reference_image_too_large");
+  let bytes;
+  try { bytes = Uint8Array.from(atob(match[2]), character => character.charCodeAt(0)); }
+  catch { throw new Error("invalid_reference_image"); }
+  if (!bytes.byteLength || bytes.byteLength > MAX_REFERENCE_IMAGE_BYTES) throw new Error("reference_image_too_large");
+  return { mimeType: match[1].toLowerCase(), bytes };
 }
 
 async function handleGallery(request, env, url) {
@@ -207,7 +222,7 @@ async function handle(request, env) {
 
   const declaredLength = Number(request.headers.get("Content-Length") || 0);
   if (declaredLength > MAX_BODY_BYTES) {
-    return json({ error: "request_too_large" }, 413, cors);
+    return json({ error: "request_too_large", message: "The image request exceeds the Worker 3 MiB payload limit. Remove some reference images or reduce their size." }, 413, cors);
   }
 
   let raw;
@@ -217,7 +232,7 @@ async function handle(request, env) {
     return json({ error: "invalid_request_body" }, 400, cors);
   }
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
-    return json({ error: "request_too_large" }, 413, cors);
+    return json({ error: "request_too_large", message: "The image request exceeds the Worker 3 MiB payload limit. Remove some reference images or reduce their size." }, 413, cors);
   }
 
   let input;
@@ -259,6 +274,29 @@ async function handle(request, env) {
     return json({ error: "invalid_steps", message: "FLUX.2 Klein 4B uses a fixed four-step process." }, 400, cors);
   }
 
+  let references = [];
+  if (input.references !== undefined) {
+    if (modelKey !== "flux-2-klein-4b") {
+      return json({ error: "references_require_flux_2", message: "Character reference images require FLUX.2 Klein 4B." }, 400, cors);
+    }
+    if (!Array.isArray(input.references) || input.references.length > MAX_REFERENCE_COUNT) {
+      return json({ error: "invalid_references", message: "Provide no more than four reference images." }, 400, cors);
+    }
+    try {
+      references = input.references.map(decodeReferenceImage);
+    } catch (error) {
+      const tooLarge = error?.message === "reference_image_too_large";
+      return json({
+        error: tooLarge ? "reference_image_too_large" : "invalid_reference_image",
+        message: tooLarge ? "Each reference image must be no larger than 512 KB." : "A reference image must be a valid PNG, JPEG, or WebP data URL.",
+      }, 400, cors);
+    }
+    const totalReferenceBytes = references.reduce((sum, reference) => sum + reference.bytes.byteLength, 0);
+    if (totalReferenceBytes > MAX_REFERENCE_COUNT * MAX_REFERENCE_IMAGE_BYTES) {
+      return json({ error: "reference_images_too_large", message: "The combined reference image payload is too large." }, 413, cors);
+    }
+  }
+
   let seed;
   if (input.seed !== undefined) {
     if (!Number.isInteger(input.seed) || input.seed < 0 || input.seed > 2147483647) {
@@ -271,10 +309,17 @@ async function handle(request, env) {
     let result;
     if (modelKey === "flux-2-klein-4b") {
       const form = new FormData();
-      form.append("prompt", prompt);
+      const conditionedPrompt = references.length
+        ? "Use image 0 as the primary character identity reference. Treat every additional reference image as the same character from another view or detail. Preserve the same face, hair, eye design, outfit, costume colors, accessories, and body proportions. Change only the pose, camera angle, expression, or scene requested by the user; do not redesign or replace the character. User direction: " + prompt
+        : prompt;
+      form.append("prompt", conditionedPrompt);
       form.append("width", String(outputSize.width));
       form.append("height", String(outputSize.height));
       if (seed !== undefined) form.append("seed", String(seed));
+      references.forEach((reference, index) => {
+        const extension = reference.mimeType === "image/png" ? "png" : reference.mimeType === "image/webp" ? "webp" : "jpg";
+        form.append("input_image_" + index, new Blob([reference.bytes], { type: reference.mimeType }), "character-reference-" + index + "." + extension);
+      });
 
       // FLUX.2 Klein requires multipart input. Response serializes FormData
       // and supplies the boundary in the Content-Type header.
@@ -307,6 +352,7 @@ async function handle(request, env) {
       steps,
       seed: seed ?? null,
       ...(outputSize ? { width: outputSize.width, height: outputSize.height, aspectRatio: input.aspectRatio === undefined ? "16:9" : input.aspectRatio } : {}),
+      referenceCount: references.length,
     }, 200, cors);
   } catch (error) {
     if (isQuotaError(error)) {

@@ -14,12 +14,21 @@
 </select>
 <p class="note">المقاس يُرسل إلى النموذج نفسه. يستخدم FLUX.2 Klein 4B أربع خطوات ثابتة.</p>
 </div>
+<div class="character-reference-panel">
+<label class="field-label">مراجع هوية الشخصية — حتى 4 صور</label>
+<p class="note">اختر صورة من هاتفك أو اضغط «استخدام كمرجع للشخصية» في أي صورة محفوظة بالمعرض. تُصغّر الصور تلقائياً إلى أقل من 512×512. المرجع الأول هو الهوية الأساسية، والبقية مراجع مساعدة.</p>
+<input id="characterReferenceFiles" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+<button id="addCharacterReferenceBtn" class="secondary full" type="button">اختيار صور مرجعية من الهاتف</button>
+<div id="characterReferenceList" class="character-reference-list"></div>
+<p id="characterReferenceStatus" class="status" role="status" aria-live="polite">لا توجد مراجع نشطة.</p>
+</div>
 <label class="field-label" for="imageGenerationPrompt">وصف الرسم أو المشهد</label>
 <textarea id="imageGenerationPrompt" class="text-input" maxlength="1800" placeholder="مثال: منزل ياباني خشبي وسط غابة خضراء، سقف قرميدي مقوس، أشعة شمس ذهبية، منظور سينمائي واسع، أسلوب أنمي مرسوم يدوياً..."></textarea>
 <button id="generateRasterImageBtn" class="primary full" type="button">توليد صورة تجريبية</button>
 <div id="imageGenerationStatus" class="status" role="status" aria-live="polite">الخدمة المجانية قد تتوقف عند بلوغ الحصة اليومية. لا يوجد تحويل تلقائي إلى خدمة مدفوعة.</div>
 <div id="imageGenerationResult" class="image-generation-result" hidden>
 <img id="generatedRasterPreview" alt="معاينة الصورة المولدة" />
+<button id="useGeneratedImageAsCharacterReferenceBtn" class="secondary full" type="button">اعتماد هذه الصورة مرجعاً أساسياً للشخصية</button>
 <button id="importGeneratedRasterBtn" class="secondary full" type="button">إدخال الصورة إلى الإطار كطبقة Raster</button>
 <a id="imageGenerationShareLink" class="gallery-share-link full" href="#" target="_blank" rel="noopener noreferrer" hidden>فتح رابط مراجعة الصورة</a>
 </div>

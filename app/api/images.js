@@ -2,6 +2,8 @@
 
 const MAX_PROMPT_LENGTH = 1800;
 const DEFAULT_WORKER_BASE_URL = "https://zero-studio.9test4675a26.workers.dev";
+const MAX_REFERENCE_COUNT = 4;
+const MAX_REFERENCE_IMAGE_BYTES = 512 * 1024;
 
 function send(res, status, payload) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -32,6 +34,25 @@ function isAllowedRequestOrigin(req, configuredOrigin) {
 
 async function readPayload(response) {
   return response.json().catch(() => ({}));
+}
+
+function validateReferenceImages(value, model) {
+  if (value === undefined) return { references: [] };
+  if (model !== "flux-2-klein-4b") return { error: "references_require_flux_2", message: "صور مرجع الشخصية تتطلب FLUX.2 Klein 4B." };
+  if (!Array.isArray(value) || value.length > MAX_REFERENCE_COUNT) return { error: "invalid_references", message: "يمكن اختيار أربع صور مرجعية كحد أقصى." };
+  const references = [];
+  let totalBytes = 0;
+  for (const dataUrl of value) {
+    if (typeof dataUrl !== "string") return { error: "invalid_reference_image", message: "إحدى الصور المرجعية غير صالحة." };
+    const match = /^data:image\/(?:png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(dataUrl);
+    if (!match) return { error: "invalid_reference_image", message: "يجب أن تكون الصور المرجعية PNG أو JPEG أو WebP." };
+    const bytes = Math.floor(match[1].length * 3 / 4);
+    if (bytes < 1 || bytes > MAX_REFERENCE_IMAGE_BYTES) return { error: "reference_image_too_large", message: "يجب ألا يتجاوز حجم كل صورة مرجعية 512 كيلوبايت." };
+    totalBytes += bytes;
+    references.push(dataUrl);
+  }
+  if (totalBytes > MAX_REFERENCE_COUNT * MAX_REFERENCE_IMAGE_BYTES) return { error: "reference_images_too_large", message: "الحجم الإجمالي للصور المرجعية كبير جداً." };
+  return { references };
 }
 
 module.exports = async function handler(req, res) {
@@ -141,6 +162,11 @@ module.exports = async function handler(req, res) {
   if (model !== "flux-1-schnell" && model !== "flux-2-klein-4b") {
     return send(res, 400, { error: "invalid_model", message: "نموذج التوليد المحدد غير مدعوم." });
   }
+  const referenceValidation = validateReferenceImages(input.references, model);
+  if (referenceValidation.error) {
+    return send(res, 400, { error: referenceValidation.error, message: referenceValidation.message });
+  }
+  const references = referenceValidation.references;
   const aspectRatio = input.aspectRatio === undefined ? "16:9" : input.aspectRatio;
   if (model === "flux-2-klein-4b" && aspectRatio !== "16:9" && aspectRatio !== "1:1") {
     return send(res, 400, { error: "invalid_aspect_ratio", message: "اختر 16:9 أو 1:1." });
@@ -161,6 +187,7 @@ module.exports = async function handler(req, res) {
         prompt: "Professional Japanese 2D anime illustration, polished anime art direction, clear composition, expressive hand-painted visual design. " + prompt,
         model,
         ...(model === "flux-1-schnell" ? { steps: 4 } : { aspectRatio }),
+        ...(references.length ? { references } : {}),
       }),
     });
 
@@ -193,6 +220,7 @@ module.exports = async function handler(req, res) {
       width: payload.width ?? null,
       height: payload.height ?? null,
       aspectRatio: payload.aspectRatio ?? null,
+      referenceCount: Number.isInteger(payload.referenceCount) ? payload.referenceCount : references.length,
     });
   } catch {
     return send(res, 502, {
@@ -202,3 +230,5 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+module.exports.config = { api: { bodyParser: { sizeLimit: "4mb" } } };

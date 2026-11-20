@@ -119,6 +119,83 @@ test("FLUX.2 Klein 4B receives explicit 16:9 dimensions using multipart input", 
   assert.match(payload.imageDataUrl, /^data:image\/png;base64,/);
 });
 
+const CHARACTER_REFERENCE_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/7Y8AAAAASUVORK5CYII=";
+
+test("FLUX.2 Klein receives character references as indexed binary multipart fields", async () => {
+  let captured;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "show the same character in side profile",
+    model: "flux-2-klein-4b",
+    aspectRatio: "1:1",
+    references: [CHARACTER_REFERENCE_PNG, CHARACTER_REFERENCE_PNG],
+  }), env(async (model, input) => {
+    const multipartResponse = new Response(input.multipart.body, {
+      headers: { "content-type": input.multipart.contentType },
+    });
+    const form = await multipartResponse.formData();
+    const first = form.get("input_image_0");
+    const second = form.get("input_image_1");
+    captured = {
+      model,
+      prompt: form.get("prompt"),
+      firstType: first?.type,
+      firstSize: first?.size,
+      secondType: second?.type,
+      secondSize: second?.size,
+      missingThird: form.get("input_image_2"),
+    };
+    return { image: "iVBORw0KGgo=" };
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(captured.model, "@cf/black-forest-labs/flux-2-klein-4b");
+  assert.match(captured.prompt, /primary character identity reference/i);
+  assert.equal(captured.firstType, "image/png");
+  assert.equal(captured.secondType, "image/png");
+  assert.ok(captured.firstSize > 0);
+  assert.ok(captured.secondSize > 0);
+  assert.equal(captured.missingThird, null);
+  const payload = await response.json();
+  assert.equal(payload.referenceCount, 2);
+});
+
+test("rejects character reference images on FLUX.1 Schnell without inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "anime character",
+    references: [CHARACTER_REFERENCE_PNG],
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "references_require_flux_2");
+  assert.equal(calls, 0);
+});
+
+test("rejects more than four character references without inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "anime character",
+    model: "flux-2-klein-4b",
+    aspectRatio: "1:1",
+    references: Array(5).fill(CHARACTER_REFERENCE_PNG),
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_references");
+  assert.equal(calls, 0);
+});
+
+test("rejects oversized or malformed character reference data without inference", async () => {
+  let calls = 0;
+  const oversized = "data:image/jpeg;base64," + "A".repeat(700000);
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "anime character",
+    model: "flux-2-klein-4b",
+    aspectRatio: "1:1",
+    references: [oversized],
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "reference_image_too_large");
+  assert.equal(calls, 0);
+});
+
 test("rejects unknown image models without calling inference", async () => {
   let calls = 0;
   const response = await worker.fetch(request("/v1/images", {

@@ -305,6 +305,91 @@ $("animationBatchFile").onchange=async event=>{
 let generatedRasterAsset=null;
 let confirmedGalleryItems=[];
 const GALLERY_LOCAL_CACHE_KEY="zero-studio-gallery-confirmed-v1";
+const CHARACTER_REFERENCE_CACHE_KEY="zero-studio-character-references-v1";
+let characterReferenceImages=[];
+function persistCharacterReferences(){
+ try{localStorage.setItem(CHARACTER_REFERENCE_CACHE_KEY,JSON.stringify(characterReferenceImages.slice(0,4)))}catch{
+  const status=$("characterReferenceStatus");
+  if(status)status.textContent="المراجع متاحة لهذه الجلسة، لكن مساحة تخزين الهاتف لم تسمح بحفظها بعد إغلاق الاستوديو.";
+ }
+}
+function readSavedCharacterReferences(){
+ try{
+  const parsed=JSON.parse(localStorage.getItem(CHARACTER_REFERENCE_CACHE_KEY)||"[]");
+  if(Array.isArray(parsed))characterReferenceImages=parsed.filter(item=>item&&typeof item.dataUrl==="string"&&item.dataUrl.startsWith("data:image/jpeg;base64,")&&item.dataUrl.length<=699000).slice(0,4);
+ }catch{characterReferenceImages=[]}
+}
+function renderCharacterReferences(){
+ const list=$("characterReferenceList"),status=$("characterReferenceStatus");
+ if(!list||!status)return;
+ list.replaceChildren();
+ characterReferenceImages.forEach((reference,index)=>{
+  const card=document.createElement("div");card.className="character-reference-item";
+  const image=document.createElement("img");image.src=reference.dataUrl;image.alt=reference.name||"مرجع شخصية";
+  const details=document.createElement("div");details.className="character-reference-details";
+  const title=document.createElement("strong");title.textContent=(index===0?"المرجع الأساسي":"مرجع إضافي")+" · "+(reference.name||"صورة شخصية");
+  const remove=document.createElement("button");remove.type="button";remove.className="secondary";remove.textContent="إزالة";
+  remove.onclick=()=>{characterReferenceImages.splice(index,1);persistCharacterReferences();renderCharacterReferences();syncImageGenerationModelControls()};
+  details.append(title,remove);card.append(image,details);list.appendChild(card);
+ });
+ status.textContent=characterReferenceImages.length
+  ? characterReferenceImages.length+" / 4 مراجع نشطة. المرجع الأول يحدد هوية الشخصية، والبقية تدعم تفاصيلها وزواياها."
+  : "لا توجد مراجع نشطة. أضف صورة شخصية أصلية قبل طلب زاوية أو وضعية جديدة.";
+}
+async function normalizeCharacterReference(source,name){
+ const image=new Image();
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر فتح صورة المرجع."));image.src=source});
+ if(!image.naturalWidth||!image.naturalHeight)throw Error("أبعاد صورة المرجع غير صالحة.");
+ let scale=Math.min(1,511/Math.max(image.naturalWidth,image.naturalHeight));
+ for(let pass=0;pass<8;pass++){
+  const canvas=document.createElement("canvas");
+  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const context=canvas.getContext("2d");if(!context)throw Error("تعذر تجهيز صورة المرجع على الهاتف.");
+  context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+  for(const quality of [.88,.82,.76,.7,.64]){
+   const dataUrl=canvas.toDataURL("image/jpeg",quality);
+   if(dataUrl.length<=349000)return{name:String(name||"مرجع شخصية").slice(0,100),dataUrl,mimeType:"image/jpeg",width:canvas.width,height:canvas.height};
+  }
+  scale*=.82;
+ }
+ throw Error("تعذر ضغط المرجع إلى الحجم الآمن البالغ نحو 256 كيلوبايت.");
+}
+async function setPrimaryCharacterReference(source,name){
+ const reference=await normalizeCharacterReference(source,name);
+ characterReferenceImages=[reference,...characterReferenceImages.filter(item=>item.dataUrl!==reference.dataUrl).slice(0,3)];
+ persistCharacterReferences();renderCharacterReferences();
+ const model=$("imageGenerationModel");if(model){model.value="flux-2-klein-4b";syncImageGenerationModelControls()}
+ const status=$("imageGenerationStatus");if(status)status.textContent="اعتمدت الصورة مرجعاً أساسياً. ستُرسل الآن إلى FLUX.2 مع كل طلب توليد حتى تزيلها.";
+}
+async function addCharacterReferenceFiles(files){
+ const selected=Array.from(files||[]).slice(0,4-characterReferenceImages.length);
+ if(!selected.length)throw Error(characterReferenceImages.length>=4?"اكتملت المراجع الأربعة. أزل مرجعاً أولاً.":"اختر صورة واحدة على الأقل.");
+ for(const file of selected){
+  if(!/^image\/(?:png|jpeg|webp)$/.test(file.type||""))throw Error("اختر صور PNG أو JPEG أو WebP فقط.");
+  if(file.size>12*1024*1024)throw Error("حجم ملف الصورة الأصلي أكبر من 12 ميغابايت.");
+  const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("تعذر قراءة ملف الصورة."));reader.readAsDataURL(file)});
+  characterReferenceImages.push(await normalizeCharacterReference(source,file.name));
+ }
+ characterReferenceImages=characterReferenceImages.slice(0,4);persistCharacterReferences();renderCharacterReferences();
+ const model=$("imageGenerationModel");if(model){model.value="flux-2-klein-4b";syncImageGenerationModelControls()}
+}
+function createGalleryReferenceButton(item,statusNode){
+ const button=document.createElement("button");button.type="button";button.className="secondary";button.textContent="استخدام كمرجع للشخصية";
+ button.onclick=async()=>{
+  button.disabled=true;
+  if(statusNode)statusNode.textContent="يجلب الصورة من المعرض ويجهزها كمرجع…";
+  try{
+   const response=await fetch("/api/gallery-image?id="+encodeURIComponent(item.id),{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok||payload.ok!==true||typeof payload.imageDataUrl!=="string")throw Error(payload.message||payload.error||"تعذر تحميل صورة المعرض.");
+   await setPrimaryCharacterReference(payload.imageDataUrl,item.title||"مرجع من المعرض");
+   if(statusNode)statusNode.textContent="تم اعتماد الصورة مرجعاً للشخصية.";
+  }catch(error){if(statusNode)statusNode.textContent=error.message||"تعذر اعتماد الصورة مرجعاً."}
+  finally{button.disabled=false}
+ };
+ return button;
+}
+readSavedCharacterReferences();
 function readConfirmedGalleryItems(){
  const cutoff=Date.now()-30*24*60*60*1000;
  let stored=[];
@@ -345,7 +430,7 @@ async function refreshProductionGallery(){
    const actions=document.createElement("div");actions.className="gallery-item-actions";
    const share=document.createElement("a");share.href=item.shareUrl;share.target="_blank";share.rel="noopener noreferrer";share.textContent="فتح رابط الصورة";share.className="gallery-share-link";
    const copy=document.createElement("button");copy.type="button";copy.textContent="نسخ رابط المراجعة";copy.onclick=async()=>{try{await navigator.clipboard.writeText(item.shareUrl);status.textContent="نُسخ رابط الصورة. أرسله في المحادثة لأتمكن من مراجعتها."}catch{status.textContent=item.shareUrl}};
-   actions.append(share,copy);card.append(link,title,date,actions);list.appendChild(card);
+   actions.append(share,copy,createGalleryReferenceButton(item,status));card.append(link,title,date,actions);list.appendChild(card);
   }
   status.textContent=items.length+" صورة محفوظة. قد تتأخر قائمة Cloudflare KV العامة حتى 60 ثانية؛ الصور التي أكد الخادم حفظها تظهر هنا فوراً.";
  }catch(error){
@@ -360,7 +445,7 @@ async function refreshProductionGallery(){
     const title=document.createElement("strong");title.textContent=item.title||"صورة مولدة";
     const actions=document.createElement("div");actions.className="gallery-item-actions";
     const share=document.createElement("a");share.href=item.shareUrl;share.target="_blank";share.rel="noopener noreferrer";share.textContent="فتح رابط الصورة";share.className="gallery-share-link";
-    actions.append(share);card.append(link,title,actions);list.appendChild(card);
+    actions.append(share,createGalleryReferenceButton(item,status));card.append(link,title,actions);list.appendChild(card);
    }
    status.textContent=confirmed.length+" صورة أكد الخادم حفظها. تعذر تحديث القائمة العامة مؤقتاً.";
   }else status.textContent=error.message||"تعذر تحميل المعرض.";
@@ -413,6 +498,7 @@ async function saveGeneratedImageToGallery(asset,prompt,model){
 async function checkImageProviderConnection(){
  const statusNode=$("imageGenerationStatus");
  if(!statusNode)return;
+ renderCharacterReferences();
  statusNode.textContent="يفحص اتصال الاستوديو بخدمة الصور دون توليد صورة…";
  try{
   const response=await fetch("/api/images",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
@@ -426,6 +512,7 @@ async function checkImageProviderConnection(){
 function syncImageGenerationModelControls(){
  const model=$("imageGenerationModel");
  const aspectGroup=$("imageGenerationAspectGroup");
+ if(model&&characterReferenceImages.length&&model.value!=="flux-2-klein-4b")model.value="flux-2-klein-4b";
  if(model&&aspectGroup)aspectGroup.hidden=model.value!=="flux-2-klein-4b";
 }
 $("imageGenerationModel")?.addEventListener("change",syncImageGenerationModelControls);
@@ -434,11 +521,17 @@ $("generateRasterImageBtn").onclick=async()=>{
  const promptText=$("imageGenerationPrompt").value.trim(),button=$("generateRasterImageBtn"),statusNode=$("imageGenerationStatus");
  const model=$("imageGenerationModel")?.value||"flux-1-schnell";
  const aspectRatio=$("imageGenerationAspectRatio")?.value||"16:9";
+ const referenceCount=model==="flux-2-klein-4b"?characterReferenceImages.length:0;
  if(!promptText){statusNode.textContent="اكتب وصف الصورة أولاً.";return}
  button.disabled=true;$("importGeneratedRasterBtn").disabled=true;generatedRasterAsset=null;$("imageGenerationResult").hidden=true;
- statusNode.textContent="يرسل طلب التوليد إلى Cloudflare Workers AI…";
+ statusNode.textContent=referenceCount?"يضغط المراجع لتقليل حجم الطلب، ثم يرسل FLUX.2 مع "+referenceCount+" صور مرجعية…":"يرسل طلب التوليد إلى Cloudflare Workers AI…";
  try{
-  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio}:{})})});
+  const normalizedReferences=model==="flux-2-klein-4b"?await Promise.all(characterReferenceImages.map(reference=>normalizeCharacterReference(reference.dataUrl,reference.name))):[];
+  if(normalizedReferences.length){characterReferenceImages=normalizedReferences;persistCharacterReferences();renderCharacterReferences()}
+  const references=normalizedReferences.map(reference=>reference.dataUrl);
+  const requestBody=JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio,...(references.length?{references}:{})}:{})});
+  if(new TextEncoder().encode(requestBody).byteLength>2*1024*1024)throw Error("حجم المراجع لا يزال كبيراً. أزل بعض المراجع وأعد المحاولة.");
+  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
   const payload=await response.json().catch(()=>({}));
   if(!response.ok)throw Error(payload.message||payload.error||("تعذر توليد الصورة (HTTP "+response.status+")."));
   if(payload.ok!==true||typeof payload.imageDataUrl!=="string"||!payload.imageDataUrl.startsWith("data:image/"))throw Error("استجابة محرك الصور غير صالحة.");
@@ -447,9 +540,21 @@ $("generateRasterImageBtn").onclick=async()=>{
   if(!image.naturalWidth||!image.naturalHeight)throw Error("الصورة الناتجة بلا أبعاد صالحة.");
   generatedRasterAsset={name:"صورة مولدة · "+new Date().toLocaleTimeString(),dataUrl:payload.imageDataUrl,mimeType:payload.mimeType||"image/jpeg",width:image.naturalWidth,height:image.naturalHeight};
   $("generatedRasterPreview").src=payload.imageDataUrl;$("imageGenerationResult").hidden=false;$("importGeneratedRasterBtn").disabled=false;
-  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+" — "+image.naturalWidth+"×"+image.naturalHeight+". جارٍ حفظ نسخة في معرض الإنتاج…";
+  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+" — "+image.naturalWidth+"×"+image.naturalHeight+(payload.referenceCount?" مع "+payload.referenceCount+" مراجع":"")+". جارٍ حفظ نسخة في معرض الإنتاج…";
   try{const saved=await saveGeneratedImageToGallery(generatedRasterAsset,promptText,payload.model||"@cf/black-forest-labs/flux-1-schnell");statusNode.textContent="تم توليد الصورة وحفظها في معرض الإنتاج. رابط المراجعة جاهز للمشاركة."}catch(saveError){statusNode.textContent="تم توليد الصورة، لكن تعذر حفظها سحابياً: "+saveError.message+" احتفظ بها داخل المشروع أو أعد محاولة الحفظ."}
  }catch(error){statusNode.textContent=error.message||"تعذر الاتصال بمحرك الصور."}
+ finally{button.disabled=false}
+};
+$("addCharacterReferenceBtn").onclick=()=>$("characterReferenceFiles").click();
+$("characterReferenceFiles").addEventListener("change",async event=>{
+ try{await addCharacterReferenceFiles(event.target.files);$("imageGenerationStatus").textContent="تم تجهيز صور المرجع وحفظها لهذا المشروع على الهاتف."}
+ catch(error){$("characterReferenceStatus").textContent=error.message||"تعذر إضافة صور المرجع."}
+ finally{event.target.value=""}
+});
+$("useGeneratedImageAsCharacterReferenceBtn").onclick=async()=>{
+ if(!generatedRasterAsset){$("imageGenerationStatus").textContent="لا توجد صورة مولدة حالية لاعتمادها مرجعاً.";return}
+ const button=$("useGeneratedImageAsCharacterReferenceBtn");button.disabled=true;
+ try{await setPrimaryCharacterReference(generatedRasterAsset.dataUrl,generatedRasterAsset.name)}catch(error){$("imageGenerationStatus").textContent=error.message||"تعذر اعتماد الصورة مرجعاً."}
  finally{button.disabled=false}
 };
 $("importGeneratedRasterBtn").onclick=()=>{
