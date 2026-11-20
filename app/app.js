@@ -316,7 +316,7 @@ function persistCharacterReferences(){
 function readSavedCharacterReferences(){
  try{
   const parsed=JSON.parse(localStorage.getItem(CHARACTER_REFERENCE_CACHE_KEY)||"[]");
-  if(Array.isArray(parsed))characterReferenceImages=parsed.filter(item=>item&&typeof item.dataUrl==="string"&&item.dataUrl.startsWith("data:image/jpeg;base64,")&&item.dataUrl.length<=700000).slice(0,4);
+  if(Array.isArray(parsed))characterReferenceImages=parsed.filter(item=>item&&typeof item.dataUrl==="string"&&item.dataUrl.startsWith("data:image/jpeg;base64,")&&item.dataUrl.length<=699000).slice(0,4);
  }catch{characterReferenceImages=[]}
 }
 function renderCharacterReferences(){
