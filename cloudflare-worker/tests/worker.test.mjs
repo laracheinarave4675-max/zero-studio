@@ -115,7 +115,7 @@ test("saves generated images to KV with a 30-day TTL and returns an opaque share
   const response = await worker.fetch(request("/v1/gallery", {
     imageDataUrl: "data:image/png;base64,aGVsbG8=",
     title: "اختبار الخلفية",
-    prompt: "anime background",
+    prompt: "وصف طويل ".repeat(300),
     model: "test-model"
   }), e);
   assert.equal(response.status, 201);
@@ -124,6 +124,10 @@ test("saves generated images to KV with a 30-day TTL and returns an opaque share
   assert.match(payload.item.shareUrl, /\/gallery\/[0-9a-f-]{36}$/i);
   assert.equal(payload.retentionDays, 30);
   assert.equal(options.expirationTtl, 2592000);
+  assert.equal("prompt" in options.metadata, false);
+  assert.ok(Buffer.byteLength(JSON.stringify(options.metadata), "utf8") < 1024);
+  const savedRecord = JSON.parse(store.get("gallery:" + payload.item.id).value);
+  assert.equal(savedRecord.prompt.length, 1800);
   const imageResponse = await worker.fetch(new Request(payload.item.shareUrl), e);
   assert.equal(imageResponse.status, 200);
   assert.equal(imageResponse.headers.get("content-type"), "image/png");
