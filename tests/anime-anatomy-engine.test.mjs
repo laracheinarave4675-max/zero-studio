@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createProject, normalizeProject, appendOperation, frameSvg } from "../app/engine.mjs";
+import { createNoriModel } from "../app/character-model.mjs";
+import { saveCharacterToLibrary } from "../app/character-library.mjs";
 import { captureFrameHistory, applyFrameHistory } from "../app/frame-history.mjs";
 import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
@@ -172,8 +174,8 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /function beginAnimeAnatomyCalibration\(\)/);
   assert.match(app, /function saveAnimeAnatomyDNA\(\)/);
   assert.match(app, /createAnimeCharacterDNA\(/);
-  assert.match(app, /modelSheetAssetIds:linkedAsset\?\[linkedAsset\.id\]:\[\]/);
-  assert.match(app, /modelSheetAssetIds\|\|\[\]\)\.includes\(id\)/);
+  assert.match(app, /characterModelAssetId:linkedAsset\.id/);
+  assert.match(app, /dna\.characterModelAssetId===id/);
   assert.match(app, /لا يمكن حذف هذا النموذج لأنه مرتبط بهوية تشريحية محفوظة/);
   assert.match(app, /linked character-library asset/);
   assert.match(app, /animeAnatomyLibrarySelect/);
@@ -184,6 +186,21 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /async function auditStoredAnimeRasterFrames\(exportZip=false\)/);
   assert.match(app, /crypto\.subtle\.digest\("SHA-256"/);
   assert.match(app, /if\(sourceSignature!==stored\.sourceSignature\)/);
+});
+
+
+test("anatomical DNA keeps a validated character-library model link across project reopen", () => {
+  const { dna } = createFixture();
+  const project = createProject("Linked anime character");
+  const libraryAsset = saveCharacterToLibrary(project, createNoriModel("happy", "side", "walk"), "Nori");
+  const linkedDNA = { ...dna, characterModelAssetId: libraryAsset.id,
+    sourceFrameId: project.frames[0].id, sourceFrameIndex: 0, sourceSignature: "b".repeat(64) };
+  project.animeCharacterDNA.push(linkedDNA);
+  const reopened = normalizeProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(reopened.animeCharacterDNA[0].characterModelAssetId, libraryAsset.id);
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA: [{ ...linkedDNA, characterModelAssetId: "missing-character-model" }]
+  }), /نموذج الشخصية المرتبط بالهوية التشريحية غير موجود/);
 });
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
