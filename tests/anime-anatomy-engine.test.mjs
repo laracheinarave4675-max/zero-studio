@@ -161,7 +161,7 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /f\.animeRaster\?\.dataUrl\?\.length\|\|0/);
   assert.match(app, /const compactHistory=!forceFull&&\(project\.frames\.length>600\|\|rasterBytes>2\*1024\*1024\)/);
   for (const id of [
-    "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers",
+    "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers", "animeAnatomyLibrarySelect",
     "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect",
     "startAnimeKeyDrawingBtn", "buildAnimeMotionPlanBtn", "prepareAnime24FrameBtn",
     "animeAnatomyConstructionLayer", "animeAnatomyGuideToggle",
@@ -172,6 +172,9 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /function beginAnimeAnatomyCalibration\(\)/);
   assert.match(app, /function saveAnimeAnatomyDNA\(\)/);
   assert.match(app, /createAnimeCharacterDNA\(/);
+  assert.match(app, /modelSheetAssetIds:linkedAsset\?\[linkedAsset\.id\]:\[\]/);
+  assert.match(app, /linked character-library asset/);
+  assert.match(app, /animeAnatomyLibrarySelect/);
   assert.match(app, /renderAnimeAnatomyDNASelect\(\)/);
   assert.match(app, /project\.animeCharacterDNA\.push\(dna\)/);
   assert.match(app, /async function saveCurrentAnimeRasterFrame\(\)/);
