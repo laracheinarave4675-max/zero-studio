@@ -1,3 +1,19 @@
+# Cloud inference architecture milestone — 2026-11-20
+
+- Confirmed the active development branch is `feat/hybrid-human-art-pipeline`; PR #6 remains open/draft and unmerged.
+- Added `docs/CLOUD_INFERENCE_ARCHITECTURE.md`: Android is the control/review device; GitHub is source control, not GPU inference; static hosting and remote inference are separate services.
+- Added current provider research to `docs/IMAGE_PROVIDER_EVALUATION.md`.
+- Cloudflare Workers AI FLUX.1 Schnell is the first candidate for a secured API feasibility prototype: official docs list 10,000 free Neurons/day on Workers Free, with model-specific image-generation charges. It is general-purpose, not accepted as anime-quality yet.
+- Hugging Face Anima ZeroGPU remains a limited non-commercial anime visual benchmark only; the model's non-commercial license is separate from the Space code license.
+- Colab/Kaggle are classified as manual experiment/training workspaces, not stable production endpoints.
+- Clarified the README that old no-generation restrictions are historical and superseded by D-026.
+- No Cloudflare/Hugging Face account was created or connected; no API token/secret was entered; no model request was run; no provider was selected; no app code or production deployment was changed.
+- Next gate: verify Cloudflare account prerequisites and free-plan setup, then build and test a quota-safe Worker prototype before connecting the studio UI.
+- Budget remains exactly $0. No paid plan, credit purchase, GPU rental, trial-based dependency, or automatic paid fallback is allowed.
+- Animation target remains 24 independently drawn images per second; free daily inference quotas do not make continuous 24-image/second generation feasible.
+
+---
+
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-19 (UTC)
