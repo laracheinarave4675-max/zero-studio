@@ -80,3 +80,15 @@ Animation quality criteria: believable timing and spacing, anticipation/action/f
 - Never claim limited free quotas can sustainably produce 24 new detailed drawings every second.
 - Do not merge PRs, deploy to production, or alter production settings without explicit user approval.
 - Do not claim visual acceptance, identity lock, or successful Android playback without inspecting the relevant frames on the actual evidence.
+
+
+## Latest motion-proof checkpoint — 2026-11-20 18:30 UTC
+
+- Current work branch: `feat/anime-character-motion-proof` (10 commits ahead of `feat/character-reference-conditioning`); current head: `18f6d44868bda8485b05ad159aa7867323219965`.
+- PR #10 remains **Draft / open / unmerged**: https://github.com/laracheinarave4675-max/zero-studio/pull/10.
+- The Gemini animation adapter now attaches the accepted FLUX.2 gallery character image as multimodal inline image input for each six-frame batch. Allowed model IDs include `gemini-3.5-flash-lite`; the motion workflow pins that model.
+- `scripts/run-character-motion-proof.mjs` defines a one-second, 24-frame, 24 FPS full-body side-profile walking-step study. It writes the native `.zero` project, 24 individual SVG frame exports, `summary.json`, and `index.html` with a 24 FPS playback control and contact sheet.
+- Automated checks verified on the current PR head: Drawing engine test workflow run `44793120751` passed, including all **250/250 native Node tests**. The log explicitly includes both new reference-image adapter tests (attachment and invalid-reference rejection). Hybrid raster/SVG workflow run `44793120610` also completed successfully.
+- The motion workflow has been made safe: normal pushes run regression tests only. Live Gemini generation requires repository Actions variable `ZERO_STUDIO_FREE_TIER_CONFIRMED=true`, the `GEMINI_API_KEY` Actions secret, and a commit message containing `[RUN_FREE_TIER_MOTION_PROOF]`. Do not enable the flag until the Google API project is confirmed to have no paid billing. The repository cannot verify the external billing state.
+- **No live Gemini motion generation has been run and no generated frame artifact exists yet.** The actual motion, character continuity, and Android playback are not visually accepted. No paid fallback or automatic retry is allowed.
+- Latest Vercel status on PR head is success for preview only. No production deployment; PR #9 and PR #10 remain unmerged.
