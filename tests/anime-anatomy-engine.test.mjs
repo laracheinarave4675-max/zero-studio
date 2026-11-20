@@ -73,12 +73,22 @@ test("character DNA locks one approved identity and measured anatomical proporti
 test("Character DNA survives native ZERO project save/open normalization", () => {
   const { dna } = createFixture();
   const project = createProject("Anatomy proof");
-  const storedDNA = { ...dna, name: "Nori", sourceFrameId: project.frames[0].id };
+  const storedDNA = { ...dna, name: "Nori", sourceFrameId: project.frames[0].id, sourceFrameIndex:0, sourceSignature:"a".repeat(64) };
   project.animeCharacterDNA.push(storedDNA);
   const reopened = normalizeProject(JSON.parse(JSON.stringify(project)));
   assert.equal(reopened.animeCharacterDNA.length, 1);
   assert.equal(reopened.animeCharacterDNA[0].characterAssetId, dna.characterAssetId);
   assert.equal(reopened.animeCharacterDNA[0].sourceFrameId, project.frames[0].id);
+  assert.equal(reopened.animeCharacterDNA[0].sourceSignature, "a".repeat(64));
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA:[{...storedDNA,sourceSignature:undefined}]
+  }), /مرجع الرسم الأصلي/);
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA:[{...storedDNA,sourceSignature:"bad"}]
+  }), /مرجع الرسم الأصلي/);
+  assert.throws(() => normalizeProject({
+    ...project, animeCharacterDNA:[{...storedDNA,sourceFrameIndex:-1}]
+  }), /موضع الرسم الأصلي/);
   assert.throws(() => normalizeProject({
     ...project, animeCharacterDNA: [storedDNA, storedDNA]
   }), /مكررة/);
