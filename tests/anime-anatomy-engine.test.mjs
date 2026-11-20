@@ -183,6 +183,8 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /project\.animeCharacterDNA\.push\(dna\)/);
   assert.match(app, /async function saveCurrentAnimeRasterFrame\(\)/);
   assert.match(app, /async function buildStoredAnimeRasterSequence\(\)/);
+  assert.match(app, /await restoreAnimeMotionPlan\(selectedAnimeDNA\)/);
+  assert.match(app, /await auditStoredAnimeRasterFrames\(false\)/);
   assert.match(app, /async function auditStoredAnimeRasterFrames\(exportZip=false\)/);
   assert.match(app, /crypto\.subtle\.digest\("SHA-256"/);
   assert.match(app, /if\(sourceSignature!==stored\.sourceSignature\)/);
