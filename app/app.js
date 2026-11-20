@@ -395,7 +395,7 @@ async function prepareGalleryUploadDataUrl(asset){
 }
 async function saveGeneratedImageToGallery(asset,prompt,model){
  const uploadImageDataUrl=await prepareGalleryUploadDataUrl(asset);
- const requestBody=JSON.stringify({imageDataUrl:uploadImageDataUrl,title:asset.name,prompt,model});
+ const requestBody=JSON.stringify({imageDataUrl:uploadImageDataUrl,title:asset.name,prompt,model,width:asset.width,height:asset.height});
  if(new Blob([requestBody]).size>3*1024*1024)throw Error("حجم طلب الحفظ ما زال كبيراً بعد الضغط؛ لم يُرسل إلى الخادم.");
  const response=await fetch("/api/gallery",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
  const payload=await response.json().catch(()=>({}));
@@ -423,13 +423,22 @@ async function checkImageProviderConnection(){
   statusNode.textContent="تعذر تهيئة محرك الصور: "+(error.message||"خطأ اتصال غير معروف.")+" يمكنك إعادة تحميل الصفحة بعد إصلاح الإعداد.";
  }
 }
+function syncImageGenerationModelControls(){
+ const model=$("imageGenerationModel");
+ const aspectGroup=$("imageGenerationAspectGroup");
+ if(model&&aspectGroup)aspectGroup.hidden=model.value!=="flux-2-klein-4b";
+}
+$("imageGenerationModel")?.addEventListener("change",syncImageGenerationModelControls);
+syncImageGenerationModelControls();
 $("generateRasterImageBtn").onclick=async()=>{
  const promptText=$("imageGenerationPrompt").value.trim(),button=$("generateRasterImageBtn"),statusNode=$("imageGenerationStatus");
+ const model=$("imageGenerationModel")?.value||"flux-1-schnell";
+ const aspectRatio=$("imageGenerationAspectRatio")?.value||"16:9";
  if(!promptText){statusNode.textContent="اكتب وصف الصورة أولاً.";return}
  button.disabled=true;$("importGeneratedRasterBtn").disabled=true;generatedRasterAsset=null;$("imageGenerationResult").hidden=true;
  statusNode.textContent="يرسل طلب التوليد إلى Cloudflare Workers AI…";
  try{
-  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({prompt:promptText})});
+  const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({prompt:promptText,model,...(model==="flux-2-klein-4b"?{aspectRatio}:{})})});
   const payload=await response.json().catch(()=>({}));
   if(!response.ok)throw Error(payload.message||payload.error||("تعذر توليد الصورة (HTTP "+response.status+")."));
   if(payload.ok!==true||typeof payload.imageDataUrl!=="string"||!payload.imageDataUrl.startsWith("data:image/"))throw Error("استجابة محرك الصور غير صالحة.");
@@ -438,7 +447,7 @@ $("generateRasterImageBtn").onclick=async()=>{
   if(!image.naturalWidth||!image.naturalHeight)throw Error("الصورة الناتجة بلا أبعاد صالحة.");
   generatedRasterAsset={name:"صورة مولدة · "+new Date().toLocaleTimeString(),dataUrl:payload.imageDataUrl,mimeType:payload.mimeType||"image/jpeg",width:image.naturalWidth,height:image.naturalHeight};
   $("generatedRasterPreview").src=payload.imageDataUrl;$("imageGenerationResult").hidden=false;$("importGeneratedRasterBtn").disabled=false;
-  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+". جارٍ حفظ نسخة في معرض الإنتاج…";
+  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+" — "+image.naturalWidth+"×"+image.naturalHeight+". جارٍ حفظ نسخة في معرض الإنتاج…";
   try{const saved=await saveGeneratedImageToGallery(generatedRasterAsset,promptText,payload.model||"@cf/black-forest-labs/flux-1-schnell");statusNode.textContent="تم توليد الصورة وحفظها في معرض الإنتاج. رابط المراجعة جاهز للمشاركة."}catch(saveError){statusNode.textContent="تم توليد الصورة، لكن تعذر حفظها سحابياً: "+saveError.message+" احتفظ بها داخل المشروع أو أعد محاولة الحفظ."}
  }catch(error){statusNode.textContent=error.message||"تعذر الاتصال بمحرك الصور."}
  finally{button.disabled=false}
