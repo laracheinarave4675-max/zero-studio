@@ -43,6 +43,21 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Prototype an AI-authored, scene-specific vector drawing program that emits a complete separate SVG document for every frame; retain the 24-unique-drawings/second acceptance test and reject static-image/tween shortcuts.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
+## Current animation direction — D-027 (approved 2026-11-20)
+
+- [x] Preserve the existing character/background generation departments and Character Bible; animation is a separate missing department.
+- [x] Approve motion direction/timing charts → spatial pose guides → complete 2D key drawings → individually reviewed raster in-betweens/cleanup → raster frame assembly.
+- [x] Explicitly restrict 3D skeletons/rigs to pose-blocking references; do not render puppet deformation as final artwork.
+- [x] Add provider-neutral anime motion plan, key-pose schedule, pose-guide sampler, independent PNG/WebP frame records, and duplicate-raster cadence audit (`app/anime-motion-engine.mjs`).
+- [ ] Connect key-pose requests to the existing still-image/reference-conditioning art department.
+- [ ] Benchmark identity-preserving key drawing on the existing approved character; check angle changes, face, hair, costume, silhouette and line quality.
+- [ ] Evaluate dedicated cartoon keyframe-in-between and frame-specific still-image approaches under the $0 compute rule; no model is selected yet.
+- [ ] Build raster contact sheet, per-frame review/replace workflow, and shot compositor integration.
+- [ ] Complete the one-second walk with 24 unique approved raster drawings and review the real playback.
+- [ ] Validate Android performance, checkpoint/recovery, transparent raster import, storage and export.
+
+The former SVG-generated motion branch is archived as a visually rejected experiment; its code is preserved but it is not the approved output route. See `docs/ANIME_KEYFRAME_MOTION_ENGINE.md`.
+
 ## Phase 3 — Character construction and animation proof of concept
 - [x] Add reusable Nori vector construction model (12 parts, semantic editable layers, versioned/validated schema).
 - [x] Add front/side/back starter model views.
