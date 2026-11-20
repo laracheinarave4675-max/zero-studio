@@ -88,6 +88,75 @@ test("image API proxies securely and returns the generated image payload", async
   }
 });
 
+const CHARACTER_REFERENCE_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/7Y8AAAAASUVORK5CYII=";
+
+test("image API forwards selected character reference images to the Klein Worker", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  let observed;
+  globalThis.fetch = async (url, options) => {
+    observed = { url, options };
+    return new Response(JSON.stringify({
+      ok: true,
+      imageDataUrl: "data:image/jpeg;base64,aGVsbG8=",
+      mimeType: "image/jpeg",
+      model: "@cf/black-forest-labs/flux-2-klein-4b",
+      referenceCount: 1,
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+  try {
+    const res = responseRecorder();
+    await handler(request({ body: {
+      prompt: "same character from the side",
+      model: "flux-2-klein-4b",
+      aspectRatio: "1:1",
+      references: [CHARACTER_REFERENCE_PNG],
+    } }), res);
+    assert.equal(res.statusCode, 200);
+    const forwarded = JSON.parse(observed.options.body);
+    assert.deepEqual(forwarded.references, [CHARACTER_REFERENCE_PNG]);
+    assert.equal(forwarded.model, "flux-2-klein-4b");
+    assert.equal(res.body.referenceCount, 1);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
+
+test("image API rejects character references on FLUX.1 and caps references at four", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  try {
+    const wrongModel = responseRecorder();
+    await handler(request({ body: { prompt: "character", references: [CHARACTER_REFERENCE_PNG] } }), wrongModel);
+    assert.equal(wrongModel.statusCode, 400);
+    assert.equal(wrongModel.body.error, "references_require_flux_2");
+
+    const tooMany = responseRecorder();
+    await handler(request({ body: {
+      prompt: "character",
+      model: "flux-2-klein-4b",
+      aspectRatio: "1:1",
+      references: Array(5).fill(CHARACTER_REFERENCE_PNG),
+    } }), tooMany);
+    assert.equal(tooMany.statusCode, 400);
+    assert.equal(tooMany.body.error, "invalid_references");
+  } finally {
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
+
 test("image API preserves free-quota exhaustion without a paid fallback", async () => {
   const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
   const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
