@@ -1,3 +1,5 @@
+> **Latest verified handoff (2026-11-20):** FLUX.2 character-reference preview is implemented and the full automated suite passes `266/266` tests on commit `cea0045993761d94e5421239d7f777943d1026e0`. A real 1280×720 gallery image has been retrieved and visually inspected; multi-view identity consistency is still unproven. The next milestone is a one-second, 24-distinct-drawing anime motion proof with visual frame review and Android playback. See [verified progress and animation handoff](docs/PROGRESS_HANDOFF_2026-11-20.md). PR #9 remains Draft; do not merge or deploy to production without explicit approval.
+
 # ZERO STUDIO
 
 > **Cloud inference deployment (2026-11-20):** The protected Cloudflare Worker `zero-studio` is deployed with its Workers AI binding. The Vercel staging project `zero-studio-preview` now serves the hybrid studio UI and a server-side `/api/images` proxy from branch `feat/hybrid-human-art-pipeline`. The final bearer secret is not configured yet, so image inference is not enabled. See [deployment guide](cloudflare-worker/DEPLOY_FROM_ANDROID.md).
