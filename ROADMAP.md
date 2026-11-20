@@ -151,9 +151,11 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [x] Add mobile on-canvas Character DNA landmark calibration and save it in the native project.
 - [x] Preserve Character DNA through project reopen normalization and large-project undo history.
 - [ ] Run the new workflow on the user's actual approved character after annotating its joint landmarks and confirming its canonical view.
-- [ ] Connect the anatomy guide and per-frame drawing tasks to the Android animation editor and native project timeline.
+- [x] Connect the anatomy guide and per-frame drawing tasks to the Android animation editor and native project timeline.
 - [ ] Add artist-editable contour/silhouette correction overlays while preserving the original key drawings.
+- [x] Add independent transparent PNG export and storage per native timeline frame, with SHA-256 content/source signatures.
+- [x] Add source-staleness checks, duplicate PNG rejection, four-part review gates, 24-frame audit, and ZIP package export with separate static background.
 - [ ] Draw and review all 24 distinct raster frames for the one-second walk; verify identity, hands, face, costume, foot contact, line quality, and timing.
-- [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests.
+- [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests on the user's Android device.
 
 The previous per-frame image-generation request route is legacy-only and not an accepted animation method. See docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. Passing unit tests does not equal visual acceptance.
