@@ -228,11 +228,12 @@ function saveAnimeKeyDrawing(){
  target.keyDrawings.sort((a,b)=>a.frame-b.frame);
  const name=target.name||"الشخصية";
  const count=target.keyDrawings.length;
+ const savedDNAId=activeAnimeDNAId;
  activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;
  $("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();
  updateAnimeRasterControls();
  cancelAnimeAnatomyCalibration();
- renderAnimeAnatomyDNASelect(activeAnimeDNAId);
+ renderAnimeAnatomyDNASelect(savedDNAId);
  $("animeMotionPlanStatus").textContent="تم اعتماد وضعية مفتاحية للإطار "+(current+1)+" للشخصية "+name+". عدد الرسومات المفتاحية المحفوظة: "+count+".";
  animeAnatomyStatus("حُفظت الوضعية المفتاحية الكاملة وربطت بالإطار الأصلي. لا تُنتج هذه العملية رسمة جديدة.");
 }
@@ -246,6 +247,7 @@ function buildAnimeMotionPlan(){
   const keys=(dna.keyDrawings||[]).filter(item=>item.frame>=0&&item.frame<24);
   const plan=createAnimeAnatomyPlan({
    shotId:uid("anime-walk"),action,characterDNA:dna,durationSeconds:1,fps:24,keyDrawings:keys,
+   backgroundAssetId:(project.animationBackground||[]).map(item=>item.id).join("+")||null,
    motionNotes:"D-028: anatomy construction guides only; every output frame must be completely redrawn and reviewed by the artist."
   });
   const tasks=createAnimeFrameDrawingTasks(plan);
@@ -351,8 +353,8 @@ function readBlobAsDataUrl(blob){
   reader.readAsDataURL(blob);
  });
 }
-async function exportFrameToTransparentPng(sourceFrame){
- const markup=frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]);
+async function exportFrameToTransparentPng(sourceFrame,backgroundLayers=[]){
+ const markup=frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,backgroundLayers);
  const url=URL.createObjectURL(new Blob([markup],{type:"image/svg+xml;charset=utf-8"}));
  try{
   const image=new Image();
@@ -439,11 +441,16 @@ async function auditStoredAnimeRasterFrames(exportZip=false){
     shotId:activeAnimeMotionPlan.shotId,fps:24,durationSeconds:1,
     uniqueDrawingCount:audit.uniqueDrawingCount,uniqueDrawingsPerSecond:audit.uniqueDrawingsPerSecond,
     characterAssetId:activeAnimeMotionPlan.characterAssetId,backgroundAssetId:activeAnimeMotionPlan.backgroundAssetId,
-    keyDrawingCount:activeAnimeMotionPlan.keyDrawings.length,reviewStatus:"all-24-approved"
+    keyDrawingCount:activeAnimeMotionPlan.keyDrawings.length,backgroundIncluded:(project.animationBackground||[]).length>0,
+   backgroundAssetId:activeAnimeMotionPlan.backgroundAssetId,reviewStatus:"all-24-approved"
    },null,2)
   },{
    name:"motion-plan.json",data:JSON.stringify(activeAnimeMotionPlan,null,2)
   }];
+  if((project.animationBackground||[]).length){
+   const backgroundBlob=await exportFrameToTransparentPng({id:"anime-static-background",layers:[]},project.animationBackground);
+   entries.push({name:"background/background.png",data:new Uint8Array(await backgroundBlob.arrayBuffer())});
+  }
   for(let index=0;index<24;index++){
    const record=project.frames[index].animeRaster;
    const encoded=record.dataUrl.slice(record.dataUrl.indexOf(",")+1);
