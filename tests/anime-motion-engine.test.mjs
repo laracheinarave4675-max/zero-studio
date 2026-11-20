@@ -43,7 +43,7 @@ test("key-drawing request calls the existing still-image API with identity, pose
  assert.equal(req.frameKind,"key-drawing");assert.equal(req.frameNumber,13);assert.equal(req.references.length,4);
  assert.deepEqual(req.referenceLabels,["approved character identity","spatial pose guide only","previous approved key drawing","character model sheet"]);
  assert.match(req.prompt,/Create ONE full-body/);assert.match(req.prompt,/Do not redesign/);assert.match(req.prompt,/Never reproduce its skeleton or guide marks/);
- assert.match(req.prompt,/chroma-blue background/);assert.ok(req.prompt.length<=1800);
+ assert.match(req.prompt,/Solid chroma-blue/);assert.ok(req.prompt.length<=1800);
 });
 test("in-between request receives the two adjacent approved key drawings and the exact target pose",()=>{
  const req=createAnimeStillDrawingRequest(plan(),6,{characterReferenceDataUrl:refImage(),fromKeyDrawingDataUrl:refImage("image/jpeg"),toKeyDrawingDataUrl:refImage("image/webp"),poseGuideDataUrl:refImage()});
