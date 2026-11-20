@@ -21,11 +21,11 @@ function request({ method = "POST", origin = ORIGIN, body = { prompt: "Anime for
   return { method, headers: { origin }, body };
 }
 
-test("image API rejects methods other than GET and POST", async () => {
+test("image API rejects non-POST requests", async () => {
   const res = responseRecorder();
-  await handler(request({ method: "DELETE" }), res);
+  await handler(request({ method: "GET" }), res);
   assert.equal(res.statusCode, 405);
-  assert.equal(res.headers.Allow, "GET, POST");
+  assert.equal(res.headers.Allow, "POST");
 });
 
 test("image API rejects requests from another origin", async () => {
