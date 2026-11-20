@@ -88,6 +88,17 @@ function validateDNA(dna) {
       dna.anatomyVersion !== 1 || !dna.characterAssetId || !dna.characterBibleId) {
     fail("سجل هوية الشخصية التشريحي غير صالح.");
   }
+  const hasSourceFrame = dna.sourceFrameId !== undefined;
+  const hasSourceSignature = dna.sourceSignature !== undefined;
+  if (hasSourceFrame !== hasSourceSignature ||
+      (hasSourceFrame && (typeof dna.sourceFrameId !== "string" || !dna.sourceFrameId.trim() ||
+        typeof dna.sourceSignature !== "string" || !/^[a-f0-9]{64}$/i.test(dna.sourceSignature)))) {
+    fail("مرجع الرسم الأصلي لهوية الشخصية أو بصمته غير صالح.");
+  }
+  if (dna.sourceFrameIndex !== undefined &&
+      (!Number.isInteger(dna.sourceFrameIndex) || dna.sourceFrameIndex < 0)) {
+    fail("موضع الرسم الأصلي لهوية الشخصية غير صالح.");
+  }
   const anchor = normalizeGuide(dna.anchorGuide);
   const lengths = calculateBoneLengths(anchor);
   for (const name of Object.keys(BONE_PAIRS)) {
