@@ -39,3 +39,7 @@
 #animeAnatomyMarkers text{fill:#172033;font-size:30px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round;pointer-events:none}
 .anatomy-step{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;color:var(--text);font-size:11px}
 .anatomy-step span{color:var(--muted)}
+
+
+.anime-keypose-tools{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+#animeMotionAction{min-height:64px;width:100%;resize:vertical;font:inherit}
