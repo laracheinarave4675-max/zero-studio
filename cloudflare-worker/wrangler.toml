@@ -1,0 +1,10 @@
+name = "zero-studio-image-worker"
+main = "src/index.js"
+compatibility_date = "2026-11-20"
+
+[ai]
+binding = "AI"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
