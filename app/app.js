@@ -364,7 +364,7 @@ $("generateRasterImageBtn").onclick=async()=>{
   if(!image.naturalWidth||!image.naturalHeight)throw Error("الصورة الناتجة بلا أبعاد صالحة.");
   generatedRasterAsset={name:"صورة مولدة · "+new Date().toLocaleTimeString(),dataUrl:payload.imageDataUrl,mimeType:payload.mimeType||"image/jpeg",width:image.naturalWidth,height:image.naturalHeight};
   $("generatedRasterPreview").src=payload.imageDataUrl;$("imageGenerationResult").hidden=false;$("importGeneratedRasterBtn").disabled=false;
-  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور").". جارٍ حفظ نسخة في معرض الإنتاج…";
+  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+". جارٍ حفظ نسخة في معرض الإنتاج…";
   try{const saved=await saveGeneratedImageToGallery(generatedRasterAsset,promptText,payload.model||"@cf/black-forest-labs/flux-1-schnell");statusNode.textContent="تم توليد الصورة وحفظها في معرض الإنتاج. رابط المراجعة جاهز للمشاركة."}catch(saveError){statusNode.textContent="تم توليد الصورة، لكن تعذر حفظها سحابياً: "+saveError.message+" احتفظ بها داخل المشروع أو أعد محاولة الحفظ."}
  }catch(error){statusNode.textContent=error.message||"تعذر الاتصال بمحرك الصور."}
  finally{button.disabled=false}
