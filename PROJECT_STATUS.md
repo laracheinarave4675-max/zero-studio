@@ -1,3 +1,17 @@
+# Hybrid image-generation integration milestone — 2026-11-20
+
+- Deployed the hybrid application branch to the separate Vercel staging project `zero-studio-preview`, domain `https://zero-studio-preview.vercel.app/`. The primary `zero-studio` project was not changed.
+- Set Vercel project root directory to `app`; the live app root returns HTTP 200.
+- Added visible image-generation prompt/preview/import UI. Generated results are imported only after user review as an actual Raster layer using the existing `addRasterLayer` engine path.
+- Added `app/api/images.js`, a server-side Vercel proxy. The browser never receives the bearer token. GET `/api/images` returns the expected 405; the endpoint accepts POST only.
+- Added Cloudflare Worker `STUDIO_ORIGIN` binding set to `https://zero-studio-preview.vercel.app`; Workers AI `AI` binding remains present.
+- Added Vercel `ZERO_STUDIO_APP_ORIGIN` environment variable for the staging project.
+- **Security gate remains incomplete:** the matching `STUDIO_ACCESS_TOKEN` Cloudflare secret and `ZERO_STUDIO_ACCESS_TOKEN` Vercel sensitive environment variable have not been created. The image API intentionally returns 503 until both are set to the same random value. Do not put the token in source code, GitHub, or chat.
+- No image inference has been executed; no anime-quality acceptance claim is made. FLUX.1 Schnell remains a general image model under evaluation.
+- No paid plan, payment method, credit purchase, GPU rental, or fallback provider was used. PR #6 remains open/unmerged; no primary production deployment or merge was performed. The 24 independently drawn images/second target is unchanged.
+
+---
+
 # Cloud inference Worker deployment milestone — 2026-11-20
 
 - Deployed the real source from `cloudflare-worker/src/index.js` on branch `feat/hybrid-human-art-pipeline` to the existing Cloudflare Worker `zero-studio` through the connected Cloudflare account API. The earlier Dashboard Template `Hello world` implementation was replaced; the existing `workers.dev` service identity was preserved.
