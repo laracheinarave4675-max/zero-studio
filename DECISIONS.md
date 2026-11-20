@@ -236,3 +236,6 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 **Limits:** a new camera view, major foreshortening, or occlusion change requires additional complete key drawings and possibly a view-specific Character DNA record. Hair, hands, facial features, cloth folds, overlaps, and final linework remain full redraw responsibilities. The Android editor integration and visual proof are still pending.
 
 **Change control:** Android-first, $0 budget, no paid provider/GPU, no production deployment, and no merge to `main` under this decision.
+
+**Raster acceptance implementation:** The editor stores each complete drawing as a per-frame transparent PNG generated from that frame's actual drawing layers. SHA-256 hashes identify the PNG bytes and the canonical SVG source. Editing a frame after capture invalidates the stored raster for approval; tampered bytes and repeated hashes are rejected. The ZIP sequence is available only after 24 unique PNGs pass identity, anatomy, line-quality, and timing review. The shared static background is exported separately once.
+
