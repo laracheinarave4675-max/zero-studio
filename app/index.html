@@ -3,6 +3,9 @@
 <p class="note">اختر إطاراً يحتوي على رسمة كاملة للشخصية. سنضع نقاطاً تشريحية فوق الرسم لتثبيت نسبها، دون قصّها أو تشويهها. هذا الإعداد يحفظ مرجع الشخصية داخل ملف المشروع.</p>
 <label class="field-label" for="animeAnatomyName">اسم الشخصية</label>
 <input id="animeAnatomyName" class="text-input" value="شخصية جديدة" maxlength="100">
+<label class="field-label" for="animeAnatomyLibrarySelect">ربط الهوية بنموذج من مكتبة الشخصيات (اختياري)</label>
+<select id="animeAnatomyLibrarySelect" class="text-input"><option value="">هوية جديدة (غير مرتبطة بنموذج مكتبة)</option></select>
+<p class="note">عند اختيار نموذج محفوظ، ستحتفظ الهوية التشريحية بمعرّف النموذج ومرجع Model Sheet بدلاً من إنشاء شخصية منفصلة عنه.</p>
 <label class="field-label" for="animeAnatomyView">زاوية الرسم المرجعي</label>
 <select id="animeAnatomyView" class="text-input">
 <option value="front">أمامي</option><option value="three-quarter">ثلاثة أرباع</option><option value="side" selected>جانبي</option><option value="back">خلفي</option>
