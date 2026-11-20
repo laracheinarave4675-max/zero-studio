@@ -104,7 +104,7 @@ function animeAnatomyStatus(message,ok=true){
  node.textContent=message;node.style.color=ok?"var(--accent)":"#ff9999";
 }
 async async function restoreAnimeMotionPlan(dna){
- if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2)return false;
+ if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2){updateAnimeRasterControls();return false;}
  try{
   const keys=dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24);
   for(const key of keys){
@@ -529,7 +529,7 @@ function wireAnimeAnatomyCalibration(){
  };
  $("cancelAnimeAnatomyBtn").onclick=cancelAnimeAnatomyCalibration;
  $("saveAnimeAnatomyDNABtn").onclick=saveAnimeAnatomyDNA;
- $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction){
+ $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;updateAnimeRasterControls();$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction){
   $("animeMotionAction").value=dna.lastMotionAction;
   restoreAnimeMotionPlan(dna).catch(error=>{
    activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;updateAnimeRasterControls();
