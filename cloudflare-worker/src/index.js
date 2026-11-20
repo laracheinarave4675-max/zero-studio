@@ -79,8 +79,35 @@ async function handleGallery(request, env, url) {
     const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
     if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime) || data.length > 4 * 1024 * 1024) return json({ error: "invalid_image" }, 400, cors);
     const id = crypto.randomUUID();
-    const metadata = { title: typeof input.title === "string" ? input.title.slice(0,100) : "صورة مولدة", prompt: typeof input.prompt === "string" ? input.prompt.slice(0,1800) : "", model: typeof input.model === "string" ? input.model.slice(0,120) : MODEL, mimeType: mime, bytes: Math.floor(parts[1].length * 3 / 4), createdAt: new Date().toISOString() };
-    await env.GALLERY.put("gallery:" + id, JSON.stringify({ imageDataUrl: data, ...metadata }), { expirationTtl: 2592000, metadata });
+    const metadata = {
+      title: typeof input.title === "string" ? input.title.slice(0, 80) : "صورة مولدة",
+      model: typeof input.model === "string" ? input.model.slice(0, 80) : MODEL,
+      mimeType: mime,
+      bytes: Math.floor(parts[1].length * 3 / 4),
+      createdAt: new Date().toISOString(),
+    };
+    const storedAsset = {
+      imageDataUrl: data,
+      ...metadata,
+      prompt: typeof input.prompt === "string" ? input.prompt.slice(0, 1800) : "",
+    };
+    try {
+      await env.GALLERY.put("gallery:" + id, JSON.stringify(storedAsset), {
+        expirationTtl: 2592000,
+        metadata,
+      });
+    } catch (error) {
+      console.error("gallery_write_failed", {
+        name: error?.name || "Error",
+        message: String(error?.message || error).slice(0, 240),
+        imageLength: data.length,
+        metadataBytes: new TextEncoder().encode(JSON.stringify(metadata)).byteLength,
+      });
+      return json({
+        error: "gallery_storage_write_failed",
+        message: "رفض مخزن الصور كتابة الملف. لم تُسجّل الصورة على أنها محفوظة.",
+      }, 502, cors);
+    }
     return json({ ok: true, item: { id, ...metadata, shareUrl: new URL("/gallery/" + id, url.origin).toString() }, retentionDays: 30 }, 201, cors);
   }
   return json({ error: "method_not_allowed" }, 405, cors);
