@@ -7,8 +7,8 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,getAnimeAnatomyFrameRole}from"./anime-anatomy-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -218,6 +218,8 @@ function buildAnimeMotionPlan(){
    motionNotes:"D-028: anatomy construction guides only; every output frame must be completely redrawn and reviewed by the artist."
   });
   const tasks=createAnimeFrameDrawingTasks(plan);
+  activeAnimeMotionPlan=plan;
+  $("animeAnatomyGuideToggleLabel").hidden=false;$("animeAnatomyGuideToggle").checked=true;
   const currentFrame=Math.min(23,current);
   const role=getAnimeAnatomyFrameRole(plan,currentFrame);
   const bundle={
@@ -262,11 +264,43 @@ function saveAnimeAnatomyDNA(){
   animeAnatomyStatus("حُفظت هوية "+name+" مع 19 نقطة تشريحية داخل المشروع .zero. لم تُعدّل الرسمة الأصلية.");
  }catch(error){animeAnatomyStatus("تعذر حفظ الهوية التشريحية: "+error.message,false)}
 }
+function renderAnimeAnatomyConstructionOverlay(){
+ if(!animeAnatomyConstructionLayer)return;
+ animeAnatomyConstructionLayer.replaceChildren();
+ if(!activeAnimeMotionPlan||!$("animeAnatomyGuideToggle")?.checked||current>=24)return;
+ try{
+  const construction=buildAnimeAnatomyConstruction(activeAnimeMotionPlan,current);
+  for(const segment of construction.segments){
+   const path=document.createElementNS(NS,"path");
+   path.setAttribute("d","M "+(segment.from.x*WIDTH)+" "+(segment.from.y*HEIGHT)+" L "+(segment.to.x*WIDTH)+" "+(segment.to.y*HEIGHT));
+   path.setAttribute("fill","none");path.setAttribute("stroke","#0f766e");
+   path.setAttribute("stroke-width","13");path.setAttribute("stroke-linecap","round");path.setAttribute("opacity",".72");
+   animeAnatomyConstructionLayer.appendChild(path);
+  }
+  for(const [name,point] of Object.entries(construction.joints)){
+   const circle=document.createElementNS(NS,"circle");
+   circle.setAttribute("cx",point.x*WIDTH);circle.setAttribute("cy",point.y*HEIGHT);
+   circle.setAttribute("r",name==="root"||name==="pelvis"?"22":"15");
+   circle.setAttribute("fill",name==="root"||name==="pelvis"?"#f59e0b":"#f8fafc");
+   circle.setAttribute("stroke","#0f172a");circle.setAttribute("stroke-width","5");
+   animeAnatomyConstructionLayer.appendChild(circle);
+  }
+ }catch(error){animeAnatomyStatus("تعذر عرض الدليل التشريحي: "+error.message,false)}
+}
+function prepareAnime24FrameShot(){
+ if(project.frames.length>=24){$("animeMotionPlanStatus").textContent="يحتوي الخط الزمني بالفعل على 24 إطاراً أو أكثر؛ سيستخدم الاختبار الإطارات 1–24.";return}
+ snapshot(true);
+ while(project.frames.length<24)project.frames.push(createFrame());
+ current=0;activeLayerId=frame().layers[0].id;render();
+ $("animeMotionPlanStatus").textContent="تم إنشاء إطارات فارغة حتى الإطار 24. ارسم رسمة كاملة مستقلة في كل إطار؛ لم تُنسخ أي رسمة.";
+}
 function wireAnimeAnatomyCalibration(){
  if(!animeAnatomyCanvas)return;
  $("startAnimeAnatomyBtn").onclick=()=>{animeAnatomyMode="dna";activeAnimeDNAId=null;$("animeAnatomyView").disabled=false;beginAnimeAnatomyCalibration()};
  $("startAnimeKeyDrawingBtn").onclick=beginAnimeKeyDrawing;
  $("buildAnimeMotionPlanBtn").onclick=buildAnimeMotionPlan;
+ $("prepareAnime24FrameBtn").onclick=prepareAnime24FrameShot;
+ $("animeAnatomyGuideToggle").onchange=renderAnimeAnatomyConstructionOverlay;
  animeAnatomyCanvas.addEventListener("pointerdown",event=>{
   if(!animeAnatomyActive||animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
   try{
@@ -292,7 +326,7 @@ function wireAnimeAnatomyCalibration(){
  };
  renderAnimeAnatomyDNASelect();
 }
-function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
+function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderAnimeAnatomyConstructionOverlay();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
 function renderFrames(){const list=$("frameList");list.replaceChildren();const start=Math.floor(current/TIMELINE_PAGE_SIZE)*TIMELINE_PAGE_SIZE,end=Math.min(project.frames.length,start+TIMELINE_PAGE_SIZE);for(let i=start;i<end;i++){const f=project.frames[i],b=document.createElement("button");b.className="frame-thumb"+(i===current?" selected":"");b.type="button";b.setAttribute("aria-label","اختيار الإطار "+(i+1));const thumb=document.createElementNS(NS,"svg");thumb.setAttribute("viewBox","0 0 1920 1080");const bg=document.createElementNS(NS,"rect");bg.setAttribute("width",WIDTH);bg.setAttribute("height",HEIGHT);bg.setAttribute("fill","#fff");thumb.appendChild(bg);[...(project.animationBackground||[]),...f.layers].forEach((l,n)=>renderLayerInto(thumb,l,n,"thumb-"+i));b.appendChild(thumb);const n=document.createElement("span");n.textContent=i+1;b.appendChild(n);b.onclick=()=>{stop();current=i;activeLayerId=frame().layers[0].id;selection=null;selectionDrag=null;clearProposal();render()};list.appendChild(b)}$("framePageInfo").textContent="الإطارات "+(start+1)+"–"+end+" من "+project.frames.length;$("framePagePrev").disabled=start===0;$("framePageNext").disabled=end>=project.frames.length;$("frameJumpInput").max=String(project.frames.length);$("frameJumpInput").value=String(current+1)}
 function renderLayers(){$("layerList").replaceChildren();frame().layers.forEach((l,i)=>{const row=document.createElement("div");row.className="layer-row"+(l.id===activeLayerId?" selected":"");const select=document.createElement("button");select.className="layer-select";select.textContent=(l.type==="raster"?"▧ ":"✎ ")+l.name;select.setAttribute("aria-label",(l.type==="raster"?"طبقة صورة: ":"طبقة متجهية: ")+l.name);select.onclick=()=>{activeLayerId=l.id;renderLayers()};const action=(label,title,fn)=>{const b=document.createElement("button");b.className="layer-mini";b.textContent=label;b.title=title;b.onclick=fn;return b};const rename=action("✎","إعادة تسمية الطبقة",()=>{const input=document.createElement("input");input.className="layer-rename-input";input.value=l.name;input.maxLength=80;input.setAttribute("aria-label","اسم الطبقة");const save=action("✓","حفظ الاسم",()=>{const name=input.value.trim();if(!name||name.length>80){status("اسم الطبقة يجب أن يكون من 1 إلى 80 حرفاً.",false);return}snapshot();renameLayer(frame(),l.id,name);renderLayers()});const cancel=action("×","إلغاء",()=>renderLayers());row.replaceChildren(input,save,cancel);input.focus();input.select();input.onkeydown=e=>{if(e.key==="Enter")save.click();if(e.key==="Escape")cancel.click()}});const vis=action(l.visible?"◉":"○","إظهار أو إخفاء",()=>{snapshot();l.visible=!l.visible;render()});const lock=action(l.locked?"🔒":"🔓","قفل أو فتح",()=>{snapshot();l.locked=!l.locked;renderLayers()});const up=action("↑","رفع الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,1))render();else{history.pop();buttons()}});const down=action("↓","خفض الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,-1))render();else{history.pop();buttons()}});row.append(select,rename,vis,lock,up,down);$("layerList").appendChild(row)})}
 function renderNodeHandles(){
