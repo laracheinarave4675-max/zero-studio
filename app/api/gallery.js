@@ -29,7 +29,14 @@ module.exports = async function handler(req, res) {
     const rawLength = Number(req.headers["content-length"] || 0);
     if (rawLength > MAX_BODY_BYTES) return send(res, 413, { ok: false, error: "image_too_large" });
     body = req.body && typeof req.body === "object" ? req.body : {};
-    if (JSON.stringify(body).length > MAX_BODY_BYTES) return send(res, 413, { ok: false, error: "image_too_large" });
+    const serialized = JSON.stringify(body);
+    if (Buffer.byteLength(serialized, "utf8") > MAX_BODY_BYTES) {
+      return send(res, 413, {
+        ok: false,
+        error: "image_too_large",
+        message: "حجم الصورة المرسلة يتجاوز حد الرفع. ضغط الصورة قبل إرسالها مطلوب.",
+      });
+    }
   }
   try {
     const upstream = await fetch(WORKER_URL, {
@@ -43,13 +50,30 @@ module.exports = async function handler(req, res) {
       cache: "no-store",
     });
     const payload = await upstream.json().catch(() => ({}));
-    if (!upstream.ok) return send(res, upstream.status >= 500 ? 502 : upstream.status, {
-      ok: false, error: payload.error || "gallery_upstream_error",
-      message: payload.message || "تعذر الوصول إلى معرض الصور."
-    });
+    if (!upstream.ok) {
+      console.error("gallery_upstream_rejected", {
+        method: req.method,
+        status: upstream.status,
+        error: String(payload.error || "gallery_upstream_error").slice(0, 100),
+      });
+      return send(res, upstream.status >= 500 ? 502 : upstream.status, {
+        ok: false,
+        error: payload.error || "gallery_upstream_error",
+        message: payload.message || "تعذر الوصول إلى معرض الصور."
+      });
+    }
     return send(res, 200, payload);
-  } catch {
-    return send(res, 502, { ok: false, error: "gallery_unreachable", message: "تعذر الاتصال بمخزن معرض الصور." });
+  } catch (error) {
+    console.error("gallery_proxy_failed", {
+      method: req.method,
+      name: error?.name || "Error",
+      message: String(error?.message || error).slice(0, 180),
+    });
+    return send(res, 502, {
+      ok: false,
+      error: "gallery_unreachable",
+      message: "تعذر الاتصال بمخزن معرض الصور. راجع سجل الخادم لمعرفة سبب الرفض.",
+    });
   }
 };
 
