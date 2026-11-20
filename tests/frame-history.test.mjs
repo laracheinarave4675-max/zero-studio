@@ -24,6 +24,14 @@ test("large frame deletion undo and redo restores then removes the exact frame",
  applyFrameHistory(p,before);assert.equal(p.frames.length,700);assert.equal(p.frames[350].id,350);
  applyFrameHistory(p,after);assert.equal(p.frames.length,699);assert.equal(p.frames[350].id,351);
 });
+test("frame history restores the shared animation background on undo and redo",()=>{
+ const p=project();p.animationBackground=[{id:"bg-before"}];
+ const before=captureFrameHistory(p,699);
+ p.animationBackground=[{id:"bg-after"}];
+ const after=captureFrameHistoryAfter(p,before);
+ applyFrameHistory(p,before);assert.deepEqual(p.animationBackground,[{id:"bg-before"}]);
+ applyFrameHistory(p,after);assert.deepEqual(p.animationBackground,[{id:"bg-after"}]);
+});
 test("large frame history also restores animation production progress",()=>{
  const p=project(),before=captureFrameHistory(p,699);
  p.animationProduction.completedFrames=6;p.animationProduction.frameSignatures=["0123456789abcdef"];
