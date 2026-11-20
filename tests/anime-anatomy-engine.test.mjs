@@ -139,6 +139,7 @@ test("large-project undo metadata preserves anatomy identity records", () => {
 test("mobile Character DNA calibration panel is connected to the drawing project", () => {
   const html = readFileSync(new URL("../app/index.html", import.meta.url), "utf8");
   const app = readFileSync(new URL("../app/app.js", import.meta.url), "utf8");
+  assert.doesNotMatch(app, /async\s+async\s+function/, "motion-plan restore must remain valid JavaScript");
   for (const id of [
     "animeAnatomyCanvas", "animeAnatomySource", "animeAnatomyMarkers",
     "startAnimeAnatomyBtn", "saveAnimeAnatomyDNABtn", "animeAnatomyDNASelect",
