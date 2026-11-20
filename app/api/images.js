@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (payload.ok !== true || typeof payload.imageDataUrl !== "string" ||
-        !/^data:image\\/(?:jpeg|png|webp);base64,/.test(payload.imageDataUrl) ||
+        !(payload.imageDataUrl.startsWith("data:image/jpeg;base64,") || payload.imageDataUrl.startsWith("data:image/png;base64,") || payload.imageDataUrl.startsWith("data:image/webp;base64,")) ||
         payload.imageDataUrl.length > 4 * 1024 * 1024) {
       return send(res, 502, { error: "invalid_image_response" });
     }
