@@ -113,3 +113,29 @@ No model is selected yet. The first controlled comparison should use the same:
 3. One reference-based edit to test whether the same character remains recognizable while pose and environment change.
 
 Score each output for drawing quality, anatomy, composition, material detail, reference adherence, identity continuity, edit stability, latency, and actual cost. Review the actual images side by side before selecting a provider. Do not begin LoRA training before this test.
+
+
+## Zero-budget candidate strategy (2026-11-20)
+
+The user confirmed a hard $0 total project budget. Paid APIs and paid GPU inference are excluded, including any automatic paid fallback. See [the governing zero-budget constraint](NEW_HYBRID_PRODUCTION_DIRECTION.md#zero-budget-operating-constraint-user-confirmed-2026-11-20).
+
+### Free experimentation route: existing Hugging Face ZeroGPU Spaces
+- Hugging Face's current ZeroGPU documentation says existing ZeroGPU Spaces are free to use; free accounts have a 5-minute daily GPU quota and shared queue priority. This is suitable for limited visual experiments and occasional approved assets, not continuous 24 fps production generation.
+- Candidate anime model: [Anima](https://huggingface.co/circlestone-labs/Anima), described as a 2B model focused on anime characters and illustrations. Its model card lists a non-commercial license, so it is not cleared for commercial use.
+- Example public Anima ZeroGPU Space: https://huggingface.co/spaces/ADGNSGNJKS/Anima. Public availability and current running status must be checked at test time; do not assume an API contract or guaranteed uptime.
+
+### Open-weight candidate for licensing comparison
+- [Tongyi-MAI/Z-Image-Turbo](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo) is marked Apache-2.0 on its model card. This is a licensing candidate, not a selected anime model. It still needs GPU compute; do not assume it can run locally on the Android phone or that hosted inference is free.
+
+### Non-negotiable operating rules
+- No paid image API, paid inference credits, subscription, GPU rental, or required payment card.
+- Free trials/credits are temporary and do not count as a sustainable zero-cost architecture.
+- No automatic paid fallback when a free quota is exhausted.
+- Free public demos are for controlled experiments, not a dependable production backend. Verify quotas, queues, terms, privacy, reference-image support, and programmatic access before integration.
+- The application must explain quota exhaustion and preserve the job for later retry rather than silently charging money.
+
+### What this means for production
+A literal 24 independently generated images per second is not feasible to promise from limited free GPU quotas. Keep the user's 24 independently drawn images/second target unchanged; do not redefine it. Instead, use free compute for creating and refining source artwork, model sheets, key art, backgrounds, and manually approved assets, while the studio manages animation production and asset reuse. If the target cannot be achieved under $0 constraints, report that limitation honestly rather than inventing free unlimited compute.
+
+### Immediate experiment
+Run a small visual comparison through existing public ZeroGPU Spaces using the same Japanese forest-house reference and one character-sheet brief. Save only user-approved outputs into the studio asset library with provenance and license metadata. Measure wait time, usable daily quota, visual quality, reference adherence, and export/reuse behavior. No API integration or account creation until the free service's terms and reliability are verified.
