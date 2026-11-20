@@ -27,7 +27,7 @@ export async function runAnimationProduction(project,provider,{maxBatches=1,maxR
   for(let attempt=0;attempt<=maxRetries&&!done;attempt++){
    abort(signal);
    const prompt=createAnimationBatchPrompt(job);
-   const correction=lastError&&!lastErrorTransient?"\n\nCORRECTION REQUIRED AFTER THE LAST REJECTED RESPONSE: "+lastError+" Return the entire exact next batch again, with all required full-scene frames and the continuityNote. Do not omit frames or change their indexes.": "";
+   const correction=lastError&&!lastErrorTransient?"\n\nSTRICT VECTOR-QUALITY REPAIR REQUIRED. THE PREVIOUS RESPONSE WAS REJECTED BY THE PROJECT VALIDATOR. EXACT REJECTION: "+lastError+". Return the complete exact next batch again. For every requested frame, use every established moving layer in the same order, put at least TWO meaningful separate SVG path operations in EACH moving layer, and at least TEN paths total per frame. Count them before returning. Never return empty layers or frames, never omit a body part, and do not change frame indexes or timestamps. Keep the face, long hair, kimono, sash, legs, feet, arms, and sleeves coherent. Return valid JSON only, including the continuityNote.": "";
    let result;
    try{
     const response=await provider({prompt:prompt+correction,jobId:job.id,batchIndex:range.batchIndex,startFrame:range.startFrame,frameCount:range.frameCount,fps:job.fps,responseFormat:"json",attempt:attempt+1,signal});
