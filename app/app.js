@@ -228,6 +228,9 @@ function saveAnimeKeyDrawing(){
  target.keyDrawings.sort((a,b)=>a.frame-b.frame);
  const name=target.name||"الشخصية";
  const count=target.keyDrawings.length;
+ activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;
+ $("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();
+ updateAnimeRasterControls();
  cancelAnimeAnatomyCalibration();
  renderAnimeAnatomyDNASelect(activeAnimeDNAId);
  $("animeMotionPlanStatus").textContent="تم اعتماد وضعية مفتاحية للإطار "+(current+1)+" للشخصية "+name+". عدد الرسومات المفتاحية المحفوظة: "+count+".";
@@ -248,6 +251,7 @@ function buildAnimeMotionPlan(){
   const tasks=createAnimeFrameDrawingTasks(plan);
   snapshot(true);dna.lastMotionAction=action;dna.lastMotionShotId=plan.shotId;
   activeAnimeMotionPlan=plan;activeAnimeAnatomySequence=createAnimeAnatomySequence(plan);
+  updateAnimeRasterControls();
   $("animeAnatomyGuideToggleLabel").hidden=false;$("animeAnatomyGuideToggle").checked=true;
   const currentFrame=Math.min(23,current);
   const role=getAnimeAnatomyFrameRole(plan,currentFrame);
@@ -395,6 +399,7 @@ async function saveCurrentAnimeRasterFrame(){
   frame().animeRaster=record;
   activeAnimeAnatomySequence=createAnimeAnatomySequence(activeAnimeMotionPlan);
   const audit=await auditStoredAnimeRasterFrames(false);
+  if(!audit)throw Error("تعذر إتمام فحص التسلسل بعد حفظ PNG.");
   animeRasterStatus("حُفظ PNG مستقل للإطار "+(frameIndex+1)+". المكتمل: "+audit.drawnFrames+"/24، المعتمد: "+audit.approvedFrames+"/24، المفقود: "+audit.missingFrames+".",approved);
  }catch(error){animeRasterStatus("تعذر حفظ رسمة الإطار: "+error.message,false)}
 }
@@ -453,7 +458,7 @@ async function auditStoredAnimeRasterFrames(exportZip=false){
  }catch(error){
   $("exportAnimeRasterSequenceBtn").disabled=true;
   animeRasterStatus("تعذر اجتياز فحص/تصدير الرسومات: "+error.message,false);
-  throw error;
+  return null;
  }
 }
 function wireAnimeAnatomyCalibration(){
@@ -464,8 +469,8 @@ function wireAnimeAnatomyCalibration(){
  $("prepareAnime24FrameBtn").onclick=prepareAnime24FrameShot;
  $("animeAnatomyGuideToggle").onchange=renderAnimeAnatomyConstructionOverlay;
  $("saveAnimeRasterFrameBtn").onclick=saveCurrentAnimeRasterFrame;
- $("auditAnimeRasterFramesBtn").onclick=()=>auditStoredAnimeRasterFrames(false);
- $("exportAnimeRasterSequenceBtn").onclick=()=>auditStoredAnimeRasterFrames(true);
+ $("auditAnimeRasterFramesBtn").onclick=()=>{auditStoredAnimeRasterFrames(false).catch(()=>{})};
+ $("exportAnimeRasterSequenceBtn").onclick=()=>{auditStoredAnimeRasterFrames(true).catch(()=>{})};
  animeAnatomyCanvas.addEventListener("pointerdown",event=>{
   if(!animeAnatomyActive||animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
   try{
