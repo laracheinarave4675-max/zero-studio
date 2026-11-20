@@ -274,7 +274,7 @@ async function handle(request, env) {
       model: modelId,
       mimeType,
       imageDataUrl: "data:" + mimeType + ";base64," + result.image,
-      steps: MAX_STEPS,
+      steps,
       seed: seed ?? null,
       ...(outputSize ? { width: outputSize.width, height: outputSize.height, aspectRatio: input.aspectRatio === undefined ? "16:9" : input.aspectRatio } : {}),
     }, 200, cors);
