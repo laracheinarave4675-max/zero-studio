@@ -23,6 +23,13 @@ jobs:
           node-version: 22
       - name: Syntax-check the motion adapter and runner
         run: node --check app/gemini-animation.mjs && node --check scripts/run-character-motion-proof.mjs
+      - name: Diagnose free-tier motion gate (never print secret values)
+        env:
+          FREE_TIER_GUARD: ${{ vars.ZERO_STUDIO_FREE_TIER_CONFIRMED }}
+          GEMINI_KEY_PRESENT: ${{ secrets.GEMINI_API_KEY != '' }}
+        run: |
+          if [ "$FREE_TIER_GUARD" = "true" ]; then echo "Free-tier repository variable: true"; else echo "Free-tier repository variable: missing or not exactly true"; fi
+          if [ "$GEMINI_KEY_PRESENT" = "true" ]; then echo "Gemini API secret: configured"; else echo "Gemini API secret: missing"; fi
       - name: Run complete automated regression suite
         run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
   one-second-character-motion:
