@@ -26,6 +26,32 @@ function request(path = "/v1/images", body = { prompt: "anime forest house" }, h
   });
 }
 
+test("uses the primary Worker as a no-inference token verifier when no local secret exists", async () => {
+  const originalFetch = globalThis.fetch;
+  let verificationCalls = 0;
+  let inferenceCalls = 0;
+  globalThis.fetch = async (url, options) => {
+    verificationCalls++;
+    assert.equal(url, "https://zero-studio.9test4675a26.workers.dev/v1/images");
+    assert.equal(options.method, "POST");
+    assert.equal(options.headers.Authorization, "Bearer " + TOKEN);
+    assert.equal(options.headers.Origin, ORIGIN);
+    assert.equal(JSON.parse(options.body).prompt, "");
+    return Response.json({ error: "invalid_prompt" }, { status: 400 });
+  };
+  try {
+    const response = await worker.fetch(request(), {
+      STUDIO_ORIGIN: ORIGIN,
+      AI: { run: async () => { inferenceCalls++; return { image: "aGVsbG8=" }; } },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(verificationCalls, 1);
+    assert.equal(inferenceCalls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("rejects a missing or invalid bearer token before inference", async () => {
   let calls = 0;
   const req = request("/v1/images", { prompt: "test" }, { Authorization: "Bearer wrong" });
