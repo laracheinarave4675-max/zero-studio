@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createProject, normalizeProject } from "../app/engine.mjs";
+import { captureFrameHistory, applyFrameHistory } from "../app/frame-history.mjs";
 import {
   ANIME_ANATOMY_FPS, ANIME_ANATOMY_JOINTS, createAnimeCharacterDNA,
   createAnimeAnatomyPlan, sampleAnimeAnatomyGuide, buildAnimeAnatomyConstruction,
@@ -83,6 +84,18 @@ test("Character DNA survives native ZERO project save/open normalization", () =>
   assert.throws(() => normalizeProject({
     ...project, animeCharacterDNA: [{ ...storedDNA, boneLengths: {} }]
   }), /قياسات الشخصية الثابتة/);
+});
+
+
+test("large-project undo metadata preserves anatomy identity records", () => {
+  const { dna } = createFixture();
+  const project = createProject("Large timeline");
+  project.animeCharacterDNA.push({ ...dna, name:"Nori" });
+  const before = captureFrameHistory(project, 0, { includeCharacterLibrary:true });
+  project.animeCharacterDNA = [];
+  applyFrameHistory(project, before);
+  assert.equal(project.animeCharacterDNA.length, 1);
+  assert.equal(project.animeCharacterDNA[0].name, "Nori");
 });
 
 test("DNA rejects missing joints, invalid proportions and identity-less characters", () => {
