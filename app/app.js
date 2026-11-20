@@ -106,6 +106,7 @@ function animeAnatomyStatus(message,ok=true){
 async function restoreAnimeMotionPlan(dna){
  if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2){updateAnimeRasterControls();return false;}
  try{
+  await verifyAnimeCharacterAnchor(dna);
   const keys=dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24);
   for(const key of keys){
    const keyFrame=project.frames[key.frame];
@@ -217,6 +218,7 @@ function beginAnimeKeyDrawing(){
 async function saveAnimeKeyDrawing(){
  const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===activeAnimeDNAId);
  if(!dna)throw Error("تعذر العثور على هوية الشخصية المحددة.");
+ await verifyAnimeCharacterAnchor(dna);
  if(!currentFrameHasDrawing())throw Error("لا يمكن اعتماد إطار فارغ؛ ارسم الشخصية كاملة في هذا الإطار أولاً.");
  if(current>=24)throw Error("الإطار الحالي خارج نطاق اختبار المشي الأول.");
  const guide={
@@ -254,6 +256,7 @@ async function buildAnimeMotionPlan(){
   const id=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===id);
   if(!dna)throw Error("اختر هوية شخصية محفوظة أولاً.");
+  await verifyAnimeCharacterAnchor(dna);
   if(project.frames.length<24)throw Error("أنشئ 24 إطاراً في الخط الزمني أولاً، ثم سجّل رسومات البداية والنهاية.");
   const action=$("animeMotionAction").value.trim();
   const keys=(dna.keyDrawings||[]).filter(item=>item.frame>=0&&item.frame<24);
@@ -308,11 +311,13 @@ async function saveAnimeAnatomyDNA(){
    joints:Object.fromEntries(ANIME_ANATOMY_LABELS.map(item=>[item.key,animeAnatomyPoints[item.key]]))
   };
   if(!currentFrameHasDrawing())throw Error("الإطار الحالي فارغ؛ ارسم الشخصية كاملة قبل حفظ هويتها.");
+  const sourceFrame=sourceFrameWithoutAnimeRaster(frame());
+  const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   const dna=createAnimeCharacterDNA({
    characterAssetId:id,characterBibleId:id+"-bible",modelSheetAssetIds:[],anchorGuide:guide,
    notes:"Calibrated on native project frame "+(current+1)+"; source frame ID "+frame().id
   });
-  dna.name=name;dna.sourceFrameId=frame().id;dna.sourceFrameIndex=current;
+  dna.name=name;dna.sourceFrameId=frame().id;dna.sourceFrameIndex=current;dna.sourceSignature=sourceSignature;
   snapshot(true);
   if(!Array.isArray(project.animeCharacterDNA))project.animeCharacterDNA=[];
   if(project.animeCharacterDNA.length>=100)throw Error("بلغت مكتبة هويات الشخصيات حد 100.");
@@ -397,6 +402,16 @@ async function exportFrameToTransparentPng(sourceFrame,backgroundLayers=[]){
 }
 function sourceFrameWithoutAnimeRaster(sourceFrame){
  const copy=JSON.parse(JSON.stringify(sourceFrame));delete copy.animeRaster;return copy;
+}
+async function verifyAnimeCharacterAnchor(dna){
+ const frameId=String(dna?.sourceFrameId||"");
+ const expected=String(dna?.sourceSignature||"").toLowerCase();
+ if(!frameId||!/^[a-f0-9]{64}$/.test(expected))throw Error("هوية الشخصية القديمة لا تحتوي بصمة مرجعها الأصلي؛ أعد معايرة الشخصية من الرسم المعتمد.");
+ const anchor=project.frames.find(item=>item.id===frameId);
+ if(!anchor)throw Error("الرسم الأصلي الذي بُنيت عليه هوية الشخصية غير موجود في المشروع.");
+ const actual=await sha256Hex(frameSvg(sourceFrameWithoutAnimeRaster(anchor),"anime-final-"+anchor.id,[]));
+ if(actual!==expected)throw Error("تغير الرسم المرجعي الأصلي للشخصية بعد معايرتها؛ لا يمكن استخدام هوية قديمة. أعد معايرة الشخصية من رسم معتمد.");
+ return true;
 }
 async function saveCurrentAnimeRasterFrame(){
  try{
