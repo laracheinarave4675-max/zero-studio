@@ -61,3 +61,8 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 - Set the variable in GitHub repository Settings → Secrets and variables → Actions → Variables. Keep the API key in Secrets, never in a file or chat. Set the guard only after verifying that the key belongs to a no-cost/free-tier project with paid billing disabled. This repository cannot inspect or guarantee the billing state of the Google AI account.
 - The model is pinned to `gemini-3.5-flash-lite`. There is no paid fallback, no automatic model switch, and no automatic retry of generation batches. If the key is missing, free quota is unavailable, or the API returns a quota/rate-limit error, stop; do not enable billing or switch providers.
 - The workflow artifact contains `index.html`: a 24 fps playback page and a 24-frame contact sheet. Open it locally after extracting the artifact to inspect the whole sequence and select individual drawings. The `.zero` project and each source SVG frame remain alongside the preview.
+
+
+## Live run authorization
+
+The project owner explicitly authorized the one-second / 24-frame free-tier-only motion proof on 2026-11-20 and confirmed that the GitHub Actions `GEMINI_API_KEY` secret is configured, Google billing is disabled, and `ZERO_STUDIO_FREE_TIER_CONFIRMED=true`. This commit intentionally touches a workflow-watched path to trigger the gated run. The workflow must still pass its regression job before live generation starts.
