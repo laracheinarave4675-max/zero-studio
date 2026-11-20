@@ -366,10 +366,43 @@ async function refreshProductionGallery(){
   }else status.textContent=error.message||"تعذر تحميل المعرض.";
  }
 }
+async function prepareGalleryUploadDataUrl(asset){
+ const source=String(asset?.dataUrl||"");
+ const maxChars=2.5*1024*1024;
+ if(!source.startsWith("data:image/"))throw Error("الصورة لا تحتوي على بيانات صورة صالحة.");
+ if(source.length<=maxChars)return source;
+ const image=new Image();
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر تجهيز الصورة للحفظ."));image.src=source});
+ if(!image.naturalWidth||!image.naturalHeight)throw Error("تعذر قراءة أبعاد الصورة للحفظ.");
+ let scale=Math.min(1,1600/Math.max(image.naturalWidth,image.naturalHeight));
+ for(let pass=0;pass<7;pass++){
+  const canvas=document.createElement("canvas");
+  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const context=canvas.getContext("2d");
+  if(!context)throw Error("تعذر إنشاء مساحة ضغط الصورة.");
+  context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);
+  context.drawImage(image,0,0,canvas.width,canvas.height);
+  for(const quality of [0.9,0.84,0.78,0.72]){
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+   if(!blob)continue;
+   const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("تعذر قراءة الصورة المضغوطة."));reader.readAsDataURL(blob)});
+   if(dataUrl.length<=maxChars)return dataUrl;
+  }
+  scale*=0.84;
+ }
+ throw Error("تعذر ضغط الصورة إلى حجم الرفع الآمن. لم تُحذف الصورة الأصلية من الاستوديو.");
+}
 async function saveGeneratedImageToGallery(asset,prompt,model){
- const response=await fetch("/api/gallery",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({imageDataUrl:asset.dataUrl,title:asset.name,prompt,model})});
+ const uploadImageDataUrl=await prepareGalleryUploadDataUrl(asset);
+ const requestBody=JSON.stringify({imageDataUrl:uploadImageDataUrl,title:asset.name,prompt,model});
+ if(new Blob([requestBody]).size>3*1024*1024)throw Error("حجم طلب الحفظ ما زال كبيراً بعد الضغط؛ لم يُرسل إلى الخادم.");
+ const response=await fetch("/api/gallery",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
  const payload=await response.json().catch(()=>({}));
- if(!response.ok||payload.ok!==true||!payload.item?.shareUrl)throw Error(payload.message||payload.error||"تعذر حفظ الصورة في المعرض.");
+ if(!response.ok||payload.ok!==true||!payload.item?.shareUrl){
+  const message=payload.message||payload.error||(response.status===413?"رفض الخادم حجم الصورة (413).":"تعذر حفظ الصورة في المعرض (HTTP "+response.status+").");
+  throw Error(message);
+ }
  asset.galleryItem=payload.item;
  rememberConfirmedGalleryItem(payload.item);
  const share=$("imageGenerationShareLink");
