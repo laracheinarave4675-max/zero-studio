@@ -173,6 +173,8 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /function saveAnimeAnatomyDNA\(\)/);
   assert.match(app, /createAnimeCharacterDNA\(/);
   assert.match(app, /modelSheetAssetIds:linkedAsset\?\[linkedAsset\.id\]:\[\]/);
+  assert.match(app, /modelSheetAssetIds\|\|\[\]\)\.includes\(id\)/);
+  assert.match(app, /لا يمكن حذف هذا النموذج لأنه مرتبط بهوية تشريحية محفوظة/);
   assert.match(app, /linked character-library asset/);
   assert.match(app, /animeAnatomyLibrarySelect/);
   assert.match(app, /renderAnimeAnatomyDNASelect\(\)/);
