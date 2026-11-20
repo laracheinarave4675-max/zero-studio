@@ -1,4 +1,21 @@
-# Anime key-drawing motion foundation — 2026-11-20
+# ZERO STUDIO — Project Status
+
+Last updated: 2026-11-20 (UTC)
+
+## D-028 anatomy-guided animation engine — 2026-11-20
+
+- The user approved replacing repeated per-frame image generation with a stable Character DNA and anatomy-guided independent drawing workflow.
+- Recorded D-028 in DECISIONS.md. It supersedes D-027's per-frame still-image request approach for final character animation; D-027 remains history for the earlier prototype.
+- Added docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md as the current source of truth.
+- Added app/anime-anatomy-engine.mjs: validated identity/proportion data, approved full key-drawing records, smooth joint construction interpolation, limb-length constraints, planted-foot anchors, center-of-mass sampling, and guide-only anatomical construction previews.
+- Added independent 24-FPS artist drawing tasks. Each frame requires a complete redraw, its own transparent PNG/WebP asset, a unique content hash, and explicit identity/anatomy/line-quality/timing review.
+- Added tests/anime-anatomy-engine.test.mjs for identity locking, proportion measurement, key-drawing approval, interpolation, foot anchoring, guide-only rendering, duplicate prevention, and the 24-approved-unique-drawings audit.
+- The geometry is reference material only. It does not deform the source character, generate final character pixels, or substitute for artist-authored drawings.
+- The prior per-frame still-image request builder is legacy-only for this animation direction and must not be used to produce final motion frames.
+- **Not yet verified:** latest GitHub Actions result, Android UI integration, annotation of the user's approved real character, an artist-authored 24-frame walk, visual identity/anatomy/line review, mobile performance, save/recovery, and export.
+- No Vercel deployment, Cloudflare deployment, production alias, paid service, or merge to main was initiated by this change.
+
+dation — 2026-11-20
 
 - User-approved decision D-027: preserve the existing character and background generation departments; focus development on the missing anime animation department.
 - New workflow: motion/timing chart → spatial pose blocking guide → complete 2D key drawings → individually reviewed raster in-between/cleanup drawings → raster frame assembly.
