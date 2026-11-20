@@ -41,7 +41,7 @@ function createFixture() {
     fps: 24,
     keyDrawings: [
       { id:"contact-start", frame:0, drawingAssetId:"key-drawing-00", approved:true, phase:"contact", guide:first, easeToNext:"ease-in-out" },
-      { id:"passing", frame:12, drawingAssetId:"key-drawing-12", approved:true, phase:"passing", guide:guide(.02), easeToNext:"ease-out" },
+      { id:"passing", frame:12, drawingAssetId:"key-drawing-12", approved:true, phase:"passing", guide:guide(.02,{footL:"swing",footR:"planted"}), easeToNext:"ease-out" },
       { id:"recovery", frame:23, drawingAssetId:"key-drawing-23", approved:true, phase:"recovery", guide:guide(0,{footL:"swing",footR:"planted"}) }
     ],
     motionNotes: "Keep the camera locked; preserve hair and costume details in every drawing."
@@ -113,7 +113,7 @@ test("planted foot stays anchored to the last planted contact instead of sliding
   assert.equal(sample.guide.joints.ankleL.x, plan.keyDrawings[0].guide.joints.ankleL.x);
   assert.equal(sample.guide.joints.toeL.x, plan.keyDrawings[0].guide.joints.toeL.x);
   const later = sampleAnimeAnatomyGuide(plan, 18);
-  assert.equal(later.lockedFeet.footR, "recovery");
+  assert.equal(later.lockedFeet.footR, "passing");
 });
 
 test("construction model exposes body segments as guide-only measurements, not finished character art", () => {
@@ -179,5 +179,7 @@ test("duplicate image hashes, non-transparent artwork and unreviewed frames are 
   assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),alpha:false}), /قناة شفافية/);
   assert.throws(() => auditAnimeAnatomySequence(sequence), /لم تُرسم/);
   reviewAnimeFrame(sequence,0,{identity:true,anatomy:true,lineQuality:false,timing:true});
-  assert.throws(() => auditAnimeAnatomySequence(sequence,{requireApproved:false}), /invalid/i);
+  const partial = auditAnimeAnatomySequence(sequence,{requireApproved:false});
+  assert.equal(partial.rejectedFrames,1);
+  assert.equal(partial.meets24UniqueApprovedDrawingsPerSecond,false);
 });
