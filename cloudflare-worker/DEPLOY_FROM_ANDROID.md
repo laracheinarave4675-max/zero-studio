@@ -18,7 +18,7 @@ From the Cloudflare dashboard in the Android browser:
 5. Set Root directory to cloudflare-worker.
 6. Leave Build command empty.
 7. Set Deploy command to npx wrangler deploy.
-8. The Worker name must be exactly zero-studio-image-worker (matching wrangler.toml).
+8. The existing deployed Worker name is exactly `zero-studio` (matching `wrangler.toml`). Do not create a duplicate Worker.
 9. Review settings and create the Worker using Workers Free only.
 
 Official guide: https://developers.cloudflare.com/workers/ci-cd/builds/
@@ -54,5 +54,11 @@ Do not expose the bearer token in a URL. Do not test image generation until the 
 - Provider details are not returned in error messages.
 - This Worker does not promise unlimited or 24-images-per-second inference.
 
-## Current deployment state
-The Worker source, Wrangler configuration, automated tests, and this guide are committed to the development branch. No Cloudflare account has been connected, no Worker has been deployed, no secrets have been entered, and no image inference request has been made.
+## Current deployment state (2026-11-20)
+- The Cloudflare account is connected to ChatGPT's Cloudflare integration.
+- The real Worker source from this repository branch has been deployed to the existing Worker `zero-studio`; the Dashboard Template Hello World code was replaced.
+- The Workers AI binding `AI` is present.
+- The non-secret `GET /health` route reports worker and binding readiness without requiring private image credentials.
+- `STUDIO_ORIGIN` and `STUDIO_ACCESS_TOKEN` are not yet configured. The image endpoint remains locked until they are configured.
+- The public app snapshot URL in the README is `https://zero-studio-three.vercel.app/`, but the current branch app code does not yet call `/v1/images`; a safe client integration is still required. Do not put the bearer token in public source code.
+- No image inference has been run. No paid plan, payment method, credit purchase, or fallback provider has been used.
