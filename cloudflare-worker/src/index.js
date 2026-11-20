@@ -38,8 +38,49 @@ function isQuotaError(error) {
   return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit/.test(message);
 }
 
+async function handleGallery(request, env, url) {
+  const cors = corsHeaders(env.STUDIO_ORIGIN || "*");
+  if (!env.GALLERY) return json({ error: "gallery_storage_unavailable" }, 503, cors);
+  if (url.pathname.startsWith("/gallery/") && request.method === "GET") {
+    const id = url.pathname.slice(9);
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "not_found" }, 404);
+    const stored = await env.GALLERY.get("gallery:" + id);
+    if (!stored) return json({ error: "not_found" }, 404);
+    let asset; try { asset = JSON.parse(stored); } catch { return json({ error: "corrupt_asset" }, 500); }
+    const parts = String(asset.imageDataUrl || "").split(";base64,");
+    const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
+    if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime)) return json({ error: "corrupt_asset" }, 500);
+    const bytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
+    return new Response(bytes, { status: 200, headers: { "content-type": mime, "cache-control": "public, max-age=3600, immutable", "content-disposition": "inline", "x-content-type-options": "nosniff" } });
+  }
+  if (url.pathname !== "/v1/gallery") return json({ error: "not_found" }, 404, cors);
+  const origin = String(env.STUDIO_ORIGIN || "").trim();
+  if (request.headers.get("Origin") !== origin) return json({ error: "origin_not_allowed" }, 403);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!constantTimeEqual(token, env.STUDIO_ACCESS_TOKEN)) return json({ error: "unauthorized" }, 401, cors);
+  if (request.method === "GET") {
+    const listed = await env.GALLERY.list({ prefix: "gallery:", limit: 100 });
+    const items = (listed.keys || []).map(entry => ({ id: entry.name.slice(8), ...(entry.metadata || {}), shareUrl: new URL("/gallery/" + entry.name.slice(8), url.origin).toString() })).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    return json({ ok: true, items, truncated: Boolean(listed.list_complete === false) }, 200, cors);
+  }
+  if (request.method === "POST") {
+    let input; try { input = await request.json(); } catch { return json({ error: "invalid_json" }, 400, cors); }
+    const data = typeof input.imageDataUrl === "string" ? input.imageDataUrl : "";
+    const parts = data.split(";base64,");
+    const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
+    if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime) || data.length > 4 * 1024 * 1024) return json({ error: "invalid_image" }, 400, cors);
+    const id = crypto.randomUUID();
+    const metadata = { title: typeof input.title === "string" ? input.title.slice(0,100) : "صورة مولدة", prompt: typeof input.prompt === "string" ? input.prompt.slice(0,1800) : "", model: typeof input.model === "string" ? input.model.slice(0,120) : MODEL, mimeType: mime, bytes: Math.floor(parts[1].length * 3 / 4), createdAt: new Date().toISOString() };
+    await env.GALLERY.put("gallery:" + id, JSON.stringify({ imageDataUrl: data, ...metadata }), { expirationTtl: 2592000, metadata });
+    return json({ ok: true, item: { id, ...metadata, shareUrl: new URL("/gallery/" + id, url.origin).toString() }, retentionDays: 30 }, 201, cors);
+  }
+  return json({ error: "method_not_allowed" }, 405, cors);
+}
 async function handle(request, env) {
   const url = new URL(request.url);
+  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);
   if (request.method === "GET" && url.pathname === "/health") {
     return json({
       ok: true,
