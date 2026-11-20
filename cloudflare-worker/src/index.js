@@ -1,4 +1,12 @@
-const MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const DEFAULT_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const MODEL_IDS = Object.freeze({
+  "flux-1-schnell": DEFAULT_MODEL,
+  "flux-2-klein-4b": "@cf/black-forest-labs/flux-2-klein-4b",
+});
+const IMAGE_PRESETS = Object.freeze({
+  "16:9": Object.freeze({ width: 1280, height: 720 }),
+  "1:1": Object.freeze({ width: 1024, height: 1024 }),
+});
 const MAX_BODY_BYTES = 8 * 1024;
 const MAX_PROMPT_LENGTH = 2048;
 const MAX_IMAGE_BASE64_LENGTH = 8 * 1024 * 1024;
@@ -41,7 +49,14 @@ function isAllowedOrigin(origin, env) {
 
 function isQuotaError(error) {
   const message = String(error?.message || error || "").toLowerCase();
-  return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit/.test(message);
+  return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit|capacity|resource.?limit/.test(message);
+}
+
+function detectImageMime(base64) {
+  if (base64.startsWith("iVBOR")) return "image/png";
+  if (base64.startsWith("/9j/")) return "image/jpeg";
+  if (base64.startsWith("UklGR")) return "image/webp";
+  return "image/jpeg";
 }
 
 async function handleGallery(request, env, url) {
@@ -79,11 +94,14 @@ async function handleGallery(request, env, url) {
     const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
     if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime) || data.length > 4 * 1024 * 1024) return json({ error: "invalid_image" }, 400, cors);
     const id = crypto.randomUUID();
+    const width = Number.isInteger(input.width) && input.width >= 1 && input.width <= 4096 ? input.width : null;
+    const height = Number.isInteger(input.height) && input.height >= 1 && input.height <= 4096 ? input.height : null;
     const metadata = {
       title: typeof input.title === "string" ? input.title.slice(0, 80) : "صورة مولدة",
-      model: typeof input.model === "string" ? input.model.slice(0, 80) : MODEL,
+      model: typeof input.model === "string" ? input.model.slice(0, 80) : DEFAULT_MODEL,
       mimeType: mime,
       bytes: Math.floor(parts[1].length * 3 / 4),
+      ...(width && height ? { width, height } : {}),
       createdAt: new Date().toISOString(),
     };
     const storedAsset = {
@@ -119,7 +137,7 @@ async function handle(request, env) {
     return json({
       ok: true,
       provider: "cloudflare-workers-ai",
-      model: MODEL,
+      model: DEFAULT_MODEL,
       aiBindingConfigured: Boolean(env.AI),
       imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN && env.STUDIO_ACCESS_TOKEN),
     });
@@ -184,9 +202,31 @@ async function handle(request, env) {
     return json({ error: "invalid_prompt", message: "Prompt must contain 1–2048 characters." }, 400, cors);
   }
 
-  const steps = input.steps === undefined ? MAX_STEPS : input.steps;
-  if (!Number.isInteger(steps) || steps < 1 || steps > MAX_STEPS) {
-    return json({ error: "invalid_steps", message: "Steps must be an integer from 1 to 4." }, 400, cors);
+  const modelKey = input.model === undefined ? "flux-1-schnell" : input.model;
+  const modelId = MODEL_IDS[modelKey];
+  if (!modelId) {
+    return json({ error: "invalid_model", message: "Choose one of the supported image models." }, 400, cors);
+  }
+
+  let outputSize = null;
+  if (modelKey === "flux-2-klein-4b") {
+    const aspectRatio = input.aspectRatio === undefined ? "16:9" : input.aspectRatio;
+    outputSize = IMAGE_PRESETS[aspectRatio];
+    if (!outputSize) {
+      return json({ error: "invalid_aspect_ratio", message: "Choose 16:9 or 1:1 for FLUX.2 Klein 4B." }, 400, cors);
+    }
+  } else if (input.aspectRatio !== undefined) {
+    return json({ error: "aspect_ratio_requires_flux_2", message: "Explicit aspect ratios are available with FLUX.2 Klein 4B." }, 400, cors);
+  }
+
+  let steps = MAX_STEPS;
+  if (modelKey === "flux-1-schnell") {
+    steps = input.steps === undefined ? MAX_STEPS : input.steps;
+    if (!Number.isInteger(steps) || steps < 1 || steps > MAX_STEPS) {
+      return json({ error: "invalid_steps", message: "Steps must be an integer from 1 to 4." }, 400, cors);
+    }
+  } else if (input.steps !== undefined && input.steps !== MAX_STEPS) {
+    return json({ error: "invalid_steps", message: "FLUX.2 Klein 4B uses a fixed four-step process." }, 400, cors);
   }
 
   let seed;
@@ -198,30 +238,51 @@ async function handle(request, env) {
   }
 
   try {
-    const result = await env.AI.run(MODEL, {
-      prompt,
-      steps,
-      ...(seed === undefined ? {} : { seed }),
-    });
+    let result;
+    if (modelKey === "flux-2-klein-4b") {
+      const form = new FormData();
+      form.append("prompt", prompt);
+      form.append("width", String(outputSize.width));
+      form.append("height", String(outputSize.height));
+      if (seed !== undefined) form.append("seed", String(seed));
+
+      // FLUX.2 Klein requires multipart input. Response serializes FormData
+      // and supplies the boundary in the Content-Type header.
+      const multipartResponse = new Response(form);
+      result = await env.AI.run(modelId, {
+        multipart: {
+          body: multipartResponse.body,
+          contentType: multipartResponse.headers.get("content-type"),
+        },
+      });
+    } else {
+      result = await env.AI.run(modelId, {
+        prompt,
+        steps,
+        ...(seed === undefined ? {} : { seed }),
+      });
+    }
 
     if (typeof result?.image !== "string" || !result.image || result.image.length > MAX_IMAGE_BASE64_LENGTH) {
       return json({ error: "invalid_provider_response" }, 502, cors);
     }
 
+    const mimeType = detectImageMime(result.image);
     return json({
       ok: true,
       provider: "cloudflare-workers-ai",
-      model: MODEL,
-      mimeType: "image/jpeg",
-      imageDataUrl: "data:image/jpeg;base64," + result.image,
-      steps,
+      model: modelId,
+      mimeType,
+      imageDataUrl: "data:" + mimeType + ";base64," + result.image,
+      steps: MAX_STEPS,
       seed: seed ?? null,
+      ...(outputSize ? { width: outputSize.width, height: outputSize.height, aspectRatio: input.aspectRatio === undefined ? "16:9" : input.aspectRatio } : {}),
     }, 200, cors);
   } catch (error) {
     if (isQuotaError(error)) {
       return json({
         error: "free_quota_exhausted",
-        message: "The provider rejected this request because its quota or rate limit was reached. No paid fallback was attempted. Keep the job and retry after the quota resets.",
+        message: "The provider rejected this request because its free quota, neuron limit, or capacity was reached. No paid fallback or alternate model was attempted.",
         retryable: true,
       }, 429, cors);
     }
