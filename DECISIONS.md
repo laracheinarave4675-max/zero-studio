@@ -219,3 +219,20 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 **Preservation:** Keep the existing character/background generation, Character Bible, reference-conditioning, gallery, raster and SVG engines intact. The old SVG motion proof is archived as a failed visual experiment, not deleted. No merge or production deploy without explicit permission.
 
 **Implementation:** `docs/ANIME_KEYFRAME_MOTION_ENGINE.md` defines the workflow. `app/anime-motion-engine.mjs` implements the first provider-neutral planning and independent-raster drawing contract.
+
+
+## D-028 — Anatomy-guided independent character drawings (2026-11-20)
+
+**Decision:** Supersede the per-frame still-image generation approach in D-027 for character animation. Repeatedly regenerating the character for every timepoint is not an acceptable motion engine because reference conditioning cannot guarantee stable identity, anatomy, hands, face, costume, or linework. Keep the approved character design as an immutable identity source and build movement from anatomy data and complete artist-approved drawings.
+
+**Production path:** Canonical Character DNA and measured proportions → complete artist-authored key drawings → motion/timing chart → smooth joint-trajectory construction guides with limb-length constraints and planted-foot anchors → complete independent artist redraw for every output timepoint → transparent raster frame review and assembly.
+
+**Hard exclusions:** no per-frame generative still requests as the animation method; no text-to-video; no single-image cut-out puppet; no mesh/rig deformation of approved artwork; no path tween or vector interpolation presented as final anime art; no held/copy frames. A skeleton, proxy, or anatomy canvas is a guide only and must never be accepted as character artwork.
+
+**Cadence:** retain the exact target of 24 distinct, independently drawn raster images per second. Each frame must have its own asset ID and unique content hash and pass identity, anatomy, line-quality, and timing review. A unit test or a 24-slot schedule does not prove an animation exists or that it is artistically acceptable.
+
+**Implementation:** add the provider-neutral anatomy engine in `app/anime-anatomy-engine.mjs`, with validated Character DNA, approved key-drawing records, smooth guide interpolation, two-bone constraints, planted-foot anchors, guide-only construction previews, independent transparent raster frame records, duplicate rejection, and per-frame review gates. The former per-frame still request helper remains legacy-only and must not be used for the approved animation path.
+
+**Limits:** a new camera view, major foreshortening, or occlusion change requires additional complete key drawings and possibly a view-specific Character DNA record. Hair, hands, facial features, cloth folds, overlaps, and final linework remain full redraw responsibilities. The Android editor integration and visual proof are still pending.
+
+**Change control:** Android-first, $0 budget, no paid provider/GPU, no production deployment, and no merge to `main` under this decision.
