@@ -14,8 +14,9 @@ Last updated: 2026-11-20 (UTC)
 - The prior per-frame still-image request builder is legacy-only for this animation direction and must not be used to produce final motion frames.
 - Added a mobile-first on-canvas Character DNA calibration panel: annotate 19 anatomical landmarks over the current drawing, set view/foot contact, save the identity into the native .zero project, and export the DNA record.
 - Extended native project normalization and large-project undo metadata to preserve Character DNA records.
-- **Not yet verified:** latest CI after the raster workflow additions, annotation of the user's approved real character, capture of 24 real artist drawings, playback of the completed walk on Android, and visual identity/anatomy/line-quality approval by the user.
-- No Vercel deployment, Cloudflare deployment, production alias, paid service, or merge to main was initiated by this change.
+- GitHub Actions is green on branch HEAD `4221ec7664ebd3bc6e360b528cd5594c1067b76b`: syntax checks passed and 290/290 tests passed.
+- **Not yet verified:** annotate the user's approved real character, create and approve 24 real artist drawings, play the completed walk on Android, and obtain visual identity/anatomy/line-quality approval from the user.
+- The latest READY Vercel preview currently points to older commit `072b27c0`; the newer drawing workflow is not yet deployed. Vercel reported its free-tier deployment rate limit (>100/day). No production deployment, Cloudflare deployment, paid service, or merge to main was initiated.
 
 dation — 2026-11-20
 
