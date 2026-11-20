@@ -176,9 +176,81 @@ async function handleGallery(request, env, url) {
   }
   return json({ error: "method_not_allowed" }, 405, cors);
 }
+async function handleAnimeSegmentation(request, env, url) {
+  const origin = request.headers.get("Origin") || "";
+  const cors = corsHeaders(origin || env.STUDIO_ORIGIN || "*");
+  if (request.method === "OPTIONS") {
+    if (!isAllowedOrigin(origin, env)) return json({ error: "origin_not_allowed" }, 403);
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "method_not_allowed" }, 405, { ...cors, allow: "POST, OPTIONS" });
+  }
+  if (!isAllowedOrigin(origin, env)) return json({ error: "origin_not_allowed" }, 403, cors);
+  if (!env.GALLERY) return json({ error: "gallery_storage_unavailable" }, 503, cors);
+  if (!(await isAuthorized(request, env))) return json({ error: "unauthorized" }, 401, cors);
+
+  let input;
+  try { input = await request.json(); }
+  catch { return json({ error: "invalid_json" }, 400, cors); }
+  const id = String(input?.sourceId || "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "invalid_source_id" }, 400, cors);
+
+  const stored = await env.GALLERY.get("gallery:" + id);
+  if (!stored) return json({ error: "source_image_not_found" }, 404, cors);
+  let asset;
+  try { asset = JSON.parse(stored); }
+  catch { return json({ error: "corrupt_asset" }, 500, cors); }
+  if (!["image/jpeg", "image/png", "image/webp"].includes(String(asset.mimeType || "")) ||
+      typeof asset.imageDataUrl !== "string" || asset.imageDataUrl.length > 4 * 1024 * 1024) {
+    return json({ error: "invalid_source_asset" }, 400, cors);
+  }
+
+  // Cloudflare Images uses BiRefNet to create a PNG foreground cutout.
+  // The Images Free plan includes 5,000 unique transformations/month; after
+  // the limit the platform returns an error. Never switch to a paid remover.
+  const sourceUrl = new URL("/gallery/" + id, url.origin).toString();
+  let transformed;
+  try {
+    transformed = await fetch(sourceUrl, {
+      cf: { image: { segment: "foreground", format: "png" } },
+    });
+  } catch {
+    return json({ error: "segmentation_unavailable", message: "تعذر تشغيل فصل الخلفية المجاني حالياً." }, 502, cors);
+  }
+  if (!transformed.ok) {
+    const detail = await transformed.text().catch(() => "");
+    const freeLimit = /9422|transformation.{0,30}limit|limit.{0,30}transformation|exceeded.{0,20}limit/i.test(detail);
+    return json({
+      error: freeLimit ? "free_transformation_limit_reached" : "segmentation_failed",
+      message: freeLimit
+        ? "انتهت حصة تحويلات الصور المجانية لهذا الشهر. لم تُفرض رسوم، ولم يتم استخدام بديل مدفوع."
+        : "لم يتمكن فصل الخلفية من معالجة هذه الصورة. احتفظ بالصورة الأصلية وجرّب لاحقاً.",
+      retryable: !freeLimit && transformed.status >= 500,
+    }, freeLimit ? 429 : 502, cors);
+  }
+  const mime = String(transformed.headers.get("content-type") || "").split(";")[0].toLowerCase();
+  if (mime !== "image/png") return json({ error: "invalid_segmentation_output" }, 502, cors);
+  const bytes = await transformed.arrayBuffer();
+  if (!bytes.byteLength || bytes.byteLength > 12 * 1024 * 1024) {
+    return json({ error: "segmentation_output_too_large" }, 502, cors);
+  }
+  return new Response(bytes, {
+    status: 200,
+    headers: {
+      ...cors,
+      "content-type": "image/png",
+      "cache-control": "no-store, max-age=0",
+      "content-disposition": "inline",
+      "x-content-type-options": "nosniff",
+      "x-zero-segmentation": "cloudflare-images-birefnet",
+    },
+  });
+}
+
 async function handle(request, env) {
   const url = new URL(request.url);
-  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);
+  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);\n  if (url.pathname === "/v1/anime/segment") return handleAnimeSegmentation(request, env, url);
   if (request.method === "GET" && url.pathname === "/health") {
     return json({
       ok: true,
