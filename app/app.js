@@ -500,7 +500,12 @@ async function auditStoredAnimeRasterFrames(exportZip=false){
     uniqueDrawingCount:audit.uniqueDrawingCount,uniqueDrawingsPerSecond:audit.uniqueDrawingsPerSecond,
     characterAssetId:activeAnimeMotionPlan.characterAssetId,backgroundAssetId:activeAnimeMotionPlan.backgroundAssetId,
     keyDrawingCount:activeAnimeMotionPlan.keyDrawings.length,backgroundIncluded:(project.animationBackground||[]).length>0,
-   backgroundAssetId:activeAnimeMotionPlan.backgroundAssetId,reviewStatus:"all-24-approved"
+    drawingCount:24,reviewStatus:"all-24-approved",
+    frames:project.frames.slice(0,24).map((entry,index)=>({
+     frameIndex:index,filename:"frames/frame-"+String(index+1).padStart(4,"0")+".png",
+     assetId:entry.animeRaster.assetId,contentHash:entry.animeRaster.contentHash,
+     sourceSignature:entry.animeRaster.sourceSignature,review:entry.animeRaster.review
+    }))
    },null,2)
   },{
    name:"motion-plan.json",data:JSON.stringify(activeAnimeMotionPlan,null,2)
@@ -516,7 +521,10 @@ async function auditStoredAnimeRasterFrames(exportZip=false){
    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
    entries.push({name:"frames/frame-"+String(index+1).padStart(4,"0")+".png",data:bytes});
   }
+  const frameEntries=entries.filter(entry=>/^frames\/frame-\d{4}\.png$/.test(entry.name));
+  if(frameEntries.length!==24||new Set(frameEntries.map(entry=>entry.name)).size!==24)throw Error("فشل تحقق حزمة التصدير: يجب أن تحتوي على 24 ملف PNG منفصلاً بالضبط.");
   const archive=createZip(entries);
+  if(!(archive instanceof Uint8Array)||archive.length<1024||archive[0]!==0x50||archive[1]!==0x4b)throw Error("ملف ZIP الناتج غير صالح أو فارغ.");
   download("zero-studio-anime-24-independent-drawings.zip",new Blob([archive],{type:"application/zip"}));
   animeRasterStatus("تم التصدير بنجاح: 24 رسمة PNG مستقلة وفريدة ومعتمدة، 24 FPS. "+report,true);
   return audit;
