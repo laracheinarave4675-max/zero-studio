@@ -24,8 +24,9 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 ## Technical implementation
 
 - `app/gemini-animation.mjs` accepts an optional validated JPEG/PNG/WebP reference image and sends it as Gemini multimodal `inline_data`.
-- `scripts/run-character-motion-proof.mjs` retrieves the gallery reference, creates a 1-second / 24-frame project, and requests four ordered batches of six drawings.
-- Each accepted batch is validated and checkpointed into the native `.zero` project.
+- `scripts/run-character-motion-proof.mjs` retrieves the gallery reference, creates or restores a validated 1-second / 24-frame project, and requests only the remaining ordered batches of six drawings.
+- Each accepted batch is validated and atomically checkpointed into the native `.zero` project.
+- A later workflow run can restore that exact `.zero` checkpoint, validate its frame count and batch index, then continue at the next uncompleted batch without regenerating accepted frames.
 - Individual SVG frame exports and the project are uploaded as a GitHub Actions artifact.
 - The workflow is isolated to branch `feat/anime-character-motion-proof`; it does not deploy the application.
 
@@ -59,7 +60,7 @@ The camera is fixed. The full character remains visible at a stable scale. The p
 - A normal push to this feature branch runs syntax checks and the complete automated test suite only. It does not call Gemini.
 - Live generation requires all three conditions: (1) a repository Actions variable named `ZERO_STUDIO_FREE_TIER_CONFIRMED` set to the exact text `true`; (2) the commit message contains `[RUN_FREE_TIER_MOTION_PROOF]`; and (3) the repository Actions secret `GEMINI_API_KEY` is configured. The variable is a deliberate guard, not proof of Google billing status.
 - Set the variable in GitHub repository Settings → Secrets and variables → Actions → Variables. Keep the API key in Secrets, never in a file or chat. Set the guard only after verifying that the key belongs to a no-cost/free-tier project with paid billing disabled. This repository cannot inspect or guarantee the billing state of the Google AI account.
-- The model is pinned to `gemini-3.5-flash-lite`. There is no paid fallback, no automatic model switch, and no automatic retry of generation batches. If the key is missing, free quota is unavailable, or the API returns a quota/rate-limit error, stop; do not enable billing or switch providers.
+- The model is pinned to `gemini-3.5-flash-lite`. There is no paid fallback or automatic model switch. Temporary Gemini 5xx overload/network errors are retried up to four times after the first attempt using bounded exponential backoff (5s, 10s, 20s, 40s, up to 60s) and a longer provider `Retry-After` hint when supplied. Hard quota errors are not retried unless Gemini explicitly provides a retry delay. If the free quota is unavailable, stop; do not enable billing or switch providers.
 - The workflow artifact contains `index.html`: a 24 fps playback page and a 24-frame contact sheet. Open it locally after extracting the artifact to inspect the whole sequence and select individual drawings. The `.zero` project and each source SVG frame remain alongside the preview.
 
 
