@@ -136,3 +136,20 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [ ] Integrate imported hand-painted backgrounds with the existing timeline and frame compositor.
 - [ ] Physically test the complete round-trip and playback on the target Android phone.
 - [ ] Keep 24 independently drawn moving-art images per second as the acceptance target.
+
+
+## Current animation direction — D-028 (supersedes D-027 for final character motion)
+
+- [x] Record the user's approved direction: one stable Character DNA plus complete artist-authored key drawings and anatomy-guided construction.
+- [x] Add measured canonical bone proportions and a validated character-identity record.
+- [x] Add smooth guide interpolation, limb-length constraints, center-of-mass sampling, and planted-foot contact anchors.
+- [x] Make the anatomy renderer explicitly guide-only; never deform the source artwork or treat guide images as final art.
+- [x] Add 24 separate full-redraw tasks per second, independent transparent raster assets, duplicate-hash rejection, and frame-level review gates.
+- [x] Add regression tests for the new anatomy engine.
+- [ ] Run the new workflow on the user's actual approved character after annotating its joint landmarks and confirming its canonical view.
+- [ ] Connect the anatomy guide and per-frame drawing tasks to the Android animation editor and native project timeline.
+- [ ] Add artist-editable contour/silhouette correction overlays while preserving the original key drawings.
+- [ ] Draw and review all 24 distinct raster frames for the one-second walk; verify identity, hands, face, costume, foot contact, line quality, and timing.
+- [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests.
+
+The previous per-frame image-generation request route is legacy-only and not an accepted animation method. See docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. Passing unit tests does not equal visual acceptance.
