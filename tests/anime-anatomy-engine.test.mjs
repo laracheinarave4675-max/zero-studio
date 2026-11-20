@@ -154,6 +154,7 @@ test("mobile Character DNA calibration panel is connected to the drawing project
   assert.match(app, /async function verifyAnimeCharacterAnchor\(dna\)/);
   assert.match(app, /await verifyAnimeCharacterAnchor\(dna\)/);
   assert.match(app, /protectedDNA=\(project\.animeCharacterDNA\|\|\[\]\)\.filter/);
+  assert.match(app, /keyDrawings\|\|\[\]\)\.some\(key=>key\.drawingAssetId===frame\(\)\.id\)/);
   assert.match(app, /لا يمكن حذف هذا الإطار لأنه الرسم المرجعي الأصلي/);
   assert.match(readFileSync(new URL("../app/engine.mjs", import.meta.url), "utf8"), /الرسم الأصلي المرتبط بهوية الشخصية غير موجود/);
   assert.match(app, /f\.animeRaster\?\.dataUrl\?\.length\|\|0/);
