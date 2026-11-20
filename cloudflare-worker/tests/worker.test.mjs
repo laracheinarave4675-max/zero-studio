@@ -102,3 +102,46 @@ test("health remains available before private image credentials are configured",
   const noAi = await worker.fetch(new Request("https://worker.example/health"), {});
   assert.equal((await noAi.json()).aiBindingConfigured, false);
 });
+
+test("saves generated images to KV with a 30-day TTL and returns an opaque share URL", async () => {
+  const store = new Map();
+  let options;
+  const gallery = {
+    async put(key, value, opts) { store.set(key, { value, metadata: opts.metadata }); options = opts; },
+    async get(key) { return store.get(key)?.value || null; },
+    async list() { return { keys: [...store.entries()].map(([name, item]) => ({ name, metadata: item.metadata })), list_complete: true }; },
+  };
+  const e = { ...env(), GALLERY: gallery };
+  const response = await worker.fetch(request("/v1/gallery", {
+    imageDataUrl: "data:image/png;base64,aGVsbG8=",
+    title: "اختبار الخلفية",
+    prompt: "anime background",
+    model: "test-model"
+  }), e);
+  assert.equal(response.status, 201);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.match(payload.item.shareUrl, /\/gallery\/[0-9a-f-]{36}$/i);
+  assert.equal(payload.retentionDays, 30);
+  assert.equal(options.expirationTtl, 2592000);
+  const imageResponse = await worker.fetch(new Request(payload.item.shareUrl));
+  assert.equal(imageResponse.status, 200);
+  assert.equal(imageResponse.headers.get("content-type"), "image/png");
+  assert.equal(await imageResponse.text(), "hello");
+});
+
+test("lists saved gallery metadata only after bearer authentication", async () => {
+  const gallery = {
+    async list() { return { keys: [{ name: "gallery:12345678-1234-1234-1234-123456789abc", metadata: { title: "Scene", createdAt: "2026-11-20T12:00:00.000Z" } }], list_complete: true }; },
+  };
+  const req = new Request("https://worker.example/v1/gallery", {
+    method: "GET",
+    headers: { Origin: ORIGIN, Authorization: "Bearer " + TOKEN },
+  });
+  const response = await worker.fetch(req, { ...env(), GALLERY: gallery });
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.items.length, 1);
+  assert.equal(payload.items[0].title, "Scene");
+  assert.match(payload.items[0].shareUrl, /gallery\/12345678/);
+});
