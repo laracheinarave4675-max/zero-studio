@@ -58,7 +58,8 @@ A passing unit test is only a software-contract result. It is not a claim of pro
 
 ## Current limitations and next work
 
-- The anatomy engine is implemented as a tested pure module; the construction guide has not yet been connected to the Android animation editor.
+- The anatomy engine is implemented as a tested module and the mobile-first Character DNA calibration panel is connected to the Android-oriented editor. It can annotate 19 landmarks over the current drawing and save the validated identity into the native .zero project.
+- Key-drawing capture, shot-plan management, task selection, and final raster frame assembly are not yet connected to the editor.
 - No artist-authored 24-frame animation has been produced by this engine yet.
 - The first approved character still needs its joint landmarks reviewed/annotated against a real model sheet.
 - The current construction view assumes one fixed camera/view per shot. A new view, strong foreshortening, or occlusion change requires another complete key drawing and possibly a new view-specific Character DNA record.
