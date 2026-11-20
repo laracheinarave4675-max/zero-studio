@@ -30,7 +30,22 @@
 </div>
 <label class="field-label" for="animeAnatomyDNASelect">هويات الشخصيات المحفوظة في المشروع</label>
 <select id="animeAnatomyDNASelect" class="text-input"><option value="">لا توجد هوية تشريحية محفوظة</option></select>
-<button id="exportAnimeAnatomyDNABtn" class="secondary full" type="button" disabled>تصدير بيانات هوية الشخصية</button>
+<div class="anime-keypose-tools">
+<label class="field-label" for="animeMotionAction">وصف حركة اللقطة</label>
+<textarea id="animeMotionAction" class="text-input" rows="2">مشي جانبي طبيعي مع انتقال الوزن وثبات القدم عند ملامسة الأرض.</textarea>
+<label class="field-label" for="animeKeyDrawingPhase">مرحلة الوضعية المفتاحية الحالية</label>
+<select id="animeKeyDrawingPhase" class="text-input">
+<option value="anticipation">استعداد</option><option value="action">حركة</option><option value="contact">ملامسة الأرض</option><option value="passing">مرور</option><option value="recovery">استعادة التوازن</option><option value="settle">استقرار</option>
+</select>
+<label class="field-label" for="animeKeyDrawingEase">منحنى الانتقال إلى الوضعية التالية</label>
+<select id="animeKeyDrawingEase" class="text-input">
+<option value="linear">خطي</option><option value="ease-in">تسارع تدريجي</option><option value="ease-out">تباطؤ تدريجي</option><option value="ease-in-out" selected>تسارع وتباطؤ</option>
+</select>
+<button id="startAnimeKeyDrawingBtn" class="secondary full" type="button">تسجيل الإطار الحالي كوضعية مفتاحية كاملة</button>
+<button id="buildAnimeMotionPlanBtn" class="primary full" type="button">إنشاء خطة حركة 24 إطاراً وتصديرها</button>
+<p class="note">لإثبات المشي الأول: جهّز 24 إطاراً في الخط الزمني، ثم سجّل رسمة مفتاحية معتمدة في الإطار 1 والإطار 24، ويمكن إضافة وضعيات بينهما. كل إطار وسيط سيبقى رسمة كاملة مستقلة مطلوب رسمها يدوياً.</p>
+<div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div>
+</div><button id="exportAnimeAnatomyDNABtn" class="secondary full" type="button" disabled>تصدير بيانات هوية الشخصية</button>
 <div id="animeAnatomyStatus" class="status" role="status" aria-live="polite"></div>
 </details>
 <div id="characterStatus" class="status" role="status" aria-live="polite"></div></section><section class="panel-card" id="humanPaintingPanel"><div class="section-heading"><h2>ورشة الرسم اليدوي</h2><span class="pill">Raster أولاً</span></div><p class="note">ابدأ بقلم الرصاص أو اختر فرشاة Raster. كل ضربة ترسمها بإصبعك أو قلمك الرقمي تتحول إلى بكسلات داخل طبقة مستقلة قابلة للحفظ والتراجع. غيّر اللون والحجم والخامة من أدوات اللوحة.</p><p class="note">لاختبار الخلفية المرجعية: خطّط أولاً منظور المنزل والسقف، ثم ارسم في طبقات منفصلة الخشب والقرميد والزجاج والأشجار والشجيرات والجدار الحجري والضوء. استخدم علامات أوراق قصيرة ومتفاوتة الاتجاه، وخطوطاً طويلة متدرجة للخشب والحواف.</p><p class="note">SVG ما زال متاحاً كمسار اختياري قابل للتحرير. يمكن أيضاً إنشاء صورة مرجعية عبر محرك الصور الهجين ثم إدخالها كطبقة Raster؛ تبقى مراجعة الجودة وثبات الشخصيات مسؤولية خط الإنتاج. محرك الفرش اليدوي ما زال أولياً ولم يجتز بعد اختبار الجودة الفنية.</p></section><section class="panel-card" id="imageGenerationPanel" data-preview-feature="flux2-optional-model-v2">
