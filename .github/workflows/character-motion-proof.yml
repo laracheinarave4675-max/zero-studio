@@ -9,13 +9,7 @@ on:
       - "app/animation-production.mjs"
       - "app/animation-worker.mjs"
       - "tests/gemini-animation.test.mjs"
-  workflow_dispatch:
-    inputs:
-      confirm_free_tier_only:
-        description: "Confirm GEMINI_API_KEY is on a no-cost/free-tier project with no paid billing or fallback."
-        required: true
-        type: boolean
-        default: false
+      - "docs/ANIME_CHARACTER_MOTION_PROOF.md"
 permissions:
   contents: read
 jobs:
@@ -33,7 +27,7 @@ jobs:
         run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
   one-second-character-motion:
     needs: regression-tests
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_free_tier_only == true }}
+    if: ${{ contains(github.event.head_commit.message, '[RUN_FREE_TIER_MOTION_PROOF]') && vars.ZERO_STUDIO_FREE_TIER_CONFIRMED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
