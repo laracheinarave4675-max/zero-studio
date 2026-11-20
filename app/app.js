@@ -300,7 +300,7 @@ async function buildAnimeMotionPlan(){
   $("animeMotionPlanStatus").style.color="#ff9999";
  }
 }
-async function saveAnimeAnatomyDNA(){
+async async function saveAnimeAnatomyDNA(){
  try{
   if(Object.keys(animeAnatomyPoints).length!==ANIME_ANATOMY_JOINTS.length)throw Error("أكمل تحديد جميع النقاط التشريحية أولاً.");
   if(animeAnatomyMode==="key"){await saveAnimeKeyDrawing();return;}
