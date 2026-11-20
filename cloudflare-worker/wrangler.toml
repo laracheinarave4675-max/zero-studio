@@ -3,6 +3,8 @@ main = "src/index.js"
 compatibility_date = "2026-11-20"
 preview_urls = true
 
+[previews]
+
 [ai]
 binding = "AI"
 
@@ -12,3 +14,10 @@ head_sampling_rate = 1
 
 [previews.ai]
 binding = "AI"
+
+[[kv_namespaces]]
+binding = "GALLERY"
+id = "1f604fc7958b491e8ac15bbb3e127de3"
+
+[vars]
+STUDIO_ALLOWED_ORIGINS = "https://zero-studio-preview.vercel.app,https://zero-studio-preview-git-feat-production-gallery-studio-37a2.vercel.app"

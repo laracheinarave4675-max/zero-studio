@@ -303,6 +303,113 @@ $("animationBatchFile").onchange=async event=>{
  finally{event.target.value=""}
 };
 let generatedRasterAsset=null;
+let confirmedGalleryItems=[];
+const GALLERY_LOCAL_CACHE_KEY="zero-studio-gallery-confirmed-v1";
+function readConfirmedGalleryItems(){
+ const cutoff=Date.now()-30*24*60*60*1000;
+ let stored=[];
+ try{const parsed=JSON.parse(localStorage.getItem(GALLERY_LOCAL_CACHE_KEY)||"[]");if(Array.isArray(parsed))stored=parsed}catch{}
+ const merged=new Map();
+ for(const item of [...confirmedGalleryItems,...stored]){
+  if(!item||typeof item.id!=="string"||typeof item.shareUrl!=="string")continue;
+  const created=Date.parse(item.createdAt||"");
+  if(!Number.isFinite(created)||created<cutoff)continue;
+  merged.set(item.id,item);
+ }
+ return [...merged.values()];
+}
+function rememberConfirmedGalleryItem(item){
+ if(!item||typeof item.id!=="string"||typeof item.shareUrl!=="string")return;
+ confirmedGalleryItems=[item,...confirmedGalleryItems.filter(entry=>entry.id!==item.id)].slice(0,100);
+ try{localStorage.setItem(GALLERY_LOCAL_CACHE_KEY,JSON.stringify(readConfirmedGalleryItems().slice(0,100)))}catch{}
+}
+async function refreshProductionGallery(){
+ const list=$("productionGalleryList"),status=$("productionGalleryStatus");
+ if(!list||!status)return;
+ status.textContent="يحمّل الصور المحفوظة…";
+ try{
+  const response=await fetch("/api/gallery",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok||payload.ok!==true)throw Error(payload.message||payload.error||"تعذر تحميل المعرض.");
+  const merged=new Map();
+  for(const item of payload.items||[])if(item&&typeof item.id==="string"&&typeof item.shareUrl==="string")merged.set(item.id,item);
+  for(const item of readConfirmedGalleryItems())if(!merged.has(item.id))merged.set(item.id,item);
+  const items=[...merged.values()].sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+  list.replaceChildren();
+  for(const item of items){
+   const card=document.createElement("article");card.className="gallery-item";
+   const link=document.createElement("a");link.href=item.shareUrl;link.target="_blank";link.rel="noopener noreferrer";link.className="gallery-image-link";
+   const image=document.createElement("img");image.src=item.shareUrl;image.alt=item.title||"صورة محفوظة";image.loading="lazy";link.appendChild(image);
+   const title=document.createElement("strong");title.textContent=item.title||"صورة مولدة";
+   const date=document.createElement("small");date.textContent=item.createdAt?new Date(item.createdAt).toLocaleString():"";
+   const actions=document.createElement("div");actions.className="gallery-item-actions";
+   const share=document.createElement("a");share.href=item.shareUrl;share.target="_blank";share.rel="noopener noreferrer";share.textContent="فتح رابط الصورة";share.className="gallery-share-link";
+   const copy=document.createElement("button");copy.type="button";copy.textContent="نسخ رابط المراجعة";copy.onclick=async()=>{try{await navigator.clipboard.writeText(item.shareUrl);status.textContent="نُسخ رابط الصورة. أرسله في المحادثة لأتمكن من مراجعتها."}catch{status.textContent=item.shareUrl}};
+   actions.append(share,copy);card.append(link,title,date,actions);list.appendChild(card);
+  }
+  status.textContent=items.length+" صورة محفوظة. قد تتأخر قائمة Cloudflare KV العامة حتى 60 ثانية؛ الصور التي أكد الخادم حفظها تظهر هنا فوراً.";
+ }catch(error){
+  const confirmed=readConfirmedGalleryItems();
+  if(confirmed.length){
+   const merged=new Map(confirmed.map(item=>[item.id,item]));
+   list.replaceChildren();
+   for(const item of merged.values()){
+    const card=document.createElement("article");card.className="gallery-item";
+    const link=document.createElement("a");link.href=item.shareUrl;link.target="_blank";link.rel="noopener noreferrer";link.className="gallery-image-link";
+    const image=document.createElement("img");image.src=item.shareUrl;image.alt=item.title||"صورة محفوظة";image.loading="lazy";link.appendChild(image);
+    const title=document.createElement("strong");title.textContent=item.title||"صورة مولدة";
+    const actions=document.createElement("div");actions.className="gallery-item-actions";
+    const share=document.createElement("a");share.href=item.shareUrl;share.target="_blank";share.rel="noopener noreferrer";share.textContent="فتح رابط الصورة";share.className="gallery-share-link";
+    actions.append(share);card.append(link,title,actions);list.appendChild(card);
+   }
+   status.textContent=confirmed.length+" صورة أكد الخادم حفظها. تعذر تحديث القائمة العامة مؤقتاً.";
+  }else status.textContent=error.message||"تعذر تحميل المعرض.";
+ }
+}
+async function prepareGalleryUploadDataUrl(asset){
+ const source=String(asset?.dataUrl||"");
+ const maxChars=2.5*1024*1024;
+ if(!source.startsWith("data:image/"))throw Error("الصورة لا تحتوي على بيانات صورة صالحة.");
+ if(source.length<=maxChars)return source;
+ const image=new Image();
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر تجهيز الصورة للحفظ."));image.src=source});
+ if(!image.naturalWidth||!image.naturalHeight)throw Error("تعذر قراءة أبعاد الصورة للحفظ.");
+ let scale=Math.min(1,1600/Math.max(image.naturalWidth,image.naturalHeight));
+ for(let pass=0;pass<7;pass++){
+  const canvas=document.createElement("canvas");
+  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+  canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const context=canvas.getContext("2d");
+  if(!context)throw Error("تعذر إنشاء مساحة ضغط الصورة.");
+  context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);
+  context.drawImage(image,0,0,canvas.width,canvas.height);
+  for(const quality of [0.9,0.84,0.78,0.72]){
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+   if(!blob)continue;
+   const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("تعذر قراءة الصورة المضغوطة."));reader.readAsDataURL(blob)});
+   if(dataUrl.length<=maxChars)return dataUrl;
+  }
+  scale*=0.84;
+ }
+ throw Error("تعذر ضغط الصورة إلى حجم الرفع الآمن. لم تُحذف الصورة الأصلية من الاستوديو.");
+}
+async function saveGeneratedImageToGallery(asset,prompt,model){
+ const uploadImageDataUrl=await prepareGalleryUploadDataUrl(asset);
+ const requestBody=JSON.stringify({imageDataUrl:uploadImageDataUrl,title:asset.name,prompt,model});
+ if(new Blob([requestBody]).size>3*1024*1024)throw Error("حجم طلب الحفظ ما زال كبيراً بعد الضغط؛ لم يُرسل إلى الخادم.");
+ const response=await fetch("/api/gallery",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:requestBody});
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok||payload.ok!==true||!payload.item?.shareUrl){
+  const message=payload.message||payload.error||(response.status===413?"رفض الخادم حجم الصورة (413).":"تعذر حفظ الصورة في المعرض (HTTP "+response.status+").");
+  throw Error(message);
+ }
+ asset.galleryItem=payload.item;
+ rememberConfirmedGalleryItem(payload.item);
+ const share=$("imageGenerationShareLink");
+ if(share){share.href=payload.item.shareUrl;share.hidden=false}
+ await refreshProductionGallery();
+ return payload.item;
+}
 async function checkImageProviderConnection(){
  const statusNode=$("imageGenerationStatus");
  if(!statusNode)return;
@@ -331,7 +438,8 @@ $("generateRasterImageBtn").onclick=async()=>{
   if(!image.naturalWidth||!image.naturalHeight)throw Error("الصورة الناتجة بلا أبعاد صالحة.");
   generatedRasterAsset={name:"صورة مولدة · "+new Date().toLocaleTimeString(),dataUrl:payload.imageDataUrl,mimeType:payload.mimeType||"image/jpeg",width:image.naturalWidth,height:image.naturalHeight};
   $("generatedRasterPreview").src=payload.imageDataUrl;$("imageGenerationResult").hidden=false;$("importGeneratedRasterBtn").disabled=false;
-  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+". راجع المعاينة ثم أدخلها كطبقة مستقلة.";
+  statusNode.textContent="وصلت الصورة من "+(payload.model||"محرك الصور")+". جارٍ حفظ نسخة في معرض الإنتاج…";
+  try{const saved=await saveGeneratedImageToGallery(generatedRasterAsset,promptText,payload.model||"@cf/black-forest-labs/flux-1-schnell");statusNode.textContent="تم توليد الصورة وحفظها في معرض الإنتاج. رابط المراجعة جاهز للمشاركة."}catch(saveError){statusNode.textContent="تم توليد الصورة، لكن تعذر حفظها سحابياً: "+saveError.message+" احتفظ بها داخل المشروع أو أعد محاولة الحفظ."}
  }catch(error){statusNode.textContent=error.message||"تعذر الاتصال بمحرك الصور."}
  finally{button.disabled=false}
 };
@@ -346,6 +454,8 @@ $("importGeneratedRasterBtn").onclick=()=>{
  }catch(error){$("imageGenerationStatus").textContent="تعذر إدخال الصورة: "+error.message}
 };
 checkImageProviderConnection();
+refreshProductionGallery();
+$("refreshProductionGalleryBtn").onclick=refreshProductionGallery;
 $("ai2dGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصف المشهد أولاً.",false);return}const button=$("ai2dGenerateBtn");button.disabled=true;$("aiGenerateBtn").disabled=true;$("ai3dGenerateBtn").disabled=true;aiStatus("المخرج الفني يخطط الكاميرا والمنظور ثم يرسم سبع طبقات 2D…");clearProposal();try{let result,critique,revisionBrief="";for(let pass=1;pass<=2;pass++){result=await generateAnimeVectorBackground(key,promptText,fetch,"gemini-3.5-flash-lite",{fallbackModels:["gemini-3.1-flash-lite"],revisionBrief,onProgress:info=>aiStatus("الجولة "+pass+" — "+info.message)});aiStatus("يعرض المراجع الفني معاينة الرسم ويفحص المنظور والخامات والإضاءة…");const png=await animeLayersPreviewPng(result.layers);try{critique=await reviewAnimeVectorPreview(key,promptText,png,fetch,result.model,{fallbackModels:["gemini-3.1-flash-lite"]})}catch(reviewError){throw Error("لم يجتز الرسم مراجعة الجودة لأن الفحص البصري فشل: "+reviewError.message+". لم يُعرض زر الاعتماد.");}if(critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0)break;if(pass===1){revisionBrief=critique.nextRevisionBrief||critique.issues.map(item=>item.area+": "+item.problem+" — "+item.correction).join("\n");aiStatus("كشف الفحص نقاطاً تحتاج تحسيناً (التقييم "+critique.overallScore+"/10). يعيد الفنان رسمها الآن…")} }proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-2d-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-2d-proposal-"+index)});$("aiReview").hidden=false;const passed=Boolean(critique&&critique.overallScore>=8&&critique.looksLike2DAnime&&critique.criticalIssues.length===0);$("aiApproveBtn").disabled=!passed;const quality=critique?" التقييم البصري: "+critique.overallScore+"/10.":"";const issues=critique?.issues?.length?" أبرز الملاحظات: "+critique.issues.slice(0,2).map(item=>item.problem).join("؛ "):"";aiStatus((passed?"اجتاز بوابة الجودة. ":"لم يجتز بوابة الجودة؛ يلزم تحسين الرسم قبل اعتماده. ")+"اقتراح الخلفية 2D: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً."+quality+issues)}catch(error){aiStatus(error.message||"تعذر إنتاج الخلفية ثنائية الأبعاد.",false)}finally{button.disabled=false;$("aiGenerateBtn").disabled=false;$("ai3dGenerateBtn").disabled=false}};
 $("aiGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصفاً للرسم أولاً.",false);return}const button=$("aiGenerateBtn");button.disabled=true;$("ai3dGenerateBtn").disabled=true;$("ai2dGenerateBtn").disabled=true;aiStatus("يرسم الاقتراح المتجهي الآن…");clearProposal();try{const result=await generateSceneProposal(key,promptText);proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-proposal-"+index)});$("aiReview").hidden=false;aiStatus("اكتمل اقتراح المشهد: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً. راجعه ثم اعتمده أو ارفضه.")}catch(error){aiStatus(error.message||"تعذر إنشاء الاقتراح.",false)}finally{button.disabled=false;$("ai3dGenerateBtn").disabled=false;$("ai2dGenerateBtn").disabled=false}};
 $("ai3dGenerateBtn").onclick=async()=>{const key=$("geminiApiKey").value.trim(),promptText=$("aiPrompt").value.trim();if(!key){aiStatus("أدخل مفتاح Gemini API أولاً.",false);return}if(!promptText){aiStatus("اكتب وصف البيئة أولاً.",false);return}const button=$("ai3dGenerateBtn");button.disabled=true;$("aiGenerateBtn").disabled=true;$("ai2dGenerateBtn").disabled=true;aiStatus("يبني الفنان المشهد ثلاثي الأبعاد ويحوّله إلى SVG…");clearProposal();try{const result=await generateMeshEnvironmentProposal(key,promptText);proposedLayers=result.layers;proposalTarget={frameId:frame().id};proposedLayers.forEach((entry,index)=>{const previewLayer={id:"ai-3d-proposal-"+index,name:entry.name,visible:true,operations:entry.operations.map(path=>({kind:"stroke",path}))};renderLayerInto(proposal,previewLayer,index,"ai-3d-proposal-"+index)});$("aiReview").hidden=false;aiStatus("اكتمل المشهد ثلاثي الأبعاد: "+proposedLayers.length+" طبقات و"+result.totalOperations+" مساراً متجهياً. راجعه قبل الاعتماد.")}catch(error){aiStatus(error.message||"تعذر إنشاء البيئة ثلاثية الأبعاد.",false)}finally{button.disabled=false;$("aiGenerateBtn").disabled=false;$("ai2dGenerateBtn").disabled=false}};

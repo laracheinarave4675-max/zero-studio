@@ -1,3 +1,19 @@
+# Production gallery milestone — 2026-11-20
+
+- Added a Cloudflare Workers KV namespace named `ZERO STUDIO Production Gallery` (free Workers KV tier; namespace ID is configured in `cloudflare-worker/wrangler.toml`).
+- Added Worker routes: authenticated `/v1/gallery` list/save and opaque-ID `/gallery/{id}` image view links. New gallery objects expire automatically after 30 days.
+- Added Vercel server proxy `app/api/gallery.js`; browser code never receives the Cloudflare bearer token.
+- Added automatic gallery save after successful image generation, gallery refresh/cards, and share-link controls in the Android-first UI.
+- Gallery links are unlisted bearer links: anyone possessing a link can view that image. Users should not save sensitive/private images. Images are retained for 30 days, and KV is limited to 1 GB total with daily read/write limits. See Cloudflare's official KV limits and pricing docs.
+- R2 is not enabled on this account; it was not activated and no payment method or paid plan was requested.
+- Deployed the Worker gallery code to the existing Cloudflare staging Worker using the script-content endpoint, preserving its secret binding. Verified through the Cloudflare API that `GALLERY` KV, AI, the existing secret binding, and both approved app origins are present.
+- Deployed a dedicated Vercel preview for branch `feat/production-gallery`; latest deployment `dpl_PBbyNexWeFYtTnn23rp13pvtB4Vf` is `READY` at `https://zero-studio-preview-git-feat-production-gallery-studio-37a2.vercel.app/`. The app root returned HTTP 200 and contains the gallery UI. The API's direct external GET correctly returns 403 without a same-origin browser referrer.
+- GitHub Actions on the latest branch commit passed: Cloud inference worker tests, hybrid raster/SVG regression tests, and drawing-engine tests. The worker suite covers gallery upload, 30-day expiration, authenticated listing, and share-link image retrieval.
+- **Remaining acceptance test:** a real browser session must generate or upload an image, save it to KV, reload the gallery, open the share link, and verify that the assistant can retrieve it. The connected tools cannot simulate the user's Android browser session, so end-to-end image persistence is not yet claimed.
+- PR #7 remains draft/open/unmerged. No primary production app alias was promoted or changed.
+
+---
+
 # Hybrid image-generation integration milestone — 2026-11-20
 
 - Deployed the hybrid application branch to the separate Vercel staging project `zero-studio-preview`, domain `https://zero-studio-preview.vercel.app/`. The primary `zero-studio` project was not changed.

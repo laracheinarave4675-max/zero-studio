@@ -19,7 +19,7 @@ function json(data, status = 200, headers = {}) {
 function corsHeaders(origin) {
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
     "access-control-allow-headers": "authorization, content-type",
     "access-control-max-age": "600",
     vary: "Origin",
@@ -33,13 +33,88 @@ function constantTimeEqual(left, right) {
   return mismatch === 0;
 }
 
+function isAllowedOrigin(origin, env) {
+  if (!origin) return false;
+  if (origin === String(env.STUDIO_ORIGIN || "").trim()) return true;
+  return String(env.STUDIO_ALLOWED_ORIGINS || "").split(",").map(value => value.trim()).filter(Boolean).includes(origin);
+}
+
 function isQuotaError(error) {
   const message = String(error?.message || error || "").toLowerCase();
   return /quota|neuron|daily limit|rate.?limit|too many requests|exceeded.*limit/.test(message);
 }
 
+async function handleGallery(request, env, url) {
+  const requestOrigin = request.headers.get("Origin") || "";
+  const cors = corsHeaders(requestOrigin || env.STUDIO_ORIGIN || "*");
+  if (!env.GALLERY) return json({ error: "gallery_storage_unavailable" }, 503, cors);
+  if (url.pathname.startsWith("/gallery/") && request.method === "GET") {
+    const id = url.pathname.slice(9);
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "not_found" }, 404);
+    const stored = await env.GALLERY.get("gallery:" + id);
+    if (!stored) return json({ error: "not_found" }, 404);
+    let asset; try { asset = JSON.parse(stored); } catch { return json({ error: "corrupt_asset" }, 500); }
+    const parts = String(asset.imageDataUrl || "").split(";base64,");
+    const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
+    if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime)) return json({ error: "corrupt_asset" }, 500);
+    const bytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
+    return new Response(bytes, { status: 200, headers: { "content-type": mime, "cache-control": "public, max-age=3600, immutable", "content-disposition": "inline", "x-content-type-options": "nosniff" } });
+  }
+  if (url.pathname !== "/v1/gallery") return json({ error: "not_found" }, 404, cors);
+  const origin = String(env.STUDIO_ORIGIN || "").trim();
+  if (!isAllowedOrigin(requestOrigin, env)) return json({ error: "origin_not_allowed" }, 403);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!constantTimeEqual(token, env.STUDIO_ACCESS_TOKEN)) return json({ error: "unauthorized" }, 401, cors);
+  if (request.method === "GET") {
+    const listed = await env.GALLERY.list({ prefix: "gallery:", limit: 100 });
+    const items = (listed.keys || []).map(entry => ({ id: entry.name.slice(8), ...(entry.metadata || {}), shareUrl: new URL("/gallery/" + entry.name.slice(8), url.origin).toString() })).sort((a,b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    return json({ ok: true, items, truncated: Boolean(listed.list_complete === false) }, 200, cors);
+  }
+  if (request.method === "POST") {
+    let input; try { input = await request.json(); } catch { return json({ error: "invalid_json" }, 400, cors); }
+    const data = typeof input.imageDataUrl === "string" ? input.imageDataUrl : "";
+    const parts = data.split(";base64,");
+    const mime = parts[0] && parts[0].startsWith("data:") ? parts[0].slice(5) : "";
+    if (!parts[1] || !["image/jpeg", "image/png", "image/webp"].includes(mime) || data.length > 4 * 1024 * 1024) return json({ error: "invalid_image" }, 400, cors);
+    const id = crypto.randomUUID();
+    const metadata = {
+      title: typeof input.title === "string" ? input.title.slice(0, 80) : "صورة مولدة",
+      model: typeof input.model === "string" ? input.model.slice(0, 80) : MODEL,
+      mimeType: mime,
+      bytes: Math.floor(parts[1].length * 3 / 4),
+      createdAt: new Date().toISOString(),
+    };
+    const storedAsset = {
+      imageDataUrl: data,
+      ...metadata,
+      prompt: typeof input.prompt === "string" ? input.prompt.slice(0, 1800) : "",
+    };
+    try {
+      await env.GALLERY.put("gallery:" + id, JSON.stringify(storedAsset), {
+        expirationTtl: 2592000,
+        metadata,
+      });
+    } catch (error) {
+      console.error("gallery_write_failed", {
+        name: error?.name || "Error",
+        message: String(error?.message || error).slice(0, 240),
+        imageLength: data.length,
+        metadataBytes: new TextEncoder().encode(JSON.stringify(metadata)).byteLength,
+      });
+      return json({
+        error: "gallery_storage_write_failed",
+        message: "رفض مخزن الصور كتابة الملف. لم تُسجّل الصورة على أنها محفوظة.",
+      }, 502, cors);
+    }
+    return json({ ok: true, item: { id, ...metadata, shareUrl: new URL("/gallery/" + id, url.origin).toString() }, retentionDays: 30 }, 201, cors);
+  }
+  return json({ error: "method_not_allowed" }, 405, cors);
+}
 async function handle(request, env) {
   const url = new URL(request.url);
+  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);
   if (request.method === "GET" && url.pathname === "/health") {
     return json({
       ok: true,
@@ -57,11 +132,11 @@ async function handle(request, env) {
     return json({ error: "worker_not_configured", message: "Worker configuration is incomplete." }, 503);
   }
 
-  if (requestOrigin !== configuredOrigin) {
+  if (!isAllowedOrigin(requestOrigin, env)) {
     return json({ error: "origin_not_allowed" }, 403);
   }
 
-  const cors = corsHeaders(configuredOrigin);
+  const cors = corsHeaders(requestOrigin);
 
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: cors });
