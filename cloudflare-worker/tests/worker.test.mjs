@@ -124,7 +124,7 @@ test("saves generated images to KV with a 30-day TTL and returns an opaque share
   assert.match(payload.item.shareUrl, /\/gallery\/[0-9a-f-]{36}$/i);
   assert.equal(payload.retentionDays, 30);
   assert.equal(options.expirationTtl, 2592000);
-  const imageResponse = await worker.fetch(new Request(payload.item.shareUrl));
+  const imageResponse = await worker.fetch(new Request(payload.item.shareUrl), e);
   assert.equal(imageResponse.status, 200);
   assert.equal(imageResponse.headers.get("content-type"), "image/png");
   assert.equal(await imageResponse.text(), "hello");
