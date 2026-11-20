@@ -1,0 +1,58 @@
+name: ZERO STUDIO first raster proof — connectivity
+on:
+  push:
+    branches:
+      - feat/anime-keyframe-raster-pipeline
+    paths:
+      - .github/workflows/anime-keyframe-first-raster-proof.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify the existing ZERO STUDIO image gateway without inference
+        env:
+          BASE_URL: https://zero-studio-flux2-preview-studio-37a2.vercel.app
+          MODEL_SHEET_ID: 4abf7811-41f8-4436-ba9f-6ca4e211fa80
+          SIDE_VIEW_ID: 83d6357f-4e5f-4f78-a603-0eb2c61ada6d
+        run: |
+          node --input-type=module <<'NODE'
+          const base = process.env.BASE_URL;
+          const origin = base;
+          async function getJson(path, withOrigin = false) {
+            const response = await fetch(new URL(path, base), {
+              headers: withOrigin ? { Origin: origin, Accept: "application/json" } : { Accept: "application/json" },
+              redirect: "manual"
+            });
+            const contentType = response.headers.get("content-type") || "";
+            if (!response.ok || !contentType.includes("application/json")) {
+              const body = (await response.text()).slice(0, 500);
+              throw new Error(`${path}: HTTP ${response.status}, content-type=${contentType}, body=${body}`);
+            }
+            const payload = await response.json();
+            if (payload.ok !== true) throw new Error(`${path}: ${JSON.stringify(payload)}`);
+            return payload;
+          }
+          const gateway = await getJson("/api/images");
+          if (gateway.routeConfigured !== true || gateway.workerReachable !== true || gateway.tokenVerified !== true || gateway.inferenceStarted !== false) {
+            throw new Error("Image gateway probe did not confirm a configured Worker and valid token: " + JSON.stringify(gateway));
+          }
+          const refs = [];
+          for (const id of [process.env.MODEL_SHEET_ID, process.env.SIDE_VIEW_ID]) {
+            const image = await getJson("/api/gallery-image?id=" + encodeURIComponent(id), true);
+            const match = /^data:image\/(?:jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(image.imageDataUrl || "");
+            if (!match) throw new Error("Gallery reference response did not contain a supported image: " + id);
+            const bytes = Math.floor(match[1].length * 3 / 4);
+            if (bytes < 1 || bytes > 512 * 1024) throw new Error("Reference is outside the 512 KB model input limit: " + id);
+            refs.push({ id, mimeType: image.mimeType, bytes });
+          }
+          await import("node:fs/promises").then(fs => fs.appendFile(process.env.GITHUB_STEP_SUMMARY,
+            "## ZERO STUDIO image-gateway probe\n\n" +
+            "- Worker connectivity and bearer token: verified (no inference run).\n" +
+            "- Character model-sheet reference: " + refs[0].bytes + " bytes.\n" +
+            "- Character side-view reference: " + refs[1].bytes + " bytes.\n\n" +
+            "No image was generated and no model quota was consumed.\n"));
+          console.log(JSON.stringify({ gateway: "verified", inferenceStarted: false, references: refs }, null, 2));
+          NODE
