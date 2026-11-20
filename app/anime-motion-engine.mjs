@@ -15,7 +15,7 @@ function normalizePoseGuide(source){
  if(!source||typeof source!=="object")fail("مرجع وضعية الجسم مفقود.");
  const joints={};
  for(const name of ANIME_POSE_JOINTS)joints[name]=validPoint(source.joints?.[name],name);
- const contacts=source.contacts&&typeof source.contacts==="object"?source.contacts:{};
+ const contacts=source.contacts&&typeof source.contacts==="object"?{...source.contacts}:{};
  const allowedContacts=["planted","swing","airborne","unknown"];
  for(const key of ["footL","footR"]){const value=String(contacts[key]||"unknown");if(!allowedContacts.includes(value))fail("حالة تماس القدم غير مدعومة.");contacts[key]=value}
  const view=String(source.view||"side");
@@ -39,7 +39,7 @@ export function createAnimeMotionPlan({shotId="shot-1",action,characterAssetId,c
  if(!Array.isArray(keyPoses)||keyPoses.length<2||keyPoses.length>durationSeconds*ANIME_MOTION_FPS)fail("تحتاج الحركة إلى وضعيتين مفتاحيتين على الأقل.");
  const totalFrames=durationSeconds*fps,poses=keyPoses.map((pose,index)=>normalizeKeyPose(pose,index,totalFrames));
  if(poses[0].frame!==0||poses.at(-1).frame!==totalFrames-1)fail("يجب أن تغطي الوضعيات المفتاحية بداية اللقطة ونهايتها.");
- for(let i=1;i<poses.length;i++){if(poses[i].frame<=poses[i-1].frame)fail("يجب ترتيب الوضعيات المفتاحية زمنياً دون تكرار.");if(poses[i].id===poses[i-1].id)fail("معرّفات الوضعيات المفتاحية مكررة.");}
+ const poseIds=new Set();for(let i=0;i<poses.length;i++){if(i>0&&poses[i].frame<=poses[i-1].frame)fail("يجب ترتيب الوضعيات المفتاحية زمنياً دون تكرار.");if(poseIds.has(poses[i].id))fail("معرّفات الوضعيات المفتاحية مكررة.");poseIds.add(poses[i].id);}
  const refs=[...new Set((Array.isArray(referenceAssetIds)?referenceAssetIds:[]).map(v=>clean(v,160)).filter(Boolean))];
  const bg=backgroundAssetId?clean(backgroundAssetId,160):null;
  const cameraRecord={locked:camera?.locked!==false,description:clean(camera?.description||"fixed camera",400)};
@@ -72,7 +72,7 @@ function eased(t,curve){
 export function sampleAnimePoseGuide(plan,frameIndex){
  const role=getAnimeFrameRole(plan,frameIndex);
  const exact=plan.keyPoses.find(pose=>pose.frame===frameIndex);
- if(exact)return{frameIndex,source:"key-pose-guide",poseId:exact.id,description:exact.description,phase:exact.phase,guide:structuredClone(exact.guide)};
+ if(exact)return{frameIndex,source:"key-pose-guide",poseId:exact.id,description:exact.description,phase:exact.phase,guide:{joints:Object.fromEntries(ANIME_POSE_JOINTS.map(name=>[name,{...exact.guide.joints[name]}])),contacts:{...exact.guide.contacts},view:exact.guide.view}};
  const from=plan.keyPoses.find(pose=>pose.id===role.fromKeyPoseId),to=plan.keyPoses.find(pose=>pose.id===role.toKeyPoseId);
  const raw=(frameIndex-from.frame)/(to.frame-from.frame),t=eased(raw,from.easeToNext),joints={};
  for(const name of ANIME_POSE_JOINTS){const a=from.guide.joints[name],b=to.guide.joints[name];joints[name]={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t};}
