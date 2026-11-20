@@ -12,8 +12,8 @@ function normalizeReferenceImage(referenceImage){
 function retryDelayFrom(value){
  if(value===null||value===undefined||value==="")return null;
  const text=String(value).trim();
- if(/^\\d+(?:\\.\\d+)?$/.test(text))return Math.max(0,Number(text)*1000);
- const duration=text.match(/^(\\d+(?:\\.\\d+)?)s$/i);
+ if(/^\d+(?:\.\d+)?$/.test(text))return Math.max(0,Number(text)*1000);
+ const duration=text.match(/^(\d+(?:\.\d+)?)s$/i);
  if(duration)return Math.max(0,Number(duration[1])*1000);
  const date=Date.parse(text);
  return Number.isFinite(date)?Math.max(0,date-Date.now()):null;
