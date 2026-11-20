@@ -250,7 +250,8 @@ async function handleAnimeSegmentation(request, env, url) {
 
 async function handle(request, env) {
   const url = new URL(request.url);
-  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);\n  if (url.pathname === "/v1/anime/segment") return handleAnimeSegmentation(request, env, url);
+  if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);
+  if (url.pathname === "/v1/anime/segment") return handleAnimeSegmentation(request, env, url);
   if (request.method === "GET" && url.pathname === "/health") {
     return json({
       ok: true,
