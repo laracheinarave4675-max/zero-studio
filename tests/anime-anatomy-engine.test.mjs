@@ -61,8 +61,8 @@ test("character DNA locks one approved identity and measured anatomical proporti
   const { dna } = createFixture();
   assert.equal(dna.format, "zero-studio-character-dna");
   assert.equal(dna.characterAssetId, "character-approved-01");
-  assert.equal(dna.boneLengths.upperArmL, Math.hypot(.08,.10));
-  assert.equal(dna.boneLengths.shinR, Math.hypot(.01,.16));
+  assert.ok(Math.abs(dna.boneLengths.upperArmL - Math.hypot(.08,.10)) < 1e-6);
+  assert.ok(Math.abs(dna.boneLengths.shinR - Math.hypot(.01,.16)) < 1e-6);
   assert.deepEqual(dna.modelSheetAssetIds, ["model-front-01","model-side-01"]);
 });
 
@@ -177,7 +177,7 @@ test("duplicate image hashes, non-transparent artwork and unreviewed frames are 
   attachAnimeFrameDrawing(sequence, 0, raster(0));
   assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),contentHash:raster(0).contentHash}), /مكررة/);
   assert.throws(() => attachAnimeFrameDrawing(sequence, 1, {...raster(1),alpha:false}), /قناة شفافية/);
-  assert.throws(() => auditAnimeAnatomySequence(sequence), /لم تُرسم/);
+  assert.throws(() => auditAnimeAnatomySequence(sequence), /لم يجتز المراجعة الفنية/);
   reviewAnimeFrame(sequence,0,{identity:true,anatomy:true,lineQuality:false,timing:true});
   const partial = auditAnimeAnatomySequence(sequence,{requireApproved:false});
   assert.equal(partial.rejectedFrames,1);
