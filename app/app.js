@@ -7,8 +7,8 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -102,6 +102,29 @@ function renderFrame(g,f,opacity=1,includeBackground=true){g.replaceChildren();g
 function animeAnatomyStatus(message,ok=true){
  const node=$("animeAnatomyStatus");if(!node)return;
  node.textContent=message;node.style.color=ok?"var(--accent)":"#ff9999";
+}
+function restoreAnimeMotionPlan(dna){
+ if(!dna||!dna.lastMotionAction||!Array.isArray(dna.keyDrawings)||dna.keyDrawings.length<2)return false;
+ try{
+  activeAnimeMotionPlan=createAnimeAnatomyPlan({
+   shotId:dna.lastMotionShotId||"restored-walk-proof",
+   action:dna.lastMotionAction,characterDNA:dna,durationSeconds:1,fps:24,
+   keyDrawings:dna.keyDrawings.filter(item=>item.frame>=0&&item.frame<24),
+   motionNotes:"Restored from the native ZERO STUDIO project; D-028 independent artist redraw workflow."
+  });
+  activeAnimeAnatomySequence=createAnimeAnatomySequence(activeAnimeMotionPlan);
+  updateAnimeRasterControls();
+  $("animeAnatomyGuideToggleLabel").hidden=false;
+  $("animeAnatomyGuideToggle").checked=true;
+  $("animeMotionPlanStatus").textContent="تم استعادة خطة الحركة المحفوظة: 24 إطاراً مستقلاً و"+activeAnimeMotionPlan.keyDrawings.length+" وضعيات مفتاحية.";
+  renderAnimeAnatomyConstructionOverlay();
+  return true;
+ }catch(error){
+  activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;
+  $("animeAnatomyGuideToggleLabel").hidden=true;
+  $("animeMotionPlanStatus").textContent="تعذر استعادة خطة الحركة: "+error.message;
+  return false;
+ }
 }
 function renderAnimeAnatomyDNASelect(selectedId=""){
  const select=$("animeAnatomyDNASelect");if(!select)return;
@@ -223,7 +246,8 @@ function buildAnimeMotionPlan(){
    motionNotes:"D-028: anatomy construction guides only; every output frame must be completely redrawn and reviewed by the artist."
   });
   const tasks=createAnimeFrameDrawingTasks(plan);
-  activeAnimeMotionPlan=plan;
+  snapshot(true);dna.lastMotionAction=action;dna.lastMotionShotId=plan.shotId;
+  activeAnimeMotionPlan=plan;activeAnimeAnatomySequence=createAnimeAnatomySequence(plan);
   $("animeAnatomyGuideToggleLabel").hidden=false;$("animeAnatomyGuideToggle").checked=true;
   const currentFrame=Math.min(23,current);
   const role=getAnimeAnatomyFrameRole(plan,currentFrame);
@@ -236,7 +260,6 @@ function buildAnimeMotionPlan(){
     drawingRequirement:task.drawingRequirement,construction:task.construction
    }))
   };
-  dna.lastMotionAction=action;dna.lastMotionShotId=plan.shotId;
   download((dna.name||"character")+"-walk-24fps-plan.json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));
   $("animeMotionPlanStatus").textContent="نجحت الخطة: 24 مهمة رسم مستقلة، "+keys.length+" وضعيات مفتاحية، والإطار الحالي "+(currentFrame+1)+" هو "+(role.kind==="key-drawing"?"رسمة مفتاحية":"إطار وسيط يحتاج إعادة رسم كاملة")+".";
   renderAnimeAnatomyConstructionOverlay();
@@ -300,6 +323,139 @@ function prepareAnime24FrameShot(){
  current=0;activeLayerId=frame().layers[0].id;render();
  $("animeMotionPlanStatus").textContent="تم إنشاء إطارات فارغة حتى الإطار 24. ارسم رسمة كاملة مستقلة في كل إطار؛ لم تُنسخ أي رسمة.";
 }
+
+function updateAnimeRasterControls(){
+ const ready=!!activeAnimeMotionPlan;
+ $("saveAnimeRasterFrameBtn").disabled=!ready||current>=24;
+ $("auditAnimeRasterFramesBtn").disabled=!ready;
+ $("exportAnimeRasterSequenceBtn").disabled=true;
+}
+function animeRasterStatus(message,ok=true){
+ const node=$("animeRasterAuditStatus");node.textContent=message;
+ node.style.color=ok?"var(--accent)":"#ff9999";
+}
+async function sha256Hex(value){
+ if(!globalThis.crypto?.subtle)throw Error("متصفح الهاتف لا يدعم حساب SHA-256 الآمن.");
+ const bytes=value instanceof Blob?await value.arrayBuffer():value instanceof ArrayBuffer?value:new TextEncoder().encode(String(value));
+ const digest=await crypto.subtle.digest("SHA-256",bytes);
+ return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,"0")).join("");
+}
+function readBlobAsDataUrl(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));
+  reader.onerror=()=>reject(Error("تعذر حفظ صورة PNG داخل المشروع."));
+  reader.readAsDataURL(blob);
+ });
+}
+async function exportFrameToTransparentPng(sourceFrame){
+ const markup=frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]);
+ const url=URL.createObjectURL(new Blob([markup],{type:"image/svg+xml;charset=utf-8"}));
+ try{
+  const image=new Image();
+  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر تحويل الرسم الحالي إلى PNG."));image.src=url});
+  const output=document.createElement("canvas");output.width=WIDTH;output.height=HEIGHT;
+  const context=output.getContext("2d",{alpha:true});
+  if(!context)throw Error("تعذر إنشاء سطح Raster شفاف.");
+  context.clearRect(0,0,WIDTH,HEIGHT);
+  context.drawImage(image,0,0,WIDTH,HEIGHT);
+  const blob=await new Promise(resolve=>output.toBlob(resolve,"image/png"));
+  if(!blob||blob.type!=="image/png"||blob.size<24)throw Error("تعذر تصدير PNG صالح من الإطار الحالي.");
+  return blob;
+ }finally{URL.revokeObjectURL(url)}
+}
+function sourceFrameWithoutAnimeRaster(sourceFrame){
+ const copy=JSON.parse(JSON.stringify(sourceFrame));delete copy.animeRaster;return copy;
+}
+async function saveCurrentAnimeRasterFrame(){
+ try{
+  if(!activeAnimeMotionPlan||!activeAnimeAnatomySequence)throw Error("أنشئ خطة الحركة أولاً.");
+  if(current<0||current>=24)throw Error("اختر واحداً من أول 24 إطاراً.");
+  if(!currentFrameHasDrawing())throw Error("الإطار الحالي فارغ؛ ارسم الشخصية كاملة قبل حفظه.");
+  animeRasterStatus("يتم تصدير الرسم الحالي إلى PNG شفاف وفحص بصمته…");
+  const frameIndex=current,sourceFrame=sourceFrameWithoutAnimeRaster(frame());
+  const sourceSignature=await sha256Hex(JSON.stringify(sourceFrame));
+  const blob=await exportFrameToTransparentPng(sourceFrame);
+  const contentHash=await sha256Hex(blob);
+  if(project.frames.some((entry,index)=>index!==frameIndex&&entry.animeRaster?.contentHash===contentHash)){
+   throw Error("هذه الصورة مطابقة تماماً لرسم محفوظ في إطار آخر. ارسم الإطار الحالي بشكل مستقل.");
+  }
+  const review={
+   identity:$("animeReviewIdentity").checked,
+   anatomy:$("animeReviewAnatomy").checked,
+   lineQuality:$("animeReviewLineQuality").checked,
+   timing:$("animeReviewTiming").checked
+  };
+  const approved=Object.values(review).every(Boolean);
+  const record=validateAnimeFrameRasterAsset({
+   assetId:uid("anime-raster"),contentHash,sourceSignature,mimeType:"image/png",
+   width:WIDTH,height:HEIGHT,alpha:true,dataUrl:await readBlobAsDataUrl(blob),
+   review:{status:approved?"approved":"rejected",...review,note:approved?"Artist review passed.":"One or more artist review checks remain unchecked."}
+  });
+  snapshot();
+  frame().animeRaster=record;
+  activeAnimeAnatomySequence=createAnimeAnatomySequence(activeAnimeMotionPlan);
+  const audit=await auditStoredAnimeRasterFrames(false);
+  animeRasterStatus("حُفظ PNG مستقل للإطار "+(frameIndex+1)+". المكتمل: "+audit.drawnFrames+"/24، المعتمد: "+audit.approvedFrames+"/24، المفقود: "+audit.missingFrames+".",approved);
+ }catch(error){animeRasterStatus("تعذر حفظ رسمة الإطار: "+error.message,false)}
+}
+async function buildStoredAnimeRasterSequence(){
+ if(!activeAnimeMotionPlan)throw Error("خطة الحركة غير نشطة؛ اختر الشخصية وأعد بناءها من سجلات المشروع.");
+ const sequence=createAnimeAnatomySequence(activeAnimeMotionPlan),staleFrames=[];
+ for(let index=0;index<24;index++){
+  const stored=project.frames[index]?.animeRaster;
+  if(!stored)continue;
+  const sourceSignature=await sha256Hex(JSON.stringify(sourceFrameWithoutAnimeRaster(project.frames[index])));
+  if(sourceSignature!==stored.sourceSignature){staleFrames.push(index);continue}
+  const drawing={
+   assetId:stored.assetId,contentHash:stored.contentHash,mimeType:stored.mimeType,
+   width:stored.width,height:stored.height,alpha:stored.alpha
+  };
+  attachAnimeFrameDrawing(sequence,index,drawing);
+  reviewAnimeFrame(sequence,index,stored.review);
+ }
+ const audit=auditAnimeAnatomySequence(sequence,{requireApproved:false});
+ return{sequence,audit,staleFrames};
+}
+async function auditStoredAnimeRasterFrames(exportZip=false){
+ try{
+  animeRasterStatus("يتم فحص هوية الرسومات وبصمات PNG ومراجعات الإطارات…");
+  const {sequence,audit,staleFrames}=await buildStoredAnimeRasterSequence();
+  activeAnimeAnatomySequence=sequence;
+  const passed=audit.meets24UniqueApprovedDrawingsPerSecond&&staleFrames.length===0;
+  $("exportAnimeRasterSequenceBtn").disabled=!passed;
+  $("animeRasterAuditStatus").style.color=passed?"var(--accent)":"#ff9999";
+  const report="الرسومات المحفوظة: "+audit.drawnFrames+"/24 · المعتمدة: "+audit.approvedFrames+"/24 · المفقودة: "+audit.missingFrames+" · المرفوضة: "+audit.rejectedFrames+" · البصمة المتغيرة: "+staleFrames.length+" · الرسومات الفريدة/الثانية: "+audit.uniqueDrawingsPerSecond;
+  if(!exportZip){animeRasterStatus(report+(passed?" — اجتاز الفحص.":" — لم يكتمل شرط 24 رسمة مستقلة معتمدة."),passed);return audit}
+  if(!passed)throw Error("لن يتم التصدير: يجب حفظ ومراجعة 24 صورة Raster مستقلة، مع إصلاح كل إطار تغير بعد تصديره.");
+  const entries=[{
+   name:"manifest.json",
+   data:JSON.stringify({
+    format:"zero-studio-independent-anime-raster-sequence",version:1,
+    shotId:activeAnimeMotionPlan.shotId,fps:24,durationSeconds:1,
+    uniqueDrawingCount:audit.uniqueDrawingCount,uniqueDrawingsPerSecond:audit.uniqueDrawingsPerSecond,
+    characterAssetId:activeAnimeMotionPlan.characterAssetId,backgroundAssetId:activeAnimeMotionPlan.backgroundAssetId,
+    keyDrawingCount:activeAnimeMotionPlan.keyDrawings.length,reviewStatus:"all-24-approved"
+   },null,2)
+  },{
+   name:"motion-plan.json",data:JSON.stringify(activeAnimeMotionPlan,null,2)
+  }];
+  for(let index=0;index<24;index++){
+   const record=project.frames[index].animeRaster;
+   const encoded=record.dataUrl.slice(record.dataUrl.indexOf(",")+1);
+   const binary=atob(encoded),bytes=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+   entries.push({name:"frames/frame-"+String(index+1).padStart(4,"0")+".png",data:bytes});
+  }
+  const archive=createZip(entries);
+  download("zero-studio-anime-24-independent-drawings.zip",new Blob([archive],{type:"application/zip"}));
+  animeRasterStatus("تم التصدير بنجاح: 24 رسمة PNG مستقلة وفريدة ومعتمدة، 24 FPS. "+report,true);
+  return audit;
+ }catch(error){
+  $("exportAnimeRasterSequenceBtn").disabled=true;
+  animeRasterStatus("تعذر اجتياز فحص/تصدير الرسومات: "+error.message,false);
+  throw error;
+ }
+}
 function wireAnimeAnatomyCalibration(){
  if(!animeAnatomyCanvas)return;
  $("startAnimeAnatomyBtn").onclick=()=>{animeAnatomyMode="dna";activeAnimeDNAId=null;$("animeAnatomyView").disabled=false;beginAnimeAnatomyCalibration()};
@@ -307,6 +463,9 @@ function wireAnimeAnatomyCalibration(){
  $("buildAnimeMotionPlanBtn").onclick=buildAnimeMotionPlan;
  $("prepareAnime24FrameBtn").onclick=prepareAnime24FrameShot;
  $("animeAnatomyGuideToggle").onchange=renderAnimeAnatomyConstructionOverlay;
+ $("saveAnimeRasterFrameBtn").onclick=saveCurrentAnimeRasterFrame;
+ $("auditAnimeRasterFramesBtn").onclick=()=>auditStoredAnimeRasterFrames(false);
+ $("exportAnimeRasterSequenceBtn").onclick=()=>auditStoredAnimeRasterFrames(true);
  animeAnatomyCanvas.addEventListener("pointerdown",event=>{
   if(!animeAnatomyActive||animeAnatomyStep>=ANIME_ANATOMY_LABELS.length)return;
   try{
@@ -322,7 +481,7 @@ function wireAnimeAnatomyCalibration(){
  };
  $("cancelAnimeAnatomyBtn").onclick=cancelAnimeAnatomyCalibration;
  $("saveAnimeAnatomyDNABtn").onclick=saveAnimeAnatomyDNA;
- $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction)$("animeMotionAction").value=dna.lastMotionAction};
+ $("animeAnatomyDNASelect").onchange=()=>{const selected=$("animeAnatomyDNASelect").value;const active=!!selected;$("exportAnimeAnatomyDNABtn").disabled=!active;$("startAnimeKeyDrawingBtn").disabled=!active;$("buildAnimeMotionPlanBtn").disabled=!active;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);if(dna?.lastMotionAction){$("animeMotionAction").value=dna.lastMotionAction;restoreAnimeMotionPlan(dna)}else updateAnimeRasterControls()};
  $("exportAnimeAnatomyDNABtn").onclick=()=>{
   const selected=$("animeAnatomyDNASelect").value;
   const dna=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selected);
@@ -332,7 +491,7 @@ function wireAnimeAnatomyCalibration(){
  };
  renderAnimeAnatomyDNASelect();
 }
-function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderAnimeAnatomyConstructionOverlay();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
+function render(){renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderAnimeAnatomyConstructionOverlay();updateAnimeRasterControls();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
 function renderFrames(){const list=$("frameList");list.replaceChildren();const start=Math.floor(current/TIMELINE_PAGE_SIZE)*TIMELINE_PAGE_SIZE,end=Math.min(project.frames.length,start+TIMELINE_PAGE_SIZE);for(let i=start;i<end;i++){const f=project.frames[i],b=document.createElement("button");b.className="frame-thumb"+(i===current?" selected":"");b.type="button";b.setAttribute("aria-label","اختيار الإطار "+(i+1));const thumb=document.createElementNS(NS,"svg");thumb.setAttribute("viewBox","0 0 1920 1080");const bg=document.createElementNS(NS,"rect");bg.setAttribute("width",WIDTH);bg.setAttribute("height",HEIGHT);bg.setAttribute("fill","#fff");thumb.appendChild(bg);[...(project.animationBackground||[]),...f.layers].forEach((l,n)=>renderLayerInto(thumb,l,n,"thumb-"+i));b.appendChild(thumb);const n=document.createElement("span");n.textContent=i+1;b.appendChild(n);b.onclick=()=>{stop();current=i;activeLayerId=frame().layers[0].id;selection=null;selectionDrag=null;clearProposal();render()};list.appendChild(b)}$("framePageInfo").textContent="الإطارات "+(start+1)+"–"+end+" من "+project.frames.length;$("framePagePrev").disabled=start===0;$("framePageNext").disabled=end>=project.frames.length;$("frameJumpInput").max=String(project.frames.length);$("frameJumpInput").value=String(current+1)}
 function renderLayers(){$("layerList").replaceChildren();frame().layers.forEach((l,i)=>{const row=document.createElement("div");row.className="layer-row"+(l.id===activeLayerId?" selected":"");const select=document.createElement("button");select.className="layer-select";select.textContent=(l.type==="raster"?"▧ ":"✎ ")+l.name;select.setAttribute("aria-label",(l.type==="raster"?"طبقة صورة: ":"طبقة متجهية: ")+l.name);select.onclick=()=>{activeLayerId=l.id;renderLayers()};const action=(label,title,fn)=>{const b=document.createElement("button");b.className="layer-mini";b.textContent=label;b.title=title;b.onclick=fn;return b};const rename=action("✎","إعادة تسمية الطبقة",()=>{const input=document.createElement("input");input.className="layer-rename-input";input.value=l.name;input.maxLength=80;input.setAttribute("aria-label","اسم الطبقة");const save=action("✓","حفظ الاسم",()=>{const name=input.value.trim();if(!name||name.length>80){status("اسم الطبقة يجب أن يكون من 1 إلى 80 حرفاً.",false);return}snapshot();renameLayer(frame(),l.id,name);renderLayers()});const cancel=action("×","إلغاء",()=>renderLayers());row.replaceChildren(input,save,cancel);input.focus();input.select();input.onkeydown=e=>{if(e.key==="Enter")save.click();if(e.key==="Escape")cancel.click()}});const vis=action(l.visible?"◉":"○","إظهار أو إخفاء",()=>{snapshot();l.visible=!l.visible;render()});const lock=action(l.locked?"🔒":"🔓","قفل أو فتح",()=>{snapshot();l.locked=!l.locked;renderLayers()});const up=action("↑","رفع الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,1))render();else{history.pop();buttons()}});const down=action("↓","خفض الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,-1))render();else{history.pop();buttons()}});row.append(select,rename,vis,lock,up,down);$("layerList").appendChild(row)})}
 function renderNodeHandles(){
@@ -492,11 +651,11 @@ $("deleteLayerBtn").onclick=()=>{snapshot();try{removeLayer(frame(),activeLayerI
 $("addFrameBtn").onclick=()=>{if(project.frames.length>=MAX_FRAMES)return alert("وصل المشروع إلى الحد الأعلى البالغ 30000 إطار.");snapshot();project.frames.splice(current+1,0,createFrame());current++;activeLayerId=frame().layers[0].id;render()};
 $("framePagePrev").onclick=()=>{current=Math.max(0,Math.floor(current/TIMELINE_PAGE_SIZE)*TIMELINE_PAGE_SIZE-TIMELINE_PAGE_SIZE);activeLayerId=frame().layers[0].id;render()};$("framePageNext").onclick=()=>{current=Math.min(project.frames.length-1,(Math.floor(current/TIMELINE_PAGE_SIZE)+1)*TIMELINE_PAGE_SIZE);activeLayerId=frame().layers[0].id;render()};$("frameJumpBtn").onclick=()=>{const value=Number($("frameJumpInput").value);if(!Number.isInteger(value)||value<1||value>project.frames.length){status("أدخل رقم إطار بين 1 و"+project.frames.length,false);return}stop();current=value-1;activeLayerId=frame().layers[0].id;render()};$("frameJumpInput").addEventListener("keydown",event=>{if(event.key==="Enter")$("frameJumpBtn").click()});$("analyzeCadenceBtn").onclick=()=>{try{const report=analyzeDrawingCadence(project.frames,+$("fpsSelect").value),rate=report.uniqueDrawingsPerSecond;const target=report.meets24UniqueDrawingsPerSecond?"تحقق الهدف العددي: 24 رسمة مستقلة/ثانية أو أكثر.":"لم يتحقق هدف 24 رسمة مستقلة/ثانية بعد.";const output="الإطارات: "+report.frameCount+" · الرسومات الفريدة: "+report.uniqueDrawingCount+" · المكررة: "+report.duplicateDrawingCount+" · المعدل الفعلي: "+rate+" رسمة/ثانية. "+target;$("cadenceStatus").textContent=output;$("cadenceStatus").style.color=report.meets24UniqueDrawingsPerSecond?"var(--accent)":"#ff9999"}catch(error){$("cadenceStatus").textContent="تعذر القياس: "+error.message;$("cadenceStatus").style.color="#ff9999"}};
 $("inbetweenBtn").onclick=()=>{if(current>=project.frames.length-1){status("اختر إطاراً يليه إطار مفتاحي ثانٍ.",false);return}try{const generated=createInbetweenFrames(frame(),project.frames[current+1],+$("inbetweenCount").value);if(project.frames.length+generated.length>MAX_FRAMES)throw Error("سيتم تجاوز الحد الأعلى البالغ 30000 إطار.");snapshot();project.frames.splice(current+1,0,...generated);current++;activeLayerId=frame().layers[0].id;render();status("تم توليد "+generated.length+" إطار وسيط قابل للتحرير.")}catch(error){status("تعذر التوليد: "+error.message,false)}};
-$("duplicateFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();const copy=JSON.parse(JSON.stringify(frame()));copy.id=uid("frame");copy.layers.forEach(l=>l.id=uid("layer"));project.frames.splice(current+1,0,copy);current++;activeLayerId=frame().layers[0].id;render()};
+$("duplicateFrameBtn").onclick=()=>{if(project.frames.length>=600)return alert("الحد التجريبي 600 إطار");snapshot();const copy=JSON.parse(JSON.stringify(frame()));copy.id=uid("frame");delete copy.animeRaster;copy.layers.forEach(l=>l.id=uid("layer"));project.frames.splice(current+1,0,copy);current++;activeLayerId=frame().layers[0].id;render()};
 $("deleteFrameBtn").onclick=()=>{if(project.frames.length===1)return alert("يجب إبقاء إطار واحد على الأقل");snapshot();project.frames.splice(current,1);current=Math.max(0,current-1);activeLayerId=frame().layers[0].id;render()};
 function data(){return{...project,name:$("projectName").value.trim()||"مشروع بدون اسم",fps:+$("fpsSelect").value}}function download(name,blob){const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 $("saveBtn").onclick=()=>{const p=data();download((p.name.replace(/[^\p{L}\p{N}-]+/gu,"-")||"zero-project")+".zero",new Blob([JSON.stringify(p,null,2)],{type:"application/json"}));$("saveState").textContent="تم تنزيل نسخة الحفظ"};$("openBtn").onclick=()=>$("openFile").click();
-$("openFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>128*1024*1024)throw Error("الملف أكبر من 128 ميغابايت؛ قسّم المشروع إلى أجزاء أصغر على الهاتف.");const next=normalizeProject(JSON.parse(await file.text()));snapshot(false,true);project=next;current=0;activeLayerId=frame().layers[0].id;selection=null;activeAnimeMotionPlan=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();$("projectName").value=project.name;$("fpsSelect").value=String(project.fps);render();$("saveState").textContent="تم فتح المشروع"}catch(err){alert("تعذر فتح المشروع: "+err.message)}finally{e.target.value=""}};
+$("openFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>128*1024*1024)throw Error("الملف أكبر من 128 ميغابايت؛ قسّم المشروع إلى أجزاء أصغر على الهاتف.");const next=normalizeProject(JSON.parse(await file.text()));snapshot(false,true);project=next;current=0;activeLayerId=frame().layers[0].id;selection=null;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();$("projectName").value=project.name;$("fpsSelect").value=String(project.fps);render();$("saveState").textContent="تم فتح المشروع"}catch(err){alert("تعذر فتح المشروع: "+err.message)}finally{e.target.value=""}};
 $("exportBtn").onclick=()=>{const p=data(),bundle={format:"zero-studio-svg-sequence",version:2,name:p.name,width:WIDTH,height:HEIGHT,fps:p.fps,frames:p.frames.map((f,i)=>({name:"frame-"+String(i+1).padStart(4,"0")+".svg",svg:frameSvg(f,"frame-"+i,p.animationBackground||[])}))};download("zero-studio-svg-sequence.json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));$("saveState").textContent="تم تصدير تسلسل SVG"};$("exportZipBtn").onclick=()=>{try{const p=data(),frames=p.frames.map((f,i)=>({name:"frames/frame-"+String(i+1).padStart(4,"0")+".svg",svg:frameSvg(f,"zip-frame-"+i,p.animationBackground||[])})),cadence=analyzeDrawingCadence(p.frames,p.fps),manifest={format:"zero-studio-project-bundle",version:1,project:"project.zero",frameCount:frames.length,fps:p.fps,cadence,width:WIDTH,height:HEIGHT,frames:frames.map(f=>f.name)},entries=[{name:"project.zero",data:JSON.stringify(p,null,2)},{name:"manifest.json",data:JSON.stringify(manifest,null,2)},...frames.map(f=>({name:f.name,data:f.svg}))],archive=createZip(entries);download("zero-studio-"+(p.name.replace(/[^\p{L}\p{N}-]+/gu,"-")||"project")+".zip",new Blob([archive],{type:"application/zip"}));$("saveState").textContent="تم إنشاء حزمة ZIP — "+entries.length+" ملفات"}catch(e){status("تعذر إنشاء ZIP: "+e.message,false)}};
 function aiStatus(message,ok=true){$("aiStatus").textContent=message;$("aiStatus").style.color=ok?"var(--accent)":"#ff9999"}
 function clearProposal(){proposedLayers=[];proposalTarget=null;proposal.replaceChildren();$("aiReview").hidden=true;$("aiApproveBtn").disabled=false}
@@ -825,5 +984,5 @@ $("aiRejectBtn").onclick=()=>{clearProposal();aiStatus("تم رفض الاقتر
 $("applyCommandsBtn").onclick=()=>{try{const d=JSON.parse($("commandInput").value);if(d.version!==1||!Array.isArray(d.operations)||d.operations.length>100)throw Error("المخطط يتطلب version 1 و100 عملية كحد أقصى");const ops=d.operations.map(validatePath);snapshot();if(layer().type==="raster"){const vector=addLayer(frame(),"رسم متجهي فوق: "+layer().name);activeLayerId=vector.id}ops.forEach(p=>appendOperation(layer(),"stroke",p));render();status("أضيفت "+ops.length+" عملية إلى "+layer().name)}catch(err){status("لم تُضف الأوامر: "+err.message,false)}};
 function stop(){playing=false;clearInterval(timer);$("playBtn").textContent="▶ معاينة"}$("playBtn").onclick=()=>{if(playing){stop();render();return}if(project.frames.length<2)return;playing=true;$("playBtn").textContent="■ إيقاف";let i=current;timer=setInterval(()=>{i=(i+1)%project.frames.length;current=i;renderFrame(art,frame());$("frameInfo").textContent="الإطار "+(i+1)+" من "+project.frames.length},1000/+$("fpsSelect").value)};
 $("focusDrawingBtn").onclick=()=>{$("drawingWorkspace").scrollIntoView({behavior:"smooth",block:"start"});resetCanvasView();};
-$("newProjectBtn").onclick=()=>{if(!confirm("بدء مشروع جديد؟ احفظ عملك الحالي أولاً"))return;stop();snapshot(false,true);project=createProject("مشروع جديد");current=0;activeLayerId=frame().layers[0].id;activeAnimeMotionPlan=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();resetRigModel();$("projectName").value="مشروع جديد";$("saveState").textContent="مشروع جديد";render()};
+$("newProjectBtn").onclick=()=>{if(!confirm("بدء مشروع جديد؟ احفظ عملك الحالي أولاً"))return;stop();snapshot(false,true);project=createProject("مشروع جديد");current=0;activeLayerId=frame().layers[0].id;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();resetRigModel();$("projectName").value="مشروع جديد";$("saveState").textContent="مشروع جديد";render()};
 if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));try{render();resetRigModel();renderCharacterLibrary();wireAnimeAnatomyCalibration();renderAnimeAnatomyDNASelect();$("appRuntimeStatus").hidden=true}catch(error){const panel=$("appRuntimeStatus");panel.hidden=false;panel.textContent="تعذر تهيئة واجهة الرسم: "+(error?.message||String(error));console.error("ZERO STUDIO startup failed",error)}})();
