@@ -9,10 +9,17 @@ on:
       - "app/animation-production.mjs"
       - "app/animation-worker.mjs"
       - "tests/gemini-animation.test.mjs"
+  workflow_dispatch:
+    inputs:
+      confirm_free_tier_only:
+        description: "Confirm GEMINI_API_KEY is on a no-cost/free-tier project with no paid billing or fallback."
+        required: true
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
-  one-second-character-motion:
+  regression-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -20,14 +27,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Syntax-check the motion adapter and runner
+        run: node --check app/gemini-animation.mjs && node --check scripts/run-character-motion-proof.mjs
       - name: Run complete automated regression suite
         run: node --test tests/*.test.mjs cloudflare-worker/tests/*.test.mjs
+  one-second-character-motion:
+    needs: regression-tests
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_free_tier_only == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Generate 24 reference-conditioned independent character drawings
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-3.1-flash-lite
+          GEMINI_MODEL: gemini-3.5-flash-lite
         run: node scripts/run-character-motion-proof.mjs
-      - name: Upload editable motion project and individual SVG frames
+      - name: Upload editable motion project, frames, and visual review page
         if: always()
         uses: actions/upload-artifact@v4
         with:
