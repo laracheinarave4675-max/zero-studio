@@ -265,6 +265,7 @@ test("anime model-sheet landmark comparison is available in the artist workspace
   assert.match(app, /compareButton\.onclick=compareAnimeDesignLandmarks/);
   assert.match(app, /report\.animeEyeComparison=eyeComparison/);
   assert.match(app, /buildArtistCorrectionPlan\(report\)/);
+  assert.match(app, /report\.correctionPlan\.suggestions\.slice\(0,8\)/);
 });
 
 
