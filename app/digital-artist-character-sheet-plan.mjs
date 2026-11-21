@@ -75,7 +75,9 @@ export function createDigitalArtistCharacterSheetPlan(){
  poly("flats","back-obi","Fill the rear obi band.",obi,map(b,[[-78,520],[78,520],[82,595],[-82,595]]));
  poly("flats","back-obi-bow","Fill the broad tied obi bow at the rear.",roseDeep,map(b,[[-35,540],[0,525],[35,540],[58,600],[0,635],[-58,600]]));
  poly("flats","back-hem","Paint the pink gradient on the lower rear hem.",rose,map(b,[[-112,860],[-70,890],[70,890],[112,860],[112,930],[70,980],[0,995],[-70,980],[-112,930]]));
- poly("flats","back-fringe","Fill the upper rear hair layers.",hairHi,map(b,[[-80,130],[-25,55],[45,66],[84,120],[40,170],[0,155],[-40,175]]));
+ poly("flats","back-sandals","Paint the pair of sandals visible below the back hem.",roseDeep,map(b,[[-48,975],[-10,975],[-8,1014],[-52,1014],[-58,997]]));
+ poly("flats","back-sandal-right","Paint the second rear sandal.",roseDeep,map(b,[[10,975],[48,975],[58,997],[52,1014],[8,1014]]));
+ 
  // Clean line art: outer contours, face, costume seams and flowing hair.
  for(const v of views){
   const cx=v.cx,id=v.id;
@@ -115,6 +117,7 @@ export function createDigitalArtistCharacterSheetPlan(){
    line("ink","back-sleeves-outline","Ink both back-view sleeves.","ink",ink,6,map(cx,[[-82,370],[-126,420],[-150,500],[-116,558],[-78,520],[78,520],[116,558],[150,500],[126,420],[82,370]]));
    line("ink","back-obi-outline","Ink the rear obi band and bow.","ink",ink,5,map(cx,[[-78,520],[78,520],[82,595],[58,600],[0,635],[-58,600],[-82,595],[-78,520]]));
    line("ink","back-hem-outline","Ink the lower hem.","ink",ink,5,map(cx,[[-112,860],[-70,890],[70,890],[112,860],[112,930],[70,980],[0,995],[-70,980],[-112,930]]));
+   line("ink","back-sandals-outline","Ink the sandals below the rear hem.","ink",ink,4,map(cx,[[-48,975],[-52,1014],[-8,1014],[10,975],[52,1014],[8,1014]]));
   }
  }
  // Shared hair flow, cloth folds, floral motifs and cel shading.
@@ -149,9 +152,9 @@ export function createDigitalArtistCharacterSheetPlan(){
   const petalColor="#d77d91";
   for(let i=0;i<5;i++){
    const a=i*Math.PI*2/5-Math.PI/2,px=Math.cos(a)*9*scale,py=Math.sin(a)*9*scale;
-   line("detail",id+"-petal-"+i,"Paint one individual petal in the kimono floral motif.","gouache",petalColor,5*scale,[[cx+px-2*scale,cy+py-2*scale],[cx+px,cy+py],[cx+px+2*scale,cy+py+2*scale]],{opacity:.9,texture:.2});
+   poly("detail",id+"-petal-"+i,"Paint one individual petal in the kimono floral motif.",petalColor,[[cx+px-4*scale,cy+py-3*scale],[cx+px,cy+py-7*scale],[cx+px+4*scale,cy+py-3*scale],[cx+px+3*scale,cy+py+3*scale],[cx+px,cy+py+5*scale],[cx+px-3*scale,cy+py+3*scale]],.92);
   }
-  line("detail",id+"-center","Dot the center of the flower motif.","gouache",gold,4*scale,[[cx,cy]],{opacity:1,texture:.1});
+  line("detail",id+"-center","Dot the center of the flower motif.","gouache",gold,4*scale,[[cx-1*scale,cy],[cx+1*scale,cy]],{opacity:1,texture:.1});
  };
  flower(370,700,"front-flower-left",1);flower(462,790,"front-flower-right",.85);
  flower(920,760,"side-flower",.8);flower(1545,760,"back-flower-left",.9);flower(1460,840,"back-flower-right",.75);
