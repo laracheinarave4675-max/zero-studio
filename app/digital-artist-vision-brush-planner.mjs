@@ -31,15 +31,18 @@ function chooseColor(region, palette) {
   return palette[0]?.color ?? "#77727b";
 }
 
-function rectPolygon(region) {
+function regionPolygon(region) {
+  if (Array.isArray(region.contour) && region.contour.length >= 3) {
+    return region.contour.map(point => center(
+      Math.round(point.x * CANVAS.width),
+      Math.round(point.y * CANVAS.height)
+    ));
+  }
   const x1 = Math.round(region.x * CANVAS.width);
   const y1 = Math.round(region.y * CANVAS.height);
   const x2 = Math.round((region.x + region.width) * CANVAS.width);
   const y2 = Math.round((region.y + region.height) * CANVAS.height);
-  return [
-    center(x1, y1), center(x2, y1),
-    center(x2, y2), center(x1, y2)
-  ];
+  return [center(x1, y1), center(x2, y1), center(x2, y2), center(x1, y2)];
 }
 
 /**
@@ -93,13 +96,13 @@ export function buildAnimeVisionBrushPlan(report, {
       id: "vision-region-" + safeId(region.id),
       intent: "Approximate reviewed region bounds: " + (region.label || region.id),
       kind: "region-fill",
-      points: rectPolygon(region),
+      points: regionPolygon(region),
       color: chooseColor(region, brief.palette),
       opacity: 0.88,
       blendMode: "normal",
       seed: 1
     });
-    warnings.push("Region " + region.id + " uses a rectangular bounding-box approximation; its organic contour is not inferred.");
+    if (!Array.isArray(region.contour)) warnings.push("Region " + region.id + " uses a rectangular bounding-box approximation; supply a reviewed contour for accurate organic edges.");
   }
 
   const layers = ROLE_ORDER.filter(role => buckets.has(role)).map(role => ({
