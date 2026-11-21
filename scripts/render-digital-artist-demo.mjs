@@ -90,6 +90,13 @@ expectColorNear("Hair region", pixelAt(960, 205), [52, 56, 76, 255]);
 expectColorNear("Clothing region", pixelAt(960, 970), [113, 153, 156, 255]);
 expectColorNear("Outside silhouette", pixelAt(1320, 700), [245, 241, 233, 255]);
 
+const artistRasterEye = analyzeRasterPixels({ width, height, data: artistCompositeContext.getImageData(0, 0, width, height).data });
+if (!artistRasterEye.bounds || artistRasterEye.bounds.x === 0 || artistRasterEye.bounds.y === 0 ||
+    artistRasterEye.bounds.width >= width || artistRasterEye.bounds.height >= height ||
+    artistRasterEye.alphaCoverage <= 0 || artistRasterEye.alphaCoverage >= 1) {
+  throw new Error("Artist silhouette eye did not isolate a bounded transparent character composite.");
+}
+
 const png = composite.toBuffer("image/png");
 await writeFile(outputDirectory + "/digital-artist-portrait.png", png);
 const report = {
@@ -104,7 +111,7 @@ const report = {
   strokeCount: result.strokeCount,
   regionFillCount: layerReports.reduce((sum, layer) => sum + layer.regionFillCount, 0),
   artistEyes: {
-    raster: analyzeRasterPixels({ width, height, data: artistCompositeContext.getImageData(0, 0, width, height).data }),
+    raster: artistRasterEye,
     lines: stream.commands.map(analyzeStrokeGeometry),
     layerSummaries: layerReports.map(layer => ({
       id: layer.id, role: layer.role, visible: layer.visible,
