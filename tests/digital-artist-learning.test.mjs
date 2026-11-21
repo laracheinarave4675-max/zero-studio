@@ -55,3 +55,17 @@ test("a skill cannot be mastered before its prerequisite skill is mastered", () 
   assert.equal(head.mastered,false);
   assert.equal(recommendNextArtistPractice(record).skillId,"gesture-silhouette");
 });
+
+test("editor only exposes report-backed skill assessment paths", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const app = await readFile(new URL("../app/app.js", import.meta.url), "utf8");
+  const html = await readFile(new URL("../app/index.html", import.meta.url), "utf8");
+  assert.match(app, /saveArtistAssessmentFromLatestReport/);
+  assert.match(app, /project\.artistLearning\s*\|\|=/);
+  assert.match(app, /skillId==="body-anatomy"/);
+  assert.match(app, /skillId==="flat-color-groups"/);
+  assert.match(app, /skillId==="anime-inking"/);
+  assert.match(app, /لن نسجل نتيجة تخمينية/);
+  assert.match(html, /saveAnimeArtistAssessmentBtn/);
+  assert.match(html, /animeArtistLearningStatus/);
+});
