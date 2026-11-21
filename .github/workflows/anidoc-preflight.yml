@@ -1,0 +1,49 @@
+name: AniDoc environment preflight
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - feat/anime-raster-keyframe-motion-engine
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anidoc-preflight
+  cancel-in-progress: true
+
+jobs:
+  inspect-runner:
+    name: Inspect available AniDoc runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out isolated experiment
+        uses: actions/checkout@v4
+
+      - name: Set up diagnostic Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Inspect GPU and checkpoint availability
+        shell: bash
+        run: |
+          set -o pipefail
+          python experiments/anidoc/preflight.py | tee anidoc-preflight.txt
+          {
+            echo "### AniDoc environment report"
+            echo
+            cat anidoc-preflight.txt
+            echo
+            echo "This job is a hardware/checkpoint diagnostic only. It does not run AniDoc inference."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: anidoc-preflight-report
+          path: anidoc-preflight.txt
+          if-no-files-found: error
+          retention-days: 7
