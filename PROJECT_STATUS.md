@@ -787,3 +787,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - The user uploads the same reference image into ZERO STUDIO. The app computes its SHA-256 digest locally with Web Crypto and binds the report to that exact file before accepting the observations. A supplied digest mismatch is rejected.
 - The generated plan remains an unapproved draft until the user checks the approval control. The report-to-plan step still uses bounding-box approximations and requires visual review.
 - This is a manual browser handoff, not an embedded model runtime or automatic Space API connection. The Space may require initial model downloads and a WebGPU-capable browser/device; mobile performance and inference quality have not yet been validated on the user's Android device.
+
+
+### Raster proof visual inspection — 2026-11-21
+
+- Downloaded and opened the CI portrait proof artifact from run `44941260537`. It contains a 1920×1080 composite PNG, seven separate raster layer PNGs, and the machine-readable eyes/region report.
+- Visual review: the fixture reads as a centered anime head-and-shoulders portrait with dark hair, facial features, brown eyes, and teal clothing. It is a coherent basic study, not yet a production-quality character illustration; hair shapes and face/eye construction remain simplified.
+- The region audit lists eight fill groups; only one reports `passed: true`. Several other groups show incomplete interior coverage (approximately 49%–88%), while one eye-white group has about 3.1% outside leakage. This confirms the quality eye is catching real fill defects rather than merely reporting success.
+- Next visual-engine improvements should target closed contour accuracy and region coverage before adding more decorative detail.
