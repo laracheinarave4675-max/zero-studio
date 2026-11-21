@@ -99,6 +99,21 @@ export function buildArtistCorrectionPlan(report = {}) {
     }
   }
 
+  const animeFace = report.animeFaceComparison;
+  if (animeFace && animeFace.measurementScope === "normalized-approved-face-landmarks-not-pixel-inference") {
+    for (const check of Array.isArray(animeFace.checks) ? animeFace.checks.filter(item => item?.passed === false) : []) {
+      add({
+        code: "anime-face-proportion-drift", targetStrokeId: null, targetMeasurement: safeId(check.id),
+        skillId: "head-and-face", severity: ["jawWidth","lowerFace","faceAspect"].includes(check.id) ? "high" : "medium",
+        title: "اختلاف في نسبة الوجه: " + safeId(check.id),
+        diagnosis: "نسبة الوجه هذه تختلف عن ورقة النموذج المعتمدة لهذه الشخصية؛ لا تُفرض نسب موحدة على جميع أساليب الأنمي.",
+        action: "راجع المعالم المرتبطة بالقياس، ثم صحح حدود الخد أو الفك أو موضع الأنف والفم مع الحفاظ على تصميم الشخصية.",
+        exercise: "ارسم خط بناء الوجه ثم حدّد الخدين والفك والذقن والأنف والفم والحاجبين، وقارن النسب بالمرجع.",
+        success: "تعود النسبة إلى هامش السماح الخاص بورقة النموذج المعتمدة."
+      });
+    }
+  }
+
   const animeHair = report.animeHairFlowComparison;
   if (animeHair && animeHair.measurementScope === "approved-root-tip-landmarks-not-automatic-strand-segmentation") {
     for (const check of Array.isArray(animeHair.checks) ? animeHair.checks.filter(item => item?.passed === false) : []) {
