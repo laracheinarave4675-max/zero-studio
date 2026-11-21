@@ -102,11 +102,11 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("collar-ink","Clarify the overlapping collar edge.","ink","#55435c",5,[[865,735],[930,830],[970,875],[1010,830],[1080,735]])
     ]},
     {id:"cel-shadows",name:"07 Cel shadows",role:"shadow",strokes:[
-      fill("face-shadow","Place a deliberate shadow plane under the fringe, clipped to skin.","#d99f9d",[[795,365],[900,395],[970,390],[1050,390],[1130,365],[1110,445],[1060,470],[970,455],[870,475],[810,440]],{opacity:.62,clipPolygon:face}),
-      fill("jaw-shadow","Add a compact jaw shadow following the chin, clipped to skin.","#d99a99",[[835,620],[900,690],[970,720],[1040,690],[1100,620],[1070,680],[970,750],[870,680]],{opacity:.48,clipPolygon:face}),
-      fill("neck-shadow","Give the neck a readable cast shadow, clipped to the neck.","#c98791",[[875,700],[970,750],[1050,700],[1040,795],[970,835],[890,790]],{opacity:.58,clipPolygon:neckClip}),
+      fill("face-shadow","Place a deliberate shadow plane under the fringe, clipped to skin.","#d99f9d",join(bezier([795,365],[850,385],[900,400],[970,390],12),bezier([970,390],[1040,400],[1090,385],[1130,365],12),bezier([1130,365],[1120,420],[1070,450],[970,445],12),bezier([970,445],[870,450],[820,420],[795,365],12)),{opacity:.62,clipPolygon:face}),
+      fill("jaw-shadow","Add a compact jaw shadow following the chin, clipped to skin.","#d99a99",join(bezier([835,620],[870,680],[920,710],[970,720],12),bezier([970,720],[1020,710],[1070,680],[1100,620],12),bezier([1100,620],[1060,700],[1015,735],[970,750],12),bezier([970,750],[925,735],[880,700],[835,620],12)),{opacity:.48,clipPolygon:face}),
+      fill("neck-shadow","Give the neck a readable cast shadow, clipped to the neck.","#c98791",join(bezier([875,700],[910,735],[940,750],[970,750],10),bezier([970,750],[1000,750],[1030,735],[1050,700],10),bezier([1050,700],[1045,770],[1010,820],[970,835],10),bezier([970,835],[930,820],[895,770],[875,700],10)),{opacity:.58,clipPolygon:neckClip}),
       fill("hair-shadow-left","Add a cool shadow ribbon clipped to the left hair mass.","#171d31",[[690,430],[750,490],[760,720],[825,940],[780,900],[710,740]],{opacity:.68,clipPolygon:leftHairClip}),
-      fill("garment-shadow","Create an under-collar shadow clipped to the clothing silhouette.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72,clipPolygon:shoulder})
+      fill("garment-shadow","Create an under-collar shadow clipped to the clothing silhouette.","#493c5d",join(bezier([850,840],[900,860],[940,890],[970,900],10),bezier([970,900],[1000,890],[1040,860],[1090,840],10),bezier([1090,840],[1140,900],[1130,980],[1080,1005],10),bezier([1080,1005],[970,1035],[860,1035],[780,1000],12),bezier([780,1000],[760,950],[800,880],[850,840],10)),{opacity:.72,clipPolygon:shoulder})
     ]},
     {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
       line("hair-ribbon-left","Paint a long curved reflected ribbon clipped to the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2,clipPolygon:leftHairClip}),
