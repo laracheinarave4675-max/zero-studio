@@ -249,3 +249,20 @@ test("anime eye and hair comparison reject missing or malformed landmarks", () =
   assert.throws(() => compareAnimeEyeDesign(reference,missing), /eyeRPupil/);
   assert.throws(() => compareAnimeHairFlow([{id:"a",root:{x:.1,y:.1},tip:{x:.2,y:.2}}],[]), /3–64/);
 });
+
+
+test("anime model-sheet landmark comparison is available in the artist workspace", async () => {
+  const [html, app] = await Promise.all([
+    readFile(new URL("../app/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../app/app.js", import.meta.url), "utf8")
+  ]);
+  for (const id of ["animeDesignLandmarkInput", "compareAnimeDesignLandmarksBtn", "animeDesignLandmarkStatus"]) {
+    assert.equal((html.match(new RegExp('id="' + id + '"', "g")) || []).length, 1);
+  }
+  assert.match(app, /compareAnimeEyeDesign/);
+  assert.match(app, /compareAnimeHairFlow/);
+  assert.match(app, /function compareAnimeDesignLandmarks\(/);
+  assert.match(app, /compareButton\.onclick=compareAnimeDesignLandmarks/);
+  assert.match(app, /report\.animeEyeComparison=eyeComparison/);
+  assert.match(app, /buildArtistCorrectionPlan\(report\)/);
+});
