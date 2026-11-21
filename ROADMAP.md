@@ -288,3 +288,14 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [ ] Extend specialist eyes to face planes, jaw proportions, brows, hands, costume folds, cel-shadow grouping and material response.
 - [ ] Run corrected full CI and inspect actual outputs on Android before claiming acceptance.
 
+## Digital Artist quality pass — 2026-11-21
+
+- [x] Repair the anime-eye syntax regression and reject invalid eye comparison tolerances.
+- [x] Add character-specific face proportion checks for cheek/jaw, lower-face, nose, mouth, brow and eye spacing.
+- [x] Connect face drift to targeted correction actions and anime drawing exercises.
+- [x] Turn reviewed vision contours into polygon fills plus separate native ink-brush outlines.
+- [x] Preserve explicit warning/fallback behavior when a vision region has only a bounding box.
+- [x] Add regression tests for face measurements, contour-to-brush conversion, and invalid inputs.
+- [x] Verify Drawing engine run #2748 and Hybrid raster/SVG run #787 on commit `38e128c5`; native brush and portrait proof artifacts uploaded.
+- [ ] Run the actual first artist drawing test on the user's Android device and visually accept/revise the resulting artwork.
+- [ ] Connect a free vision model successfully on Android, or keep manual observation handoff clearly labeled until that is proven.
