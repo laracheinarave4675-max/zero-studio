@@ -4,7 +4,7 @@ const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
 export const createLayer=(name="طبقة 1")=>({id:uid("layer"),name,visible:true,locked:false,operations:[]});
 export const createFrame=()=>({id:uid("frame"),layers:[createLayer()]});
-export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()],characterLibrary:[],animeCharacterDNA:[],animationBackground:null});
+export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()],characterLibrary:[],animeCharacterDNA:[],animeAutoSequence:null,animationBackground:null});
 export function safeColor(c,f="#172033"){return typeof c==="string"&&(/^#[0-9a-f]{3,8}$/i.test(c)||/^(black|white|red|blue|green|none)$/i.test(c)||/^url\(#zero-[a-z0-9-]+\)$/i.test(c))?c:f}
 export const SVG_DEFS="<defs><linearGradient id=\"zero-sky\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e2f2ee\"/><stop offset=\".55\" stop-color=\"#c7dfd8\"/><stop offset=\"1\" stop-color=\"#a7c1b3\"/></linearGradient><radialGradient id=\"zero-sun\"><stop offset=\"0\" stop-color=\"#fff0c8\"/><stop offset=\".72\" stop-color=\"#f6d99e\"/><stop offset=\"1\" stop-color=\"#eebf78\"/></radialGradient><linearGradient id=\"zero-wall\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#eadcc3\"/><stop offset=\".48\" stop-color=\"#d4c1a0\"/><stop offset=\"1\" stop-color=\"#a99578\"/></linearGradient><linearGradient id=\"zero-wood\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#8b6c51\"/><stop offset=\".5\" stop-color=\"#6d503d\"/><stop offset=\"1\" stop-color=\"#49382e\"/></linearGradient><linearGradient id=\"zero-roof\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#7a7168\"/><stop offset=\".45\" stop-color=\"#4d4b4a\"/><stop offset=\"1\" stop-color=\"#292f33\"/></linearGradient><linearGradient id=\"zero-glass\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#d2e7dc\"/><stop offset=\".35\" stop-color=\"#8db9b3\"/><stop offset=\"1\" stop-color=\"#466d72\"/></linearGradient><linearGradient id=\"zero-road\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#858c82\"/><stop offset=\".4\" stop-color=\"#666f69\"/><stop offset=\"1\" stop-color=\"#4c5753\"/></linearGradient><linearGradient id=\"zero-leaf\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#a6bd79\"/><stop offset=\".42\" stop-color=\"#658b5b\"/><stop offset=\"1\" stop-color=\"#315b46\"/></linearGradient><linearGradient id=\"zero-shadow\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#68786a\"/><stop offset=\"1\" stop-color=\"#a4a38b\"/></linearGradient></defs>";
 
@@ -298,6 +298,34 @@ function normalizeAnimeAutoDrawingRecord(raw){
  };
 }
 
+function normalizeAnimeAutoSequence(raw,frames){
+ if(raw===undefined||raw===null)return null;
+ if(!raw||raw.format!=="zero-studio-anime-auto-sequence"||raw.version!==1||
+    typeof raw.batchId!=="string"||!/^anime-auto-[a-z0-9_-]{6,100}$/i.test(raw.batchId)||
+    !Number.isInteger(raw.baseFrameIndex)||raw.baseFrameIndex<0||
+    raw.fps!==24||raw.durationSeconds!==1||raw.totalFrames!==24||
+    !["paused","running","complete"].includes(raw.status)||
+    typeof raw.action!=="string"||!raw.action.trim()||raw.action.length>1800||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(raw.characterReferenceGalleryId||""))||
+    raw.baseFrameIndex+24>frames.length){
+  throw Error("بيانات تسلسل الرسومات الآلي غير صالحة");
+ }
+ for(let index=0;index<24;index++){
+  const frame=frames[raw.baseFrameIndex+index];
+  const marker="ZERO-AUTO:"+raw.batchId+":"+String(index).padStart(2,"0");
+  if(!frame.layers.some(layer=>layer.name===marker))throw Error("علامة إطار الرسوم الآلي "+(index+1)+" مفقودة من التسلسل");
+  if(frame.animeAutoDrawing&&(frame.animeAutoDrawing.batchId!==raw.batchId||frame.animeAutoDrawing.frameIndex!==index)){
+   throw Error("سجل رسمة الأنمي الآلية لا يطابق موضعه في التسلسل");
+  }
+ }
+ return{
+  format:"zero-studio-anime-auto-sequence",version:1,batchId:raw.batchId,
+  baseFrameIndex:raw.baseFrameIndex,fps:24,durationSeconds:1,totalFrames:24,
+  action:raw.action.trim(),characterReferenceGalleryId:String(raw.characterReferenceGalleryId),
+  status:raw.status
+ };
+}
+
 export function normalizeProject(p){
  if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");
  const frames=p.frames.map(f=>{
@@ -333,10 +361,17 @@ export function normalizeProject(p){
  const dnaIds=animeCharacterDNA.map(item=>item.characterAssetId);
  if(new Set(dnaIds).size!==dnaIds.length)throw Error("معرّفات هويات الأنمي التشريحية مكررة");
  const animationProduction=normalizeAnimationProduction(p.animationProduction);
+ const animeAutoSequence=normalizeAnimeAutoSequence(p.animeAutoSequence,frames);
+ if(animeAutoSequence){
+  const records=frames.slice(animeAutoSequence.baseFrameIndex,animeAutoSequence.baseFrameIndex+24)
+   .map(frame=>frame.animeAutoDrawing).filter(Boolean);
+  const hashes=records.map(record=>record.contentHash);
+  if(new Set(hashes).size!==hashes.length)throw Error("توجد رسومات أنمي آلية مكررة داخل التسلسل");
+ }
  let animationBackground=null;
  if(p.animationBackground!==undefined&&p.animationBackground!==null){if(!Array.isArray(p.animationBackground)||p.animationBackground.length<1||p.animationBackground.length>MAX_LAYERS)throw Error("طبقات الخلفية الثابتة غير صالحة");const names=new Set();let count=0;animationBackground=p.animationBackground.map((source,index)=>{const layer=normalizeLayer(source,index);if(names.has(layer.name))throw Error("أسماء طبقات الخلفية الثابتة مكررة");names.add(layer.name);count+=layer.operations.length;if(count>2800)throw Error("تجاوزت الخلفية الثابتة حد 2800 عملية متجهية");layer.locked=true;return layer})}
  if(animationProduction&&frames.length!==Math.max(1,animationProduction.baseFrameCount+animationProduction.completedFrames))throw Error("عدد إطارات المشروع لا يطابق سجل إنتاج الحركة.");
- return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animeCharacterDNA,animationProduction,animationBackground};
+ return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animeCharacterDNA,animationProduction,animeAutoSequence,animationBackground};
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function createRasterLayer({name="طبقة نقطية",dataUrl,mimeType,width,height,opacity=1,blendMode="normal"}={}){
