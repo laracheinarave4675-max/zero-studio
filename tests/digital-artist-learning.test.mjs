@@ -45,3 +45,13 @@ test("duplicate attempts, unknown skills and invalid evidence fail closed", () =
   assert.throws(() => add(record,"unknown","not-a-skill"),/Unknown anime artist skill/);
   assert.throws(() => recordArtistAssessment(record,{id:"no-digest",skillId:"gesture-silhouette",reportDigest:"no",checks:checks()}),/SHA-256/);
 });
+
+test("a skill cannot be mastered before its prerequisite skill is mastered", () => {
+  const record = createArtistLearningRecord();
+  for (const id of ["h1","h2","h3"]) add(record,id,"head-and-face");
+  const progress = evaluateArtistSkillProgress(record);
+  const head = progress.skills.find(item=>item.skillId==="head-and-face");
+  assert.equal(head.prerequisitesMet,false);
+  assert.equal(head.mastered,false);
+  assert.equal(recommendNextArtistPractice(record).skillId,"gesture-silhouette");
+});
