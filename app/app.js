@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA,compareAnimeEyeDesign,compareAnimeFaceDesign,compareAnimeHairFlow}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,extractRasterContours,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA,compareAnimeEyeDesign,compareAnimeFaceDesign,compareAnimeHairFlow}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1203,7 +1203,7 @@ async function inspectDigitalArtistEyes(){
    if(!ctx)throw Error("تعذر إنشاء سطح فحص الطبقة");
    ctx.drawImage(image,0,0,inspectionWidth,inspectionHeight);
    const pixels=ctx.getImageData(0,0,inspectionWidth,inspectionHeight);
-   const raster=analyzeRasterPixels(pixels);
+   const raster=analyzeRasterPixels(pixels);const rasterContours=extractRasterContours(pixels,{minimumArea:3,maximumComponents:24,maximumPoints:96});
    raster.inspectionScale=inspectionScale;
    if(raster.bounds)raster.bounds={x:Math.round(raster.bounds.x/inspectionScale),y:Math.round(raster.bounds.y/inspectionScale),width:Math.round(raster.bounds.width/inspectionScale),height:Math.round(raster.bounds.height/inspectionScale)};
    const records=frameRecords.filter(record=>record.layer.id===layer.id);
@@ -1225,7 +1225,7 @@ async function inspectDigitalArtistEyes(){
     for(const item of group)fillEyes.push({id:item.record.stroke.id,intent:item.record.stroke.intent,color,groupRegions:group.length,...fill});
    }
    const meanLength=geometries.length?geometries.reduce((sum,item)=>sum+item.length,0)/geometries.length:0;
-   layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,geometries,meanLength,pressureSamples,fillEyes});
+   layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,rasterContours,geometries,meanLength,pressureSamples,fillEyes});
   }
   const allGeometry=layerEyes.flatMap(layer=>layer.geometries);
   const strokeWarnings=allGeometry.flatMap(item=>item.warnings.map(code=>({id:item.id,code,intent:item.intent})));
@@ -1251,7 +1251,7 @@ async function inspectDigitalArtistEyes(){
   }
   const report={
    version:1,frame:current+1,analyzedLayers:layerEyes.length,operations:allGeometry.length,
-   visiblePixels:totalVisible,topColors,
+   visiblePixels:totalVisible,topColors,contourSummary:{components:layerEyes.reduce((sum,item)=>sum+item.rasterContours.connectedComponentCount,0),returned:layerEyes.reduce((sum,item)=>sum+item.rasterContours.returnedComponentCount,0)},
    operationKinds:{fills:allGeometry.filter(item=>item.kind==="region-fill").length,brushes:allGeometry.filter(item=>item.kind==="brush-stroke").length},
    approvals,strokeWarnings,
    characterIdentity:{characterAssetId:selectedDNA?.characterAssetId||null,characterName:selectedDNA?.name||null,anatomy:anatomyEye},
@@ -1259,7 +1259,7 @@ async function inspectDigitalArtistEyes(){
    layerEyes:layerEyes.map(layer=>({
     name:layer.name,role:layer.role,visible:layer.visible,
     visiblePixels:layer.raster.visiblePixels,alphaCoverage:layer.raster.alphaCoverage,
-    bounds:layer.raster.bounds,dominantPalette:layer.raster.dominantPalette.slice(0,4),
+    bounds:layer.raster.bounds,dominantPalette:layer.raster.dominantPalette.slice(0,4),rasterContours:layer.rasterContours.components,connectedComponentCount:layer.rasterContours.connectedComponentCount,
     averageStrokeLength:layer.meanLength,
     fillPassed:layer.fillEyes.filter(fill=>fill.passed).length,
     fillFailed:layer.fillEyes.filter(fill=>!fill.passed).length
@@ -1270,7 +1270,7 @@ async function inspectDigitalArtistEyes(){
   renderDigitalArtistLearning();
   status.textContent=[
    "فحص الفنان — الإطار "+report.frame,
-   "عين البنية: "+report.analyzedLayers+" طبقات، "+report.visiblePixels.toLocaleString("en-US")+" بكسل ظاهر",
+   "عين البنية: "+report.analyzedLayers+" طبقات، "+report.visiblePixels.toLocaleString("en-US")+" بكسل ظاهر","عين المحيط من البكسلات: "+report.contourSummary.components+" مكوّناً متصلاً، أُعيدت حدود "+report.contourSummary.returned+" مكوّنات قابلة للمراجعة",
    "عين الخط: "+report.operations+" عملية؛ "+report.operationKinds.brushes+" ضربات فرشاة و"+report.operationKinds.fills+" تعبئات مغلقة",
    "العين اللونية: "+(topColors.join(" · ")||"لا توجد ألوان قابلة للقياس"),
    "عين التعبئة: "+report.fillEyes.filter(item=>item.passed).length+"/"+report.fillEyes.length+" مناطق اجتازت اختبار التغطية والتسرب"+(report.fillEyes.some(item=>!item.passed)?" — "+report.fillEyes.filter(item=>!item.passed).map(item=>item.id).join("، "):""),
