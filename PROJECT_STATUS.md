@@ -1,3 +1,14 @@
+## D-031 anime craft practice expansion — 2026-11-21
+
+- Added `app/anime-drawing-training.mjs`, a detailed anime-specific practice library covering all 15 curriculum skills: gesture/silhouette, head construction, anime eyes/expressions, hair masses, body anatomy, hands/feet, costume/folds, perspective, inking, flat colors, cel shadows, material highlights, model sheets, composition, and independent animation drawings.
+- Each study now teaches a concrete Japanese animation drawing principle, a sequenced drill, common visual mistakes, a target deliverable, and skill-specific review criteria. It explicitly avoids treating one set of proportions as universal for every anime style.
+- Added session generation with foundation/intermediate/advanced difficulty, recommended layer order, native Canvas2D raster medium, and a distinction between machine-measurable checks and criteria that still require human visual review.
+- Connected the editor's Anime Craft panel: skill names are readable, the artist can inspect detailed focus/sequence/mistakes/rubric, choose difficulty, and generate a practical drawing session.
+- Added `tests/anime-drawing-training.test.mjs` to verify coverage of every curriculum skill, anime-specific drill content, independent raster drawing requirements, defensive copies, and invalid input rejection.
+- This is a real structured practice system and editor integration, not neural-network training. The generated session is a drawing brief; it does not autonomously complete the exercise or claim artistic mastery.
+- GitHub Actions were triggered for the current PR head; results are pending verification. No Android device test or visual acceptance has occurred in this pass.
+- PR #14 remains Draft and unmerged. No production deployment, paid compute, generated final artwork, or Worker changes.
+
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-21 (UTC)
