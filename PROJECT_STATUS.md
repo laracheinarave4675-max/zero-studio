@@ -806,3 +806,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Added regression tests for contour preservation, invalid/degenerate/self-crossing/out-of-bounds contours, polygon-to-raster coordinate conversion, and legacy rectangle fallback.
 - Important verification limit: these commits were made through the GitHub Contents API; no fresh Actions run has yet been observed for this head. The latest verified green Actions runs remain on the earlier documented commit. No latest-head test pass is claimed.
 - Vercel's most recent listed preview for this branch still points to an earlier commit, not this contour update. No production deployment or merge was performed.
+
+
+### Contour bridge CI verification — 2026-11-21
+
+- The first contour CI run on the intermediate head exposed that the drawing brief dropped the validated contour before the planner received it. The contract mapping was corrected in commit `37079202fc3db8564b06c6ffe0ce78352eda26c3`.
+- On that corrected head, Drawing engine workflow run `44942052300` passed all **402/402 tests**; Hybrid raster/SVG workflow run `44942052319` passed, including syntax checks, full native tests and the raster-brush/portrait proof job.
+- The contour-specific tests now cover polygon preservation, zero-area and duplicate-point rejection, self-crossing and out-of-box rejection, contour-to-canvas coordinate mapping, and legacy rectangle fallback.
+- The Vercel preview listing still points to commit `37668ff3bff28d790c3a913d9fd0175fcb66d6a0`, not the contour implementation. The latest code is in the open Draft PR; no deployment, merge or production change has been made.
