@@ -214,7 +214,9 @@ function normalizeLayer(l,i){
    const intent=String(stroke.intent||"").trim().slice(0,180);
    const source=stroke.source==="digital-artist"?"digital-artist":"manual";
    if(source==="digital-artist"&&!intent)throw Error("ضربة الفنان الرقمي تحتاج إلى وصف نية الرسم");
-   return{id:strokeId,intent,source,points,options:{brush,size:Number(options.size)||12,color:String(options.color||"#243348"),opacity:Number(options.opacity??1),texture:Number(options.texture??.55),blendMode:mode,pressureSensitive:options.pressureSensitive!==false,erase:options.erase===true,seed:Number.isFinite(+options.seed)?+options.seed:1}};
+   const kind=stroke.kind==="raster-region-fill"?"raster-region-fill":"raster-brush-stroke";
+   const review=stroke.review==="approved"?"approved":stroke.review==="rejected"?"rejected":"pending";
+   return{id:strokeId,intent,source,kind,review,points,options:{brush,size:Number(options.size)||12,color:String(options.color||"#243348"),opacity:Number(options.opacity??1),texture:Number(options.texture??.55),blendMode:mode,pressureSensitive:options.pressureSensitive!==false,erase:options.erase===true,seed:Number.isFinite(+options.seed)?+options.seed:1}};
   });
   return{id,name,type:"raster",visible:l.visible!==false,locked:l.locked===true,operations:[],strokes:editableStrokes,mimeType:mime,dataUrl:data,width,height,opacity,blendMode};
  }
