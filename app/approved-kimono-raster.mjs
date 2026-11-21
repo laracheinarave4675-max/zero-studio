@@ -117,13 +117,19 @@ function drawKimonoBody(ctx,bob,cloth,sleeveSwing){
  path(ctx,[["M",347,430+bob],["Q",380,408+bob,386,436+bob],["Q",375,454+bob,352,451+bob],["Z"]],FIXED_PALETTE.obiLight,FIXED_PALETTE.ink,2.5);
  tapered(ctx,[[265,424+bob],[306,437+bob],[340,432+bob],[368,418+bob]],FIXED_PALETTE.gold,2.8);
  // Stable cherry blossom placements on sleeve and lower kimono.
- flower(ctx,377,367+bob,8,.78);flower(ctx,402,407+bob,6,.68);flower(ctx,286,690+bob,10,.72);flower(ctx,341,746+bob,9,.72);flower(ctx,386,719+bob,7,.65);
+ flower(ctx,377,367+bob,8,.82);flower(ctx,402,407+bob,6,.76);flower(ctx,286,690+bob,10,.82);flower(ctx,341,746+bob,9,.78);flower(ctx,386,719+bob,7,.72);
+ flower(ctx,270,638+bob,6,.55);flower(ctx,366,670+bob,7,.62);flower(ctx,402,748+bob,6,.55);flower(ctx,428+sleeveSwing,462+bob,6,.62);
+ flower(ctx,418+sleeveSwing*.6,433+bob,7,.62);flower(ctx,393+sleeveSwing*.5,451+bob,5,.66);flower(ctx,296,725+bob,5,.56);flower(ctx,365,765+bob,5,.56);
+ tapered(ctx,[[267,652+bob],[275,659+bob],[281,669+bob],[285,679+bob]],"#c9878e",1.5);
+ tapered(ctx,[[359,687+bob],[367,694+bob],[374,706+bob],[378,716+bob]],"#c9878e",1.5);
+ tapered(ctx,[[288,490+bob],[292,564+bob],[286+cloth*.35,667+bob],[282+cloth,776+bob]],"#d7c9bb",2.2);
+ tapered(ctx,[[331,500+bob],[340,584+bob],[344+cloth*.45,688+bob],[351+cloth,789+bob]],"#fff8ed",2.2);
 }
 function drawArmAndHand(ctx,bob,swing){
- // The sleeve opening moves only by a small gait offset. Its cut and shape remain fixed.
- const x=swing*18;
- path(ctx,[["M",385+x,354+bob],["C",397+x,365+bob,397+x,402+bob,390+x,432+bob],["L",379+x,461+bob],["Q",370+x,471+bob,365+x,458+bob],["C",369+x,421+bob,369+x,388+bob,385+x,354+bob],["Z"]],FIXED_PALETTE.skin,FIXED_PALETTE.ink,3.2);
- tapered(ctx,[[382+x,418+bob],[382+x,438+bob],[378+x,452+bob],[372+x,459+bob]],FIXED_PALETTE.skinShade,2);
+ const x=swing*.42;
+ path(ctx,[["M",405+x,461+bob],["Q",414+x,464+bob,415+x,475+bob],["L",412+x,495+bob],["Q",410+x,502+bob,406+x,497+bob],["L",401+x,481+bob],["Q",399+x,470+bob,405+x,461+bob],["Z"]],FIXED_PALETTE.skin,FIXED_PALETTE.ink,2.6);
+ tapered(ctx,[[406+x,481+bob],[407+x,488+bob],[408+x,494+bob],[407+x,497+bob]],FIXED_PALETTE.skinShade,1.5);
+ tapered(ctx,[[410+x,481+bob],[412+x,487+bob],[411+x,493+bob],[410+x,496+bob]],FIXED_PALETTE.skinShade,1.35);
 }
 function drawFeet(ctx,pose,bob){
  const base=789+bob;
