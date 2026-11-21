@@ -38,6 +38,11 @@ export function buildAnimeConstructionModel({
   if (![tilt,lean,shoulderScale].every(Number.isFinite)||Math.abs(tilt)>.3||Math.abs(lean)>.25||shoulderScale<.65||shoulderScale>1.5) fail("Pose parameters exceed supported construction bounds.");
 
   const {x,y,width,height}=headBounds;
+  const cubicPoints=(a,b,c,d,count=14)=>Array.from({length:count+1},(_,i)=>{
+    const t=i/count,u=1-t;
+    return {x:u*u*u*a.x+3*u*u*t*b.x+3*u*t*t*c.x+t*t*t*d.x,y:u*u*u*a.y+3*u*u*t*b.y+3*u*t*t*c.y+t*t*t*d.y};
+  });
+  const joinPoints=(...parts)=>parts.flatMap((part,index)=>index?part.slice(1):part);
   const chin=head.landmarks.chin;
   const neckTop=y+height*.82,neckBottom=Math.min(.88,chin.y+height*.34);
   const neckWidth=width*.24;
@@ -58,16 +63,16 @@ export function buildAnimeConstructionModel({
   const waistWidth=shoulderHalf*1.05;
   const waist={center:waistCenter,width:waistWidth};
   const ribcage={center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.2},width:shoulderHalf*1.45,height:height*.34};
-  const torsoOutline=[
-    shoulders.left,
-    {x:shoulders.left.x+shoulderHalf*.08,y:shoulderY+height*.22},
-    {x:waistCenter.x-waistWidth/2,y:waistCenter.y},
-    {x:waistCenter.x+waistWidth/2,y:waistCenter.y},
-    {x:shoulders.right.x-shoulderHalf*.08,y:shoulderY+height*.22},
-    shoulders.right,
-    neckBaseRight,
-    neckBaseLeft
-  ];
+  const leftWaist={x:waistCenter.x-waistWidth/2,y:waistCenter.y};
+  const rightWaist={x:waistCenter.x+waistWidth/2,y:waistCenter.y};
+  const torsoOutline=joinPoints(
+    cubicPoints(shoulders.left,{x:shoulders.left.x+shoulderHalf*.16,y:shoulderY+height*.015},{x:leftWaist.x-shoulderHalf*.08,y:leftWaist.y-height*.12},leftWaist),
+    cubicPoints(leftWaist,{x:leftWaist.x+waistWidth*.08,y:leftWaist.y+height*.09},{x:rightWaist.x-waistWidth*.08,y:rightWaist.y+height*.09},rightWaist),
+    cubicPoints(rightWaist,{x:rightWaist.x+shoulderHalf*.08,y:rightWaist.y-height*.12},{x:shoulders.right.x-shoulderHalf*.16,y:shoulderY+height*.015},shoulders.right),
+    cubicPoints(shoulders.right,{x:shoulders.right.x-shoulderHalf*.3,y:shoulderY-height*.04},neckBaseRight,neckBaseRight,8),
+    cubicPoints(neckBaseRight,{x:neckBase.x+neckWidth*.35,y:neckBottom+height*.03},{x:neckBase.x-neckWidth*.35,y:neckBottom+height*.03},neckBaseLeft,8),
+    cubicPoints(neckBaseLeft,{x:shoulders.left.x+shoulderHalf*.3,y:shoulderY+height*.04},shoulders.left,shoulders.left,8)
+  );
   const torso={neck,shoulders,ribcage,waist,outline:torsoOutline};
 
   const eyes=head.eyes.map((eye,index)=>{
@@ -88,9 +93,9 @@ export function buildAnimeConstructionModel({
   });
 
   const guides=hairGuides??[
-    {id:"fringe-left",root:{x:x+width*.22,y:y+height*.1},control1:{x:x+width*.04,y:y+height*.03},control2:{x:x+width*.12,y:y+height*.28},tip:{x:x+width*.29,y:y+height*.34},rootWidth:width*.2,tipWidth:width*.004,side:1},
-    {id:"fringe-center",root:{x:x+width*.46,y:y+height*.025},control1:{x:x+width*.6,y:y+height*.04},control2:{x:x+width*.48,y:y+height*.25},tip:{x:x+width*.52,y:y+height*.34},rootWidth:width*.22,tipWidth:width*.003,side:1},
-    {id:"fringe-right",root:{x:x+width*.78,y:y+height*.1},control1:{x:x+width*.98,y:y+height*.03},control2:{x:x+width*.88,y:y+height*.28},tip:{x:x+width*.7,y:y+height*.34},rootWidth:width*.2,tipWidth:width*.004,side:-1},
+    {id:"fringe-left",root:{x:x+width*.22,y:y+height*.1},control1:{x:x+width*.04,y:y+height*.03},control2:{x:x+width*.12,y:y+height*.28},tip:{x:x+width*.29,y:y+height*.34},rootWidth:width*.34,tipWidth:width*.003,side:1},
+    {id:"fringe-center",root:{x:x+width*.46,y:y+height*.025},control1:{x:x+width*.6,y:y+height*.04},control2:{x:x+width*.48,y:y+height*.25},tip:{x:x+width*.52,y:y+height*.34},rootWidth:width*.38,tipWidth:width*.003,side:1},
+    {id:"fringe-right",root:{x:x+width*.78,y:y+height*.1},control1:{x:x+width*.98,y:y+height*.03},control2:{x:x+width*.88,y:y+height*.28},tip:{x:x+width*.7,y:y+height*.34},rootWidth:width*.34,tipWidth:width*.003,side:-1},
     {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:1},
     {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:-1}
   ];
@@ -104,6 +109,10 @@ export function buildAnimeConstructionModel({
     cubicPoints({x:x+width*1.18,y:y+height*1.58},{x:x+width*.95,y:y+height*1.78},{x:x+width*.15,y:y+height*1.78},{x:x-width*.18,y:y+height*1.55},18),
     cubicPoints({x:x-width*.18,y:y+height*1.55},{x:x-width*.32,y:y+height*.75},{x:x-width*.35,y:y-height*.08},{x:x+width*.5,y:y-height*.09},22)
   );
+  const ears=[
+    {id:"ear-left",outline:ellipse(x+width*.005,y+height*.59,width*.055,height*.105,24)},
+    {id:"ear-right",outline:ellipse(x+width*.995,y+height*.59,width*.055,height*.105,24)}
+  ];
   const brows=head.eyes.map((eye,index)=>{
     const b=eye.bounds,cx=eye.center.x,side=index===0?-1:1;
     return {id:index===0?"brow-left":"brow-right",points:Array.from({length:11},(_,i)=>{const t=i/10;return{x:cx-b.width*.52+b.width*1.04*t,y:head.axes.browY-Math.sin(Math.PI*t)*height*.018};})};
@@ -139,7 +148,7 @@ export function buildAnimeConstructionModel({
   return {
     format:"zero-studio-anime-construction-model",version:1,profileId:style.id,
     canvasSpace:"normalized-0-to-1",view:{yaw,pose:{shoulderTilt:tilt,torsoLean:lean,shoulderWidth:shoulderScale}},
-    head,eyes,torso,hair,brows,nose,mouth,hairBackSilhouette,folds,shadows,
+    head,eyes,torso,hair,ears,brows,nose,mouth,hairBackSilhouette,folds,shadows,
     constructionOrder:["gesture-and-axis","head-volume","facial-feature-zones","torso-volume","hair-root-to-tip-clumps","cloth-tension-anchors","light-and-occlusion"]
   };
 }
