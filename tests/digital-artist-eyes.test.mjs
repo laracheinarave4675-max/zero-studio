@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
-  analyzeRasterPixels, analyzeStrokeGeometry, compareLandmarks,
+  analyzeRasterPixels, extractRasterContours, analyzeStrokeGeometry, compareLandmarks,
   comparePalette, inspectRegionFill, inspectRegionFillGroup,
   compareAnatomyGuideToDNA
 } from "../app/digital-artist-eyes.mjs";
@@ -307,4 +307,30 @@ test("anime face comparison rejects missing landmarks and invalid tolerances", (
   const missing={...reference}; delete missing.chin;
   assert.throws(()=>compareAnimeFaceDesign(reference,missing),/chin/);
   assert.throws(()=>compareAnimeFaceDesign(reference,reference,{jawWidthTolerance:"invalid"}),/tolerance/);
+});
+
+
+test("raster eye extracts pixel-derived connected components and closed silhouette contours", () => {
+  const width = 9, height = 7, data = new Uint8ClampedArray(width * height * 4);
+  const paint = (x,y) => data.set([30,40,50,255],(y*width+x)*4);
+  for (const [x,y] of [[1,1],[2,1],[1,2],[2,2],[3,2],[2,3],[6,4],[7,4],[6,5]]) paint(x,y);
+  const result = extractRasterContours({width,height,data},{minimumArea:2,maximumPoints:64});
+  assert.equal(result.connectedComponentCount,2);
+  assert.equal(result.returnedComponentCount,2);
+  assert.equal(result.measurementScope,"alpha-connected-components-and-pixel-boundary-contours-not-semantic-part-recognition");
+  assert.equal(result.components[0].area,6);
+  assert.equal(result.components[1].area,3);
+  assert.ok(result.components.every(item=>item.contour.length>=4));
+  assert.ok(result.components.every(item=>item.contour.every(point=>point.x>=0&&point.x<=1&&point.y>=0&&point.y<=1)));
+});
+
+test("raster contour eye filters tiny components, caps output and rejects oversized surfaces", () => {
+  const width=5,height=5,data=new Uint8ClampedArray(width*height*4);
+  data.set([1,2,3,255],(0*width+0)*4);
+  for(const [x,y] of [[2,2],[3,2],[2,3],[3,3]]) data.set([1,2,3,255],(y*width+x)*4);
+  const filtered=extractRasterContours({width,height,data},{minimumArea:2,maximumComponents:1});
+  assert.equal(filtered.connectedComponentCount,1);
+  assert.equal(filtered.returnedComponentCount,1);
+  assert.equal(filtered.components[0].area,4);
+  assert.throws(()=>extractRasterContours({width:2049,height:1024,data:new Uint8ClampedArray(0)}),/dimensions|RGBA/);
 });
