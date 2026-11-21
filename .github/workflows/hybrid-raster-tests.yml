@@ -49,6 +49,8 @@ jobs:
         run: node scripts/render-digital-artist-demo.mjs
       - name: Render the general anime drawing quality benchmark
         run: node scripts/render-digital-artist-anime-quality.mjs
+      - name: Render the construction-driven anime artist study
+        run: node scripts/render-anime-construction-study.mjs
       - name: Upload brush proof sheet
         uses: actions/upload-artifact@v4
         with:
@@ -68,5 +70,12 @@ jobs:
         with:
           name: zero-studio-anime-quality-benchmark
           path: artifacts/digital-artist-anime-quality-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload construction-driven anime artist study
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-construction-study
+          path: artifacts/anime-construction-study/
           if-no-files-found: error
           retention-days: 14
