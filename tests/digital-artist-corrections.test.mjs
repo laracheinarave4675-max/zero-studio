@@ -41,7 +41,7 @@ test("failed region fills map to the flat-color lesson with measurable acceptanc
   assert.equal(plan.summary.total, 1);
   assert.equal(plan.suggestions[0].skillId, "flat-color-groups");
   assert.equal(plan.suggestions[0].severity, "high");
-  assert.match(plan.suggestions[0].success, /88%/);
+  assert.match(plan.suggestions[0].success, /90%/);
 });
 
 test("anatomy deviations create one correction per failed measured bone, not for skipped comparisons", () => {
