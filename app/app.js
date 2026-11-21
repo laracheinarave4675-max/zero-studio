@@ -1140,7 +1140,7 @@ function mountAnimeArtistCurriculum(){
   };
  }
  select.dataset.bound="true";
- update();artistLearningStatus();
+ update();
 }
 async function compareAnimeDesignLandmarks(){
  const input=$("animeDesignLandmarkInput"),status=$("animeDesignLandmarkStatus");
