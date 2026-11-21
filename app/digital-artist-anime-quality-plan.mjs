@@ -1,0 +1,121 @@
+const pt = (values) => values.map(([x,y], i) => ({ x, y, pressure: i === 0 || i === values.length - 1 ? 0.22 : 0.62 + (i % 4) * 0.08 }));
+const bezier = (a,b,c,d,n=12) => Array.from({length:n+1},(_,i) => {
+  const t=i/n, u=1-t;
+  return [u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]];
+});
+const join = (...parts) => parts.flatMap((part,i)=>i?part.slice(1):part);
+const line = (id,intent,brush,color,size,points,extra={}) => ({id,intent,brush,color,size,points:pt(points),...extra});
+const fill = (id,intent,color,points,extra={}) => ({id,intent,kind:"region-fill",color,points:pt(points),...extra});
+const shape = (id,intent,color,parts,extra={}) => fill(id,intent,color,join(...parts),extra);
+const outline = (id,intent,points,size=7,color="#302538") => line(id,intent,"ink",color,size,points,{texture:0});
+
+export function createDigitalArtistAnimeQualityPlan() {
+  const hairBack = join(
+    bezier([720,430],[620,170],[820,75],[970,92],18),
+    bezier([970,92],[1220,65],[1320,280],[1220,520],18),
+    bezier([1220,520],[1290,710],[1210,910],[1080,990],18),
+    bezier([1080,990],[1110,780],[1090,630],[1125,520],12),
+    bezier([1125,520],[980,610],[820,560],[720,430],12)
+  );
+  const face = join(
+    bezier([790,340],[850,260],[1070,250],[1135,350],16),
+    bezier([1135,350],[1140,535],[1080,690],[970,735],18),
+    bezier([970,735],[850,710],[780,560],[790,340],18)
+  );
+  const fringeLeft = join(bezier([700,410],[680,230],[820,120],[960,125],16),bezier([960,125],[925,250],[890,350],[835,440],12),bezier([835,440],[790,410],[750,400],[700,410],8));
+  const fringeMid = join(bezier([860,150],[970,80],[1110,150],[1160,300],16),bezier([1160,300],[1100,340],[1050,390],[1010,470],12),bezier([1010,470],[970,380],[920,300],[860,150],12));
+  const fringeRight = join(bezier([1080,175],[1220,230],[1280,390],[1200,500],16),bezier([1200,500],[1150,430],[1120,365],[1090,310],10));
+  const shoulder = join(
+    bezier([890,700],[820,745],[700,750],[600,900],18),
+    bezier([600,900],[530,1000],[610,1060],[760,1070],16),
+    bezier([760,1070],[960,1090],[1160,1070],[1360,1060],16),
+    bezier([1360,1060],[1510,1010],[1450,900],[1340,820],16),
+    bezier([1340,820],[1240,745],[1120,740],[1050,700],14),
+    bezier([1050,700],[1000,790],[940,790],[890,700],10)
+  );
+  const leftEye = join(bezier([810,455],[850,405],[920,410],[950,460],10),bezier([950,460],[925,515],[850,520],[810,455],10));
+  const rightEye = join(bezier([990,460],[1025,405],[1095,405],[1135,455],10),bezier([1135,455],[1100,520],[1025,515],[990,460],10));
+  const layers = [
+    {id:"background",name:"01 Background and atmosphere",role:"background",strokes:[
+      fill("bg-warm-field","Lay a calm warm background field.","#f5e8df",[[0,0],[1920,0],[1920,1080],[0,1080]]),
+      line("bg-halo","Paint a soft circular halo behind the portrait.","watercolor","#f4c8bd",180,join(bezier([960,35],[1270,35],[1370,210],[1330,390],18),bezier([1330,390],[1280,560],[1120,620],[960,610],18),bezier([960,610],[800,620],[640,560],[590,390],18),bezier([590,390],[550,210],[650,35],[960,35],18)),{opacity:.34,texture:.4})
+    ]},
+    {id:"hair-base",name:"02 Hair silhouette",role:"base-color",strokes:[
+      fill("hair-back-mass","Establish one flowing rear hair mass with a tapered silhouette.","#292438",hairBack),
+      fill("hair-left-fall","Separate the left falling hair ribbon.","#30283f",join(bezier([720,390],[665,560],[700,800],[810,990],14),bezier([810,990],[750,940],[680,850],[660,720],12),bezier([660,720],[630,560],[660,440],[720,390],12))),
+      fill("hair-right-fall","Separate the right falling hair ribbon.","#302438",join(bezier([1190,390],[1280,560],[1270,810],[1140,990],14),bezier([1140,990],[1210,920],[1300,790],[1300,650],12),bezier([1300,650],[1310,510],[1250,420],[1190,390],12))),
+      fill("hair-fringe-left","Build the left swept fringe lock.","#30263b",fringeLeft),
+      fill("hair-fringe-mid","Build the central tapered fringe lock.","#272235",fringeMid),
+      fill("hair-fringe-right","Build the right swept fringe lock.","#342a42",fringeRight)
+    ]},
+    {id:"skin-flats",name:"03 Skin and facial planes",role:"flat-color",strokes:[
+      fill("face-base","Fill the face with a clean warm skin tone.","#f4cbb7",face),
+      fill("neck-base","Connect jaw and shoulders with a believable neck.","#efbda9",join(bezier([875,670],[880,750],[850,805],[815,835],12),bezier([815,835],[940,900],[1060,875],[1110,820],12),bezier([1110,820],[1050,770],[1040,720],[1045,670],12))),
+      fill("ear-left","Place the left ear inside the hair silhouette.","#efbda9",join(bezier([790,480],[730,440],[720,520],[790,575],10),bezier([790,575],[815,550],[810,505],[790,480],8))),
+      fill("ear-right","Place the right ear inside the hair silhouette.","#efbda9",join(bezier([1130,475],[1190,435],[1210,510],[1135,575],10),bezier([1135,575],[1110,545],[1110,500],[1130,475],8)))
+    ]},
+    {id:"clothing-flats",name:"04 Clothing silhouette and panels",role:"flat-color",strokes:[
+      fill("shoulder-clothing","Block the full shoulder and collar silhouette.","#d9d6e8",shoulder),
+      fill("collar-inner","Create a layered collar with a visible overlap.","#fff0e6",join(bezier([865,735],[900,815],[940,860],[970,875],10),bezier([970,875],[1000,850],[1040,800],[1080,735],10),bezier([1080,735],[1050,900],[1010,970],[970,980],10),bezier([970,980],[925,950],[890,870],[865,735],10))),
+      fill("bodice-panel","Add a deep plum central garment panel.","#6b526f",[[780,865],[890,820],[970,900],[1050,820],[1170,865],[1260,1050],[690,1050]]),
+      fill("sleeve-left","Shape the left sleeve with a soft flared edge.","#c5b9dc",join(bezier([650,860],[560,890],[550,980],[640,1030],12),bezier([640,1030],[720,1000],[760,940],[790,900],10))),
+      fill("sleeve-right","Shape the right sleeve with a soft flared edge.","#c5b9dc",join(bezier([1290,850],[1390,880],[1420,980],[1320,1030],12),bezier([1320,1030],[1240,1000],[1200,940],[1170,900],10)))
+    ]},
+    {id:"features",name:"05 Anime facial features",role:"detail",strokes:[
+      fill("eye-left-white","Place the left sclera inside its eyelid.","#fff8f0",leftEye),
+      fill("eye-right-white","Place the right sclera inside its eyelid.","#fff8f0",rightEye),
+      fill("iris-left","Build a large amber iris with a round lower contour.","#a65f52",join(bezier([850,430],[880,410],[925,430],[925,475],10),bezier([925,475],[920,520],[875,525],[850,490],10),bezier([850,490],[840,465],[842,445],[850,430],8))),
+      fill("iris-right","Build the matching amber iris.","#a65f52",join(bezier([1020,430],[1050,410],[1095,430],[1095,475],10),bezier([1095,475],[1090,520],[1045,525],[1020,490],10),bezier([1020,490],[1010,465],[1012,445],[1020,430],8))),
+      fill("pupil-left","Set a dark pupil into the left iris.","#34273c",[[875,435],[895,435],[900,490],[890,505],[875,490]]),
+      fill("pupil-right","Set a dark pupil into the right iris.","#34273c",[[1045,435],[1065,435],[1065,490],[1055,505],[1045,490]]),
+      fill("glint-left","Add two controlled reflected lights to the left eye.","#fffdf8",[[858,440],[875,432],[884,445],[878,458]]),
+      fill("glint-right","Add two controlled reflected lights to the right eye.","#fffdf8",[[1028,440],[1045,432],[1054,445],[1048,458]])
+    ]},
+    {id:"ink",name:"06 Clean anime line art",role:"clean-line",strokes:[
+      outline("face-ink","Ink a soft cheek and chin contour.",face,6),
+      outline("hair-back-ink","Ink the large rear hair silhouette.",hairBack,9),
+      outline("fringe-left-ink","Ink the left fringe lock.",fringeLeft,8),
+      outline("fringe-mid-ink","Ink the central fringe lock.",fringeMid,8),
+      outline("fringe-right-ink","Ink the right fringe lock.",fringeRight,8),
+      outline("shoulder-ink","Ink the clothing silhouette with tapered pressure.",shoulder,7),
+      outline("eye-left-ink","Ink the expressive left eyelid.",leftEye,7),
+      outline("eye-right-ink","Ink the expressive right eyelid.",rightEye,7),
+      line("eye-left-lash","Extend the outer left lashes.","ink","#282236",5,[[815,460],[795,445],[782,428]]),
+      line("eye-right-lash","Extend the outer right lashes.","ink","#282236",5,[[1130,455],[1150,438],[1165,420]]),
+      line("brows","Place expressive eyebrows above both eyes.","ink","#55404b",5,[[820,390],[860,375],[920,385],[1010,385],[1070,375],[1110,390]]),
+      line("nose","Suggest the nose with two delicate marks.","ink","#bd827f",3,[[975,500],[965,545],[980,548]]),
+      line("mouth","Draw a small confident smile.","ink","#9c5364",4,[[935,620],[965,632],[995,620]]),
+      line("ear-details","Add restrained inner-ear contours.","ink","#b47778",3,[[765,490],[780,515],[770,535],[790,540],[800,520]]),
+      line("collar-ink","Clarify the overlapping collar edge.","ink","#55435c",5,[[865,735],[930,830],[970,875],[1010,830],[1080,735]])
+    ]},
+    {id:"cel-shadows",name:"07 Cel shadows",role:"shadow",strokes:[
+      fill("face-shadow","Place a deliberate shadow plane under the fringe.","#d99f9d",[[795,365],[900,395],[970,390],[1050,390],[1130,365],[1110,445],[1060,470],[970,455],[870,475],[810,440]],{opacity:.62}),
+      fill("jaw-shadow","Add a compact jaw shadow following the chin.","#d99a99",[[835,620],[900,690],[970,720],[1040,690],[1100,620],[1070,680],[970,750],[870,680]],{opacity:.48}),
+      fill("neck-shadow","Give the neck a readable cast shadow.","#c98791",[[875,700],[970,750],[1050,700],[1040,795],[970,835],[890,790]],{opacity:.58}),
+      fill("hair-shadow-left","Add a cool shadow ribbon to the left hair.","#171d31",[[690,430],[750,490],[760,720],[825,940],[780,900],[710,740]],{opacity:.68}),
+      fill("garment-shadow","Create a broad under-collar shadow plane.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72})
+    ]},
+    {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
+      line("hair-ribbon-left","Paint a long curved reflected ribbon through the left hair.","gouache","#8d829d",15,join(bezier([735,330],[700,520],[735,730],[805,870],16)),{opacity:.7,texture:.25}),
+      line("hair-ribbon-mid","Paint a fine highlight following the central hair flow.","gouache","#9c8da9",10,join(bezier([900,180],[850,300],[850,390],[820,455],14)),{opacity:.72,texture:.2}),
+      line("hair-ribbon-right","Paint a tapered highlight through the right hair.","gouache","#81768f",12,join(bezier([1160,300],[1210,500],[1200,720],[1135,890],16)),{opacity:.68,texture:.22}),
+      line("hair-strands","Add fine directional strands that follow the scalp and locks.","ink","#554b65",2,join(bezier([760,245],[820,170],[900,150],[955,160],12),bezier([1000,145],[1100,160],[1160,245],[1180,330],12)),{opacity:.65})
+    ]},
+    {id:"fabric-folds",name:"09 Fabric folds and finish",role:"detail",strokes:[
+      line("fold-left-1","Describe the left sleeve fold with a tapered line.","ink","#887a9d",3,[[680,900],[735,940],[770,990]]),
+      line("fold-left-2","Add a secondary sleeve crease.","ink","#a194ae",2,[[650,945],[700,975],[730,1015]]),
+      line("fold-right-1","Describe the right sleeve fold.","ink","#887a9d",3,[[1260,900],[1205,940],[1170,990]]),
+      line("fold-right-2","Add a secondary garment crease.","ink","#a194ae",2,[[1290,945],[1240,975],[1210,1015]]),
+      line("bodice-seams","Add the garment seam and waist construction.","ink","#b8a7c1",2,[[820,870],[900,925],[970,950],[1040,925],[1120,870]]),
+      line("cheek-blush","Blend a restrained blush across both cheeks.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2}),
+      line("eye-lower-left","Add the soft lower lash line.","ink","#806477",3,[[820,475],[865,510],[925,480]]),
+      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]])
+    ]}
+  ];
+  return {
+    format:"zero-studio-digital-artist-brush-plan", version:1,
+    title:"General anime drawing quality benchmark — original character",
+    identity:{characterAssetId:"general-anime-quality-benchmark"},
+    layers
+  };
+}
