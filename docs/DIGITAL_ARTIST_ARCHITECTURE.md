@@ -138,9 +138,9 @@ The versioned brush plan accepts explicit region-fill polygon boundaries. The va
 
 The editor now provides individual operation selection, isolated preview, previous/next navigation, approve/reject/reset controls, and persisted review state. These decisions are stored in native project history and can be undone. This is a review gate, not yet full point editing or corrected-stroke replay.
 
-Visual inspection of the latest CI composite confirms that the broad horizontal bands are gone and that the main color regions and eye whites are filled. The sample still has rough silhouette/line alignment and unfinished costume/hair details. It remains a deterministic hand-authored renderer fixture, not a model-authored image or visually accepted production character.
+Visual inspection of the latest CI composite confirms that the broad horizontal bands are gone and that the main color regions and eye whites are filled. Construction and rough-sketch layers remain preserved as editable references but are hidden in the composite. The sample still has rough silhouette/line alignment and unfinished costume/hair details. It remains a deterministic hand-authored renderer fixture, not a model-authored image or visually accepted production character.
 
-GitHub Actions at HEAD `f3fb38792a5e8b5c1afc76f95c49217ae402f8dd` passed 357/357 tests in Drawing engine run #2371. Hybrid raster/SVG run #601 passed its test and Canvas2D proof jobs and uploaded the composite plus seven layer PNGs. This confirms code and renderer integration, not artistic quality, AI autonomy or Android performance.
+GitHub Actions at HEAD `9bacac06d08040dc75054b73a9d7cd56ebdad2eb` passed 357/357 tests in Drawing engine run #2381. Hybrid raster/SVG run #606 passed its test and Canvas2D proof jobs and uploaded the composite plus seven layer PNGs. This confirms code and renderer integration, not artistic quality, AI autonomy or Android performance.
 
 ### Updated acceptance gate
 
