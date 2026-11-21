@@ -36,11 +36,11 @@ export function createDigitalArtistAnimeQualityPlan() {
   const leftEye = join(bezier([810,455],[850,405],[920,410],[950,460],10),bezier([950,460],[925,515],[850,520],[810,455],10));
   const rightEye = join(bezier([990,460],[1025,405],[1095,405],[1135,455],10),bezier([1135,455],[1100,520],[1025,515],[990,460],10));
   const layers = [
-    {id:"background",name:"01 Background and atmosphere",role:"background",strokes:[
+    {id:"background",name:"01 Background and atmosphere",role:"construction",strokes:[
       fill("bg-warm-field","Lay a calm warm background field.","#f5e8df",[[0,0],[1920,0],[1920,1080],[0,1080]]),
       line("bg-halo","Paint a soft circular halo behind the portrait.","watercolor","#f4c8bd",180,join(bezier([960,35],[1270,35],[1370,210],[1330,390],18),bezier([1330,390],[1280,560],[1120,620],[960,610],18),bezier([960,610],[800,620],[640,560],[590,390],18),bezier([590,390],[550,210],[650,35],[960,35],18)),{opacity:.34,texture:.4})
     ]},
-    {id:"hair-base",name:"02 Hair silhouette",role:"base-color",strokes:[
+    {id:"hair-base",name:"02 Hair silhouette",role:"rough-sketch",strokes:[
       fill("hair-back-mass","Establish one flowing rear hair mass with a tapered silhouette.","#292438",hairBack),
       fill("hair-left-fall","Separate the left falling hair ribbon.","#30283f",join(bezier([720,390],[665,560],[700,800],[810,990],14),bezier([810,990],[750,940],[680,850],[660,720],12),bezier([660,720],[630,560],[660,440],[720,390],12))),
       fill("hair-right-fall","Separate the right falling hair ribbon.","#302438",join(bezier([1190,390],[1280,560],[1270,810],[1140,990],14),bezier([1140,990],[1210,920],[1300,790],[1300,650],12),bezier([1300,650],[1310,510],[1250,420],[1190,390],12))),
@@ -61,7 +61,7 @@ export function createDigitalArtistAnimeQualityPlan() {
       fill("sleeve-left","Shape the left sleeve with a soft flared edge.","#c5b9dc",join(bezier([650,860],[560,890],[550,980],[640,1030],12),bezier([640,1030],[720,1000],[760,940],[790,900],10))),
       fill("sleeve-right","Shape the right sleeve with a soft flared edge.","#c5b9dc",join(bezier([1290,850],[1390,880],[1420,980],[1320,1030],12),bezier([1320,1030],[1240,1000],[1200,940],[1170,900],10)))
     ]},
-    {id:"features",name:"05 Anime facial features",role:"detail",strokes:[
+    {id:"features",name:"05 Anime facial features",role:"flat-color",strokes:[
       fill("eye-left-white","Place the left sclera inside its eyelid.","#fff8f0",leftEye),
       fill("eye-right-white","Place the right sclera inside its eyelid.","#fff8f0",rightEye),
       fill("iris-left","Build a large amber iris with a round lower contour.","#a65f52",join(bezier([850,430],[880,410],[925,430],[925,475],10),bezier([925,475],[920,520],[875,525],[850,490],10),bezier([850,490],[840,465],[842,445],[850,430],8))),
