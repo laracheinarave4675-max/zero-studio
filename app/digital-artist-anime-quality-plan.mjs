@@ -88,7 +88,8 @@ export function createDigitalArtistAnimeQualityPlan() {
       outline("eye-right-ink","Ink the expressive right eyelid.",rightEye,7),
       line("eye-left-lash","Extend the outer left lashes.","ink","#282236",5,[[815,460],[795,445],[782,428]]),
       line("eye-right-lash","Extend the outer right lashes.","ink","#282236",5,[[1130,455],[1150,438],[1165,420]]),
-      line("brows","Place expressive eyebrows above both eyes.","ink","#55404b",5,[[820,390],[860,375],[920,385],[1010,385],[1070,375],[1110,390]]),
+      line("brow-left","Place the left expressive eyebrow above the left eye.","ink","#55404b",5,[[820,390],[860,375],[920,385]]),
+      line("brow-right","Place the right expressive eyebrow above the right eye.","ink","#55404b",5,[[1010,385],[1070,375],[1110,390]]),
       line("nose","Suggest the nose with two delicate marks.","ink","#bd827f",3,[[975,500],[965,545],[980,548]]),
       line("mouth","Draw a small confident smile.","ink","#9c5364",4,[[935,620],[965,632],[995,620]]),
       line("ear-details","Add restrained inner-ear contours.","ink","#b47778",3,[[765,490],[780,515],[770,535],[790,540],[800,520]]),
@@ -102,9 +103,9 @@ export function createDigitalArtistAnimeQualityPlan() {
       fill("garment-shadow","Create a broad under-collar shadow plane.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72})
     ]},
     {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
-      line("hair-ribbon-left","Paint a long curved reflected ribbon through the left hair.","gouache","#8d829d",15,join(bezier([735,330],[700,520],[735,730],[805,870],16)),{opacity:.7,texture:.25}),
-      line("hair-ribbon-mid","Paint a fine highlight following the central hair flow.","gouache","#9c8da9",10,join(bezier([900,180],[850,300],[850,390],[820,455],14)),{opacity:.72,texture:.2}),
-      line("hair-ribbon-right","Paint a tapered highlight through the right hair.","gouache","#81768f",12,join(bezier([1160,300],[1210,500],[1200,720],[1135,890],16)),{opacity:.68,texture:.22}),
+      line("hair-ribbon-left","Paint a long curved reflected ribbon contained within the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2}),
+      line("hair-ribbon-mid","Paint a fine highlight following the crown without crossing the face.","gouache","#9c8da9",8,join(bezier([900,125],[850,155],[820,195],[800,235],14)),{opacity:.62,texture:.18}),
+      line("hair-ribbon-right","Paint a tapered highlight contained within the right hair mass.","gouache","#81768f",11,join(bezier([1240,320],[1270,500],[1260,720],[1210,870],16)),{opacity:.62,texture:.2}),
       line("hair-strands","Add fine directional strands that follow the scalp and locks.","ink","#554b65",2,join(bezier([760,245],[820,170],[900,150],[955,160],12),bezier([1000,145],[1100,160],[1160,245],[1180,330],12)),{opacity:.65})
     ]},
     {id:"fabric-folds",name:"09 Fabric folds and finish",role:"detail",strokes:[
