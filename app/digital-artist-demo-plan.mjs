@@ -6,12 +6,12 @@ export function createDigitalArtistDemoPlan(){
   format:"zero-studio-digital-artist-brush-plan",version:1,title:"Anime portrait — native brush execution study",
   identity:{characterAssetId:"zero-demo-anime-face"},
   layers:[
-   {id:"construction",name:"01 · Construction",role:"construction",strokes:[
+   {id:"construction",name:"01 · Construction",role:"construction",visible:false,strokes:[
     stroke("guide-head","Establish the head oval and facial proportions.","graphite","#85818a",5,[[960,235],[1080,260],[1155,355],[1170,485],[1135,615],[1060,710],[960,748],[860,710],[785,615],[750,485],[765,355],[840,260],[960,235]]),
     stroke("guide-eye","Mark the eye alignment.","graphite","#aaa5ad",3,[[755,470],[850,465],[960,470],[1070,465],[1165,470]]),
     stroke("guide-center","Mark the face centerline.","graphite","#aaa5ad",3,[[960,250],[958,390],[960,540],[960,700]])
    ]},
-   {id:"rough","name":"02 · Rough sketch",role:"rough-sketch",strokes:[
+   {id:"rough","name":"02 · Rough sketch",role:"rough-sketch",visible:false,strokes:[
     stroke("rough-hair","Block in the hair silhouette.","graphite","#77747e",8,[[755,480],[735,345],[790,220],[900,155],[1035,155],[1145,235],[1190,365],[1165,500]]),
     stroke("rough-body","Block in the neck and shoulders.","graphite","#77747e",7,[[875,690],[875,790],[800,820],[690,900],[640,1010],[960,1040],[1280,1010],[1230,900],[1120,820],[1045,790],[1045,690]])
    ]},
