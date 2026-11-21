@@ -31,3 +31,18 @@ test("general benchmark uses organic multi-sample contours and real editable bru
  assert.ok(strokes.every(stroke=>stroke.points.every(point=>Number.isFinite(point.x)&&Number.isFinite(point.y))));
  assert.ok(!JSON.stringify(plan).includes("data:image/"));
 });
+
+
+test("anime benchmark clips hair highlights and skin shadows to semantic masks",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const strokes=plan.layers.flatMap(layer=>layer.strokes);
+ for(const id of ["hair-ribbon-left","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow"]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke?.clipPolygon?.length>=3,"missing semantic clip mask for "+id);
+ }
+ const stream=compileDigitalArtistBrushPlan(plan);
+ for(const id of ["hair-ribbon-left","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow"]){
+  const command=stream.commands.find(item=>item.strokeId===id);
+  assert.ok(command?.options?.clipPolygon?.length>=3,"clip mask was not preserved in compiled command "+id);
+ }
+});
