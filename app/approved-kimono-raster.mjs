@@ -60,16 +60,13 @@ function flower(ctx,x,y,size,opacity=1){
  ctx.beginPath();ctx.arc(0,0,size*.14,0,Math.PI*2);ctx.fillStyle=FIXED_PALETTE.gold;ctx.fill();ctx.restore();
 }
 function drawHairBack(ctx,bob,flow){
- const g=ctx.createLinearGradient(300,150,470,570);g.addColorStop(0,FIXED_PALETTE.hair);g.addColorStop(.58,FIXED_PALETTE.hairMid);g.addColorStop(1,FIXED_PALETTE.hair);
- path(ctx,[["M",294,151+bob],["C",325,74+bob,405,78+bob,430,141+bob],["C",448,192+bob,436,275+bob,455+flow,360+bob],["C",467+flow,427+bob,450+flow,494+bob,426+flow,552+bob],["C",412+flow,584+bob,397+flow,553+bob,395,520+bob],["C",370,438+bob,362,360+bob,346,282+bob],["C",324,228+bob,287,206+bob,294,151+bob],["Z"]],g,FIXED_PALETTE.ink,5);
- const locks=[
- [[353,133+bob],[395,215+bob],[398+flow*.3,392+bob],[414+flow,545+bob]],
- [[378,117+bob],[430,225+bob],[421+flow*.7,380+bob],[443+flow,515+bob]],
- [[327,155+bob],[359,254+bob],[362+flow*.4,393+bob],[390+flow,537+bob]]
- ];
- for(const p of locks)tapered(ctx,p,FIXED_PALETTE.hairMid,5);
- tapered(ctx,[[354,133+bob],[376,218+bob],[375+flow*.2,365+bob],[402+flow,505+bob]],FIXED_PALETTE.hairGlint,3.1);
- tapered(ctx,[[391,124+bob],[424,220+bob],[414+flow*.3,354+bob],[433+flow,478+bob]],"#645b68",2.2);
+ const g=ctx.createLinearGradient(285,110,414,455);
+ g.addColorStop(0,FIXED_PALETTE.hair);g.addColorStop(.46,FIXED_PALETTE.hairMid);g.addColorStop(.78,FIXED_PALETTE.hair);g.addColorStop(1,"#211b25");
+ path(ctx,[["M",288,150+bob],["C",286,105+bob,321,78+bob,355,95+bob],["C",390,112+bob,407,149+bob,405,203+bob],["C",409,275+bob,414+flow,344+bob,403+flow,409+bob],["C",398+flow,445+bob,379+flow,463+bob,366+flow,438+bob],["C",355,409+bob,353,355+bob,337,307+bob],["C",323,266+bob,297,236+bob,281,207+bob],["C",271,185+bob,276,164+bob,288,150+bob],["Z"]],g,FIXED_PALETTE.ink,5);
+ const locks=[[[306,131+bob],[348,186+bob],[354+flow*.3,319+bob],[369+flow,433+bob]],[[334,105+bob],[382,173+bob],[377+flow*.7,310+bob],[393+flow,426+bob]],[[289,166+bob],[323,224+bob],[339+flow*.4,341+bob],[354+flow,426+bob]]];
+ for(const p of locks)tapered(ctx,p,FIXED_PALETTE.hairMid,4.6);
+ tapered(ctx,[[310,124+bob],[352,197+bob],[354+flow*.2,325+bob],[372+flow,430+bob]],FIXED_PALETTE.hairGlint,3);
+ tapered(ctx,[[357,112+bob],[391,191+bob],[386+flow*.3,313+bob],[399+flow,405+bob]],"#645b68",2.1);
 }
 function drawHead(ctx,bob){
  const skin=ctx.createLinearGradient(224,155,348,286);skin.addColorStop(0,"#fff0e6");skin.addColorStop(1,FIXED_PALETTE.skin);
