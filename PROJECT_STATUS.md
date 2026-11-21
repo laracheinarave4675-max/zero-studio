@@ -837,3 +837,15 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Added engine round-trip and editor-wiring regression tests. Latest code SHA: `21b186ec3ee139d51bc66b4749c3d6430fcb8cf3`. Connected Actions lookup returned no PR-triggered workflow runs for this SHA; CI is not yet verified.
 - PR #14 remains draft, unmerged and not deployed to production. Android runtime and local model inference remain untested.
 
+
+## D-033 live learning ledger integration — 2026-11-21
+
+- Connected the evidence-led learning ledger to the live Digital Artist inspection panel and native project state (project.artistLearning), so attempts survive project JSON save/load and undo snapshots.
+- Added a progress summary, next-practice recommendation, and recent assessment history to the editor.
+- An assessment can only be recorded after inspecting the current frame. The report is canonically serialized and SHA-256 hashed before the ledger records it.
+- Important evidence gate: only skill families with direct current measurements can be assessed from this panel: head/body anatomy against a non-skipped Character DNA comparison with at least three measurements; inking from measured brush operations and stroke warnings; flat colors from inspected closed raster fills and explicit coverage/leakage thresholds. Other curriculum skills are rejected rather than assigned fabricated scores.
+- The assessment button requires an explicit user action. Recording a result does not edit artwork, approve strokes, or train model weights.
+- Added tests/digital-artist-learning-ui.test.mjs to verify the editor integration and truthful learning boundary.
+- Verified that the app source imports the ledger, all four UI elements exist, and the project normalizer already preserves the artistLearning field. GitHub Actions results for the newest commits were not returned by the connected workflow-run lookup; CI status remains unconfirmed.
+- Physical Android browser testing, model-backed vision inference, and actual artist-quality improvement remain unverified.
+- PR #14 remains draft; no merge or production deployment.
