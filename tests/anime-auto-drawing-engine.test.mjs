@@ -102,3 +102,11 @@ test("chroma-key extraction retains antialiased edge coverage and rejects images
   assert.equal(result.data[11], 255);
   assert.throws(() => removeAnimeChromaKeyFromRgba(new Uint8ClampedArray([40, 40, 40, 255])), /both a removable blue backdrop/i);
 });
+
+test("maximum motion description keeps a single-frame provider prompt within the 1800-character limit", () => {
+  const plan = createAnimeAutoDrawingPlan({ action: "walk ".repeat(100) });
+  const request = createAnimeAutoDrawingRequest(plan, 0, {
+    identityReference: image("identity")
+  });
+  assert.ok(request.prompt.length <= 1800);
+});
