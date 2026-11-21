@@ -167,6 +167,16 @@ module.exports = async function handler(req, res) {
     return send(res, 400, { error: referenceValidation.error, message: referenceValidation.message });
   }
   const references = referenceValidation.references;
+  const allowedReferenceRoles = new Set(["identity", "pose", "continuity"]);
+  const referenceRoles = input.referenceRoles;
+  if (referenceRoles !== undefined &&
+      (!Array.isArray(referenceRoles) || referenceRoles.length !== references.length ||
+       referenceRoles.some((role, index) => !allowedReferenceRoles.has(role) || (index === 0 && role !== "identity")))) {
+    return send(res, 400, {
+      error: "invalid_reference_roles",
+      message: "يجب تحديد دور صالح لكل صورة مرجعية، ويجب أن يكون المرجع الأول مرجع الهوية."
+    });
+  }
   const aspectRatio = input.aspectRatio === undefined ? "16:9" : input.aspectRatio;
   if (model === "flux-2-klein-4b" && aspectRatio !== "16:9" && aspectRatio !== "1:1") {
     return send(res, 400, { error: "invalid_aspect_ratio", message: "اختر 16:9 أو 1:1." });
@@ -187,7 +197,10 @@ module.exports = async function handler(req, res) {
         prompt: "Professional Japanese 2D anime illustration, polished anime art direction, clear composition, expressive hand-painted visual design. " + prompt,
         model,
         ...(model === "flux-1-schnell" ? { steps: 4 } : { aspectRatio }),
-        ...(references.length ? { references } : {}),
+        ...(references.length ? {
+          references,
+          ...(referenceRoles ? { referenceRoles } : {}),
+        } : {}),
       }),
     });
 
