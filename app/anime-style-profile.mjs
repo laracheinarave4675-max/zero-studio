@@ -66,72 +66,78 @@ export function validateAnimeStyleProfile(input) {
 }
 
 export function deriveAnimeHeadConstruction({bounds, viewYaw=0, profile=DEFAULT_TV_ANIME_STYLE_PROFILE}={}) {
-  const style = validateAnimeStyleProfile(profile);
+  const style=validateAnimeStyleProfile(profile);
   const x=Number(bounds?.x),y=Number(bounds?.y),width=Number(bounds?.width),height=Number(bounds?.height),yaw=Number(viewYaw);
   if (![x,y,width,height,yaw].every(Number.isFinite)||width<=0||height<=0||x<0||y<0||x+width>1||y+height>1||yaw < -1||yaw > 1) fail("Head bounds and view yaw must be normalized and within the canvas.");
   const absYaw=Math.abs(yaw),direction=Math.sign(yaw),cx=x+width/2;
-  // Yaw is treated as a projection parameter: the far cheek/skull plane
-  // compresses, the facial centerline moves toward the near side, and the
-  // jaw/chin are projected from the same head volume (not shifted separately).
-  const projectedWidth=width*(1-absYaw*.28);
-  const centerShift=direction*width*absYaw*.105;
-  const projectedCenter=cx-centerShift;
+  const cosYaw=Math.cos(absYaw*Math.PI*.46),sinYaw=Math.sin(absYaw*Math.PI*.46);
   const at=ratio=>y+height*ratio;
+  const project=(localX,depth=0)=>{
+    const normalizedX=localX-.5;
+    return cx+width*(normalizedX*cosYaw+depth*sinYaw*.34);
+  };
   const eyeY=at(style.head.eyeLine),browY=at(style.head.browLine);
   const noseY=at(style.head.noseBase),mouthY=at(style.head.mouthLine);
-  const nearScale=1-absYaw*.045;
+  const nearScale=1-absYaw*.035;
   const farScale=1-absYaw*(1-style.eyes.farEyeScaleAtFullYaw);
-  const eyeOffset=projectedWidth*style.eyes.centerOffsetToFace;
-  const eyeWidth=projectedWidth*style.eyes.widthToFace;
+  const eyeOffset=style.eyes.centerOffsetToFace;
+  const eyeWidth=width*style.eyes.widthToFace*cosYaw;
   const eyeHeight=eyeWidth*style.eyes.heightToWidth;
   const nearSide=direction||1;
   const eye=side=>{
+    const localX=.5+side*eyeOffset;
+    const depth=Math.sqrt(Math.max(0,1-Math.pow((localX-.5)*2,2)))*.22;
     const near=side===nearSide,scale=near?nearScale:farScale;
-    const centerX=projectedCenter+side*eyeOffset;
+    const centerX=project(localX,depth);
     return {center:{x:centerX,y:eyeY},bounds:{x:centerX-eyeWidth*scale/2,y:eyeY-eyeHeight*scale/2,width:eyeWidth*scale,height:eyeHeight*scale},scale,side:side<0?"left":"right",upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,nearSide:near};
   };
-  const cheekHalf=projectedWidth*style.head.cheekWidth/2;
-  const jawHalf=projectedWidth*style.head.jawWidth/2;
-  const cheekLeft={x:projectedCenter-cheekHalf,y:at(.59)};
-  const cheekRight={x:projectedCenter+cheekHalf,y:at(.59)};
-  const jawLeft={x:projectedCenter-jawHalf*(yaw>0?.82:1),y:at(.78)};
-  const jawRight={x:projectedCenter+jawHalf*(yaw<0?.82:1),y:at(.78)};
-  const chin={x:projectedCenter+direction*width*absYaw*.035,y:at(1)};
-  const noseBase={x:projectedCenter+direction*projectedWidth*absYaw*.16,y:noseY};
-  const mouthCenter={x:projectedCenter+direction*projectedWidth*absYaw*.075,y:mouthY};
-  const silhouette=Array.from({length:65},(_,i)=>{
-    const angle=-Math.PI/2+i/64*Math.PI*2;
+  const cheekDepth=.17;
+  const cheekLeft={x:project(.08,cheekDepth),y:at(.59)};
+  const cheekRight={x:project(.92,cheekDepth),y:at(.59)};
+  const jawLeft={x:project(.5-style.head.jawWidth*.5,.11),y:at(.79)};
+  const jawRight={x:project(.5+style.head.jawWidth*.5,.11),y:at(.79)};
+  const chin={x:project(.5+direction*absYaw*.035,.27),y:at(1)};
+  const noseBase={x:project(.5+direction*absYaw*.035,.42),y:noseY};
+  const mouthCenter={x:project(.5+direction*absYaw*.02,.31),y:mouthY};
+  const silhouette=[];
+  for(let i=0;i<=96;i++){
+    const angle=-Math.PI/2+i/96*Math.PI*2;
     const side=Math.cos(angle),vertical=Math.sin(angle);
-    const far=direction!==0&&side*direction<0;
-    const planeScale=far?1-absYaw*.42:1-absYaw*.08;
-    const lower=1-.29*Math.max(0,vertical);
-    const cheek=1+.035*Math.max(0,vertical);
-    return {x:projectedCenter+side*projectedWidth*.5*planeScale*lower*cheek,y:y+height*.5+vertical*height*.5};
-  });
-  const farEarVisible=absYaw<.12 || absYaw<.9;
+    const lowerProgress=clamp((vertical-.12)/.88,0,1);
+    const jawTaper=1-.62*Math.pow(lowerProgress,1.18);
+    const cheekBulge=1+.045*Math.exp(-Math.pow((vertical-.2)/.22,2));
+    const localX=.5+side*.5*jawTaper*cheekBulge;
+    const depth=Math.sqrt(Math.max(0,1-Math.pow(side,2)))*.19;
+    const projectedX=project(localX,depth);
+    silhouette.push({x:projectedX,y:y+height*.5+vertical*height*.5});
+  }
+  const nearCheek=direction>=0?cheekRight:cheekLeft;
+  const farCheek=direction>=0?cheekLeft:cheekRight;
   return {
     profileId:style.id,viewYaw:yaw,
-    bounds:{x,y,width,height,projectedWidth,projectedCenter},
+    bounds:{x,y,width,height,projectedWidth:width*cosYaw,projectedCenter:project(.5,.0)},
     axes:{
-      centerline:{from:{x:projectedCenter+direction*projectedWidth*.08,y},to:{x:projectedCenter-direction*projectedWidth*.035,y:y+height}},
+      centerline:{from:{x:project(.5,.2),y},to:{x:chin.x,y:y+height}},
       browY,eyeY,noseY,mouthY,
-      nearCheekX:direction>=0?cheekRight.x:cheekLeft.x,
-      farCheekX:direction>=0?cheekLeft.x:cheekRight.x
+      nearCheekX:nearCheek.x,farCheekX:farCheek.x
     },
-    landmarks:{
-      crown:{x:projectedCenter,y},chin,cheekLeft,cheekRight,jawLeft,jawRight,
-      noseBase,mouthCenter,
-      nearCheek:direction>=0?cheekRight:cheekLeft,
-      farCheek:direction>=0?cheekLeft:cheekRight
-    },
+    landmarks:{crown:{x:project(.5,.12),y},chin,cheekLeft,cheekRight,jawLeft,jawRight,noseBase,mouthCenter,nearCheek,farCheek},
     planes:{
-      nearCheek:{center:direction>=0?cheekRight:cheekLeft,scale:1-absYaw*.08},
-      farCheek:{center:direction>=0?cheekLeft:cheekRight,scale:1-absYaw*.42},
-      noseProjection:{bridge:{x:projectedCenter+direction*projectedWidth*absYaw*.11,y:at(.52)},tip:{x:noseBase.x+direction*projectedWidth*absYaw*.035,y:noseY},base:noseBase},
-      jawVisibility:{nearSide:direction>=0?"right":"left",farSideScale:1-absYaw*.38}
+      nearCheek:{center:nearCheek,scale:1-absYaw*.07},
+      farCheek:{center:farCheek,scale:1-absYaw*.38},
+      noseProjection:{bridge:{x:project(.5,.33),y:at(.52)},tip:{x:project(.5,.48),y:noseY},base:noseBase},
+      jawVisibility:{nearSide:direction>=0?"right":"left",farSideScale:1-absYaw*.34}
     },
     silhouette,
+    faceCrossSections:[
+      {id:"brow",y:browY,left:project(.08,.12),right:project(.92,.12)},
+      {id:"eye",y:eyeY,left:project(.09,.18),right:project(.91,.18)},
+      {id:"cheek",y:at(.59),left:cheekLeft.x,right:cheekRight.x},
+      {id:"jaw",y:at(.79),left:jawLeft.x,right:jawRight.x},
+      {id:"chin",y:chin.y,left:chin.x-width*.025,right:chin.x+width*.025}
+    ],
     eyes:[eye(-1),eye(1)],
+    projection:{yaw,cosYaw,sinYaw,faceDepth:.34},
     derivedFromHeadBounds:true
   };
 }
