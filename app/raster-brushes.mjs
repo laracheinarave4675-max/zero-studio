@@ -181,6 +181,18 @@ function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
  }
 }
 
+function applyRasterClip(context, polygon) {
+ if (polygon == null) return;
+ if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) throw Error("قناع القص يحتاج إلى مضلع صالح");
+ const points = polygon.map(point => {
+  const x=Number(point?.x), y=Number(point?.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y<0||x>1920||y>1080) throw Error("نقطة قناع القص خارج مساحة الرسم");
+  return {x,y};
+ });
+ context.beginPath(); context.moveTo(points[0].x,points[0].y);
+ for(let i=1;i<points.length;i++) context.lineTo(points[i].x,points[i].y);
+ context.closePath(); context.clip();
+}
 export function drawRasterBrushStroke(context,points,options={}){
  if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
