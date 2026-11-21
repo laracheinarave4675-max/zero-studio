@@ -109,6 +109,9 @@ expectColorNear("Clothing region", pixelAt(960, 970), [113, 153, 156, 255]);
 expectColorNear("Outside silhouette", pixelAt(1320, 700), [245, 241, 233, 255]);
 
 const artistRasterEye = analyzeRasterPixels({ width, height, data: artistCompositeContext.getImageData(0, 0, width, height).data });
+if (!fillEyeReports.length || fillEyeReports.some(item => !item.insideSamples || !item.outsideSamples)) {
+  throw new Error("Artist fill eye did not produce usable inside/outside region measurements.");
+}
 if (!artistRasterEye.bounds || artistRasterEye.bounds.x === 0 || artistRasterEye.bounds.y === 0 ||
     artistRasterEye.bounds.width >= width || artistRasterEye.bounds.height >= height ||
     artistRasterEye.alphaCoverage <= 0 || artistRasterEye.alphaCoverage >= 1) {
