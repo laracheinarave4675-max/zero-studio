@@ -68,18 +68,18 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
   const lightFromLeft=model.shadows.light.x<0;
   const shadowDirection=lightFromLeft?1:-1;
   const headWidth=model.head.bounds.width,headHeight=model.head.bounds.height;
-  const nose=model.head.landmarks.noseBase;
-  const shadowInnerTop={x:nose.x+shadowDirection*headWidth*.012,y:model.head.axes.eyeY+headHeight*.14};
-  const shadowOuterTop={x:nose.x+shadowDirection*headWidth*.075,y:model.head.axes.eyeY+headHeight*.18};
-  const shadowOuterBottom={x:nose.x+shadowDirection*headWidth*.068,y:model.head.axes.noseY+headHeight*.085};
-  const shadowInnerBottom={x:nose.x+shadowDirection*headWidth*.018,y:model.head.axes.noseY+headHeight*.095};
+  const cheek=shadowDirection>0?model.head.landmarks.cheekRight:model.head.landmarks.cheekLeft;
+  const shadowInnerTop={x:cheek.x-shadowDirection*headWidth*.125,y:model.head.axes.eyeY+headHeight*.13};
+  const shadowOuterTop={x:cheek.x-shadowDirection*headWidth*.025,y:model.head.axes.eyeY+headHeight*.17};
+  const shadowOuterBottom={x:cheek.x-shadowDirection*headWidth*.035,y:model.head.axes.noseY+headHeight*.055};
+  const shadowInnerBottom={x:cheek.x-shadowDirection*headWidth*.105,y:model.head.axes.noseY+headHeight*.065};
   const shadowPoints=[
-    ...quadraticPoints(shadowInnerTop,{x:nose.x+shadowDirection*headWidth*.045,y:model.head.axes.eyeY+headHeight*.11},shadowOuterTop,8),
-    ...quadraticPoints(shadowOuterTop,{x:nose.x+shadowDirection*headWidth*.09,y:model.head.axes.noseY+headHeight*.005},shadowOuterBottom,10).slice(1),
-    ...quadraticPoints(shadowOuterBottom,{x:nose.x+shadowDirection*headWidth*.04,y:model.head.axes.noseY+headHeight*.13},shadowInnerBottom,8).slice(1),
-    ...quadraticPoints(shadowInnerBottom,{x:nose.x+shadowDirection*headWidth*.004,y:model.head.axes.noseY+headHeight*.02},shadowInnerTop,8).slice(1)
+    ...quadraticPoints(shadowInnerTop,{x:cheek.x-shadowDirection*headWidth*.065,y:model.head.axes.eyeY+headHeight*.095},shadowOuterTop,8),
+    ...quadraticPoints(shadowOuterTop,{x:cheek.x+shadowDirection*headWidth*.005,y:model.head.axes.noseY-headHeight*.025},shadowOuterBottom,10).slice(1),
+    ...quadraticPoints(shadowOuterBottom,{x:cheek.x-shadowDirection*headWidth*.075,y:model.head.axes.noseY+headHeight*.11},shadowInnerBottom,8).slice(1),
+    ...quadraticPoints(shadowInnerBottom,{x:cheek.x-shadowDirection*headWidth*.15,y:model.head.axes.noseY+headHeight*.015},shadowInnerTop,8).slice(1)
   ];
-  const shadows=[fill("face-cast-shadow","Paint a narrow tapered cheek-plane cel shadow beside the nose, never a broad patch across the face.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px),opacity:.42})];
+  const shadows=[fill("face-cast-shadow","Shade the cheek plane beneath the outer eye using its projected cheek landmark, leaving the nose and mouth untouched.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px),opacity:.42})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
     title:"Construction-driven anime character study",
