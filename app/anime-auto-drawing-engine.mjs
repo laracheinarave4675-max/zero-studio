@@ -194,6 +194,7 @@ export function removeAnimeChromaKeyFromRgba(source, {
   const output = new Uint8ClampedArray(source.length);
   let transparentPixels = 0, opaquePixels = 0, partialPixels = 0;
   const smooth = value => {
+    const clamp = (number, minimum, maximum) => Math.min(maximum, Math.max(minimum, number));
     const t = clamp(value, 0, 1);
     return t * t * (3 - 2 * t);
   };
