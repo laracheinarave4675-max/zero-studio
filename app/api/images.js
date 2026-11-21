@@ -81,20 +81,38 @@ module.exports = async function handler(req, res) {
           "Authorization": "Bearer " + token,
           "Origin": appOrigin,
         },
-        body: JSON.stringify({ prompt: "" }),
+        body: JSON.stringify({ prompt: "", workload: "anime-auto-drawing" }),
       });
       const payload = await readPayload(upstream);
 
-      if (upstream.status === 400 && payload.error === "invalid_prompt") {
+      if (upstream.status === 503 && payload.error === "anime_free_tier_not_confirmed") {
         return send(res, 200, {
           ok: true,
           routeConfigured: true,
           workerReachable: true,
           tokenVerified: true,
           provider: "cloudflare-workers-ai",
-          model: "@cf/black-forest-labs/flux-1-schnell",
           inferenceStarted: false,
-          message: "الاتصال ورمز الوصول صحيحان. لم يتم تشغيل النموذج أو استهلاك الحصة.",
+          animeAutoFreeTierConfirmed: false,
+          message: "تم التحقق من الاتصال، لكن إعداد الخطة المجانية الآمنة لمحرك التحريك لم يُفعّل في Cloudflare.",
+        });
+      }
+
+      if (upstream.status === 400 && payload.error === "invalid_prompt") {
+        const freeTierConfirmed =
+          String(process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED || "") === "true";
+        return send(res, 200, {
+          ok: true,
+          routeConfigured: true,
+          workerReachable: true,
+          tokenVerified: true,
+          provider: "cloudflare-workers-ai",
+          model: "@cf/black-forest-labs/flux-2-klein-4b",
+          inferenceStarted: false,
+          animeAutoFreeTierConfirmed: freeTierConfirmed,
+          message: freeTierConfirmed
+            ? "الاتصال ورمز الوصول مؤكدان، ومحرك التحريك مضبوط على وضع الخطة المجانية فقط. لم يبدأ أي توليد."
+            : "الاتصال ورمز الوصول صحيحان، لكن إعداد الخطة المجانية الآمنة في Vercel غير مفعّل. لم يبدأ أي توليد.",
         });
       }
 
