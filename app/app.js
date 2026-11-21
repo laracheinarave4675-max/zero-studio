@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA,compareAnimeEyeDesign,compareAnimeHairFlow}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1139,6 +1139,38 @@ function mountAnimeArtistCurriculum(){
  }
  select.dataset.bound="true";
  update();artistLearningStatus();
+}
+async function compareAnimeDesignLandmarks(){
+ const input=$("animeDesignLandmarkInput"),status=$("animeDesignLandmarkStatus");
+ if(!input||!status)return;
+ try{
+  const raw=input.value.trim();
+  if(!raw||raw.length>65536)throw Error("أدخل بيانات معالم لا تتجاوز 64 KiB.");
+  const payload=JSON.parse(raw);
+  if(!payload||typeof payload!=="object"||!payload.eyes)throw Error("يلزم قسم eyes وفيه reference وcurrent.");
+  const eyeComparison=compareAnimeEyeDesign(payload.eyes.reference,payload.eyes.current);
+  let hairComparison=null;
+  if(payload.hair){
+   hairComparison=compareAnimeHairFlow(payload.hair.reference,payload.hair.current,{headWidth:payload.hair.headWidth??1});
+  }
+  const report=latestDigitalArtistInspection||{frame:current,operations:0,visiblePixels:0,fillEyes:[],strokeWarnings:[],layerEyes:[],characterIdentity:null};
+  report.animeEyeComparison=eyeComparison;
+  if(hairComparison)report.animeHairFlowComparison=hairComparison;
+  report.correctionPlan=buildArtistCorrectionPlan(report);
+  latestDigitalArtistInspection=report;
+  const eyeFailed=eyeComparison.failures.length;
+  const hairFailed=hairComparison?.failures.length??0;
+  status.textContent=[
+   "مقارنة تصميم الأنمي اكتملت اعتماداً على المعالم التي أدخلتها.",
+   "العيون: "+(eyeComparison.passed?"مطابقة ضمن هامش السماح":"تحتاج إلى تصحيح "+eyeFailed+" قياسات من "+eyeComparison.compared),
+   ...eyeComparison.checks.filter(item=>!item.passed).map(item=>"• "+item.id+" — الانحراف "+(Number.isFinite(item.deviation)?item.deviation.toFixed(3):"خارج حدود العين")),
+   ...(hairComparison?["الشعر: "+(hairComparison.passed?"اتجاه الكتل مطابق":"تحتاج "+hairFailed+" كتل إلى التصحيح"),...hairComparison.checks.filter(item=>!item.passed).map(item=>"• كتلة "+item.id)]:[]),
+   "تم إنشاء "+report.correctionPlan.summary.total+" اقتراح تصحيح مرتبط بمهارات الأنمي.",
+   "حدود الفحص: هذه مقارنة هندسية لمعالم مقدمة يدوياً أو من تقرير رؤية؛ لا تستخرج المعالم من البكسلات ولا تثبت جودة الرسم وحدها."
+  ].join("\\n");
+  const eyesStatus=$("digitalArtistEyesReport");
+  if(eyesStatus&&latestDigitalArtistInspection)eyesStatus.dataset.report=JSON.stringify(report);
+ }catch(error){status.textContent="تعذرت مقارنة معالم الأنمي: "+(error?.message||String(error));}
 }
 async function inspectDigitalArtistEyes(){
  const status=$("digitalArtistEyesReport"),button=$("digitalArtistEyesBtn");
