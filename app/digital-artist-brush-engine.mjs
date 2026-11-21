@@ -9,7 +9,7 @@ export const DIGITAL_ARTIST_BRUSH_ROLES = Object.freeze([
 ]);
 export const DIGITAL_ARTIST_BRUSHES = Object.freeze(Object.keys(RASTER_BRUSH_PRESETS));
 const ROLE_ORDER = new Map(DIGITAL_ARTIST_BRUSH_ROLES.map((role, index) => [role, index]));
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));\nfunction validateClipPolygon(value, id) {\n  if (!Array.isArray(value) || value.length < 3 || value.length > 20000) fail("Clip mask for " + id + " must be a polygon.");\n  return value.map(point => { const x=Number(point?.x), y=Number(point?.y); if (![x,y].every(Number.isFinite)||x<0||y<0||x>1920||y>1080) fail("Clip mask for " + id + " is outside the canvas."); return {x,y}; });\n}
 const fail = message => { throw new Error(message); };
 const safeId = (value, label) => {
   const id = String(value ?? "").trim();
@@ -72,7 +72,7 @@ export function validateDigitalArtistBrushPlan(input) {
         if (!Object.hasOwn(RASTER_BLEND_MODES, blendMode)) fail("Unsupported region fill blend mode.");
         total++;
         if (total > 2400) fail("The brush plan exceeds the 2400-operation safety limit.");
-        return { id: strokeId, layerId: id, sequence: strokeIndex, intent, kind, points, color, opacity, blendMode, seed: Number.isInteger(stroke.seed) ? stroke.seed : 1 };
+        return { id: strokeId, layerId: id, sequence: strokeIndex, intent, kind, points, color, opacity, blendMode, clipPolygon, seed: Number.isInteger(stroke.seed) ? stroke.seed : 1 };
       }
       if (kind !== "brush-stroke") fail("Unsupported Digital Artist operation kind: " + kind + ".");
       const brush = String(stroke.brush ?? "ink");
@@ -94,7 +94,7 @@ export function validateDigitalArtistBrushPlan(input) {
       if (!Object.hasOwn(RASTER_BLEND_MODES, blendMode)) fail("Unsupported raster blend mode.");
       const color = String(stroke.color ?? "#29232b");
       if (!/^#[0-9a-f]{6}$/i.test(color)) fail("Brush color must be a six-digit hex color.");
-      const seed = Number.isInteger(stroke.seed) ? stroke.seed : 1;
+      const seed = Number.isInteger(stroke.seed) ? stroke.seed : 1;\n      const clipPolygon = stroke.clipPolygon == null ? null : validateClipPolygon(stroke.clipPolygon, strokeId);
       total++;
       if (total > 2400) fail("The brush plan exceeds the 2400-operation safety limit.");
       return {
@@ -133,7 +133,7 @@ export function compileDigitalArtistBrushPlan(input) {
         layerId: "artist-raster-" + layer.id,
         intent: stroke.intent,
         points: stroke.points.map(point => ({ ...point })),
-        options: { color: stroke.color, opacity: stroke.opacity, blendMode: stroke.blendMode, seed: stroke.seed }
+        options: { color: stroke.color, opacity: stroke.opacity, blendMode: stroke.blendMode, seed: stroke.seed, clipPolygon: stroke.clipPolygon }
       } : {
         kind: "raster-brush-stroke",
         strokeId: stroke.id,
@@ -144,7 +144,7 @@ export function compileDigitalArtistBrushPlan(input) {
         options: {
           brush: stroke.brush, size: stroke.size, color: stroke.color, opacity: stroke.opacity,
           texture: stroke.texture, blendMode: stroke.blendMode, seed: stroke.seed,
-          pressureSensitive: stroke.pressureSensitive, erase: stroke.erase
+          pressureSensitive: stroke.pressureSensitive, erase: stroke.erase, clipPolygon: stroke.clipPolygon
         }
       };
       commands.push({ stepIndex: commands.length, ...command });
