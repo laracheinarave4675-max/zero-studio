@@ -94,6 +94,6 @@ test("yaw projects facial depth and compresses the far side while preserving mir
  assert.ok(left.projection.cosYaw<1);
  assert.ok(left.projection.sinYaw>0);
  assert.ok(left.planes.farCheek.scale<left.planes.nearCheek.scale);
- assert.ok(Math.abs((left.landmarks.noseBase.x+right.landmarks.noseBase.x)-(bounds.x+bounds.width))<1e-8);
+ assert.ok(Math.abs((left.landmarks.noseBase.x+right.landmarks.noseBase.x)-2*(bounds.x+bounds.width/2))<1e-8);
  assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-8);
 });
