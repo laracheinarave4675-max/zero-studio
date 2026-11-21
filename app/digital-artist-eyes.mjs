@@ -362,7 +362,9 @@ export function compareAnimeEyeDesign(reference, current, options = {}) {
     add(side + "-eye-aspect", ref[side].aspectRatio, cur[side].aspectRatio, tolerances.aspectRatio, "ratio");
     add(side + "-eye-slant", ref[side].slant, cur[side].slant, tolerances.slant, "radians");
     add(side + "-iris-x", ref[side].irisOffset.x, cur[side].irisOffset.x, tolerances.irisOffset, "eye-width-ratio");
-    add(side + "-iris-y", ref[side].irisOffset.y, cur[side].irisOffset.y, tolerances.irisOffset, "eye-width-ratio");\n    add(side + "-pupil-x", ref[side].pupilOffset.x, cur[side].pupilOffset.x, tolerances.irisOffset, "eye-width-ratio");\n    add(side + "-pupil-y", ref[side].pupilOffset.y, cur[side].pupilOffset.y, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-iris-y", ref[side].irisOffset.y, cur[side].irisOffset.y, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-pupil-x", ref[side].pupilOffset.x, cur[side].pupilOffset.x, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-pupil-y", ref[side].pupilOffset.y, cur[side].pupilOffset.y, tolerances.irisOffset, "eye-width-ratio");
     checks.push({ id: side + "-iris-contained", expected: true, actual: cur[side].irisInside, deviation: cur[side].irisInside ? 0 : 1, tolerance: 0, unit: "boolean", passed: cur[side].irisInside });
   }
   const eyeGap = (map, faceWidth) => {
