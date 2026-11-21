@@ -409,7 +409,7 @@ async function handle(request, env) {
         .filter(index => index >= 0);
       const roleInstructions = [
         identityImages.length
-          ? "Identity authority images: " + identityImages.join(", ") + ". They define face, eye design, hair, costume, palette, accessories and body proportions. Preserve these exactly."
+          ? "Use image 0 as the primary character identity reference. Identity authority images: " + identityImages.join(", ") + ". They define face, eye design, hair, costume, palette, accessories and body proportions. Preserve these exactly."
           : "",
         poseImages.length
           ? "Pose-only images: " + poseImages.join(", ") + ". Use them only for body pose, silhouette, timing and limb placement. Do not copy their character design."
