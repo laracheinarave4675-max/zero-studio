@@ -4,7 +4,7 @@ import { drawRasterBrushStroke, fillRasterRegion, mapPointsToRaster } from "../a
 import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
 import { executeDigitalArtistBrushStream } from "../app/digital-artist-brush-executor.mjs";
 import { createDigitalArtistDemoPlan } from "../app/digital-artist-demo-plan.mjs";
-import { analyzeRasterPixels, analyzeStrokeGeometry } from "../app/digital-artist-eyes.mjs";
+import { analyzeRasterPixels, analyzeStrokeGeometry, inspectRegionFillGroup } from "../app/digital-artist-eyes.mjs";
 
 const width = 1920, height = 1080;
 const plan = createDigitalArtistDemoPlan();
@@ -21,6 +21,7 @@ const layerDirectory = outputDirectory + "/layers";
 await mkdir(layerDirectory, { recursive: true });
 
 const layerReports = [];
+const fillEyeReports = [];
 let layerIndex = 0;
 const result = await executeDigitalArtistBrushStream(stream, {
   createLayer: async descriptor => {
@@ -45,6 +46,28 @@ const result = await executeDigitalArtistBrushStream(stream, {
     }
     if (paintedPixels < 50) {
       throw new Error("Layer " + target.descriptor.name + " rendered too few nontransparent pixels: " + paintedPixels);
+    }
+
+    if (target.descriptor.role === "flat-color") {
+      const groups = new Map();
+      for (const command of target.descriptor.commands || []) {
+        if (command.kind !== "raster-region-fill") continue;
+        const color = String(command.options?.color || "#000000").toLowerCase();
+        if (!groups.has(color)) groups.set(color, []);
+        groups.get(color).push(command.points);
+      }
+      for (const [color, polygons] of groups) {
+        const check = inspectRegionFillGroup({ width, height, data: pixels }, polygons, color, {
+          stride: 4, margin: 8, colorTolerance: 28,
+          minimumCoverage: 0.88, maximumLeakage: 0.005
+        });
+        fillEyeReports.push({ layerId: target.descriptor.id, color, ...check });
+        if (!check.passed) {
+          throw new Error("Artist fill eye rejected " + color + " in " + target.descriptor.name +
+            ": inside coverage " + check.insideCoverage.toFixed(3) +
+            ", outside leakage " + check.outsideLeakage.toFixed(3));
+        }
+      }
     }
 
     if (target.descriptor.visible !== false) {
@@ -113,6 +136,7 @@ const report = {
   artistEyes: {
     raster: artistRasterEye,
     lines: stream.commands.map(analyzeStrokeGeometry),
+    fillRegions: fillEyeReports,
     layerSummaries: layerReports.map(layer => ({
       id: layer.id, role: layer.role, visible: layer.visible,
       alphaCoverage: layer.rasterEye.alphaCoverage,
@@ -145,7 +169,8 @@ if (summaryPath) {
     "",
     "- Visible composite pixel coverage: " + (report.artistEyes.raster.alphaCoverage * 100).toFixed(1) + "%.",
     "- Measured stroke geometries: " + report.artistEyes.lines.length + ".",
-    "- Layer silhouette bounds and dominant colors are recorded in digital-artist-eyes-report.json.",
+    "- Semantic fill groups passed: " + report.artistEyes.fillRegions.length + "; minimum inside coverage 88%, maximum outside leakage 0.5%.",
+    "- Layer silhouette bounds, dominant colors and fill diagnostics are recorded in digital-artist-eyes-report.json.",
     "",
     "This is a renderer integration proof only; it is not an AI-authored or visually approved anime character.",
     ""
