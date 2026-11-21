@@ -191,6 +191,9 @@ test("GET diagnostic verifies the Worker bearer token without starting inference
   process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
   let observed;
   globalThis.fetch = async (url, options) => {
+    if (String(url).endsWith("/health")) {
+      return new Response(JSON.stringify({ animeAutoFreeTierGuard: true, animeAutoFreeTierConfirmed: false }), { status: 200 });
+    }
     observed = { url, options };
     return new Response(JSON.stringify({ error: "invalid_prompt" }), { status: 400 });
   };
@@ -204,6 +207,8 @@ test("GET diagnostic verifies the Worker bearer token without starting inference
     assert.equal(observed.url, "https://zero-studio.9test4675a26.workers.dev/v1/images");
     assert.equal(observed.options.headers.Authorization, "Bearer unit-test-secret");
     assert.equal(JSON.parse(observed.options.body).prompt, "");
+    assert.equal(JSON.parse(observed.options.body).workload, "anime-auto-drawing");
+    assert.equal(res.body.animeAutoFreeTierConfirmed, false);
   } finally {
     globalThis.fetch = oldFetch;
     if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
