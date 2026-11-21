@@ -26,4 +26,8 @@ test("refined brush plan paints a background and rear hair before the face",()=>
  for(const id of ["brow-left","brow-right","nose-bridge","mouth-line"])assert.ok(ink.includes(id));
  const shadow=plan.layers.find(layer=>layer.role==="shadow")?.strokes.find(stroke=>stroke.id==="face-cast-shadow");
  assert.ok(shadow.clipPolygon?.length>=3);
+ const shadowXs=shadow.points.map(point=>point.x/1920);
+ const shadowYs=shadow.points.map(point=>point.y/1080);
+ assert.ok(Math.max(...shadowXs)-Math.min(...shadowXs)<.12,"cheek shadow must stay local, not span the face");
+ assert.ok(Math.min(...shadowYs)>.45&&Math.max(...shadowYs)<.9,"cheek shadow must stay below the eye line and above the chin");
 });
