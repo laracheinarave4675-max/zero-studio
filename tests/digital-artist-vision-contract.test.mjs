@@ -83,3 +83,49 @@ test("rejects oversized observation collections and out-of-canvas region boxes",
   region.regions[0].x = 0.5;
   assert.throws(() => validateAnimeVisionReport(region), /fully inside/);
 });
+
+import { buildAnimeVisionBrushPlan } from "../app/digital-artist-vision-brush-planner.mjs";
+import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
+
+test("turns reviewed landmarks and semantic boxes into validated native raster brush commands", () => {
+  const value = report();
+  value.landmarks = [
+    { id: "left-eye", label: "Left eye center", x: 0.42, y: 0.36, confidence: 0.96 },
+    { id: "right-eye", label: "Right eye center", x: 0.58, y: 0.36, confidence: 0.94 }
+  ];
+  value.regions = [
+    { id: "hair", label: "Hair mass", x: 0.12, y: 0.04, width: 0.76, height: 0.52, confidence: 0.91 },
+    { id: "face", label: "Face skin", x: 0.29, y: 0.2, width: 0.42, height: 0.55, confidence: 0.93 }
+  ];
+  value.palette = [
+    { id: "hair-base", label: "Hair", color: "#6b426f", confidence: 0.88 },
+    { id: "skin-base", label: "Skin", color: "#efc4a8", confidence: 0.92 }
+  ];
+  const result = buildAnimeVisionBrushPlan(value, { approveObservations: true, characterAssetId: "char-demo" });
+  assert.equal(result.review.approved, true);
+  assert.equal(result.review.nativeRasterBrushPlan, true);
+  assert.equal(result.review.imageGenerationUsed, false);
+  assert.equal(result.review.inferencePerformed, false);
+  assert.ok(result.plan.strokeCount >= 6);
+  const stream = compileDigitalArtistBrushPlan(result.plan);
+  assert.equal(stream.renderer, "native-canvas2d-raster-brush-engine");
+  assert.equal(stream.identity.characterAssetId, "char-demo");
+  assert.ok(stream.commands.some(command => command.kind === "raster-region-fill"));
+  assert.ok(stream.commands.some(command => command.kind === "raster-brush-stroke"));
+  assert.ok(result.review.warnings.some(warning => warning.includes("rectangular bounding-box")));
+});
+
+test("keeps uncertain observations out of the plan and requires review by default", () => {
+  const value = report();
+  value.landmarks[0].confidence = 0.2;
+  value.regions[0].confidence = 0.3;
+  const result = buildAnimeVisionBrushPlan(value);
+  assert.equal(result.review.approved, false);
+  assert.equal(result.review.requiresHumanApproval, true);
+  assert.equal(result.review.estimatedStrokeCount, 0);
+  assert.throws(() => buildAnimeVisionBrushPlan(value), /no high-confidence/);
+});
+
+test("rejects planner confidence outside the supported range", () => {
+  assert.throws(() => buildAnimeVisionBrushPlan(report(), { minimumConfidence: 1.5 }), /between 0 and 1/);
+});
