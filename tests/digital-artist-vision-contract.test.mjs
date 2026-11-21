@@ -117,15 +117,14 @@ test("turns reviewed landmarks and semantic boxes into validated native raster b
 
 test("keeps uncertain observations out of the plan and requires review by default", () => {
   const value = report();
+  const pending = buildAnimeVisionBrushPlan(value);
+  assert.equal(pending.review.approved, false);
+  assert.equal(pending.review.requiresHumanApproval, true);
+  assert.ok(pending.review.estimatedStrokeCount > 0);
   value.landmarks[0].confidence = 0.2;
   value.regions[0].confidence = 0.3;
-  const result = buildAnimeVisionBrushPlan(value);
-  assert.equal(result.review.approved, false);
-  assert.equal(result.review.requiresHumanApproval, true);
-  assert.equal(result.review.estimatedStrokeCount, 0);
   assert.throws(() => buildAnimeVisionBrushPlan(value), /no high-confidence/);
 });
-
 test("rejects planner confidence outside the supported range", () => {
   assert.throws(() => buildAnimeVisionBrushPlan(report(), { minimumConfidence: 1.5 }), /between 0 and 1/);
 });
