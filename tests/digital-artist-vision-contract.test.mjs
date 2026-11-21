@@ -61,3 +61,25 @@ test("rejects duplicate observation ids and invalid confidence thresholds", () =
   assert.throws(() => validateAnimeVisionReport(a), /Duplicate vision observation id/);
   assert.throws(() => buildAnimeVisionDrawingBrief(report(), { minimumConfidence: 2 }), /between 0 and 1/);
 });
+
+test("sanitizes control characters and caps untrusted identity notes", () => {
+  const value = report();
+  value.subject = "Anime\\nportrait\\u0000";
+  value.identityLocks = Array.from({ length: 40 }, (_, index) => "lock-" + index);
+  value.notes = Array.from({ length: 30 }, (_, index) => "note-" + index);
+  const result = validateAnimeVisionReport(value);
+  assert.equal(result.subject, "Anime portrait");
+  assert.equal(result.identityLocks.length, 32);
+  assert.equal(result.notes.length, 24);
+});
+
+test("rejects oversized observation collections and out-of-canvas region boxes", () => {
+  const value = report();
+  value.landmarks = Array.from({ length: 129 }, (_, index) => ({
+    id: "point-" + index, label: "point", x: 0.5, y: 0.5, confidence: 0.9
+  }));
+  assert.throws(() => validateAnimeVisionReport(value), /landmark count/);
+  const region = report();
+  region.regions[0].x = 0.5;
+  assert.throws(() => validateAnimeVisionReport(region), /fully inside/);
+});
