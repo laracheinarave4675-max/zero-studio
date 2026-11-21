@@ -74,8 +74,8 @@ export function renderAnimeRasterCharacterFrame(canvas,profile,pose,{width=768,h
  canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("Canvas 2D context unavailable.");
  ctx.clearRect(0,0,width,height);ctx.save();const unit=Math.min(width/768,height/1024);ctx.translate((width-768*unit)/2,(height-1024*unit)/2);ctx.scale(unit,unit);
  const p=profile.palette,b=pose.bob||0;
- leg(ctx,402,pose.footB*.82-13,pose.liftB,false,p);
- leg(ctx,421,pose.footA*.82+13,pose.liftA,true,p);
+ leg(ctx,402,pose.footB*.82-13,pose.liftB,p);
+ leg(ctx,421,pose.footA*.82+13,pose.liftA,p);
  kimono(ctx,b,pose.cloth,pose.arm,p);hair(ctx,b,pose.hair,p);face(ctx,b,p,profile.proportions.head);frontHair(ctx,b,p);
  ink(ctx,[{x:366,y:353+b},{x:371,y:389+b},{x:384,y:418+b},{x:399,y:434+b}],p.kimonoShade,3);
  ctx.restore();
