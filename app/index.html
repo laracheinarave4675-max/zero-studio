@@ -65,12 +65,27 @@
 </div>
 <div id="animeWalkTaskList" class="anime-walk-task-grid" aria-label="التنقل بين مهام الإطارات الأربعة والعشرين"></div>
 </div>
-<p class="note">لإثبات المشي الأول: جهّز 24 إطاراً في الخط الزمني، ثم سجّل رسمة مفتاحية معتمدة في الإطار 1 والإطار 24، ويمكن إضافة وضعيات بينهما. كل إطار وسيط سيبقى رسمة كاملة مستقلة مطلوب رسمها يدوياً.</p>
+<p class="note">محرك التحريك هو المسؤول عن إنتاج الرسومات، وليس عليك رسم أي إطار. يولّد خمس وضعيات مفتاحية أولاً (1 و7 و13 و19 و24)، ثم ينشئ 19 رسمة وسيطة كاملة، مع الحفاظ على ورقة التصميم كمرجع ثابت للهوية واستخدام الوضعيات السابقة لتوجيه الحركة فقط.</p>
+<div class="anime-auto-drawing-panel" id="animeAutoDrawingPanel">
+<div class="section-heading"><strong>محرك الرسم والتحريك الآلي — 24 رسمة مستقلة</strong><span class="pill">24 FPS</span></div>
+<p class="note">كل صورة تُرسم من جديد بواسطة محرك الصور، ثم تُحوّل محلياً إلى PNG شفاف وتحفظ كطبقة مستقلة داخل الخط الزمني. لا تُستخدم دمية أو تشويه للشخصية أو إطارات SVG هندسية. يجب أن تراجع الرسومات بصرياً قبل اعتمادها وتصديرها.</p>
+<div class="button-grid">
+<button id="startAnimeAutoDrawingBtn" class="primary full" type="button">توليد 24 رسمة أنمي تلقائياً</button>
+<button id="stopAnimeAutoDrawingBtn" class="secondary full" type="button" disabled>إيقاف بعد الإطار الجاري</button>
+</div>
+<div id="animeAutoDrawingStatus" class="status" role="status" aria-live="polite">لم يبدأ توليد الإطارات. سيُفحص الاتصال وحدود الخطة المجانية أولاً دون استهلاك حصة.</div>
+<div class="button-grid">
+<button id="auditAnimeAutoSequenceBtn" class="secondary" type="button" disabled>فحص تسلسل الرسومات</button>
+<button id="exportAnimeAutoSequenceBtn" class="primary" type="button" disabled>تصدير 24 PNG بعد المراجعة</button>
+</div>
+<div id="animeAutoDrawingAuditStatus" class="status" role="status" aria-live="polite">لا توجد رسومات آلية مكتملة بعد.</div>
+</div>
 <div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button">تهيئة خط زمني من 24 إطاراً مستقلاً</button>
 <label class="toggle" id="animeAnatomyGuideToggleLabel" hidden><input id="animeAnatomyGuideToggle" type="checkbox" checked> عرض دليل المفاصل فوق لوحة الرسم أثناء الرسم</label>
 <div class="anime-raster-review" id="animeRasterReviewPanel">
-<strong>اعتماد الرسم النقطي النهائي للإطار الحالي</strong>
-<p class="note">يحوّل الرسم الذي أنجزته في الإطار الحالي إلى PNG شفاف مستقل 1920×1080، ثم يحفظه داخل ملف المشروع. لا يتم إنشاء أو توليد أي رسم جديد.</p>
+<strong>مراجعة الرسمة النهائية للإطار الحالي</strong>
+<p class="note">تظهر هنا نقاط مراجعة الإطار المحدد. عند اختيار إطار أنتجه محرك التحريك، احفظ المراجعة من الزر التالي. لا تُعتمد الرسومات الآلية تلقائياً ولا تُصدّر قبل إكمال فحوص الهوية والتشريح والخط والتوقيت.</p>
+<button id="saveAnimeAutoReviewBtn" class="secondary full" type="button">حفظ مراجعة الإطار الآلي الحالي</button>
 <label class="toggle"><input id="animeReviewIdentity" type="checkbox"> ثبات هوية الشخصية</label>
 <label class="toggle"><input id="animeReviewAnatomy" type="checkbox"> سلامة التشريح واليدين والقدمين</label>
 <label class="toggle"><input id="animeReviewLineQuality" type="checkbox"> جودة الخطوط والتفاصيل</label>
