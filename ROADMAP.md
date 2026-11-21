@@ -299,3 +299,6 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [x] Verify Drawing engine run #2748 and Hybrid raster/SVG run #787 on commit `38e128c5`; native brush and portrait proof artifacts uploaded.
 - [ ] Run the actual first artist drawing test on the user's Android device and visually accept/revise the resulting artwork.
 - [ ] Connect a free vision model successfully on Android, or keep manual observation handoff clearly labeled until that is proven.
+
+- [x] Extract bounded alpha-connected raster components and pixel-boundary contours locally, and include them in the editor inspection report without semantic overclaim.
+- [x] Publish the tested artist branch to the isolated Cloudflare Pages preview for the first device-level drawing test.
