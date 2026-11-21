@@ -236,3 +236,14 @@ The two governing goals remain: build a real anime production studio, and build 
 
 
 Data acquisition must be rights-aware: record provenance and permitted use for every reference. Manga109 general data is academic non-commercial; Manga109-s has a separate limited commercial-use permission with restrictions. Do not use a non-commercial dataset for commercial learning/output.
+
+
+**Contour-aware vision bridge — implementation started 2026-11-21**
+- [x] Accept optional normalized polygon contours in vision region observations.
+- [x] Reject degenerate, repeated-point, out-of-box and self-crossing contours.
+- [x] Prefer reviewed contour polygons over rectangular bounds when creating native raster fill commands.
+- [x] Update the browser vision prompt to request organic character-part outlines.
+- [x] Add focused regression tests for contour conversion and compatibility fallback.
+- [ ] Run the new tests and full project suites on the latest branch head; current GitHub Contents API commits have not produced a fresh Actions result.
+- [ ] Inspect a real model-authored contour report against an uploaded character reference and correct contour accuracy before approving fills.
+- [ ] Replace point-estimated contours with segmentation/mask-derived boundaries if the small VLM cannot produce reliable outlines.
