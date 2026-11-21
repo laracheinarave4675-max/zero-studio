@@ -4,6 +4,7 @@ import { drawRasterBrushStroke, fillRasterRegion, mapPointsToRaster } from "../a
 import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
 import { executeDigitalArtistBrushStream } from "../app/digital-artist-brush-executor.mjs";
 import { createDigitalArtistDemoPlan } from "../app/digital-artist-demo-plan.mjs";
+import { analyzeRasterPixels, analyzeStrokeGeometry } from "../app/digital-artist-eyes.mjs";
 
 const width = 1920, height = 1080;
 const plan = createDigitalArtistDemoPlan();
@@ -60,7 +61,8 @@ const result = await executeDigitalArtistBrushStream(stream, {
       strokeCount: target.strokeCount,
       regionFillCount: target.regionFillCount,
       paintedPixels,
-      visible: target.descriptor.visible !== false
+      visible: target.descriptor.visible !== false,
+      rasterEye: analyzeRasterPixels({ width, height, data: pixels })
     });
   }
 });
@@ -96,9 +98,20 @@ const report = {
   layers: layerReports,
   strokeCount: result.strokeCount,
   regionFillCount: layerReports.reduce((sum, layer) => sum + layer.regionFillCount, 0),
+  artistEyes: {
+    raster: analyzeRasterPixels({ width, height, data: compositeContext.getImageData(0, 0, width, height).data }),
+    lines: stream.commands.map(analyzeStrokeGeometry),
+    layerSummaries: layerReports.map(layer => ({
+      id: layer.id, role: layer.role, visible: layer.visible,
+      alphaCoverage: layer.rasterEye.alphaCoverage,
+      bounds: layer.rasterEye.bounds,
+      dominantPalette: layer.rasterEye.dominantPalette.slice(0, 5)
+    }))
+  },
   note: "This is an execution/rendering proof for a deterministic brush plan. It is not a vision-model output, an approved character, or an artistic-quality acceptance result."
 };
 await writeFile(outputDirectory + "/report.json", JSON.stringify(report, null, 2));
+await writeFile(outputDirectory + "/digital-artist-eyes-report.json", JSON.stringify(report.artistEyes, null, 2));
 
 const summaryPath = process.env.GITHUB_STEP_SUMMARY;
 if (summaryPath) {
@@ -115,6 +128,12 @@ if (summaryPath) {
     rows,
     "",
     "Total: " + result.strokeCount + " drawing operations (including " + layerReports.reduce((sum, layer) => sum + layer.regionFillCount, 0) + " closed region fills) in " + result.layerCount + " native raster layers.",
+    "",
+    "### Artist eyes v1 — deterministic inspection",
+    "",
+    "- Visible composite pixel coverage: " + (report.artistEyes.raster.alphaCoverage * 100).toFixed(1) + "%.",
+    "- Measured stroke geometries: " + report.artistEyes.lines.length + ".",
+    "- Layer silhouette bounds and dominant colors are recorded in digital-artist-eyes-report.json.",
     "",
     "This is a renderer integration proof only; it is not an AI-authored or visually approved anime character.",
     ""
