@@ -39,6 +39,15 @@ test("line-art eye measures stroke geometry and pressure hierarchy", () => {
   assert.equal(report.pressureRange.max, .8);
 });
 
+test("line-art eye preserves compiled command IDs as review references", () => {
+  const report = analyzeStrokeGeometry({
+    strokeId: "artist-raster-face/face-ink-01",
+    intent: "Ink the jaw.",
+    points: [{ x: 10, y: 10, pressure: .2 }, { x: 20, y: 15, pressure: .8 }]
+  });
+  assert.equal(report.id, "artist-raster-face/face-ink-01");
+});
+
 test("identity eye compares normalized facial and anatomical landmarks", () => {
   const reference = { leftEye: { x: .35, y: .4 }, rightEye: { x: .65, y: .4 }, chin: { x: .5, y: .8 } };
   const same = compareLandmarks(reference, reference);
