@@ -14,7 +14,7 @@ export const DEFAULT_TV_ANIME_STYLE_PROFILE = Object.freeze({
     jawWidth: 0.72, cheekWidth: 0.94, chinRoundness: 0.12
   }),
   eyes: Object.freeze({
-    widthToFace: 0.205, heightToWidth: 0.43, centerOffsetToFace: 0.225,
+    widthToFace: 0.205, heightToWidth: 0.58, centerOffsetToFace: 0.225,
     irisToEyeHeight: 0.82, upperLidWeight: 1.55, lowerLidWeight: 0.62,
     farEyeScaleAtFullYaw: 0.78, asymmetryAllowance: 0.06
   }),

@@ -27,38 +27,43 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     stroke("construction-shoulder-axis","Connect the shoulder construction masses.","graphite","#8a8290",2,[model.torso.shoulders.left,model.torso.shoulders.center,model.torso.shoulders.right])
   ];
   const flat=[
+    fill("background-field","Lay down a warm neutral drawing-paper field.","#f5e9e1",[{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}]),
+    fill("rear-hair-mass","Establish the rear hair silhouette behind the face and shoulders.","#292438",model.hairBackSilhouette),
+    fill("neck-base","Connect the jaw to the torso with a tapered neck volume.","#e7b29f",model.torso.neck.polygon),
+    fill("torso-base","Build the shoulder-to-waist torso silhouette from its anatomical anchors.","#d4c9df",model.torso.outline),
     fill("face-base","Lay in the head volume derived from the head construction.","#f0c4b0",headShape),
-    fill("neck-base","Fill the neck mass connecting jaw and torso.","#e7b29f",[model.torso.neck.left,model.torso.neck.right,model.torso.neck.base]),
-    fill("torso-base","Block the torso mass between the shoulder and waist anchors.","#d4c9df",ellipsePoints(model.torso.ribcage.center.x,model.torso.ribcage.center.y,model.torso.ribcage.width/2,model.torso.ribcage.height/2)),
     ...model.hair.map(clump=>fill("hair-"+clump.id,"Fill one independent root-to-tip hair clump.","#30283d",clump.outline)),
     ...model.eyes.flatMap(eye=>[
-      fill(eye.id+"-sclera","Fill the sclera inside the derived eye system.","#fff9f2",eye.sclera),
+      fill(eye.id+"-sclera","Fill the almond-shaped sclera bounded by upper and lower lids.","#fff9f2",eye.sclera),
       fill(eye.id+"-iris","Fill the iris inside its eye boundary.","#9d625a",eye.iris,{clipPolygon:eye.sclera.map(px)}),
       fill(eye.id+"-pupil","Fill the pupil inside its eye boundary.","#30283b",eye.pupil,{clipPolygon:eye.sclera.map(px)})
     ])
   ];
   const ink=[
     stroke("head-contour","Ink the constructed head silhouette.","ink","#332b38",7,headShape),
+    ...model.brows.map(brow=>stroke(brow.id,"Ink an expressive brow aligned to the derived brow axis.","ink","#443443",4,brow.points)),
+    stroke("nose-bridge","Indicate the nose bridge with a restrained anime line.","ink","#b47f7c",2.5,model.nose.points),
+    stroke("mouth-line","Ink the mouth curve aligned to the derived mouth landmark.","ink","#9e5e69",3,model.mouth.points),
     ...model.eyes.flatMap(eye=>[
       stroke(eye.id+"-upper-lid","Ink the expressive upper eyelid with stronger line weight.","ink","#2b2635",7,eye.upperLid),
       stroke(eye.id+"-lower-lid","Ink the lighter lower eyelid.","ink","#66566a",3,eye.lowerLid)
     ]),
-    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",3,clump.flow))
+    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.5,clump.flow))
   ];
-  const shadowAnchor=model.shadows.facePlane.anchor,shadowNormal=model.shadows.facePlane.normal;
   const shadowPoints=[
-    shadowAnchor,
-    {x:shadowAnchor.x+shadowNormal.x*.07,y:shadowAnchor.y+shadowNormal.y*.07},
-    {x:shadowAnchor.x+shadowNormal.x*.13,y:shadowAnchor.y+shadowNormal.y*.12},
-    {x:shadowAnchor.x+shadowNormal.x*.04,y:shadowAnchor.y+shadowNormal.y*.18}
-  ].map(point=>({x:Math.max(0,Math.min(1,point.x)),y:Math.max(0,Math.min(1,point.y))}));
-  const shadows=[fill("face-cast-shadow","Place a small first-pass cast shadow using the declared light direction.","#c98f91",shadowPoints)];
+    {x:model.head.landmarks.cheekLeft.x,y:model.head.axes.eyeY+model.head.bounds.height*.08},
+    {x:model.head.landmarks.cheekLeft.x+model.head.bounds.width*.09,y:model.head.axes.noseY-model.head.bounds.height*.015},
+    {x:model.head.landmarks.noseBase.x-model.head.bounds.width*.025,y:model.head.axes.mouthY},
+    {x:model.head.landmarks.mouthCenter.x-model.head.bounds.width*.055,y:model.head.landmarks.chin.y-model.head.bounds.height*.12},
+    {x:model.head.landmarks.jawLeft.x+model.head.bounds.width*.05,y:model.head.landmarks.chin.y-model.head.bounds.height*.08}
+  ];
+  const shadows=[fill("face-cast-shadow","Place a soft-sided cheek and jaw shadow on the side opposite the declared key light.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
     title:"Construction-driven anime character study",
     identity:{characterAssetId:"construction-driven-anime-study"},
     layers:[
-      {id:"construction",name:"01 Head and body construction",role:"construction",strokes:construction},
+      {id:"construction",name:"01 Head and body construction",role:"construction",visible:false,strokes:construction},
       {id:"flats",name:"02 Form and feature flats",role:"flat-color",strokes:flat},
       {id:"ink",name:"03 Feature, silhouette and hair-flow ink",role:"clean-line",strokes:ink},
       {id:"shadows",name:"04 Light-direction shadow pass",role:"shadow",strokes:shadows}
