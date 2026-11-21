@@ -78,6 +78,7 @@ const expectColorNear = (label, actual, expected, tolerance = 12) => {
 // Regression probes: representative pixels are inside the artist-authored
 // face, hair and clothing polygons, while the control point stays outside them.
 expectColorNear("Face region", pixelAt(960, 580), [239, 196, 177, 255]);
+expectColorNear("Eye white region", pixelAt(850, 472), [255, 249, 242, 255]);
 expectColorNear("Hair region", pixelAt(960, 205), [52, 56, 76, 255]);
 expectColorNear("Clothing region", pixelAt(960, 970), [113, 153, 156, 255]);
 expectColorNear("Outside silhouette", pixelAt(1320, 700), [245, 241, 233, 255]);
