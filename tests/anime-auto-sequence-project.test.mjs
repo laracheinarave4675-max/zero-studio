@@ -38,7 +38,7 @@ test("automatic anime sequence state survives native project normalization", () 
 test("automatic sequence marker mismatch rejects corrupted project metadata", () => {
   const project = sequenceProject();
   project.frames[10].layers[0].name = "ordinary layer";
-  assert.throws(() => normalizeProject(project), /marker.*missing/i);
+  assert.throws(() => normalizeProject(project), /مفقودة من التسلسل/);
 });
 
 test("automatic drawing review metadata requires a unique transparent PNG record", () => {
@@ -71,5 +71,5 @@ test("automatic drawing review metadata requires a unique transparent PNG record
   const normalized = normalizeProject(project);
   assert.equal(normalized.frames[1].animeAutoDrawing.review.status, "pending");
   project.frames[1].animeAutoDrawing.contentHash = "invalid";
-  assert.throws(() => normalizeProject(project), /audit.*invalid|not valid/i);
+  assert.throws(() => normalizeProject(project), /غير صالحة/);
 });
