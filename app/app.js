@@ -265,6 +265,10 @@ async function buildAnimeMotionPlan(){
   if(project.frames.length<24)throw Error("أنشئ 24 إطاراً في الخط الزمني أولاً، ثم سجّل رسومات البداية والنهاية.");
   const action=$("animeMotionAction").value.trim();
   const keys=(dna.keyDrawings||[]).filter(item=>item.frame>=0&&item.frame<24);
+  if(activeKimonoWalkChart){
+   const missing=KIMONO_WALK_REFERENCE.keyDrawingFrames.filter(frameIndex=>!keys.some(key=>key.frame===frameIndex));
+   if(missing.length)throw Error("قالب مشي الكيمونو يحتاج اعتماد خمس وضعيات مفتاحية كاملة في الإطارات: "+missing.map(index=>index+1).join("، ")+".");
+  }
   for(const key of keys){
    const keyFrame=project.frames[key.frame];
    if(!keyFrame||keyFrame.id!==key.drawingAssetId||!/^[a-f0-9]{64}$/.test(key.sourceSignature||"")){
