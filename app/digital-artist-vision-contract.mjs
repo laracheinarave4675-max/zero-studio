@@ -19,6 +19,13 @@ const unit = (value, label) => {
   if (!finite(value) || value < 0 || value > 1) fail(label + " must be normalized between 0 and 1.");
   return value;
 };
+const cross = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+const segmentsCross = (a, b, c, d) => {
+  const abC = cross(a, b, c), abD = cross(a, b, d);
+  const cdA = cross(c, d, a), cdB = cross(c, d, b);
+  return ((abC > 1e-10 && abD < -1e-10) || (abC < -1e-10 && abD > 1e-10)) &&
+    ((cdA > 1e-10 && cdB < -1e-10) || (cdA < -1e-10 && cdB > 1e-10));
+};
 const safeId = (value, label) => {
   const id = text(value, 80);
   if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]*$/.test(id)) fail(label + " must be a stable identifier.");
@@ -71,6 +78,17 @@ export function validateAnimeVisionReport(input) {
       for (let index = 0; index < contour.length; index++) {
         const current = contour[index], next = contour[(index + 1) % contour.length];
         if (Math.hypot(current.x - next.x, current.y - next.y) < 0.00001) fail("A region contour contains duplicate consecutive points.");
+        if (current.x < x - 0.001 || current.x > x + width + 0.001 || current.y < y - 0.001 || current.y > y + height + 0.001) {
+          fail("A region contour point must remain inside its declared bounding box.");
+        }
+      }
+      for (let first = 0; first < contour.length; first++) {
+        const a = contour[first], b = contour[(first + 1) % contour.length];
+        for (let second = first + 1; second < contour.length; second++) {
+          if (second === first || second === (first + 1) % contour.length || (second + 1) % contour.length === first) continue;
+          const c = contour[second], d = contour[(second + 1) % contour.length];
+          if (segmentsCross(a, b, c, d)) fail("A region contour must not cross itself.");
+        }
       }
       let twiceArea = 0;
       for (let index = 0; index < contour.length; index++) {
