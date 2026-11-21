@@ -64,15 +64,28 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     ...model.hair.map(clump=>stroke("hair-sheen-"+clump.id,"Add a restrained reflected-light strand along the hair flow.","ink","#a99bb5",4.2,clump.flow.slice(3,Math.max(5,clump.flow.length-4)),{opacity:.72})),
     ...model.eyes.map(eye=>stroke(eye.id+"-iris-upper-rim","Define the upper iris rim beneath the eyelid.","ink","#694a57",1.8,eye.iris.slice(5,15),{opacity:.8}))
   ];
-  const shadowLeft=model.head.landmarks.cheekLeft.x;
-  const shadowPoints=[
-    {x:shadowLeft+.006,y:model.head.axes.eyeY+model.head.bounds.height*.1},
-    {x:shadowLeft+.045,y:model.head.axes.noseY-model.head.bounds.height*.02},
-    {x:shadowLeft+.055,y:model.head.axes.mouthY-model.head.bounds.height*.02},
-    {x:shadowLeft+.028,y:model.head.landmarks.chin.y-model.head.bounds.height*.13},
-    {x:shadowLeft-.002,y:model.head.landmarks.chin.y-model.head.bounds.height*.23}
+  const lightFromLeft=model.shadows.light.x<0;
+  const shadowSide=lightFromLeft?"right":"left";
+  const cross=model.head.faceCrossSections;
+  const row=id=>cross.find(item=>item.id===id);
+  const eyeRow=row("eye"),cheekRow=row("cheek"),jawRow=row("jaw");
+  const noseX=model.head.landmarks.noseBase.x,mouthX=model.head.landmarks.mouthCenter.x;
+  const shadowPoints=shadowSide==="right"?[
+    {x:noseX,y:eyeRow.y+model.head.bounds.height*.04},
+    {x:cheekRow.right,y:cheekRow.y},
+    {x:jawRow.right,y:jawRow.y},
+    {x:model.head.landmarks.chin.x,y:model.head.landmarks.chin.y-model.head.bounds.height*.04},
+    {x:mouthX+model.head.bounds.width*.015,y:model.head.axes.mouthY+model.head.bounds.height*.02},
+    {x:noseX+model.head.bounds.width*.025,y:model.head.axes.noseY+model.head.bounds.height*.025}
+  ]:[
+    {x:noseX,y:eyeRow.y+model.head.bounds.height*.04},
+    {x:cheekRow.left,y:cheekRow.y},
+    {x:jawRow.left,y:jawRow.y},
+    {x:model.head.landmarks.chin.x,y:model.head.landmarks.chin.y-model.head.bounds.height*.04},
+    {x:mouthX-model.head.bounds.width*.015,y:model.head.axes.mouthY+model.head.bounds.height*.02},
+    {x:noseX-model.head.bounds.width*.025,y:model.head.axes.noseY+model.head.bounds.height*.025}
   ];
-  const shadows=[fill("face-cast-shadow","Place a soft-sided cheek and jaw shadow on the side opposite the declared key light.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
+  const shadows=[fill("face-form-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
     title:"Construction-driven anime character study",
