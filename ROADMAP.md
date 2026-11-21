@@ -191,13 +191,16 @@ This supersedes the vector-first character-art choice in D-029. The character Di
 - [x] Verify the raster command contract and regression suite in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
 - [x] Add an executor adapter that paints compiled commands into native transparent raster layers, preserves stroke IDs/intents/source/points/options, finalizes layers, and rolls back failed runs.
 - [x] Integrate a minimal Digital Artist panel into the editor to load a brush plan, execute it with progress, and create separate raster layers.
-- [x] Add a deterministic 54-stroke / 7-layer portrait fixture to exercise the editor execution path; this is a test fixture, not an AI-authored drawing.
+- [x] Add a deterministic 56-operation / 7-layer portrait fixture to exercise the editor execution path; this is a test fixture, not an AI-authored drawing.
 - [x] Add tests for command ordering, layer finalization, rollback, malformed stream rejection, and native project stroke-history compatibility.
-- [x] Export a reproducible 54-stroke / 7-layer Canvas2D proof image and separate transparent layer PNGs in GitHub Actions.
+- [x] Export a reproducible 56-operation / 7-layer Canvas2D proof image and separate transparent layer PNGs in GitHub Actions.
 - [x] Visually inspect the deterministic proof; record the banded flat-color result as a known quality defect rather than claiming artistic acceptance.
-- [ ] Improve region filling/flat-color coverage so paint follows the character silhouette without broad horizontal bands.
+- [x] Add closed polygon region-fill operations in the validated brush plan and native Canvas2D executor.
+- [x] Replace the demo flat-color bands with 14 closed semantic fills and add in-bounds/out-of-bounds pixel probes to the CI render.
+- [x] Visually inspect the latest render and confirm the broad horizontal flat-color bands are gone; record remaining silhouette/line-art defects.
 - [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
-- [ ] Add individual-stroke replay/scrubbing, correction, layer preview, review and approval controls.
+- [x] Add per-operation selection, isolated preview, previous/next navigation, approve/reject/reset review controls, and persistent review state.
+- [ ] Add editable point/brush correction and safe corrected-operation replay/scrubbing.
 - [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
 - [ ] Run the fixture in a real browser, inspect its rendered output, then produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
 - [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
