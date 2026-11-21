@@ -106,10 +106,10 @@ function drawKimonoBody(ctx,bob,cloth,sleeveSwing){
  path(ctx,[["M",269,301+bob],["C",282,353+bob,297,400+bob,330,452+bob],["C",350,526+bob,368,660+bob,386,790+bob],["L",354,795+bob],["C",339,650+bob,324,550+bob,301,476+bob],["C",276,411+bob,253,350+bob,244,319+bob],["Z"]],FIXED_PALETTE.kimonoLight,FIXED_PALETTE.ink,3.1);
  // Sleeve: broad, hanging silhouette; its design and sakura locations are locked.
  const sleeveGradient=ctx.createLinearGradient(350,290,460,510);sleeveGradient.addColorStop(0,FIXED_PALETTE.kimono);sleeveGradient.addColorStop(.68,"#e9d5ce");sleeveGradient.addColorStop(1,FIXED_PALETTE.pink);
- path(ctx,[["M",324,299+bob],["C",360,280+bob,405,298+bob,421,342+bob],["C",434,385+bob,432+sleeve,438+bob,438+sleeveSwing,481+bob],["C",404,503+bob,375,482+bob,351,459+bob],["C",337,413+bob,320,365+bob,324,299+bob],["Z"]],sleeve,FIXED_PALETTE.ink,5);
+ path(ctx,[["M",324,299+bob],["C",360,280+bob,405,298+bob,421,342+bob],["C",434,385+bob,432+sleeveSwing,438+bob,438+sleeveSwing,481+bob],["C",404,503+bob,375,482+bob,351,459+bob],["C",337,413+bob,320,365+bob,324,299+bob],["Z"]],sleeveGradient,FIXED_PALETTE.ink,5);
  tapered(ctx,[[347,323+bob],[379,351+bob],[390+sleeveSwing*.3,414+bob],[404+sleeveSwing,465+bob]],FIXED_PALETTE.kimonoLight,3.2);
  // Sleeve edge / cuff line.
- tapered(ctx,[[353,459+bob],[379,479+bob],[409+sleeve*.5,492+bob],[438+sleeveSwing,481+bob]],FIXED_PALETTE.pinkDark,3);
+ tapered(ctx,[[353,459+bob],[379,479+bob],[409+sleeveSwing*.5,492+bob],[438+sleeveSwing,481+bob]],FIXED_PALETTE.pinkDark,3);
  // Fixed folds and shadows.
  tapered(ctx,[[276,484+bob],[288,556+bob],[269+cloth,670+bob],[261+cloth,766+bob]],FIXED_PALETTE.kimonoShade,3.2);
  tapered(ctx,[[349,489+bob],[365,566+bob],[383+cloth,682+bob],[393+cloth,782+bob]],"#cdbeb1",3.1);
