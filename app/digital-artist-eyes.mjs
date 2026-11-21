@@ -97,7 +97,7 @@ export function analyzeStrokeGeometry(stroke) {
     if (delta > Math.PI * 0.72) sharpTurns++;
   }
   return {
-    id: String(stroke.id ?? ""),
+    id: String(stroke.id ?? stroke.strokeId ?? ""),
     intent: String(stroke.intent ?? ""),
     kind: stroke.kind === "raster-region-fill" ? "region-fill" : "brush-stroke",
     sampleCount: points.length, length, sharpTurns,
