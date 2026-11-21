@@ -324,6 +324,7 @@ async function saveAnimeAnatomyDNA(){
    joints:Object.fromEntries(ANIME_ANATOMY_LABELS.map(item=>[item.key,animeAnatomyPoints[item.key]]))
   };
   if(!currentFrameHasDrawing())throw Error("الإطار الحالي فارغ؛ ارسم الشخصية كاملة قبل حفظ هويتها.");
+  if(activeKimonoWalkChart&&current!==0)throw Error("ابدأ اعتماد هوية مشي الكيمونو من الإطار 1 أولاً حتى يصبح الرسم نفسه أول وضعية مفتاحية.");
   const sourceFrame=sourceFrameWithoutAnimeRaster(frame());
   const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-final-"+sourceFrame.id,[]));
   const dna=createAnimeCharacterDNA({
@@ -331,6 +332,7 @@ async function saveAnimeAnatomyDNA(){
    notes:"Calibrated on native project frame "+(current+1)+"; source frame ID "+frame().id+(linkedAsset?"; linked character-library asset "+linkedAsset.id:"")
   });
   dna.name=name;dna.sourceFrameId=frame().id;dna.sourceFrameIndex=current;dna.sourceSignature=sourceSignature;
+  if(activeKimonoWalkChart){dna.keyDrawings=[{id:uid("anime-key"),frame:0,drawingAssetId:frame().id,sourceSignature,approved:true,phase:$("animeKeyDrawingPhase").value,easeToNext:$("animeKeyDrawingEase").value,guide:JSON.parse(JSON.stringify(guide)),note:"Artist-approved first full drawing and identity anchor for kimono side-walk."}];}
   snapshot(true);
   if(!Array.isArray(project.animeCharacterDNA))project.animeCharacterDNA=[];
   if(project.animeCharacterDNA.length>=100)throw Error("بلغت مكتبة هويات الشخصيات حد 100.");
@@ -340,7 +342,7 @@ async function saveAnimeAnatomyDNA(){
   updateAnimeRasterControls();
   renderAnimeAnatomyDNASelect(id);
   cancelAnimeAnatomyCalibration();
-  animeAnatomyStatus("حُفظت هوية "+name+" مع 19 نقطة تشريحية داخل المشروع .zero. لم تُعدّل الرسمة الأصلية.");
+  animeAnatomyStatus(activeKimonoWalkChart?"حُفظت هوية "+name+"، وسُجل الإطار 1 تلقائياً كأول وضعية مفتاحية. أكمل الإطارات 7 و13 و19 و24.":"حُفظت هوية "+name+" مع 19 نقطة تشريحية داخل المشروع .zero. لم تُعدّل الرسمة الأصلية.");renderKimonoWalkTaskNavigator();
  }catch(error){animeAnatomyStatus((animeAnatomyMode==="key"?"تعذر اعتماد الرسمة المفتاحية: ":"تعذر حفظ الهوية التشريحية: ")+error.message,false)}
 }
 function renderAnimeAnatomyConstructionOverlay(){
