@@ -6,7 +6,7 @@ import{captureFrameHistory,captureFrameHistoryAfter,applyFrameHistory}from"./fra
 import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNoriPalette,applyNoriRigPose,solveNoriRigJoint,interpolateNoriRigModels,NORI_JOINT_KEYS,NORI_RIG_BONES,createNoriModelSheetSvg,createCharacterModelFromFrame,rotateNoriHead,rotateNoriBody,copyCharacterInstanceToFrame,replaceCharacterInstanceInFrame}from"./character-model.mjs";
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
-import{drawRasterBrushStroke,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
+import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
 import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
@@ -916,12 +916,14 @@ function mountDigitalArtistBrushPanel(){
     },
     paintStroke:async(target,command)=>{
      const surface=await rasterSurfaces.get(target);
-     const mapped=mapPointsToRaster(command.points,WIDTH,HEIGHT,target.width,target.height,command.options.size);
-     const result=drawRasterBrushStroke(surface.context,mapped.points,{...command.options,size:mapped.size});
+     const mapped=mapPointsToRaster(command.points,WIDTH,HEIGHT,target.width,target.height,command.options.size??1);
+     const result=command.kind==="raster-region-fill"
+      ?fillRasterRegion(surface.context,mapped.points,command.options)
+      :drawRasterBrushStroke(surface.context,mapped.points,{...command.options,size:mapped.size});
      target.strokes.push({
-      id:command.strokeId,intent:command.intent,source:"digital-artist",
-      points:command.points.map(point=>({x:point.x,y:point.y,pressure:point.pressure})),
-      options:{...command.options}
+      id:command.strokeId,intent:command.intent,source:"digital-artist",kind:command.kind,
+      points:command.points.map(point=>({x:point.x,y:point.y,pressure:point.pressure??1})),
+      options:{...command.options},review:"pending"
      });
      return result;
     },
