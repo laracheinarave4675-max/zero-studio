@@ -1134,11 +1134,15 @@ async function inspectDigitalArtistEyes(){
    await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر قراءة طبقة "+layer.name));image.src=layer.dataUrl;});
    const width=Number(layer.width)||image.naturalWidth,height=Number(layer.height)||image.naturalHeight;
    if(!width||!height||width*height>8*1024*1024)throw Error("طبقة "+layer.name+" تتجاوز حد الفحص الآمن");
-   const scratch=document.createElement("canvas");scratch.width=width;scratch.height=height;
+   const inspectionScale=Math.min(1,960/width,540/height);
+   const inspectionWidth=Math.max(1,Math.round(width*inspectionScale)),inspectionHeight=Math.max(1,Math.round(height*inspectionScale));
+   const scratch=document.createElement("canvas");scratch.width=inspectionWidth;scratch.height=inspectionHeight;
    const ctx=scratch.getContext("2d",{willReadFrequently:true});
    if(!ctx)throw Error("تعذر إنشاء سطح فحص الطبقة");
-   ctx.drawImage(image,0,0,width,height);
-   const raster=analyzeRasterPixels(ctx.getImageData(0,0,width,height));
+   ctx.drawImage(image,0,0,inspectionWidth,inspectionHeight);
+   const raster=analyzeRasterPixels(ctx.getImageData(0,0,inspectionWidth,inspectionHeight));
+   raster.inspectionScale=inspectionScale;
+   if(raster.bounds)raster.bounds={x:Math.round(raster.bounds.x/inspectionScale),y:Math.round(raster.bounds.y/inspectionScale),width:Math.round(raster.bounds.width/inspectionScale),height:Math.round(raster.bounds.height/inspectionScale)};
    const records=frameRecords.filter(record=>record.layer.id===layer.id);
    const geometries=records.map(record=>analyzeStrokeGeometry(record.stroke));
    const pressureSamples=geometries.filter(item=>item.kind==="brush-stroke"&&item.sampleCount>1);
