@@ -5,6 +5,8 @@ import {
   buildAnimeVisionDrawingBrief,
   validateAnimeVisionReport
 } from "../app/digital-artist-vision-contract.mjs";
+import { buildAnimeVisionBrushPlan } from "../app/digital-artist-vision-brush-planner.mjs";
+import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
 
 const report = () => ({
   format: ANIME_VISION_REPORT_FORMAT,
@@ -84,8 +86,6 @@ test("rejects oversized observation collections and out-of-canvas region boxes",
   assert.throws(() => validateAnimeVisionReport(region), /fully inside/);
 });
 
-import { buildAnimeVisionBrushPlan } from "../app/digital-artist-vision-brush-planner.mjs";
-import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
 
 test("turns reviewed landmarks and semantic boxes into validated native raster brush commands", () => {
   const value = report();
