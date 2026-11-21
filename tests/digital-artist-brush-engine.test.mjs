@@ -11,11 +11,11 @@ const makePlan = () => ({
     { id: "rough", name: "Gesture and construction", role: "construction", strokes: [
       { id: "s1", intent: "Establish the head gesture.", brush: "graphite", color: "#777777", size: 9, texture: 0.7, points: [{x:620,y:190,pressure:.25},{x:665,y:160,pressure:.8},{x:720,y:185,pressure:.4}] }
     ]},
-    { id: "ink", name: "Clean ink", role: "clean-line", strokes: [
-      { id: "s2", intent: "Ink the jaw contour with tapered pressure.", brush: "ink", color: "#24202a", size: 7, pressureSensitive: true, points: [{x:610,y:250,pressure:.15},{x:640,y:330,pressure:.9},{x:700,y:360,pressure:.2}] }
-    ]},
     { id: "flats", name: "Base colors", role: "flat-color", strokes: [
       { id: "s3", intent: "Paint a soft skin base mark.", brush: "gouache", color: "#e8c2ae", size: 24, opacity: .8, texture: .3, points: [{x:650,y:270,pressure:.6},{x:680,y:285,pressure:.9}] }
+    ]},
+    { id: "ink", name: "Clean ink", role: "clean-line", strokes: [
+      { id: "s2", intent: "Ink the jaw contour with tapered pressure.", brush: "ink", color: "#24202a", size: 7, pressureSensitive: true, points: [{x:610,y:250,pressure:.15},{x:640,y:330,pressure:.9},{x:700,y:360,pressure:.2}] }
     ]}
   ]
 });
@@ -24,7 +24,7 @@ test("validates semantic raster brush layers and pressure samples", () => {
   const plan = validateDigitalArtistBrushPlan(makePlan());
   assert.equal(plan.strokeCount, 3);
   assert.equal(plan.authoringMode, "ordered-native-raster-brush-strokes");
-  assert.equal(plan.layers[1].strokes[0].points[1].pressure, .9);
+  assert.equal(plan.layers[2].strokes[0].points[1].pressure, .9);
 });
 
 test("compiles to native raster commands without requiring vector paths", () => {
@@ -32,8 +32,8 @@ test("compiles to native raster commands without requiring vector paths", () => 
   assert.equal(stream.renderer, "native-canvas2d-raster-brush-engine");
   assert.equal(stream.audit.vectorRequired, false);
   assert.equal(stream.audit.nativeRasterBrushes, true);
-  assert.deepEqual(stream.commands.map(item => item.strokeId), ["s1", "s2", "s3"]);
-  assert.equal(getDigitalArtistBrushStep(stream, 1).options.pressureSensitive, true);
+  assert.deepEqual(stream.commands.map(item => item.strokeId), ["s1", "s3", "s2"]);
+  assert.equal(getDigitalArtistBrushStep(stream, 2).options.pressureSensitive, true);
   assert.equal(getDigitalArtistBrushStep(stream, 3), null);
 });
 
