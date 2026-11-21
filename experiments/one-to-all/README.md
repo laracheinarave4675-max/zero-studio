@@ -78,4 +78,4 @@ The script creates:
 
 It deliberately does not interpolate, duplicate, or convert FPS, and labels the package as a motion reference rather than final artwork. The generated MP4 remains separately available at its original path.
 
-Dependencies, if missing in the notebook runtime: `pip install -r experiments/one-to-all/requirements.txt`.
+Dependencies, if missing in the notebook runtime: `pip install -r experiments/one-to-all/requirements.txt`.\n\nRun the packaging tests from the repository root with `python -m unittest discover -s experiments/one-to-all -p 'test_*.py'`. These tests use a synthetic clip and do not claim that One-to-All inference has run.
