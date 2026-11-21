@@ -346,11 +346,11 @@ export function compareAnimeEyeDesign(reference, current, options = {}) {
   const ref = { left: animeEyeMetrics(reference, "left"), right: animeEyeMetrics(reference, "right") };
   const cur = { left: animeEyeMetrics(current, "left"), right: animeEyeMetrics(current, "right") };
   const tolerances = {
-    faceWidth: clamp(Number(options.faceWidthTolerance ?? 0.06), 0.005, 0.3),
-    aspectRatio: clamp(Number(options.aspectRatioTolerance ?? 0.18), 0.01, 1),
-    slant: clamp(Number(options.slantTolerance ?? 0.16), 0.01, 1),
-    irisOffset: clamp(Number(options.irisOffsetTolerance ?? 0.12), 0.01, 0.8),
-    eyeSpacing: clamp(Number(options.eyeSpacingTolerance ?? 0.07), 0.005, 0.3)
+    faceWidth: boundedOption(options, "faceWidthTolerance", 0.06, 0.005, 0.3),
+    aspectRatio: boundedOption(options, "aspectRatioTolerance", 0.18, 0.01, 1),
+    slant: boundedOption(options, "slantTolerance", 0.16, 0.01, 1),
+    irisOffset: boundedOption(options, "irisOffsetTolerance", 0.12, 0.01, 0.8),
+    eyeSpacing: boundedOption(options, "eyeSpacingTolerance", 0.07, 0.005, 0.3)
   };
   const checks = [];
   const add = (id, expected, actual, tolerance, unit) => {
