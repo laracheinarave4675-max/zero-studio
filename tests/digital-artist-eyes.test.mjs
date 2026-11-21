@@ -50,6 +50,23 @@ test("line-art eye preserves compiled command IDs as review references", () => {
   assert.equal(report.id, "artist-raster-face/face-ink-01");
 });
 
+test("line-art eye flags duplicate samples, unstable pressure and zero-length strokes", () => {
+  const duplicate = analyzeStrokeGeometry({
+    id: "bad-ink", points: [
+      {x:10,y:10,pressure:.2},{x:10,y:10,pressure:.9},
+      {x:10.1,y:10.1,pressure:.1},{x:10.2,y:10.2,pressure:.9},
+      {x:10.3,y:10.3,pressure:.1},{x:10.4,y:10.4,pressure:.9}
+    ]
+  });
+  assert.ok(duplicate.segmentQuality.duplicateSegments >= 1);
+  assert.ok(duplicate.warnings.includes("duplicate-consecutive-points"));
+  assert.ok(duplicate.warnings.includes("unstable-pressure"));
+  const emptyMove = analyzeStrokeGeometry({id:"dot",points:[{x:4,y:4,pressure:.5}]});
+  assert.ok(emptyMove.warnings.includes("zero-length-stroke"));
+  const clean = analyzeStrokeGeometry({id:"clean",points:[{x:0,y:0,pressure:.3},{x:10,y:2,pressure:.4},{x:20,y:4,pressure:.5}]});
+  assert.deepEqual(clean.warnings, []);
+});
+
 test("identity eye compares normalized facial and anatomical landmarks", () => {
   const reference = { leftEye: { x: .35, y: .4 }, rightEye: { x: .65, y: .4 }, chin: { x: .5, y: .8 } };
   const same = compareLandmarks(reference, reference);
