@@ -37,13 +37,14 @@ const result=await executeDigitalArtistBrushStream(stream,{
  }
 });
 const raster=analyzeRasterPixels({width,height,data:ctx.getImageData(0,0,width,height).data});
+const fillCount=layerReports.reduce((sum,item)=>sum+item.regionFillCount,0);
 const png=composite.toBuffer("image/png");
 await writeFile(output+"/character-sheet-raster.png",png);
 const report={
  renderer:"ZERO STUDIO native Canvas2D drawRasterBrushStroke + fillRasterRegion",
  sourceReference:{galleryAssetId:"be172712-e073-4d06-9587-eec7e6c62a84",originalSize:"1280x720"},
  sourcePixelsEmbedded:false,imageGenerationUsed:false,modelInferenceUsed:false,
- canvas:{width,height},strokeCount:result.strokeCount,regionFillCount:result.regionFillCount,
+ canvas:{width,height},strokeCount:result.strokeCount,regionFillCount:fillCount,
  layers:layerReports,artistEyes:{raster,strokeGeometry:stream.commands.map(analyzeStrokeGeometry)},
  qualityScope:"Native brush execution and layer geometry verified; visual likeness and exact costume details require human review against the source reference.",
 };
@@ -54,4 +55,4 @@ if(summary){
  const text="# ZERO STUDIO character-sheet brush test\n\n- Reference asset: `be172712-e073-4d06-9587-eec7e6c62a84`\n- Renderer: native Canvas2D raster brushes\n- Strokes: "+result.strokeCount+"\n- Region fills: "+result.regionFillCount+"\n\n| Layer | Role | Strokes | Fills | Painted pixels |\n|---|---|---:|---:|---:|\n"+rows+"\n";
  await (await import("node:fs/promises")).appendFile(summary,text);
 }
-console.log(JSON.stringify({output,strokeCount:result.strokeCount,regionFillCount:result.regionFillCount,layers:layerReports.length},null,2));
+console.log(JSON.stringify({output,strokeCount:result.strokeCount,regionFillCount:fillCount,layers:layerReports.length},null,2));
