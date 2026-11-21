@@ -279,3 +279,35 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 **Implementation:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and app/digital-artist-brush-engine.mjs define the raster-first path. This refinement supersedes the vector-first drawing-hand choice in D-029, while keeping D-029's no-image-generation rule, AI art-director, character memory, anatomy guidance, critique loop, editable steps, $0/Android-first constraints, and unchanged 24 independently authored drawings/second target.
 
 **Acceptance gate:** one complete full-body anime character from a blank canvas, rendered by native pressure-sensitive brush commands into separate raster layers, replayable stroke-by-stroke, with stable reference identity and user-approved visual quality. SVG may be used for invisible guides only. No image/video generation, no hidden flattened generated artwork, no paid compute, no production merge/deployment without approval.
+
+## D-031 — Build the artist's own eyes and anime craft knowledge before external vision dependencies (2026-11-21)
+
+**Decision:** The Digital Artist must become a stronger artist in its own right. A general-purpose external vision-language model is not a prerequisite for seeing, understanding, planning, or drawing. Do not make the artist wait for another AI to tell it what is visible or what to draw.
+
+**The two governing goals remain unchanged:**
+1. Build ZERO STUDIO into a real anime production studio capable of producing a professional animated series.
+2. Build a genuine digital anime artist that authors artwork through editable raster drawing operations, then supports the unchanged goal of 24 independently authored drawings per second.
+
+**The artist's own eyes:** Build a multi-pass internal perception and critique system that can inspect its current canvas, layers, marks and character references at multiple scales. Its specialist "eyes" must cover:
+- silhouette and contour: shape closure, proportions, overlaps, holes, gaps, and region-fill leakage;
+- anatomy and construction: facial landmarks, head/body proportions, pose balance, joint relationships and perspective guides;
+- line art: continuity, taper, pressure hierarchy, wobble, intersections and line cleanliness;
+- color and light: region coverage, palette consistency, flat-color boundaries, cel-shadow shapes, highlights and light direction;
+- character identity: compare approved model-sheet measurements, face/hair/costume landmarks and palette swatches;
+- temporal continuity: later, compare independently drawn frames for identity drift, anatomy jumps and changing design details.
+
+These eyes are measurement and critique tools, not image generators. They may combine deterministic computer vision, geometry, pixel/region analysis, project metadata, and small specialist models that can run within the $0 budget. No single external VLM is required.
+
+**Anime craft knowledge:** Build a structured, searchable anime drawing curriculum and reference library, not a vague prompt or an unlicensed scrape. Teach and evaluate shape language, gesture, anatomy, facial construction, eyes, hair masses and strand grouping, hands, costumes and folds, perspective, inking, brush/line-weight hierarchy, flat-color grouping, cel shading, lighting, material rendering, expressions, model sheets and shot continuity. Each reference should record provenance, permitted use, style/technique labels, drawing stage, and any associated annotated strokes or regions.
+
+**Learning route:** start with user-approved model sheets and examples the project owns or is authorized to use; record authentic process examples as editable operations; create annotations and drawing exercises; train or tune small specialist perception/planning components only when a lawful, suitable dataset and free compute are available. Prefer explicit measurable exercises and feedback over attempting to train a large general model from scratch.
+
+**Data rights:** dataset availability does not equal permission for commercial anime production. Manga109's general collection is restricted to academic non-commercial use; Manga109-s has a separate limited commercial-use grant with conditions and a no-redistribution rule. Every dataset and artwork source must be checked individually before ingestion. Do not use non-commercial datasets for commercial training or outputs.
+
+**Drawing hand:** improve the native raster engine itself—anime-appropriate tapered ink, stable curves, organic hair/cloth brushes, closed region and mask fills, clean flat-color coverage, controlled cel-shadow shapes, highlights, and layer replay/correction. The artist, not an image-generation model, must author every final mark.
+
+**Implementation priority:** 1) develop the native eyes and measurable critique; 2) improve brush, fill, coloring and inking; 3) create the licensed anime reference/learning library and exercises; 4) connect the eyes to the artist's correction loop; 5) evaluate small free specialist models as optional accelerators; 6) only then scale to a complete model-authored character and 24 unique drawings/second.
+
+**Guardrails:** no generated image/video output as final art; no paid inference, GPU, subscriptions, or fallbacks; Android-first; preserve separate editable layers and ordered stroke history; no merge or production deployment without user approval.
+
+**Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and ROADMAP.md.
