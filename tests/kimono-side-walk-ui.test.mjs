@@ -29,6 +29,9 @@ test("the five key poses are mandatory before the walk plan can be built", () =>
   assert.match(app, /KIMONO_WALK_REFERENCE\.keyDrawingFrames\.filter/);
   assert.match(app, /قالب مشي الكيمونو يحتاج اعتماد خمس وضعيات مفتاحية كاملة/);
   assert.match(app, /dna\.lastMotionPreset=activeKimonoWalkChart\?"kimono-side-walk-v2":null/);
+  assert.match(app, /dna\.keyDrawings=\[\{id:uid\("anime-key"\),frame:0/);
+  assert.match(app, /ابدأ اعتماد هوية مشي الكيمونو من الإطار 1/);
+  assert.match(app, /أكمل الإطارات 7 و13 و19 و24/);
   assert.match(app, /dna\.lastMotionPreset===\"kimono-side-walk-v2\"\?createKimonoSideWalkChart\(\):null/);
 });
 
