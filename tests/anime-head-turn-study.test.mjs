@@ -59,7 +59,7 @@ test("plan rejects missing identity, non-24 cadence, invalid angle and incomplet
   assert.throws(() => makePlan({ characterDNAId: "" }), /هوية Character DNA/);
   assert.throws(() => makePlan({ fps: 12 }), /24/);
   assert.throws(() => createAnimeHeadTurnPlan({ characterAssetId: "x", characterDNAId: "dna", keyPoses: [{ ...plan.keyPoses[0] }, { ...plan.keyPoses[1], yawDegrees: 120 }] }), /دوران الرأس/);
-  assert.throws(() => makePlan({ keyPoses: plan.keyPoses.slice(1) }), /الإطارين الأول والأخير/);
+  assert.throws(() => makePlan({ keyPoses: [{ ...plan.keyPoses[0], frame: 1 }, plan.keyPoses[1]] }), /الإطارين الأول والأخير/);
 });
 test("plan rejects changing hair clump identities across poses", () => {
   const plan = makePlan();
