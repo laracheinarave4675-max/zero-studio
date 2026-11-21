@@ -336,3 +336,14 @@ These eyes are measurement and critique tools, not image generators. They may co
 **Drawing output:** All final marks remain editable native Canvas2D raster brush operations on semantic layers. The training module creates no image and cannot substitute generated pictures for the drawing exercise.
 
 **Constraints:** Android-first, $0 budget, rights-cleared references only, no paid fallback, no PR merge or production deployment without explicit user approval.
+
+
+## D-034 — Specialist anime eyes must compare against the character's own model sheet (2026-11-21)
+
+**Decision:** Eye and hair design are style-specific. The artist must preserve the approved character's own eye proportions, slant, iris/pupil placement, spacing, and hair clump flow; do not impose one universal anime template.
+
+**Implementation:** Add geometry comparison functions for normalized approved/current eye landmarks and stable named hair root-tip clumps. Produce specific correction exercises linked to the failed measurement or clump. Surface the comparison in the Arabic artist panel.
+
+**Evidence boundary:** These checks compare supplied/model-reported landmarks; they do not detect landmarks directly from pixels. Hair clump root-tip comparison is not strand segmentation. The results may guide human correction but cannot be used to claim visual understanding or skill mastery until tied to verified reference and current raster evidence.
+
+**Output:** Continue using native editable raster brush strokes for final drawing. Comparison helpers do not generate or edit artwork automatically.
