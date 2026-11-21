@@ -10,6 +10,7 @@ const width=1920,height=1080,output="artifacts/digital-artist-character-sheet-pr
 const plan=createDigitalArtistCharacterSheetPlan();
 const stream=compileDigitalArtistBrushPlan(plan);
 const composite=createCanvas(width,height),ctx=composite.getContext("2d");
+const artistComposite=createCanvas(width,height),artistCtx=artistComposite.getContext("2d");
 ctx.fillStyle="#fffdf9";ctx.fillRect(0,0,width,height);
 const layers=[],layerReports=[];
 await mkdir(output+"/layers",{recursive:true});
@@ -28,7 +29,7 @@ const result=await executeDigitalArtistBrushStream(stream,{
   const c=target.canvas.getContext("2d"),pixels=c.getImageData(0,0,width,height).data;
   let paintedPixels=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]>0)paintedPixels++;
   if(paintedPixels<30)throw new Error("Artist layer rendered too few pixels: "+target.descriptor.id);
-  if(target.descriptor.visible!==false)ctx.drawImage(target.canvas,0,0);
+  if(target.descriptor.visible!==false){ctx.drawImage(target.canvas,0,0);artistCtx.drawImage(target.canvas,0,0);}
   const filename=String(layers.length+1).padStart(2,"0")+"-"+target.descriptor.id+".png";
   await writeFile(output+"/layers/"+filename,target.canvas.toBuffer("image/png"));
   const raster=analyzeRasterPixels({width,height,data:pixels});
@@ -36,7 +37,7 @@ const result=await executeDigitalArtistBrushStream(stream,{
   layers.push(target);
  }
 });
-const raster=analyzeRasterPixels({width,height,data:ctx.getImageData(0,0,width,height).data});
+const raster=analyzeRasterPixels({width,height,data:artistCtx.getImageData(0,0,width,height).data});
 const fillCount=layerReports.reduce((sum,item)=>sum+item.regionFillCount,0);
 const png=composite.toBuffer("image/png");
 await writeFile(output+"/character-sheet-raster.png",png);
