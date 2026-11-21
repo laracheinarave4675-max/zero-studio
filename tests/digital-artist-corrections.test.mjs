@@ -83,3 +83,37 @@ test("editor inspection imports and displays the correction plan", async () => {
   assert.match(app, /اقتراحات التصحيح/);
   assert.match(app, /لا تعدّل الرسم أو تعتمد الضربات تلقائياً/);
 });
+
+
+test("anime eye geometry failures produce focused eye and gaze practice", () => {
+  const plan = buildArtistCorrectionPlan({
+    animeEyeComparison: {
+      measurementScope: "normalized-approved-landmarks-not-pixel-inference",
+      checks: [
+        {id:"left-iris-x",passed:false},
+        {id:"right-eye-aspect",passed:false},
+        {id:"eye-pair-spacing",passed:true}
+      ]
+    }
+  });
+  assert.equal(plan.summary.total, 2);
+  assert.ok(plan.suggestions.every(item => item.skillId === "anime-eyes-expressions"));
+  assert.equal(plan.suggestions[0].targetMeasurement, "left-iris-x");
+  assert.equal(plan.suggestions[0].autoApplied, false);
+});
+
+test("anime hair-flow failures point to the exact model-sheet clump", () => {
+  const plan = buildArtistCorrectionPlan({
+    animeHairFlowComparison: {
+      measurementScope: "approved-root-tip-landmarks-not-automatic-strand-segmentation",
+      checks: [
+        {id:"bang-2",passed:false,missing:false},
+        {id:"side-3",passed:false,missing:true}
+      ]
+    }
+  });
+  assert.equal(plan.summary.total, 2);
+  assert.ok(plan.suggestions.every(item => item.skillId === "hair-masses"));
+  assert.equal(plan.suggestions[1].severity, "high");
+  assert.equal(plan.suggestions[0].targetMeasurement, "bang-2");
+});
