@@ -849,3 +849,13 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Verified that the app source imports the ledger, all four UI elements exist, and the project normalizer already preserves the artistLearning field. GitHub Actions results for the newest commits were not returned by the connected workflow-run lookup; CI status remains unconfirmed.
 - Physical Android browser testing, model-backed vision inference, and actual artist-quality improvement remain unverified.
 - PR #14 remains draft; no merge or production deployment.
+
+## D-034 imported-ledger integrity and editor consolidation — 2026-11-21
+
+- Consolidated the editor around one learning panel and one assessment-save handler. The current-frame eye report enables the assessment action; the user explicitly selects a skill and saves the attempt.
+- Removed duplicate imports/handlers introduced during integration.
+- Added deep validation for imported assessment entries: unique IDs, known skill IDs, SHA-256 digest format, 3–32 unique boolean checks, and recomputation of score/pass state from the checks. The project normalizer calls this validator, so a hand-edited JSON file cannot claim a mastery score that disagrees with its stored checks.
+- This does not cryptographically prove that the report itself was honestly measured; it prevents simple score tampering and malformed records.
+- Latest code SHA: `02cd7c8633852b92b9f61e792aa29e8024baeaab`. Drawing engine and Hybrid raster/SVG CI runs were queued for this commit; no pass result has been observed yet.
+- PR #14 remains draft; no merge or production deployment.
+
