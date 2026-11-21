@@ -120,8 +120,8 @@ export function buildAnimeConstructionModel({
   ).map(viewPoint);
   const leftEarFar=yaw>0,rightEarFar=yaw<0;
   const ears=[
-    {id:"ear-left",outline:ellipse(viewPoint({x:x+width*.005,y:y+height*.59}).x,y+height*.59,width*.055*(leftEarFar?1-Math.abs(yaw)*.3:1-Math.abs(yaw)*.06),height*.105,24)},
-    {id:"ear-right",outline:ellipse(viewPoint({x:x+width*.995,y:y+height*.59}).x,y+height*.59,width*.055*(rightEarFar?1-Math.abs(yaw)*.3:1-Math.abs(yaw)*.06),height*.105,24)}
+    {id:"ear-left",visible:!(leftEarFar&&Math.abs(yaw)>.78),farSide:leftEarFar,outline:ellipse(viewPoint({x:x+width*.005,y:y+height*.59}).x,y+height*.59,width*.055*(leftEarFar?1-Math.abs(yaw)*.42:1-Math.abs(yaw)*.08),height*.105,24)},
+    {id:"ear-right",visible:!(rightEarFar&&Math.abs(yaw)>.78),farSide:rightEarFar,outline:ellipse(viewPoint({x:x+width*.995,y:y+height*.59}).x,y+height*.59,width*.055*(rightEarFar?1-Math.abs(yaw)*.42:1-Math.abs(yaw)*.08),height*.105,24)}
   ];
   const brows=head.eyes.map((eye,index)=>{
     const b=eye.bounds,cx=eye.center.x,side=index===0?-1:1;
@@ -182,5 +182,5 @@ export function auditAnimeConstructionModel(model) {
   if((model.folds??[]).length<3)findings.push({severity:"warning",code:"missing-cloth-tension",message:"Cloth fold anchors are insufficient."});
   if(!finitePoint(model.shadows?.light)||Math.abs(Math.hypot(model.shadows.light.x,model.shadows.light.y)-1)>.001)findings.push({severity:"error",code:"invalid-light-vector",message:"Light direction must be normalized."});
   const errors=findings.filter(item=>item.severity==="error").length;
-  return {valid:errors===0,errors,warnings:findings.filter(item=>item.severity==="warning").length,findings,checks:{headDerivedFromBounds:!!model.head?.derivedFromHeadBounds,eyeSystems:model.eyes?.length??0,hairClumps:model.hair?.length??0,clothAnchors:model.folds?.length??0,lightDeclared:!!model.shadows?.light,visualQualityMeasured:false,semanticRecognitionPerformed:false}};
+  return {valid:errors===0,errors,warnings:findings.filter(item=>item.severity==="warning").length,findings,checks:{headDerivedFromBounds:!!model.head?.derivedFromHeadBounds,yawProjectionPresent:!!model.head?.planes?.noseProjection&&Array.isArray(model.head?.silhouette),eyeSystems:model.eyes?.length??0,hairClumps:model.hair?.length??0,clothAnchors:model.folds?.length??0,lightDeclared:!!model.shadows?.light,visualQualityMeasured:false,semanticRecognitionPerformed:false}};
 }
