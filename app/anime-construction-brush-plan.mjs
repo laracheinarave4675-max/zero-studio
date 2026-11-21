@@ -52,7 +52,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
         stroke(eye.id+"-upper-lid","Ink the expressive upper eyelid with stronger line weight.","ink","#2b2635",7,eye.upperLid),
         stroke(eye.id+"-upper-crease","Add the upper eyelid crease to establish the eye socket.","ink","#806d79",2.1,eye.upperCrease,{opacity:.68}),
         stroke(eye.id+"-lower-lid","Ink the lighter lower eyelid.","ink","#66566a",3,eye.lowerLid),
-        ...eye.lashFan.map((lash,index)=>stroke(eye.id+"-outer-lash-"+index,"Fan a tapered lash from the outer eye corner.","ink","#2b2635",2.6,[lash.from,lash.to])),
+        ...eye.lashFan.map((lash,index)=>stroke(eye.id+(index===0?"-outer-lashes":"-outer-lash-"+index),"Fan a tapered lash from the outer eye corner.","ink","#2b2635",2.6,[lash.from,lash.to])),
         stroke(eye.id+"-inner-lashes","Add a short inner lash accent.","ink","#2b2635",2.5,[right,{x:right.x+.014,y:right.y-.02}])
       ];
     }),
