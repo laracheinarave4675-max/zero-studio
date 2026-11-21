@@ -482,3 +482,31 @@ test("FLUX.2 rejects invalid semantic reference roles without inference", async 
   assert.equal((await response.json()).error, "invalid_reference_roles");
   assert.equal(calls, 0);
 });
+
+test("automated anime drawing refuses inference until the Worker free-only setting is confirmed", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "one anime walk drawing",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    workload: "anime-auto-drawing"
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "anime_free_tier_not_confirmed");
+  assert.equal(calls, 0);
+});
+
+test("automated anime drawing can use inference only when the free-only setting is explicitly enabled", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "one anime walk drawing",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    workload: "anime-auto-drawing"
+  }), {
+    ...env(async () => { calls++; return { image: "iVBORw0KGgo=" }; }),
+    ANIME_AI_FREE_TIER_CONFIRMED: "true"
+  });
+  assert.equal(response.status, 200);
+  assert.equal(calls, 1);
+});
