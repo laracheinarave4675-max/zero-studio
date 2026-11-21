@@ -942,3 +942,16 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - The stroke-geometry report has zero warnings after replacing intentional one-point flower dots with short editable strokes. Transparent character alpha coverage is 25.95% of the 1920×1080 canvas.
 - Verified commit `22f8c31a4941ba4ae9f93070f615e29663a10c2e`: Drawing engine run #2787 and Hybrid raster/SVG run #826 both passed. The character-sheet proof artifact was uploaded by the Hybrid workflow.
 - This is a CI/engine execution proof, not yet an Android in-app drawing acceptance test. The preview URL and production Worker were not changed by this pass; PR #14 remains Draft and unmerged.
+
+
+
+## Construction-driven anime artist and three-view geometry — 2026-11-21
+
+- Added a parameterized construction model for head axes, yaw-aware eye scale, seven editable root-to-tip hair clumps, ears, neck/torso masses, garment fold anchors and declared lighting.
+- Connected the model to the validated native Canvas2D brush pipeline. The generated plan now includes face/ear/hair fills, eye sclera/iris/pupil/catchlights, lids/lashes/brows, nose/mouth, collar seam, hair-flow ink, sheen accents and a clipped cheek/jaw shadow.
+- Fixed measured geometry defects found by CI: the default eye aspect ratio did not meet the expressive-eye target; torso control points escaped the 1920×1080 canvas; the construction artist also had a duplicate helper declaration. These were corrected at source, not by weakening the assertions.
+- Added view-dependent compression for the far cheek/jaw, hair masses and ears, plus explicit near/far eye classification. A three-view renderer now exports left three-quarter, front and right three-quarter studies from one style profile and shared hair-clump IDs.
+- Verified head `8fd924660a8cbd5a3055ae838eea492e5f0e7f09`: Drawing engine run #2959 and Hybrid raster/SVG run #997 completed successfully; both test jobs reported **469/469 passing, 0 failing**. The hybrid job rendered and uploaded both the construction study and the three-view continuity sheet.
+- Visual review confirms the three-quarter face silhouette now changes rather than only shifting facial landmarks. However, the output remains a geometry study, not professional anime acceptance: skull depth, ear placement, hair overlap/negative spaces, torso anatomy and stylistic expressiveness still need refinement.
+- Vercel preview deployment is currently blocked by its reported free build-rate limit. No production deployment, Worker change or PR merge was made. PR #14 remains Draft.
+- The user's gallery character remains excluded from this general baseline until the user accepts its visual quality.
