@@ -746,3 +746,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Branch `feat/digital-artist-engine` at `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d` passed 381/381 Node tests. Drawing engine runs #2490 and #2491 succeeded; Hybrid raster/SVG run #659 succeeded, including the Canvas2D portrait renderer and artifact upload.
 - The existing eye panel still measures pixels, stroke geometry, region fills and approved anatomy guides. This update does not claim neural vision, automatic facial landmark extraction, model training, or professional visual acceptance.
 - PR #14 remains Draft and unmerged. No production deployment; $0 budget maintained.
+
+
+## Vision-to-drawing integration boundary — 2026-11-21
+
+- Added `app/digital-artist-vision-contract.mjs`: strict provider-neutral validation for SHA-256-bound character references, subject/style/composition, normalized landmarks, bounded semantic regions, palette swatches, identity locks, and per-observation confidence.
+- Added a drawing brief adapter that separates trusted observations from a human review queue. It deliberately creates no strokes and accepts no image payloads.
+- Added regression cases for coordinate bounds, invalid digests/colors, duplicate IDs, low-confidence observations, control-character sanitization, and collection limits. The Drawing engine workflow now syntax-checks this module and runs the full `tests/*.test.mjs` suite.
+- A live Qwen2.5-VL-3B-Instruct provider smoke test was attempted through the connected Hugging Face account. The provider returned HTTP 402 Payment Required. No inference ran and no image was analyzed. Do not retry this paid provider path under the project's hard $0 budget.
+- SmolVLM-256M-Instruct remains a candidate for a genuinely free local/browser or public Space route, but no successful inference is claimed.
+- Next: identify a zero-cost, no-card vision route; run it on an approved character reference; validate its structured observations; then implement a separate geometry planner that produces only native Canvas2D brush commands. Human review remains mandatory.
+- No production Worker changes, no paid fallback, no PR merge, and no production deployment.
