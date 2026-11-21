@@ -108,7 +108,8 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("hair-ribbon-left","Paint a long curved reflected ribbon clipped to the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2,clipPolygon:leftHairClip}),
       line("hair-ribbon-mid","Paint a fine highlight following the crown without crossing the face.","gouache","#9c8da9",8,join(bezier([900,125],[850,155],[820,195],[800,235],14)),{opacity:.62,texture:.18}),
       line("hair-ribbon-right","Paint a tapered highlight clipped to the right hair mass.","gouache","#81768f",11,join(bezier([1240,320],[1270,500],[1260,720],[1210,870],16)),{opacity:.62,texture:.2,clipPolygon:rightHairClip}),
-      line("hair-strands-left","Add fine directional strands inside the left hair mass.","ink","#554b65",2,join(bezier([675,430],[655,570],[685,730],[750,865],14)),{opacity:.65,clipPolygon:leftHairClip}),\n      line("hair-strands-right","Add fine directional strands inside the right hair mass.","ink","#554b65",2,join(bezier([1240,430],[1280,580],[1260,740],[1200,865],14)),{opacity:.65,clipPolygon:rightHairClip})
+      line("hair-strands-left","Add fine directional strands inside the left hair mass.","ink","#554b65",2,join(bezier([675,430],[655,570],[685,730],[750,865],14)),{opacity:.65,clipPolygon:leftHairClip}),
+      line("hair-strands-right","Add fine directional strands inside the right hair mass.","ink","#554b65",2,join(bezier([1240,430],[1280,580],[1260,740],[1200,865],14)),{opacity:.65,clipPolygon:rightHairClip})
     ]},
     {id:"fabric-folds",name:"09 Fabric folds and finish",role:"detail",strokes:[
       line("fold-left-1","Describe the left sleeve fold with a tapered line.","ink","#887a9d",3,[[680,900],[735,940],[770,990]]),
