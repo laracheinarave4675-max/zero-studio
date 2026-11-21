@@ -10,12 +10,16 @@ test("Digital Artist exposes individual operation preview and review controls", 
   for (const id of [
     "digitalArtistStrokeSelect", "digitalArtistStrokePreview", "digitalArtistStrokeDetails",
     "digitalArtistStrokePrevBtn", "digitalArtistStrokeNextBtn",
-    "digitalArtistStrokeApproveBtn", "digitalArtistStrokeRejectBtn", "digitalArtistStrokeResetBtn"
+    "digitalArtistStrokeApproveBtn", "digitalArtistStrokeRejectBtn", "digitalArtistStrokeResetBtn",
+    "digitalArtistStrokeEditInput", "digitalArtistStrokeApplyEditBtn"
   ]) assert.match(html, new RegExp('id="' + id + '"'));
   assert.match(app, /function collectDigitalArtistStrokeRecords\(/);
   assert.match(app, /function renderDigitalArtistStrokePreview\(/);
   assert.match(app, /fillRasterRegion\(ctx,mapped,record\.stroke\.options/);
   assert.match(app, /setDigitalArtistStrokeReview\("approved"\)/);
   assert.match(app, /setDigitalArtistStrokeReview\("rejected"\)/);
+  assert.match(app, /validateDigitalArtistStrokeEdit\(record\.stroke,edit\)/);
+  assert.match(app, /rebuildDigitalArtistRasterLayerDataUrl\(record\.layer,nextStrokes\)/);
+  assert.match(app, /applyDigitalArtistStrokeCorrection\(\)/);
   assert.match(app, /renderDigitalArtistStrokeReview\(\)/);
 });
