@@ -159,3 +159,93 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests on the user's Android device.
 
 The previous per-frame image-generation request route is legacy-only and not an accepted animation method. See docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. Passing unit tests does not equal visual acceptance.
+
+## Digital Artist track — D-029 (approved 2026-11-21)
+
+The new primary character-art direction is an AI digital artist that draws through ordered editable strokes and paths, not image generation. See docs/DIGITAL_ARTIST_ARCHITECTURE.md.
+
+- [x] Approve the Digital Artist architecture and record D-029.
+- [x] Define a versioned, provider-neutral plan schema with semantic art stages and individual stroke/tool/intent metadata.
+- [x] Validate SVG operations, bounds, IDs, layer sequence and reject embedded raster/image payloads.
+- [x] Compile plans into editable semantic vector layers and replayable one-stroke steps.
+- [x] Pass the Digital Artist module and regression tests in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
+- [ ] Connect a vision-capable model planner to produce validated stroke plans from a brief plus approved character reference, without image-generation output.
+- [ ] Integrate individual-stroke replay/scrubbing, correction, layer preview, approval/rejection and commit into the Android workspace.
+- [ ] Produce one complete full-body character from a blank canvas; inspect the editable paths and visual quality against the approved model sheet.
+- [ ] Add visual critique that edits existing vector paths instead of regenerating an image.
+- [ ] Collect permitted drawing-process examples and reviewed corrections for supervised/tool-use improvement; do not begin large-scale RL without process data and a reliable evaluator.
+- [ ] Only after the still passes visual review, extend the same artist to independently authored animation drawings at the unchanged 24 drawings/second target.
+
+**Non-claims:** the schema and unit tests do not prove autonomous drawing, professional anime quality, or visual identity retention. No image/video generation is permitted in the final-art authoring path.
+
+
+
+## D-030 correction — Raster-first Digital Artist (2026-11-21)
+
+This supersedes the vector-first character-art choice in D-029. The character Digital Artist uses native pressure-sensitive Canvas2D raster brush strokes on separate layers as its primary drawing medium. SVG is optional for construction guides, skeletons, simple masks, and selected geometry; it is not required for final line art, flats, shadows, or details.
+
+- [x] Confirm and document the existing raster brush and persistent raster-surface engines as the primary drawing hand.
+- [x] Add a versioned raster brush-plan contract with semantic layers, per-point pressure, brush profile, size, color, opacity, texture, blend mode, seed, intent and replay order.
+- [x] Compile plans into native raster brush commands with `vectorRequired: false`.
+- [x] Add unit tests for the raster-first command contract and validation.
+- [x] Verify the raster command contract and regression suite in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
+- [x] Add an executor adapter that paints compiled commands into native transparent raster layers, preserves stroke IDs/intents/source/points/options, finalizes layers, and rolls back failed runs.
+- [x] Integrate a minimal Digital Artist panel into the editor to load a brush plan, execute it with progress, and create separate raster layers.
+- [x] Add a deterministic 56-operation / 7-layer portrait fixture to exercise the editor execution path; this is a test fixture, not an AI-authored drawing.
+- [x] Add tests for command ordering, layer finalization, rollback, malformed stream rejection, and native project stroke-history compatibility.
+- [x] Export a reproducible 56-operation / 7-layer Canvas2D proof image and separate transparent layer PNGs in GitHub Actions.
+- [x] Visually inspect the deterministic proof; record the banded flat-color result as a known quality defect rather than claiming artistic acceptance.
+- [x] Add closed polygon region-fill operations in the validated brush plan and native Canvas2D executor.
+- [x] Replace the demo flat-color bands with 14 closed semantic fills and add in-bounds/out-of-bounds pixel probes to the CI render.
+- [x] Visually inspect the latest render and confirm the broad horizontal flat-color bands are gone; record remaining silhouette/line-art defects.
+- [ ] Build the artist’s internal multi-eye perception passes (silhouette/contours, anatomy/construction, line-art quality, color/light, character identity); reports must identify pixel regions, affected layers/stroke IDs and correction targets. External VLMs are optional second opinions, not runtime prerequisites.
+- [x] Add per-operation selection, isolated preview, previous/next navigation, approve/reject/reset review controls, and persistent review state.
+- [x] Add validated per-operation point/pressure/brush-style correction, replay the full ordered raster layer from a scratch surface, commit atomically, refuse locked layers, and reset edited marks to pending review.
+- [ ] Improve the native anime drawing hand: stable tapered inking, speed/pressure response, organic hair/cloth brushes, cleaner boundary fills, cel-shadow masks and controlled highlights.
+- [ ] Build the authorized Anime Craft Library: model sheets, construction examples, line-art examples, color/shadow studies, stage annotations and stroke-process examples with provenance and usage rights.
+- [ ] Add measurable anime drawing exercises for eyes/heads/expressions, hair masses, anatomy/poses, hands/costume folds, perspective, inking/taper, flat colors and cel shading.
+- [ ] Connect perception reports to the existing correction/replay loop and measure before/after quality improvements on the same reference task.
+- [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
+- [ ] Run the fixture in a real browser, inspect its rendered output, then produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
+- [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
+
+**Important:** The older D-029 vector command contract remains optional infrastructure for geometric guides and selected contours. It is not the acceptance route for final anime character art. No generated image/video, no paid compute, no merge/deploy without user approval.
+
+## D-031 — Artist-owned perception and anime craft learning (2026-11-21)
+
+The two governing goals remain: build a real anime production studio, and build its own digital artist that draws editable native marks and ultimately authors 24 independent drawings per second. The artist must have its own internal eyes and learn anime drawing craft; an external vision-language model is optional and never a required dependency.
+
+**Implementation order:** internal silhouette/anatomy/line/color/identity analysis → strengthen brushes, fills, inking, cel shading and highlights → create a rights-cleared anime model-sheet and craft library → connect visual critique to stroke correction/replay → produce and review one complete original character → evaluate the 24-independent-drawings/second animation path.
+
+**Initial implementation delivered — 2026-11-21**
+- [x] Add deterministic raster eyes for visible bounds, alpha coverage, centroid, perimeter and dominant palette.
+- [x] Add stroke-geometry inspection for sample count, length, bounds, pressure range and sharp turns.
+- [x] Add named landmark and named palette comparison primitives for later model-sheet identity checks.
+- [x] Add actual region-fill pixel sampling for interior coverage and outside leakage.
+- [x] Connect a local eyes report to the editor's current-frame Digital Artist layers, including layer coverage, palette, operation review state and fill checks.
+- [x] Add a 15-skill anime craft curriculum with staged prerequisites, lessons, practical exercises and evaluation metrics.
+- [x] Add reference provenance/rights validation for study, training and commercial-production purposes, plus native-raster-only practice tasks and an editor curriculum browser.
+- [x] Verify the first eyes/curriculum milestone: HEAD 536ee9b49b989fbd5770fea66cadbb0252d80fe6 passed 376/376 tests in both Drawing engine run #2449 and Hybrid raster/SVG run #639; raster proof/export jobs passed.
+
+**Still pending**
+- [ ] Connect landmark and palette comparisons to the actual approved Character DNA/model-sheet data.
+- [ ] Extend the eyes from metrics to specific visual diagnosis: anatomy, contour defects, line continuity/taper, shadow/light direction and corrective coordinates.
+- [ ] Populate the authorized Anime Craft Library with real approved examples, annotated model sheets and legally usable process examples. The curriculum catalog alone is not training data.
+- [ ] Let the artist execute curriculum tasks, store its authored stroke logs, compare results and learn only from reviewed/approved corrections.
+- [ ] Improve native brush and paint quality, then demonstrate a complete visually reviewed original anime character.
+
+
+Data acquisition must be rights-aware: record provenance and permitted use for every reference. Manga109 general data is academic non-commercial; Manga109-s has a separate limited commercial-use permission with restrictions. Do not use a non-commercial dataset for commercial learning/output.
+
+
+**Contour-aware vision bridge — implementation started 2026-11-21**
+- [x] Accept optional normalized polygon contours in vision region observations.
+- [x] Reject degenerate, repeated-point, out-of-box and self-crossing contours.
+- [x] Prefer reviewed contour polygons over rectangular bounds when creating native raster fill commands.
+- [x] Update the browser vision prompt to request organic character-part outlines.
+- [x] Add focused regression tests for contour conversion and compatibility fallback.
+- [x] Run the new tests and full project suites on the corrected latest code head; Drawing engine 402/402 and Hybrid raster/SVG plus raster proof all passed (runs 44942052300 and 44942052319).
+- [ ] Inspect a real model-authored contour report against an uploaded character reference and correct contour accuracy before approving fills.
+- [ ] Replace point-estimated contours with segmentation/mask-derived boundaries if the small VLM cannot produce reliable outlines.
+
+- [ ] Publish a non-production preview from the corrected head so the new contour prompt and review UI can be checked in a browser.
