@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createArtistLearningRecord, recordArtistAssessment,
-  evaluateArtistSkillProgress, recommendNextArtistPractice
+  evaluateArtistSkillProgress, recommendNextArtistPractice, validateArtistLearningRecord
 } from "../app/digital-artist-learning.mjs";
 
 const digest = "a".repeat(64);
@@ -68,4 +68,14 @@ test("editor connects project-persisted assessments to measured inspection repor
   assert.match(html, /recordDigitalArtistAssessmentBtn/);
   assert.match(html, /digitalArtistLearningSummary/);
   assert.match(html, /digitalArtistLearningHistory/);
+});
+
+test("persisted evidence cannot claim a score that disagrees with its checks", () => {
+  const record = createArtistLearningRecord();
+  add(record,"tamper-check","gesture-silhouette",6);
+  const tampered = structuredClone(record);
+  tampered.attempts[0].score = 1;
+  tampered.attempts[0].passed = true;
+  assert.throws(() => validateArtistLearningRecord(tampered), /does not match/);
+  assert.equal(validateArtistLearningRecord(record).attempts.length,1);
 });
