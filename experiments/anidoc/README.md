@@ -41,3 +41,13 @@ A real test is only accepted when all of the following are recorded:
 - visual review of all output frames for identity drift, anatomy, costume continuity, and temporal artifacts.
 
 A passing preflight is not an animation result. Nothing in this experiment changes production or merges into the studio branch.
+
+## Free-GPU route to investigate (not yet an inference result)
+
+The first practical candidate is a Kaggle Notebook with the T4x2 accelerator. Kaggle's November 2026 staff announcement says each T4x2 has two 16 GB GPUs and that it remains the accelerator after the P100 retirement. Free accelerator capacity can be queued and the available weekly quota is floating, so the account must be checked at run time. Importantly, the upstream AniDoc launcher sets `CUDA_VISIBLE_DEVICES=0`; it will use one 16 GB card unless the launcher is deliberately changed and multi-GPU behavior is validated. The reported ~14 GB requirement leaves little headroom on a 16 GB card.
+
+A free Google Colab notebook is a fallback only: Google states that free GPU availability and usage limits are dynamic and not guaranteed.
+
+Storage is another gating item. The linked Hugging Face repositories currently list approximately 32.6 GB for Stable Video Diffusion XT, 8.83 GB for AniDoc, and 204 MB for CoTracker. These repository totals can include alternate precision variants; the exact minimal files required by the upstream loader must be confirmed before downloading. Kaggle documents a 20 GB auto-saved working disk plus separate session scratch space, so a full unfiltered snapshot should not be downloaded blindly.
+
+No Kaggle or Colab inference has been run from this repository. The next accepted milestone is a user-authorized Kaggle/Colab session that confirms GPU model, free VRAM, disk capacity, Python compatibility, and required checkpoint files before any model download or inference.
