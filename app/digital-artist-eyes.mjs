@@ -111,23 +111,29 @@ export function analyzeStrokeGeometry(stroke) {
 export function compareLandmarks(reference, current, options = {}) {
   if (!reference || !current || typeof reference !== "object" || typeof current !== "object") fail("Two landmark maps are required.");
   const tolerance = Number.isFinite(Number(options.tolerance)) ? clamp(Number(options.tolerance), 0, 1) : 0.025;
-  const names = Object.keys(reference).filter(name => current[name]);
-  if (!names.length) fail("No corresponding named landmarks were found.");
+  const names = Object.keys(reference);
+  if (!names.length) fail("The approved reference has no named landmarks.");
   const measurements = names.map(name => {
     const a = reference[name], b = current[name];
-    if (![a?.x, a?.y, b?.x, b?.y].every(value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)) {
-      fail("Landmark " + name + " must use normalized coordinates from 0 to 1.");
+    if (![a?.x, a?.y].every(value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)) {
+      fail("Reference landmark " + name + " must use normalized coordinates from 0 to 1.");
+    }
+    if (!b) return { name, deviation: null, withinTolerance: false, missing: true };
+    if (![b?.x, b?.y].every(value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)) {
+      fail("Current landmark " + name + " must use normalized coordinates from 0 to 1.");
     }
     const delta = distance({ x: Number(a.x), y: Number(a.y) }, { x: Number(b.x), y: Number(b.y) });
-    return { name, deviation: delta, withinTolerance: delta <= tolerance };
+    return { name, deviation: delta, withinTolerance: delta <= tolerance, missing: false };
   });
-  const mean = measurements.reduce((sum, item) => sum + item.deviation, 0) / measurements.length;
+  const measured = measurements.filter(item => Number.isFinite(item.deviation));
+  const missing = measurements.filter(item => item.missing).map(item => item.name);
+  const mean = measured.length ? measured.reduce((sum, item) => sum + item.deviation, 0) / measured.length : null;
   return {
-    compared: measurements.length,
+    compared: measured.length, missing,
     meanDeviation: mean,
-    maxDeviation: Math.max(...measurements.map(item => item.deviation)),
+    maxDeviation: measured.length ? Math.max(...measured.map(item => item.deviation)) : null,
     tolerance,
-    passed: measurements.every(item => item.withinTolerance),
+    passed: missing.length === 0 && measured.length > 0 && measurements.every(item => item.withinTolerance),
     measurements
   };
 }
@@ -188,19 +194,23 @@ export function compareAnatomyGuideToDNA(dna, guide, options = {}) {
 export function comparePalette(reference, current, options = {}) {
   if (!reference || !current || typeof reference !== "object" || typeof current !== "object") fail("Two named palettes are required.");
   const tolerance = Number.isFinite(Number(options.tolerance)) ? clamp(Number(options.tolerance), 0, 441.7) : 32;
-  const names = Object.keys(reference).filter(name => current[name]);
-  if (!names.length) fail("No corresponding named palette swatches were found.");
+  const names = Object.keys(reference);
+  if (!names.length) fail("The approved reference has no named palette swatches.");
   const swatches = names.map(name => {
-    const a = hexToRgb(reference[name]), b = hexToRgb(current[name]);
+    const a = hexToRgb(reference[name]);
+    if (!current[name]) return { name, distance: null, passed: false, missing: true };
+    const b = hexToRgb(current[name]);
     const delta = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-    return { name, distance: delta, passed: delta <= tolerance };
+    return { name, distance: delta, passed: delta <= tolerance, missing: false };
   });
+  const measured = swatches.filter(item => Number.isFinite(item.distance));
+  const missing = swatches.filter(item => item.missing).map(item => item.name);
   return {
-    compared: swatches.length,
-    meanDistance: swatches.reduce((sum, item) => sum + item.distance, 0) / swatches.length,
-    maxDistance: Math.max(...swatches.map(item => item.distance)),
+    compared: measured.length, missing,
+    meanDistance: measured.length ? measured.reduce((sum, item) => sum + item.distance, 0) / measured.length : null,
+    maxDistance: measured.length ? Math.max(...measured.map(item => item.distance)) : null,
     tolerance,
-    passed: swatches.every(item => item.passed),
+    passed: missing.length === 0 && measured.length > 0 && swatches.every(item => item.passed),
     swatches
   };
 }
