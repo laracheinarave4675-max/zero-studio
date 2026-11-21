@@ -1,7 +1,8 @@
 import {mkdir,writeFile} from "node:fs/promises";
 import {createCanvas} from "@napi-rs/canvas";
 import {buildAnimeConstructionModel,auditAnimeConstructionModel} from "../app/anime-construction-artist.mjs";
-import {buildAnimeConstructionBrushPlan,compileAnimeConstructionBrushPlan} from "../app/anime-construction-brush-plan.mjs";
+import {buildAnimeConstructionBrushPlan} from "../app/anime-construction-brush-plan.mjs";
+import {compileDigitalArtistBrushPlan} from "../app/digital-artist-brush-engine.mjs";
 import {executeDigitalArtistBrushStream} from "../app/digital-artist-brush-executor.mjs";
 import {drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster} from "../app/raster-brushes.mjs";
 
@@ -18,7 +19,7 @@ for(const view of views){
  const backgroundLayer=plan.layers.find(layer=>layer.id==="flats");
  backgroundLayer.strokes=backgroundLayer.strokes.filter(stroke=>stroke.id!=="background-field");
  const panel=createCanvas(width,height),panelCtx=panel.getContext("2d");
- const stream=compileAnimeConstructionBrushPlan(model);
+ const stream=compileDigitalArtistBrushPlan(plan);
  const result=await executeDigitalArtistBrushStream(stream,{
   createLayer:async descriptor=>{const canvas=createCanvas(width,height);return{descriptor,canvas,context:canvas.getContext("2d")};},
   paintStroke:async(target,command)=>{
