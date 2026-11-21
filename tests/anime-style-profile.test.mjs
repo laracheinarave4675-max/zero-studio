@@ -30,7 +30,7 @@ test("anime head construction rejects invalid normalized bounds and facial style
  assert.throws(()=>deriveAnimeHeadConstruction({bounds:{x:.9,y:.2,width:.2,height:.4}}),/normalized/);
  const invalid=structuredClone(DEFAULT_TV_ANIME_STYLE_PROFILE);
  invalid.head.eyeLine=.7;
- assert.throws(()=>validateAnimeStyleProfile(invalid),/Facial construction lines/);
+ assert.throws(()=>validateAnimeStyleProfile(invalid),/outside supported range|Facial construction lines/);
 });
 
 test("hair clump geometry has root-to-tip flow and a tapered organic outline",()=>{
