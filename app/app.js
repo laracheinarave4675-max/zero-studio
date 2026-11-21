@@ -1076,12 +1076,33 @@ async function recordLatestDigitalArtistAssessment(){
  const select=$("animeArtistSkillSelect"),skillId=select?.value;
  if(!skillId)throw Error("اختر مهارة من منهج الأنمي أولاً.");
  const report=latestDigitalArtistInspection;
- const checks=[
-  {id:"visible-raster-output",passed:report.analyzedLayers>0&&report.visiblePixels>0},
-  {id:"region-fill-quality",passed:report.fillEyes.length>0&&report.fillEyes.every(item=>item.passed===true)},
-  {id:"stroke-geometry-quality",passed:report.strokeWarnings.length===0},
-  {id:"anatomy-reference-check",passed:!!report.characterIdentity?.anatomy&&!report.characterIdentity.anatomy.skipped&&report.characterIdentity.anatomy.passed===true}
- ];
+ const anatomy=report.characterIdentity?.anatomy;
+ let checks;
+ if(skillId==="head-and-face"||skillId==="body-anatomy"){
+  if(!anatomy||anatomy.skipped||!Array.isArray(anatomy.measurements)||anatomy.measurements.length<3)throw Error("هذه المهارة تحتاج مقارنة تشريحية فعلية مع Character DNA وقياس ثلاثة معالم على الأقل؛ لم يتوفر ذلك في هذا الفحص.");
+  checks=[
+   {id:"anatomy-reference-available",passed:true},
+   {id:"anatomy-measurements-present",passed:anatomy.measurements.length>=3},
+   {id:"anatomy-all-measurements-within-tolerance",passed:anatomy.passed===true&&anatomy.measurements.every(item=>item.passed===true)}
+  ];
+ }else if(skillId==="anime-inking"){
+  const lineLayers=report.layerEyes.filter(item=>item.averageStrokeLength!==null&&item.averageStrokeLength!==undefined);
+  if(!report.operations||!lineLayers.length)throw Error("هذه المهارة تحتاج عمليات خطوط قابلة للقياس في الفحص الحالي.");
+  checks=[
+   {id:"line-operations-present",passed:report.operationKinds.brushes>0},
+   {id:"line-geometry-warnings",passed:report.strokeWarnings.length===0},
+   {id:"line-measurable-paths",passed:lineLayers.every(item=>Number.isFinite(item.averageStrokeLength)&&item.averageStrokeLength>0)}
+  ];
+ }else if(skillId==="flat-color-groups"){
+  if(!report.fillEyes.length)throw Error("هذه المهارة تحتاج مناطق تعبئة Raster مفحوصة؛ لا توجد مناطق في التقرير الحالي.");
+  checks=[
+   {id:"fill-regions-present",passed:report.fillEyes.length>0},
+   {id:"fill-interior-coverage",passed:report.fillEyes.every(item=>item.passed===true&&item.insideCoverage>=0.9)},
+   {id:"fill-outside-leakage",passed:report.fillEyes.every(item=>item.passed===true&&item.outsideLeakage<=0.02)}
+  ];
+ }else{
+  throw Error("لم نربط هذه المهارة بعد بمقاييس عين موثوقة. حالياً يمكن تسجيل تقييم الرأس والتشريح والخطوط والتلوين المسطح فقط؛ لن نخترع درجات لبقية المهارات.");
+ }
  const canonical=JSON.stringify({frame:report.frame,operations:report.operations,visiblePixels:report.visiblePixels,fillEyes:report.fillEyes,strokeWarnings:report.strokeWarnings,characterIdentity:report.characterIdentity,layerEyes:report.layerEyes});
  const digestBytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical));
  const reportDigest=Array.from(new Uint8Array(digestBytes),byte=>byte.toString(16).padStart(2,"0")).join("");
