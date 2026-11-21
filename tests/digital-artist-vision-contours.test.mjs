@@ -42,6 +42,12 @@ test("vision contract rejects contours with zero area or repeated adjacent point
   assert.throws(() => validateAnimeVisionReport(report([
     { x: 0.2, y: 0.2 }, { x: 0.2, y: 0.2 }, { x: 0.6, y: 0.6 }
   ])), /duplicate consecutive/);
+  assert.throws(() => validateAnimeVisionReport(report([
+    { x: 0.3, y: 0.2 }, { x: 0.6, y: 0.7 }, { x: 0.3, y: 0.7 }, { x: 0.6, y: 0.2 }
+  ])), /cross itself/);
+  assert.throws(() => validateAnimeVisionReport(report([
+    { x: 0.1, y: 0.2 }, { x: 0.6, y: 0.2 }, { x: 0.6, y: 0.6 }
+  ])), /inside its declared bounding box/);
 });
 
 test("planner maps reviewed contour points to native raster fill coordinates", () => {
