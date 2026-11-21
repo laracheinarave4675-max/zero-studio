@@ -885,3 +885,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Hybrid raster/SVG run #747 passed all 420 Node tests (0 failures); the native five-brush proof and Digital Artist portrait render/artifact upload also succeeded.
 - An earlier run caught a stale reference to a removed assessment button; the obsolete reference was removed before the passing runs.
 - This confirms software contracts and renderer execution only. It does not establish professional anime drawing quality, autonomous neural learning, or Android device acceptance.
+
+### Anime specialist eyes — D-034 (2026-11-21)
+
+- Added `compareAnimeEyeDesign`: compares approved/current normalized landmarks for left/right eye width relative to face width, eye aspect ratio, eye slant, iris offset, pupil offset, approximate iris containment inside the eye outline, and eye-pair spacing.
+- Added `compareAnimeHairFlow`: compares stable named hair clumps by root-to-tip direction and relative length against an approved model sheet; missing and unexpected clumps fail explicitly.
+- Added focused correction rules that turn failed eye checks into eye/gaze exercises and failed hair-clump checks into hair-mass/flow exercises.
+- Connected an Arabic editor panel for supplied reference/current landmark maps. The user can compare eye and optional hair geometry and see linked corrections.
+- Comparison output explicitly identifies its scope: manually/model-reported normalized landmarks, not pixel-based landmark inference or automatic strand segmentation. It does not award mastery.
+- Comparison results are included in the canonical inspection digest. The learning ledger still refuses eye/hair skill scoring until actual raster-linked evidence and trustworthy measurements are available.
+- CI on commit `a19d0b94fcc42910dcb46b60821f4af64fef5a7e` exposed a syntax error in the new tolerance helper. It was corrected in subsequent commits (`f5db0fa`, `730a46e`, `04e09ea`, `8c1da74`). A fresh CI result for the corrected head is not yet available; do not claim it passes.
+- No Android visual test, no autonomous model training, no PR merge, no production deployment, and no production Worker changes.
