@@ -383,6 +383,54 @@ export function compareAnimeEyeDesign(reference, current, options = {}) {
   };
 }
 
+
+/**
+ * Compare anime face proportions to this character's approved model sheet.
+ * All measurements are relative to that reference; no universal face template
+ * and no pixel-based landmark inference are implied.
+ */
+export function compareAnimeFaceDesign(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") {
+    fail("Approved and current anime face landmark maps are required.");
+  }
+  const names = ["faceTop","faceLeft","faceRight","cheekLeft","cheekRight","jawLeft","jawRight","chin","noseTip","mouthCenter","leftEyeCenter","rightEyeCenter","leftBrow","rightBrow"];
+  const ref = Object.fromEntries(names.map(name => [name, animePoint(reference[name], "reference " + name)]));
+  const cur = Object.fromEntries(names.map(name => [name, animePoint(current[name], "current " + name)]));
+  const width = map => map.faceRight.x - map.faceLeft.x;
+  const height = map => map.chin.y - map.faceTop.y;
+  const refWidth = width(ref), curWidth = width(cur), refHeight = height(ref), curHeight = height(cur);
+  if (Math.min(refWidth,curWidth,refHeight,curHeight) < 0.01) fail("Anime face bounds are too small to measure.");
+  const eyeLine = map => (map.leftEyeCenter.y + map.rightEyeCenter.y) / 2;
+  const metric = map => ({
+    faceAspect: height(map) / width(map),
+    cheekWidth: (map.cheekRight.x - map.cheekLeft.x) / width(map),
+    jawWidth: (map.jawRight.x - map.jawLeft.x) / width(map),
+    lowerFace: (map.chin.y - eyeLine(map)) / height(map),
+    noseLevel: (map.noseTip.y - eyeLine(map)) / height(map),
+    mouthLevel: (map.mouthCenter.y - eyeLine(map)) / height(map),
+    mouthToChin: (map.chin.y - map.mouthCenter.y) / height(map),
+    browEyeGap: (eyeLine(map) - (map.leftBrow.y + map.rightBrow.y) / 2) / height(map),
+    eyeSpacing: (map.rightEyeCenter.x - map.leftEyeCenter.x) / width(map)
+  });
+  const expected = metric(ref), actual = metric(cur);
+  const checks = [];
+  const defaults = { faceAspect:0.1, cheekWidth:0.07, jawWidth:0.07, lowerFace:0.07, noseLevel:0.06, mouthLevel:0.06, mouthToChin:0.06, browEyeGap:0.05, eyeSpacing:0.06 };
+  for (const key of Object.keys(defaults)) {
+    const tolerance = boundedOption(options, key + "Tolerance", defaults[key], 0.005, 0.5);
+    const deviation = Math.abs(actual[key] - expected[key]);
+    checks.push({ id:key, expected:expected[key], actual:actual[key], deviation, tolerance, unit:"face-relative-ratio", passed:deviation <= tolerance });
+  }
+  const failed = checks.filter(item => !item.passed);
+  return {
+    format:"zero-studio-anime-face-comparison", version:1,
+    compared:checks.length, passed:failed.length === 0,
+    referenceBounds:{width:refWidth,height:refHeight},
+    currentBounds:{width:curWidth,height:curHeight},
+    checks, failures:failed.map(item=>item.id),
+    measurementScope:"normalized-approved-face-landmarks-not-pixel-inference"
+  };
+}
+
 /**
  * Compare directional hair clumps with a character's approved hair model sheet.
  * Each clump is represented by a root and tip landmark; this is a geometry check,
