@@ -15,37 +15,40 @@ Last updated: 2026-11-21 (UTC)
 - CI now verifies representative pixels inside face, hair, eye-white and clothing polygons and a control pixel outside the silhouette. This guards against accidental flat-color bands and spill at those probe points; it does not prove every region is anatomically perfect.
 - Verified on application HEAD a9f4449b848854623fde0d0172598c86b4ad112a: Drawing engine run #2396 passed syntax checks and all 361 tests (0 failures). The Hybrid raster/SVG run #614 completed the Canvas2D renderer proof successfully for the same code and uploaded the portrait plus seven transparent layer PNGs; its node-test job was still running at the time this note was written. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44934080883 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44934085875.
 - Visual inspection: the latest CI render no longer has the broad horizontal flat-color bands. The face, hair masses, eye whites and clothing regions are visibly filled. Construction and rough-sketch layers remain available but are hidden in the final composite after cleanup. The current deterministic portrait still has rough silhouette/outline alignment and incomplete costume/hair refinement; it is a renderer-and-region-fill proof, not an approved production anime character.
-- Not yet implemented/verified: vision-capable model planner that reads an approved reference and autonomously authors a brush plan; automated critique against a real approved character; full-body character; professional visual approval; physical Android testing.
+- Not yet implemented/verified: the artist's internal multi-eye perception passes; the structured, rights-cleared Anime Craft Library and drawing exercises; automated critique against an approved real character; complete full-body character; professional visual approval; physical Android testing.
 - Deployment: PR #14 remains open as Draft on feat/digital-artist-engine. No merge or production deployment occurred. The Vercel free build-rate limit remains a constraint; no paid upgrade or fallback was used.
 - Budget remains $0. The long-term target remains 24 independently authored drawings per second. No generated image/video output is accepted as the final artwork.
 
-## Immediate next steps
+## Immediate next steps — D-031 artist-first direction
 
-1. Improve hair/costume silhouettes and fill/ink alignment on the deterministic proof, then visually inspect all layers.
-2. Connect a free, vision-capable planner only after the interface contract is ready; verify a real inference request before claiming model integration.
-3. Add automated critique that edits the existing stroke records and uses the tested replay route.
-4. Produce and visually review one complete character before starting independent 24-FPS animation drawings.
+1. Build the artist's internal silhouette, anatomy, line-art, color/light and identity eyes, with measurable defect reports tied to pixel regions and stroke IDs.
+2. Improve native anime drawing tools: tapered clean inking, organic hair/cloth brush behavior, closed fills, clean flats, cel shadows and highlights.
+3. Create the authorized Anime Craft Library and structured drawing exercises from approved model sheets and rights-cleared examples.
+4. Connect the eyes to the existing correction/replay system, then draw and visually review one complete character.
+5. Only after the still passes should we return to the independent 24-drawings/second animation path.
 
-## Vision-planner provider check — 2026-11-21
+## Optional external visual-model research — 2026-11-21
 
-- Inspected the authenticated Hugging Face integration and candidate Qwen3-VL models/spaces. Qwen3-VL-2B-Instruct (Apache-2.0) and the Qwen3-VL Demo Space are promising visual-analysis candidates; the demo accepts an image plus a prompt and exposes 2B/4B/8B choices.
-- The attempted smoke-test inference was **not executed**: the Space requested a 60-second ZeroGPU allocation while the connected free account had only 42 seconds remaining in its current daily quota. No provider inference or paid fallback ran.
-- Hugging Face's current docs state that free accounts receive 5 minutes/day of ZeroGPU time, while current Inference Providers pricing lists no monthly credits for Free users. Therefore the planner must not depend on paid Inference Providers and must fail closed when free quota is exhausted.
-- Candidate references: https://huggingface.co/spaces/baohuynhbk14/Qwen3-VL-Demo and https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct. No Space was modified, no model was connected to ZERO STUDIO, and the vision-planner inference milestone remains pending.
+- Reviewed Qwen3-VL-2B/4B and public Hugging Face Spaces as potential optional visual-analysis helpers.
+- A Qwen3-VL smoke-test inference did not start: the Space requested 60 seconds of ZeroGPU while the connected free account had only 42 seconds remaining in its current daily quota. No inference ran and no paid fallback was used.
+- This reinforces D-031: an external VLM is not the artist's eyes and must not be a blocking dependency. Prioritize the native multi-eye perception passes and the anime drawing curriculum first.
+- Candidate references remain https://huggingface.co/spaces/baohuynhbk14/Qwen3-VL-Demo and https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct. No Space was modified, and no model was connected to ZERO STUDIO.
 
 ## D-029 / D-030 architecture record
 
 - D-029 approved an AI digital artist that authors explicit, editable drawing operations rather than final image/video generation. The initial vector-first command contract remains optional infrastructure for guides and selected geometry.
 - D-030 refined the final-art route to raster-first: semantic Canvas2D brush layers and an ordered, editable stroke log are the authored source. A flattened PNG is only a preview/export artifact.
+- D-031 establishes the artist-first direction: the artist must have its own measurable visual eyes and anime craft knowledge; no external vision-language model is required to operate it. The two studio goals remain professional anime-series production and the genuine independent-drawing digital artist with the unchanged 24 drawings/second target.
 - The architecture, Character DNA requirements, anatomy guidance, critique/correction loop, and visual acceptance gates are documented in `docs/DIGITAL_ARTIST_ARCHITECTURE.md`.
 - No vision model inference or image-generation inference was used for this implementation.
 
 ## Immediate next steps
 
-1. Connect a free vision-capable planner that takes an approved character reference and emits only validated native-brush commands; fail closed when free inference quota is exhausted.
-2. Add automated critique that edits existing stroke records and uses the validated layer-replay path.
-3. Run the editor interaction flow in a real browser/Android browser and inspect the seven-layer project, not only the CI renderer artifact.
-4. Produce and visually review one complete model-authored character before starting the independently drawn 24-FPS animation path.
+1. Implement the internal multi-eye perception passes and measurable critique.
+2. Improve anime-specific brush behavior, inking, filling, flat-color coverage, cel shadows and highlights.
+3. Build the rights-cleared Anime Craft Library and drawing exercises.
+4. Connect the eyes to stroke correction/replay; then validate one full original anime character.
+5. Test the artist/animation path against the unchanged 24 independently authored drawings/second target.
 
 ---
 
