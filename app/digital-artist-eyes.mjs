@@ -391,8 +391,8 @@ export function compareAnimeHairFlow(reference, current, options = {}) {
       reference.length > 64 || current.length > 64) fail("Anime hair-flow comparison needs 3–64 reference and current clumps.");
   const headWidth = Number(options.headWidth ?? 1);
   if (!Number.isFinite(headWidth) || headWidth <= 0 || headWidth > 2) fail("A positive normalized head width is required.");
-  const angleTolerance = clamp(Number(options.angleTolerance ?? 0.28), 0.01, Math.PI);
-  const lengthTolerance = clamp(Number(options.lengthTolerance ?? 0.2), 0.01, 1);
+  const angleTolerance = boundedOption(options, "angleTolerance", 0.28, 0.01, Math.PI);
+  const lengthTolerance = boundedOption(options, "lengthTolerance", 0.2, 0.01, 1);
   const normalize = (items, label) => {
     const ids = new Set();
     return new Map(items.map((item, index) => {
