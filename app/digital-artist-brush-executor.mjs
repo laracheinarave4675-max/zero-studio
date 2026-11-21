@@ -28,27 +28,38 @@ function validateStream(stream) {
     for (const command of layer.commands) {
       const globalCommand = stream.commands[cursor];
       assert(globalCommand && globalCommand.stepIndex === cursor, "Raster commands are not in a continuous execution order.");
-      assert(command && command.kind === "raster-brush-stroke" && globalCommand.kind === command.kind, "Unsupported raster command.");
+      assert(command && ["raster-brush-stroke", "raster-region-fill"].includes(command.kind) && globalCommand.kind === command.kind, "Unsupported raster artist operation.");
       assert(command.layerId === layer.id && globalCommand.layerId === layer.id, "A stroke references the wrong raster layer.");
       assert(typeof command.strokeId === "string" && command.strokeId.length > 0 && !strokeIds.has(command.strokeId), "A stroke id is missing or duplicated.");
       strokeIds.add(command.strokeId);
       assert(globalCommand.strokeId === command.strokeId, "The flattened command stream differs from its layer commands.");
-      assert(typeof command.intent === "string" && command.intent.trim().length > 0, "Every stroke needs an artist intent.");
-      assert(Array.isArray(command.points) && command.points.length >= 1 && command.points.length <= 20000, "A stroke has an invalid point list.");
+      assert(typeof command.intent === "string" && command.intent.trim().length > 0, "Every operation needs an artist intent.");
+      assert(Array.isArray(command.points) && command.points.length >= (command.kind === "raster-region-fill" ? 3 : 1) && command.points.length <= 20000, "An operation has an invalid point list.");
       totalSamples += command.points.length;
       assert(totalSamples <= 500000, "The stream exceeds the project's 500,000-point editable stroke-history limit.");
-      for (const point of command.points) {
-        const x = Number(point?.x), y = Number(point?.y), pressure = Number(point?.pressure);
-        assert(Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= 1920 && y >= 0 && y <= 1080, "A stroke point is outside the 1920×1080 canvas.");
-        assert(Number.isFinite(pressure) && pressure >= 0.06 && pressure <= 1, "A stroke pressure value is invalid.");
+      if (command.kind === "raster-region-fill") {
+        for (const point of command.points) {
+          const x = Number(point?.x), y = Number(point?.y);
+          assert(Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= 1920 && y >= 0 && y <= 1080, "A fill boundary is outside the 1920×1080 canvas.");
+        }
+        const options = command.options;
+        assert(options && typeof options.color === "string" && /^#[0-9a-f]{6}$/i.test(options.color), "A region fill color is invalid.");
+        assert(Number.isFinite(Number(options.opacity)) && options.opacity >= 0 && options.opacity <= 1, "A region fill opacity is invalid.");
+        assert(BLENDS.has(options.blendMode), "A region fill blend mode is unsupported.");
+      } else {
+        for (const point of command.points) {
+          const x = Number(point?.x), y = Number(point?.y), pressure = Number(point?.pressure);
+          assert(Number.isFinite(x) && Number.isFinite(y) && x >= 0 && x <= 1920 && y >= 0 && y <= 1080, "A stroke point is outside the 1920×1080 canvas.");
+          assert(Number.isFinite(pressure) && pressure >= 0.06 && pressure <= 1, "A stroke pressure value is invalid.");
+        }
+        const options = command.options;
+        assert(options && BRUSHES.has(options.brush), "A stroke uses an unsupported raster brush.");
+        assert(Number.isFinite(Number(options.size)) && options.size >= 0.5 && options.size <= 240, "A stroke brush size is invalid.");
+        assert(typeof options.color === "string" && /^#[0-9a-f]{6}$/i.test(options.color), "A stroke color is invalid.");
+        assert(Number.isFinite(Number(options.opacity)) && options.opacity >= 0 && options.opacity <= 1, "A stroke opacity is invalid.");
+        assert(Number.isFinite(Number(options.texture)) && options.texture >= 0 && options.texture <= 1, "A stroke texture value is invalid.");
+        assert(BLENDS.has(options.blendMode), "A stroke blend mode is unsupported.");
       }
-      const options = command.options;
-      assert(options && BRUSHES.has(options.brush), "A stroke uses an unsupported raster brush.");
-      assert(Number.isFinite(Number(options.size)) && options.size >= 0.5 && options.size <= 240, "A stroke brush size is invalid.");
-      assert(typeof options.color === "string" && /^#[0-9a-f]{6}$/i.test(options.color), "A stroke color is invalid.");
-      assert(Number.isFinite(Number(options.opacity)) && options.opacity >= 0 && options.opacity <= 1, "A stroke opacity is invalid.");
-      assert(Number.isFinite(Number(options.texture)) && options.texture >= 0 && options.texture <= 1, "A stroke texture value is invalid.");
-      assert(BLENDS.has(options.blendMode), "A stroke blend mode is unsupported.");
       cursor++;
     }
   }
