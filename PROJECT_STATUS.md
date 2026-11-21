@@ -1,3 +1,11 @@
+
+## D-030 Raster-first Digital Artist refinement — 2026-11-21
+
+- User explicitly challenged whether SVG is required and warned it may make anime drawing rigid. The architecture is refined: SVG is optional, never mandatory for final art.
+- Confirmed existing app assets already include a Canvas2D raster brush engine (`app/raster-brushes.mjs`) with graphite, ink, gouache, watercolor and foliage presets, pressure-aware point samples, tapered ribbon marks, grain/bristle texture, opacity, blend modes and erasing; `app/raster-surface.mjs` provides persistent native raster surfaces.
+- Added `app/digital-artist-brush-engine.mjs`: a versioned AI brush-plan contract compiling ordered, pressure-sensitive brush strokes into native raster layer commands. The plan carries identity reference digest, intent, semantic stage, coordinates, pressure, brush, size, color, opacity, texture, blend mode and seed. It does not require SVG paths or image payloads.
+- Added `tests/digital-artist-brush-engine.test.mjs` covering valid plan compilation, replay order, native raster rendering target, vector-not-required contract, pressure/bounds/brush/color/stage-order/duplicate-ID validation.
+- This remains a command contract, not yet wired to the app or a vision-capable model. No complete AI-authored character drawing has been produced.
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-21 (UTC)
