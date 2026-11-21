@@ -29,3 +29,20 @@ test("construction brush plan retains clipped iris and pupil operations",()=>{
 test("construction plan rejects an unrecognized model rather than silently using fixed coordinates",()=>{
  assert.throws(()=>buildAnimeConstructionBrushPlan({format:"wrong"}),/construction model/);
 });
+
+test("expressive eye construction includes catchlights and outer lash strokes",()=>{
+ const model=buildAnimeConstructionModel();
+ assert.ok(model.eyes.every(eye=>eye.bounds.height/eye.bounds.width>=.8));
+ const plan=buildAnimeConstructionBrushPlan(model);
+ const strokes=plan.layers.flatMap(layer=>layer.strokes);
+ for(const id of ["eye-left-catchlight","eye-right-catchlight","eye-left-outer-lashes","eye-right-outer-lashes","ear-left","ear-right","cloth-fold-left-shoulder-tension"]){
+  assert.ok(strokes.some(stroke=>stroke.id===id),id+" should be present in the artist plan");
+ }
+});
+
+test("face shadow remains a narrow cheek-side region",()=>{
+ const plan=buildAnimeConstructionBrushPlan();
+ const shadow=plan.layers.find(layer=>layer.role==="shadow").strokes.find(stroke=>stroke.id==="face-cast-shadow");
+ const xs=shadow.points.map(point=>point.x);
+ assert.ok(Math.max(...xs)-Math.min(...xs)<1920*.12);
+});
