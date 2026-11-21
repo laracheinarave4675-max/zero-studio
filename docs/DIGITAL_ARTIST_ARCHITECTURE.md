@@ -142,6 +142,17 @@ The original optional geometry command contract in `app/digital-artist-engine.mj
 
 This optional geometry contract is an infrastructure milestone, not the final-art path. The raster-first contract in `app/digital-artist-brush-engine.mjs` is the approved route for final character art. Neither contract yet means an AI model autonomously drew a complete production-quality anime character. The next milestone is to strengthen the artist's internal eyes and anime craft library, then connect their measurable critique to the raster contract and the editor's correction/replay loop. External vision models remain optional helpers, never prerequisites.
 
+## D-031 implementation snapshot — 2026-11-21
+
+The first local artist-eyes implementation is now part of the codebase:
+
+- `app/digital-artist-eyes.mjs` provides deterministic raster measurement (alpha coverage/bounds, centroid, perimeter and quantized palette), stroke-geometry measurement (sample count, path length, bounds, pressure range and sharp turns), named-landmark comparison, named-palette comparison, and pixel sampling for region coverage/leakage.
+- The editor's **افحص الرسم بعيون الفنان** action inspects the current frame's Digital Artist raster layers locally. It downsamples inspection surfaces to at most 960×540 for an Android-friendly first pass, then reports per-layer bounds/coverage/palette, operation geometry, review state, and same-color grouped region-fill checks.
+- Region fills of the same color are inspected as a union, so adjacent intended hair/clothing regions do not incorrectly count as outside paint leakage.
+- `scripts/render-digital-artist-demo.mjs` produces a separate transparent visible-art composite for the silhouette eye (not the opaque page-background composite), records per-layer raster metrics, preserves stable command IDs in stroke reports, and exports `digital-artist-eyes-report.json` with the seven layer PNGs.
+- `app/anime-artist-curriculum.mjs` defines 15 staged anime craft skills, prerequisites, lessons, drawing exercises and evaluation metrics. Its reference-card gate records provenance and separately checks study, training, redistribution and commercial-use declarations. The editor includes a curriculum browser.
+- Automated tests cover all these measurement and curriculum primitives. These are deterministic analysis and learning scaffolds, not neural vision, model training, automatic art-direction or professional-quality acceptance. The actual approved Character DNA/model-sheet must still be connected to the landmark and palette comparators; the authorized reference library must still be populated.
+
 ## Training and improvement strategy
 
 Do not begin with millions of RL trials. Build a measurable supervised/tool-use loop first:
