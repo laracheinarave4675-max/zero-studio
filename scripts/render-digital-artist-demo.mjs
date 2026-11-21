@@ -104,6 +104,12 @@ const expectColorNear = (label, actual, expected, tolerance = 12) => {
 // face, hair and clothing polygons, while the control point stays outside them.
 expectColorNear("Face region", pixelAt(960, 580), [239, 196, 177, 255]);
 expectColorNear("Eye white region", pixelAt(850, 472), [255, 249, 242, 255]);
+expectColorNear("Left iris pigment", pixelAt(868, 477), [166, 106, 69, 255], 18);
+expectColorNear("Left pupil", pixelAt(880, 478), [37, 32, 44, 255], 18);
+expectColorNear("Left eye glint", pixelAt(874, 463), [255, 253, 247, 255], 18);
+expectColorNear("Right iris pigment", pixelAt(1025, 477), [166, 106, 69, 255], 18);
+expectColorNear("Right pupil", pixelAt(1042, 478), [37, 32, 44, 255], 18);
+expectColorNear("Right eye glint", pixelAt(1036, 463), [255, 253, 247, 255], 18);
 expectColorNear("Hair region", pixelAt(960, 205), [52, 56, 76, 255]);
 expectColorNear("Clothing region", pixelAt(960, 970), [113, 153, 156, 255]);
 expectColorNear("Outside silhouette", pixelAt(1320, 700), [245, 241, 233, 255]);
