@@ -1,0 +1,29 @@
+name: AniDoc PR environment check
+
+on:
+  pull_request:
+    branches:
+      - feat/anime-raster-keyframe-motion-engine
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-runner:
+    name: Inspect available AniDoc runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Inspect GPU and checkpoint availability
+        run: |
+          python experiments/anidoc/preflight.py | tee anidoc-preflight.txt
+          cat anidoc-preflight.txt >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anidoc-preflight-report
+          path: anidoc-preflight.txt
+          retention-days: 7
