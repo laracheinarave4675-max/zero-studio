@@ -37,9 +37,9 @@ export function createApprovedKimonoWalkPoses(){
   const angle=(index/24)*Math.PI*2;
   return Object.freeze({frameIndex:index,frameNumber:index+1,timeSeconds:index/24,exposureFrames:1,
    // Motion-only values: these cannot override any field in FIXED_DESIGN.
-   stride:Math.sin(angle),liftLeft:Math.max(0,Math.cos(angle))*17,liftRight:Math.max(0,-Math.cos(angle))*17,
-   bodyBob:(1-Math.cos(angle*2))*2.4,hairFollow:Math.sin(angle-.48)*4.2,clothFollow:Math.sin(angle-.72)*2.4,
-   sleeveSwing:Math.sin(angle+Math.PI)*.045
+   stride:Math.sin(angle),liftLeft:Math.max(0,Math.cos(angle))*58,liftRight:Math.max(0,-Math.cos(angle))*58,
+   bodyBob:(1-Math.cos(angle*2))*6,hairFollow:Math.sin(angle-.48)*14,clothFollow:Math.sin(angle-.72)*25,
+   sleeveSwing:Math.sin(angle+Math.PI)*12
   });
  }));
 }
@@ -77,8 +77,8 @@ function drawHead(ctx,bob){
  // The single visible eye, brow, nose and mouth are fixed parts of the approved profile.
  path(ctx,[["M",242,203+bob],["Q",256,190+bob,269,202+bob],["Q",257,214+bob,242,203+bob],["Z"]],"#fff4ed",FIXED_PALETTE.ink,1.9);
  path(ctx,[["M",246,203+bob],["Q",257,193+bob,266,202+bob],["Q",256,211+bob,246,203+bob],["Z"]],FIXED_PALETTE.eye,null);
- ctx.beginPath();ctx.arc(256,203+bob,3.3,0,Math.PI*2);ctx.fillStyle="#30262d";ctx.fill();
- ctx.beginPath();ctx.arc(257,202+bob,1,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();
+ ctx.beginPath();ctx.arc(256,203+bob,2.6,0,Math.PI*2);ctx.fillStyle="#30262d";ctx.fill();
+ ctx.beginPath();ctx.arc(257,202+bob,.8,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();
  tapered(ctx,[[242,190+bob],[250,185+bob],[261,187+bob],[267,191+bob]],"#5b454d",2.3);
  tapered(ctx,[[231,224+bob],[238,226+bob],[244,225+bob],[247,222+bob]],FIXED_PALETTE.skinShade,2);
  tapered(ctx,[[237,244+bob],[246,247+bob],[253,246+bob],[257,243+bob]],"#a96f70",1.7);
@@ -100,12 +100,12 @@ function drawNeckAndCollar(ctx,bob){
  path(ctx,[["M",274,262+bob],["L",303,302+bob],["L",328,267+bob]],null,FIXED_PALETTE.kimonoLight,3);
 }
 function drawKimonoBody(ctx,bob,cloth,sleeveSwing){
- const fill=ctx.createLinearGradient(265,295,390,794);fill.addColorStop(0,FIXED_PALETTE.kimonoLight);fill.addColorStop(.53,FIXED_PALETTE.kimono);fill.addColorStop(.78,"#ebd5cb");fill.addColorStop(1,FIXED_PALETTE.pink);
+ const fill=ctx.createLinearGradient(265,295,390,794);fill.addColorStop(0,FIXED_PALETTE.kimonoLight);fill.addColorStop(.38,FIXED_PALETTE.kimono);fill.addColorStop(.62,"#ead7cf");fill.addColorStop(.78,"#e2b9b4");fill.addColorStop(.91,FIXED_PALETTE.pink);fill.addColorStop(1,"#c97883");
  path(ctx,[["M",266,294+bob],["C",289,279+bob,338,288+bob,357,316+bob],["C",371,362+bob,358,423+bob,382,482+bob],["C",410,557+bob,413+cloth,674+bob,423+cloth,785+bob],["C",374,805+bob,286,804+bob,220,783+bob],["C",249,677+bob,251,570+bob,267,481+bob],["C",282,415+bob,257,355+bob,266,294+bob],["Z"]],fill,FIXED_PALETTE.ink,5.5);
  // Front wrap panel and its stable overlapping edge.
  path(ctx,[["M",269,301+bob],["C",282,353+bob,297,400+bob,330,452+bob],["C",350,526+bob,368,660+bob,386,790+bob],["L",354,795+bob],["C",339,650+bob,324,550+bob,301,476+bob],["C",276,411+bob,253,350+bob,244,319+bob],["Z"]],FIXED_PALETTE.kimonoLight,FIXED_PALETTE.ink,3.1);
  // Sleeve: broad, hanging silhouette; its design and sakura locations are locked.
- const sleeveGradient=ctx.createLinearGradient(350,290,460,510);sleeveGradient.addColorStop(0,FIXED_PALETTE.kimono);sleeveGradient.addColorStop(.68,"#e9d5ce");sleeveGradient.addColorStop(1,FIXED_PALETTE.pink);
+ const sleeveGradient=ctx.createLinearGradient(350,290,460,510);sleeveGradient.addColorStop(0,FIXED_PALETTE.kimono);sleeveGradient.addColorStop(.48,"#e9d5ce");sleeveGradient.addColorStop(.82,FIXED_PALETTE.pinkLight);sleeveGradient.addColorStop(1,FIXED_PALETTE.pinkDark);
  path(ctx,[["M",324,299+bob],["C",360,280+bob,405,298+bob,421,342+bob],["C",434,385+bob,432+sleeveSwing,438+bob,438+sleeveSwing,481+bob],["C",404,503+bob,375,482+bob,351,459+bob],["C",337,413+bob,320,365+bob,324,299+bob],["Z"]],sleeveGradient,FIXED_PALETTE.ink,5);
  tapered(ctx,[[347,323+bob],[379,351+bob],[390+sleeveSwing*.3,414+bob],[404+sleeveSwing,465+bob]],FIXED_PALETTE.kimonoLight,3.2);
  // Sleeve edge / cuff line.
@@ -129,8 +129,8 @@ function drawArmAndHand(ctx,bob,swing){
  tapered(ctx,[[382+x,418+bob],[382+x,438+bob],[378+x,452+bob],[372+x,459+bob]],FIXED_PALETTE.skinShade,2);
 }
 function drawFeet(ctx,pose,bob){
- const base=786+bob;
- const left=pose.stride*23,right=-pose.stride*23;
+ const base=789+bob;
+ const left=pose.stride*68,right=-pose.stride*68;
  const foot=(x,lift,front)=>{
   const y=base-lift;
   path(ctx,[["M",x-16,y],["Q",x-12,y-21,x+2,y-18],["Q",x+22,y-15,x+34,y-3],["Q",x+37,y+5,x+22,y+8],["L",x-10,y+6],["Z"]],FIXED_PALETTE.skin,FIXED_PALETTE.ink,2.8);
@@ -139,7 +139,7 @@ function drawFeet(ctx,pose,bob){
   path(ctx,[["M",x-17,y+15],["Q",x+11,y+22,x+40,y+14]],null,FIXED_PALETTE.sandalDark,2.7);
   if(front){ctx.beginPath();ctx.arc(x+25,y-1,2.2,0,Math.PI*2);ctx.fillStyle=FIXED_PALETTE.skin;ctx.fill();}
  };
- foot(300+left,pose.liftLeft,true);foot(319+right,pose.liftRight,false);
+ foot(288+left,pose.liftLeft,true);foot(323+right,pose.liftRight,false);
 };
 function drawApprovedCharacter(ctx,pose){
  const bob=pose.bodyBob||0,flow=pose.hairFollow||0,cloth=pose.clothFollow||0,swing=pose.sleeveSwing||0;
@@ -161,8 +161,8 @@ export function renderApprovedKimonoCharacterFrame(canvas,profile,pose,{width=76
  if(!Number.isInteger(width)||!Number.isInteger(height)||width<256||height<256||width>2048||height>2048)throw Error("Raster output must be 256–2048 pixels.");
  for(const key of ["stride","liftLeft","liftRight","bodyBob","hairFollow","clothFollow","sleeveSwing"])if(!Number.isFinite(Number(pose[key])))throw Error("Invalid motion parameter: "+key);
  const motion={frameIndex:pose.frameIndex,frameNumber:pose.frameIndex+1,timeSeconds:pose.frameIndex/24,fps:24,exposureFrames:1,
-  stride:clamp(pose.stride,-1,1),liftLeft:clamp(pose.liftLeft,0,20),liftRight:clamp(pose.liftRight,0,20),
-  bodyBob:clamp(pose.bodyBob,0,5),hairFollow:clamp(pose.hairFollow,-5,5),clothFollow:clamp(pose.clothFollow,-3,3),sleeveSwing:clamp(pose.sleeveSwing,-.05,.05)};
+  stride:clamp(pose.stride,-1,1),liftLeft:clamp(pose.liftLeft,0,60),liftRight:clamp(pose.liftRight,0,60),
+  bodyBob:clamp(pose.bodyBob,0,12),hairFollow:clamp(pose.hairFollow,-16,16),clothFollow:clamp(pose.clothFollow,-28,28),sleeveSwing:clamp(pose.sleeveSwing,-14,14)};
  canvas.width=width;canvas.height=height;const ctx=canvas.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("Canvas 2D is unavailable.");
  ctx.clearRect(0,0,width,height);ctx.save();
  const scale=Math.min(width/640,height/900);ctx.translate((width-640*scale)/2,(height-900*scale)/2);ctx.scale(scale,scale);
