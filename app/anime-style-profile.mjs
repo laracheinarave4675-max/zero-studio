@@ -53,7 +53,7 @@ const numericPaths = [
 export function validateAnimeStyleProfile(input) {
   if (!input || typeof input !== "object" || input.format !== ANIME_STYLE_PROFILE_FORMAT || input.version !== ANIME_STYLE_PROFILE_VERSION) fail("Unsupported anime style profile.");
   if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(String(input.id ?? ""))) fail("Anime style profile needs a stable id.");
-  const result = structuredClone(input);
+  const result = JSON.parse(JSON.stringify(input));
   for (const [section,key,min,max] of numericPaths) {
     const value = Number(result[section]?.[key]);
     if (!Number.isFinite(value) || value < min || value > max) fail("Anime style profile value outside supported range: "+section+"."+key);
@@ -109,10 +109,11 @@ const cubic = (a,b,c,d,t) => {
 /** Build one organic hair clump from a root-to-tip cubic flow and a width profile. */
 export function buildAnimeHairClump({root,control1,control2,tip,rootWidth=0.08,tipWidth=0.002,samples=18,side=1}={}) {
   const points=[root,control1,control2,tip];
-  if (points.some(point=>![Number(point?.x),Number(point?.y)].every(Number.isFinite)) ||
+  if (points.some(point=>![Number(point?.x),Number(point?.y)].every(Number.isFinite)||Number(point.x)<0||Number(point.x)>1||Number(point.y)<0||Number(point.y)>1)) throw new Error("Anime hair clump control points must use normalized coordinates.");
+  if (
       [rootWidth,tipWidth,samples,side].some(value=>!Number.isFinite(Number(value))) ||
       rootWidth<=0||rootWidth>0.3||tipWidth<0||tipWidth>rootWidth||!Number.isInteger(samples)||samples<6||samples>96||![1,-1].includes(side)) {
-    fail("Anime hair clump needs valid normalized root, controls, tip, width and sample count.");
+    fail("Anime hair clump needs valid widths, side direction and sample count (6–96).");
   }
   const left=[],right=[],center=[];
   for(let i=0;i<=samples;i++){
