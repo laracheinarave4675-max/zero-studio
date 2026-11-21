@@ -889,7 +889,7 @@ function wireAnimeAnatomyCalibration(){
 function syncAnimeRasterReviewControls(){const review=frame().animeAutoDrawing?.review||frame().animeRaster?.review||{};$("animeReviewIdentity").checked=review.identity===true;$("animeReviewAnatomy").checked=review.anatomy===true;$("animeReviewLineQuality").checked=review.lineQuality===true;$("animeReviewTiming").checked=review.timing===true}
 
 function digitalArtistDemoPlan(){
- const pointList=values=>values.map(([x,y],index)=>({x,y,pressure:index===0||index===values.length-1?.24:.48+((index%3)*.16)}));
+ const pointList=values=>values.map(([x,y],index)=>({x,y,pressure:(index===0||index===values.length-1)?0.24:0.48+((index%3)*0.16)}));
  const stroke=(id,intent,brush,color,size,values,extra={})=>({id,intent,brush,color,size,points:pointList(values),...extra});
  return{
   format:"zero-studio-digital-artist-brush-plan",version:1,title:"Anime portrait — native brush execution study",
