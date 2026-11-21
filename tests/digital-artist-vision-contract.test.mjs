@@ -137,6 +137,7 @@ test("orders shadow and highlight layers after flat colors", () => {
     { id: "eye-highlight", label: "Eye highlight", x: 0.4, y: 0.3, width: 0.05, height: 0.04, confidence: 0.95 }
   ];
   const result = buildAnimeVisionBrushPlan(value, { approveObservations: true });
-  assert.deepEqual(result.plan.layers.map(layer => layer.role), ["flat-color", "shadow", "highlight"]);
+  assert.deepEqual(result.plan.layers.map(layer => layer.role), ["construction", "flat-color", "shadow", "highlight"]);
+  assert.deepEqual(result.plan.layers.slice(1).map(layer => layer.role), ["flat-color", "shadow", "highlight"]);
   assert.doesNotThrow(() => compileDigitalArtistBrushPlan(result.plan));
 });
