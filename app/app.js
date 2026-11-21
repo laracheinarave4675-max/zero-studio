@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -901,79 +901,6 @@ function collectDigitalArtistStrokeRecords(){
  });
  return records;
 }
-function rasterizeArtistSvgForInspection(svgMarkup){
- return new Promise((resolve,reject)=>{
-  const blob=new Blob([svgMarkup],{type:"image/svg+xml;charset=utf-8"});
-  const url=URL.createObjectURL(blob),image=new Image();
-  const cleanup=()=>URL.revokeObjectURL(url);
-  image.onload=()=>{
-   try{
-    const surface=document.createElement("canvas");surface.width=WIDTH;surface.height=HEIGHT;
-    const context=surface.getContext("2d",{willReadFrequently:true});
-    if(!context)throw Error("تعذر إنشاء سطح فحص الرسم");
-    context.clearRect(0,0,WIDTH,HEIGHT);context.drawImage(image,0,0,WIDTH,HEIGHT);
-    const pixels=context.getImageData(0,0,WIDTH,HEIGHT);
-    cleanup();resolve(pixels);
-   }catch(error){cleanup();reject(error)}
-  };
-  image.onerror=()=>{cleanup();reject(Error("تعذر تحويل طبقات الفنان إلى صورة للفحص"))};
-  image.src=url;
- });
-}
-async function runDigitalArtistEyes(){
- const output=$("digitalArtistEyesReport"),button=$("digitalArtistEyesBtn");
- if(!output||!button||button.disabled)return;
- const artistLayers=frame().layers.filter(item=>item.type==="raster"&&Array.isArray(item.strokes)&&item.strokes.some(stroke=>stroke.source==="digital-artist"));
- if(!artistLayers.length){output.textContent="لا توجد رسومات للفنان في الإطار الحالي. نفّذ خطة رسم أولاً.";return}
- button.disabled=true;output.textContent="تعمل عيون الفنان الآن: تفحص الشكل والحدود والضربات والألوان…";
- try{
-  const artistFrame={...frame(),layers:artistLayers};
-  const compositePixels=await rasterizeArtistSvgForInspection(frameSvg(artistFrame,"artist-eye"));
-  const rasterEye=analyzeRasterPixels(compositePixels,{quantization:16});
-  const strokes=artistLayers.flatMap(item=>item.strokes.filter(stroke=>stroke.source==="digital-artist").map(stroke=>({layer:item,stroke})));
-  const geometry=strokes.map(item=>({layer:item.layer.name,...analyzeStrokeGeometry(item.stroke)}));
-  const fillReports=[];
-  for(const item of artistLayers){
-   const fills=item.strokes.filter(stroke=>stroke.source==="digital-artist"&&stroke.kind==="raster-region-fill");
-   if(!fills.length)continue;
-   const surface=await rasterSurfaces.get(item);
-   const layerPixels=surface.context.getImageData(0,0,surface.width,surface.height);
-   const stride=Math.max(1,Math.floor(Math.max(surface.width,surface.height)/360));
-   for(const stroke of fills){
-    const mapped=mapPointsToRaster(stroke.points,WIDTH,HEIGHT,surface.width,surface.height,1);
-    const inspection=inspectRegionFill(layerPixels,mapped.points,stroke.options.color,{
-     stride,margin:Math.max(4,Math.round(10*surface.width/WIDTH)),
-     colorTolerance:28,minimumCoverage:.88,maximumLeakage:.02
-    });
-    fillReports.push({id:stroke.id,layer:item.name,intent:stroke.intent,...inspection});
-   }
-  }
-  const fillPassed=fillReports.filter(item=>item.passed).length,fillFailed=fillReports.length-fillPassed;
-  const sharpTurns=geometry.reduce((sum,item)=>sum+item.sharpTurns,0);
-  const dominant=rasterEye.dominantPalette.slice(0,6).map(item=>item.color+" ("+Math.round(item.share*100)+"%)").join(" · ")||"لا توجد ألوان ظاهرة";
-  const lines=[
-   "فحص الإطار "+(current+1)+" — "+artistLayers.length+" طبقة فنان / "+strokes.length+" عملية.",
-   "عين الشكل: "+rasterEye.visiblePixels.toLocaleString()+" بكسل ظاهر، تغطية "+(rasterEye.alphaCoverage*100).toFixed(1)+"%، حدود "+(rasterEye.bounds?(rasterEye.bounds.width+"×"+rasterEye.bounds.height):"فارغة")+".",
-   "عين الخطوط: "+geometry.length+" ضربة محللة، مجموع أطوال "+Math.round(geometry.reduce((sum,item)=>sum+item.length,0))+" وحدة، "+sharpTurns+" انعطافاً حاداً يحتاج مراجعة بصرية.",
-   "عين التلوين: "+(fillReports.length?fillPassed+"/"+fillReports.length+" مناطق اجتازت فحص التغطية والتسرب"+(fillFailed?"؛ "+fillFailed+" مناطق تحتاج مراجعة":""):"لا توجد مناطق تعبئة مسجلة")+".",
-   "لوحة الألوان السائدة: "+dominant+"."
-  ];
-  if(fillFailed)lines.push("المناطق التي تحتاج مراجعة: "+fillReports.filter(item=>!item.passed).map(item=>item.id+" (تغطية "+Math.round(item.insideCoverage*100)+"%، تسرب "+Math.round(item.outsideLeakage*100)+"%)").join("؛ ")+".");
-  lines.push("هذه قياسات تشخيصية أولية وليست حكماً فنياً نهائياً على جودة الأنمي. عين الهوية تحتاج إلى ربط Model Sheet معتمد قبل إصدار مقارنة شخصية.");
-  output.textContent=lines.join("\n");
-  output.dataset.report=JSON.stringify({frame:current+1,raster:rasterEye,geometry,fillReports});
- }catch(error){
-  output.textContent="تعذر إكمال فحص عيون الفنان: "+(error?.message||String(error));
- }finally{
-  button.disabled=false;
- }
-}
-function mountDigitalArtistEyes(){
- const button=$("digitalArtistEyesBtn");
- if(!button||button.dataset.bound==="true")return;
- button.dataset.bound="true";
- button.addEventListener("click",()=>runDigitalArtistEyes());
-}
 function rebuildDigitalArtistRasterLayerDataUrl(layer,strokes){
  if(!layer||layer.type!=="raster")throw Error("طبقة Raster صالحة مطلوبة لإعادة الرسم");
  const width=Number(layer.width),height=Number(layer.height);
@@ -1140,14 +1067,25 @@ async function inspectDigitalArtistEyes(){
    const ctx=scratch.getContext("2d",{willReadFrequently:true});
    if(!ctx)throw Error("تعذر إنشاء سطح فحص الطبقة");
    ctx.drawImage(image,0,0,inspectionWidth,inspectionHeight);
-   const raster=analyzeRasterPixels(ctx.getImageData(0,0,inspectionWidth,inspectionHeight));
+   const pixels=ctx.getImageData(0,0,inspectionWidth,inspectionHeight);
+   const raster=analyzeRasterPixels(pixels);
    raster.inspectionScale=inspectionScale;
    if(raster.bounds)raster.bounds={x:Math.round(raster.bounds.x/inspectionScale),y:Math.round(raster.bounds.y/inspectionScale),width:Math.round(raster.bounds.width/inspectionScale),height:Math.round(raster.bounds.height/inspectionScale)};
    const records=frameRecords.filter(record=>record.layer.id===layer.id);
    const geometries=records.map(record=>analyzeStrokeGeometry(record.stroke));
    const pressureSamples=geometries.filter(item=>item.kind==="brush-stroke"&&item.sampleCount>1);
+   const fillEyes=[];
+   const stride=Math.max(1,Math.floor(Math.max(inspectionWidth,inspectionHeight)/360));
+   for(const record of records.filter(item=>item.stroke.kind==="raster-region-fill")){
+    const mapped=mapPointsToRaster(record.stroke.points,WIDTH,HEIGHT,inspectionWidth,inspectionHeight,1);
+    const fill=inspectRegionFill(pixels,mapped.points,record.stroke.options?.color||"#000000",{
+     stride,margin:Math.max(3,Math.round(8*inspectionScale)),
+     colorTolerance:28,minimumCoverage:.88,maximumLeakage:.005
+    });
+    fillEyes.push({id:record.stroke.id,intent:record.stroke.intent,...fill});
+   }
    const meanLength=geometries.length?geometries.reduce((sum,item)=>sum+item.length,0)/geometries.length:0;
-   layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,geometries,meanLength,pressureSamples});
+   layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,geometries,meanLength,pressureSamples,fillEyes});
   }
   const allGeometry=layerEyes.flatMap(layer=>layer.geometries);
   const totalVisible=layerEyes.reduce((sum,layer)=>sum+layer.raster.visiblePixels,0);
@@ -1159,11 +1097,15 @@ async function inspectDigitalArtistEyes(){
    version:1,frame:current+1,analyzedLayers:layerEyes.length,operations:allGeometry.length,
    visiblePixels:totalVisible,topColors,
    operationKinds:{fills:allGeometry.filter(item=>item.kind==="region-fill").length,brushes:allGeometry.filter(item=>item.kind==="brush-stroke").length},
-   approvals,layerEyes:layerEyes.map(layer=>({
+   approvals,
+   fillEyes:layerEyes.flatMap(layer=>layer.fillEyes.map(fill=>({layer:layer.name,...fill}))),
+   layerEyes:layerEyes.map(layer=>({
     name:layer.name,role:layer.role,visible:layer.visible,
     visiblePixels:layer.raster.visiblePixels,alphaCoverage:layer.raster.alphaCoverage,
     bounds:layer.raster.bounds,dominantPalette:layer.raster.dominantPalette.slice(0,4),
-    averageStrokeLength:layer.meanLength
+    averageStrokeLength:layer.meanLength,
+    fillPassed:layer.fillEyes.filter(fill=>fill.passed).length,
+    fillFailed:layer.fillEyes.filter(fill=>!fill.passed).length
    }))
   };
   status.textContent=[
@@ -1171,6 +1113,7 @@ async function inspectDigitalArtistEyes(){
    "عين البنية: "+report.analyzedLayers+" طبقات، "+report.visiblePixels.toLocaleString("en-US")+" بكسل ظاهر",
    "عين الخط: "+report.operations+" عملية؛ "+report.operationKinds.brushes+" ضربات فرشاة و"+report.operationKinds.fills+" تعبئات مغلقة",
    "العين اللونية: "+(topColors.join(" · ")||"لا توجد ألوان قابلة للقياس"),
+   "عين التعبئة: "+report.fillEyes.filter(item=>item.passed).length+"/"+report.fillEyes.length+" مناطق اجتازت اختبار التغطية والتسرب"+(report.fillEyes.some(item=>!item.passed)?" — "+report.fillEyes.filter(item=>!item.passed).map(item=>item.id).join("، "):""),
    "مراجعة العمليات: "+Object.entries(approvals).map(([key,value])=>key+" "+value).join("، "),
    ...report.layerEyes.map(layer=>layer.name+": "+(layer.bounds?"حدود "+layer.bounds.width+"×"+layer.bounds.height:"طبقة فارغة")+"، تغطية "+(layer.alphaCoverage*100).toFixed(1)+"%")
   ].join("\n");
@@ -1198,7 +1141,6 @@ function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
  if(!input||!loadButton||!runButton||!statusNode)return;
  mountDigitalArtistStrokeReview();
- mountDigitalArtistEyes();
  loadButton.onclick=()=>{
   input.value=JSON.stringify(createDigitalArtistDemoPlan(),null,2);
   statusNode.textContent="تم تحميل مثال بورتريه من 7 طبقات. هذه خطة اختبار ثابتة للتحقق من الفرشاة والتنفيذ، وليست ناتج نموذج ذكاء اصطناعي.";
