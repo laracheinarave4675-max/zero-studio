@@ -1,6 +1,7 @@
 // ZERO STUDIO — reference-preserving raster atlas and localized redraw prototype.
 // Reuses approved source pixels for immutable identity regions; redraws only the foot motion zone.
 // No image-model inference, SVG output, mesh deformation, or moving character-part sprites.
+import { drawTaperedRasterStroke } from "./anime-raster-drawing-engine.mjs";
 export const APPROVED_KIMONO_ATLAS_ID = "zero-approved-kimono-raster-atlas-v1";
 export const APPROVED_KIMONO_ATLAS_FPS = 24;
 export const APPROVED_KIMONO_ATLAS_FRAME_COUNT = 24;
@@ -163,6 +164,19 @@ function drawWalkFoot(context, heelX, topY, roll, lift) {
     ["Q", heel + 5, soleY - 5, heel + 15, soleY - 5],
     ["Z"]
   ], PALETTE.sandal, PALETTE.sandalDark, 1.1);
+  // Use the studio's tapered raster-ink brush for the tiny straps and ankle accents.
+  drawTaperedRasterStroke(context, [
+    { x: heel + 13, y: soleY - 5 },
+    { x: heel + 7, y: soleY - 10 },
+    { x: toeX + 9, y: soleY - 8 },
+    { x: toeX + 4, y: soleY - 2 }
+  ], { color: PALETTE.sandalDark, width: 1.8, taper: 0.72 });
+  drawTaperedRasterStroke(context, [
+    { x: heel - 2, y: ankleY + 17 },
+    { x: heel - 7, y: ankleY + 24 },
+    { x: heel - 14, y: soleY - 13 },
+    { x: toeX + 16, y: soleY - 8 }
+  ], { color: PALETTE.skinShade, width: 1.2, taper: 0.8 });
 }
 export function hashRasterPixels(bytes) {
   if (!bytes || bytes.length === 0 || bytes.length % 4 !== 0) throw new Error("RGBA bytes are required.");
