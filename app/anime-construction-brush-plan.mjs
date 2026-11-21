@@ -8,10 +8,18 @@ const stroke=(id,intent,brush,color,size,points,extra={})=>({id,intent,brush,col
 const ellipsePoints=(cx,cy,rx,ry,count=36)=>Array.from({length:count},(_,i)=>({x:cx+Math.cos(i/count*Math.PI*2)*rx,y:cy+Math.sin(i/count*Math.PI*2)*ry}));
 const facePolygon=head=>{
   const {x,y,width,height}=head.bounds,cx=head.landmarks.chin.x;
+  const yaw=Number(head.viewYaw??0),yawAbs=Math.abs(yaw),direction=Math.sign(yaw);
   return Array.from({length:64},(_,i)=>{
     const a=-Math.PI/2+i/63*Math.PI*2;
-    const sy=Math.sin(a),jaw=1-.24*Math.max(0,sy);
-    return {x:cx+Math.cos(a)*width*.49*jaw,y:y+height*.5+sy*height*.5};
+    const side=Math.cos(a),sy=Math.sin(a);
+    const farSide=direction!==0&&side*direction<0;
+    const depthScale=yawAbs<.001?1:(farSide?1-yawAbs*.42:1-yawAbs*.08);
+    const jaw=1-.3*Math.max(0,sy);
+    const cheekPlane=1+.035*Math.max(0,sy);
+    return {
+      x:cx+side*width*.49*jaw*cheekPlane*depthScale,
+      y:y+height*.5+sy*height*.5
+    };
   });
 };
 
