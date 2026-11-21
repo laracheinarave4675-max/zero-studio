@@ -282,3 +282,145 @@ export function inspectRegionFillGroup(imageData, polygons, expectedColor, optio
 export function inspectRegionFill(imageData, polygon, expectedColor, options = {}) {
   return inspectRegionFillGroup(imageData, [polygon], expectedColor, options);
 }
+
+
+const animePoint = (point, label) => {
+  const x = Number(point?.x), y = Number(point?.y);
+  if (![x, y].every(Number.isFinite) || x < 0 || x > 1 || y < 0 || y > 1) {
+    fail(label + " must be a normalized point between 0 and 1.");
+  }
+  return { x, y };
+};
+const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const wrapAngle = angle => {
+  while (angle > Math.PI) angle -= Math.PI * 2;
+  while (angle < -Math.PI) angle += Math.PI * 2;
+  return angle;
+};
+function animeEyeMetrics(landmarks, side) {
+  const prefix = side === "left" ? "eyeL" : "eyeR";
+  const outer = animePoint(landmarks[prefix + "Outer"], prefix + "Outer");
+  const inner = animePoint(landmarks[prefix + "Inner"], prefix + "Inner");
+  const upper = animePoint(landmarks[prefix + "Upper"], prefix + "Upper");
+  const lower = animePoint(landmarks[prefix + "Lower"], prefix + "Lower");
+  const iris = animePoint(landmarks[prefix + "Iris"], prefix + "Iris");
+  const pupil = animePoint(landmarks[prefix + "Pupil"], prefix + "Pupil");
+  const width = distance(outer, inner);
+  if (width < 0.002) fail(prefix + " width is too small to measure.");
+  const center = midpoint(outer, inner);
+  const eyeHeight = distance(upper, lower);
+  const eyePolygon = [outer, upper, inner, lower];
+  const irisInside = pointInPolygon(iris.x, iris.y, eyePolygon);
+  const irisOffset = { x: (iris.x - center.x) / width, y: (iris.y - center.y) / width };
+  const pupilOffset = { x: (pupil.x - iris.x) / width, y: (pupil.y - iris.y) / width };
+  return {
+    width, aspectRatio: eyeHeight / width,
+    slant: Math.atan2(inner.y - outer.y, inner.x - outer.x),
+    irisOffset, pupilOffset, irisInside,
+    upperLidHeight: distance(upper, center) / width,
+    lowerLidHeight: distance(lower, center) / width
+  };
+}
+
+/**
+ * Compare an anime eye design against the approved model sheet.
+ * This measures normalized landmark geometry only; it does not infer landmarks
+ * from pixels and deliberately does not impose one universal anime eye shape.
+ */
+export function compareAnimeEyeDesign(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") {
+    fail("Approved and current anime eye landmark maps are required.");
+  }
+  const refFaceLeft = animePoint(reference.faceLeft, "reference faceLeft");
+  const refFaceRight = animePoint(reference.faceRight, "reference faceRight");
+  const curFaceLeft = animePoint(current.faceLeft, "current faceLeft");
+  const curFaceRight = animePoint(current.faceRight, "current faceRight");
+  const refFaceWidth = distance(refFaceLeft, refFaceRight);
+  const curFaceWidth = distance(curFaceLeft, curFaceRight);
+  if (refFaceWidth < 0.01 || curFaceWidth < 0.01) fail("Face width is too small for anime eye comparison.");
+  const ref = { left: animeEyeMetrics(reference, "left"), right: animeEyeMetrics(reference, "right") };
+  const cur = { left: animeEyeMetrics(current, "left"), right: animeEyeMetrics(current, "right") };
+  const tolerances = {
+    faceWidth: clamp(Number(options.faceWidthTolerance ?? 0.06), 0.005, 0.3),
+    aspectRatio: clamp(Number(options.aspectRatioTolerance ?? 0.18), 0.01, 1),
+    slant: clamp(Number(options.slantTolerance ?? 0.16), 0.01, 1),
+    irisOffset: clamp(Number(options.irisOffsetTolerance ?? 0.12), 0.01, 0.8),
+    eyeSpacing: clamp(Number(options.eyeSpacingTolerance ?? 0.07), 0.005, 0.3)
+  };
+  const checks = [];
+  const add = (id, expected, actual, tolerance, unit) => {
+    const deviation = Math.abs(actual - expected);
+    checks.push({ id, expected, actual, deviation, tolerance, unit, passed: deviation <= tolerance });
+  };
+  for (const side of ["left", "right"]) {
+    add(side + "-eye-width", ref[side].width / refFaceWidth, cur[side].width / curFaceWidth, tolerances.faceWidth, "face-width-ratio");
+    add(side + "-eye-aspect", ref[side].aspectRatio, cur[side].aspectRatio, tolerances.aspectRatio, "ratio");
+    add(side + "-eye-slant", ref[side].slant, cur[side].slant, tolerances.slant, "radians");
+    add(side + "-iris-x", ref[side].irisOffset.x, cur[side].irisOffset.x, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-iris-y", ref[side].irisOffset.y, cur[side].irisOffset.y, tolerances.irisOffset, "eye-width-ratio");
+    checks.push({ id: side + "-iris-contained", expected: true, actual: cur[side].irisInside, deviation: cur[side].irisInside ? 0 : 1, tolerance: 0, unit: "boolean", passed: cur[side].irisInside });
+  }
+  const eyeGap = (map, faceWidth) => {
+    const left = midpoint(animePoint(map.eyeLOuter, "eyeLOuter"), animePoint(map.eyeLInner, "eyeLInner"));
+    const right = midpoint(animePoint(map.eyeROuter, "eyeROuter"), animePoint(map.eyeRInner, "eyeRInner"));
+    return distance(left, right) / faceWidth;
+  };
+  add("eye-pair-spacing", eyeGap(reference, refFaceWidth), eyeGap(current, curFaceWidth), tolerances.eyeSpacing, "face-width-ratio");
+  const failed = checks.filter(item => !item.passed);
+  return {
+    format: "zero-studio-anime-eye-comparison", version: 1,
+    compared: checks.length, passed: failed.length === 0,
+    referenceFaceWidth: refFaceWidth, currentFaceWidth: curFaceWidth,
+    checks, failures: failed.map(item => item.id),
+    measurementScope: "normalized-approved-landmarks-not-pixel-inference"
+  };
+}
+
+/**
+ * Compare directional hair clumps with a character's approved hair model sheet.
+ * Each clump is represented by a root and tip landmark; this is a geometry check,
+ * not automatic strand segmentation.
+ */
+export function compareAnimeHairFlow(reference, current, options = {}) {
+  if (!Array.isArray(reference) || !Array.isArray(current) || reference.length < 3 || current.length < 3 ||
+      reference.length > 64 || current.length > 64) fail("Anime hair-flow comparison needs 3–64 reference and current clumps.");
+  const headWidth = Number(options.headWidth ?? 1);
+  if (!Number.isFinite(headWidth) || headWidth <= 0 || headWidth > 2) fail("A positive normalized head width is required.");
+  const angleTolerance = clamp(Number(options.angleTolerance ?? 0.28), 0.01, Math.PI);
+  const lengthTolerance = clamp(Number(options.lengthTolerance ?? 0.2), 0.01, 1);
+  const normalize = (items, label) => {
+    const ids = new Set();
+    return new Map(items.map((item, index) => {
+      const id = String(item?.id ?? "");
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}$/.test(id) || ids.has(id)) fail(label + " hair clump IDs must be unique and stable.");
+      ids.add(id);
+      const root = animePoint(item.root, label + " " + id + " root");
+      const tip = animePoint(item.tip, label + " " + id + " tip");
+      const dx = tip.x - root.x, dy = tip.y - root.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 0.002) fail(label + " hair clump " + id + " is too short.");
+      return [id, { id, angle: Math.atan2(dy, dx), length: length / headWidth }];
+    }));
+  };
+  const ref = normalize(reference, "reference"), cur = normalize(current, "current");
+  const checks = [];
+  for (const [id, expected] of ref) {
+    const actual = cur.get(id);
+    if (!actual) {
+      checks.push({ id, passed: false, missing: true, angleDeviation: null, lengthDeviation: null });
+      continue;
+    }
+    const angleDeviation = Math.abs(wrapAngle(actual.angle - expected.angle));
+    const lengthDeviation = Math.abs(actual.length - expected.length) / Math.max(expected.length, 0.001);
+    checks.push({ id, passed: angleDeviation <= angleTolerance && lengthDeviation <= lengthTolerance,
+      missing: false, angleDeviation, lengthDeviation, angleTolerance, lengthTolerance });
+  }
+  for (const id of cur.keys()) if (!ref.has(id)) checks.push({ id, passed: false, unexpected: true, angleDeviation: null, lengthDeviation: null });
+  return {
+    format: "zero-studio-anime-hair-flow-comparison", version: 1,
+    compared: checks.filter(item => !item.missing && !item.unexpected).length,
+    passed: checks.length === reference.length && checks.every(item => item.passed),
+    checks, failures: checks.filter(item => !item.passed).map(item => item.id),
+    measurementScope: "approved-root-tip-landmarks-not-automatic-strand-segmentation"
+  };
+}
