@@ -1031,10 +1031,10 @@ async function saveArtistAssessmentFromLatestReport(){
   const report=JSON.parse(reportNode?.dataset.report||"null");if(!report)throw Error("افحص الرسم أولاً للحصول على تقرير قياس.");
   const skillId=$("animeArtistSkillSelect")?.value||"",skill=getAnimeArtistCurriculum().find(item=>item.id===skillId);if(!skill)throw Error("اختر مهارة صحيحة.");
   let checks=[];
-  if(["head-and-face","body-anatomy","hands-and-feet","model-sheet-identity"].includes(skillId)){
+  if(skillId==="body-anatomy"){
    const anatomy=report.characterIdentity?.anatomy;if(!anatomy||anatomy.skipped||!Array.isArray(anatomy.measurements))throw Error("هذه المهارة تحتاج مرجع Character DNA ووضعية معتمدة.");
    checks=anatomy.measurements.slice(0,32).map(item=>({id:"anatomy-"+item.name,passed:item.passed===true}));
-  }else if(["flat-color-groups","hair-masses","cel-shadows-and-light","highlights-and-materials"].includes(skillId)){
+  }else if(skillId==="flat-color-groups"){
    const fills=report.fillEyes||[];if(fills.length<3)throw Error("نحتاج ثلاث مناطق تعبئة مقاسة على الأقل.");
    checks=fills.slice(0,32).map(item=>({id:"fill-"+item.id,passed:item.passed===true}));
   }else if(skillId==="anime-inking"){
