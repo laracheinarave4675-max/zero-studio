@@ -91,6 +91,12 @@ test("anime line art keeps fringe separators out of the face and adds layered ir
  const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
  for(const id of ["fringe-left-ink","fringe-mid-ink","fringe-right-ink"])
   assert.ok(!strokes.some(stroke=>stroke.id===id),"closed fringe outline must not cross the face: "+id);
- for(const id of ["hair-crown-seam-left","hair-crown-seam-right","hair-side-seam-left","hair-side-seam-right","iris-shade-left","iris-shade-right"])
+ for(const id of ["hair-crown-seam-left","hair-crown-seam-right","hair-strand-top-left","hair-strand-top-right","hair-strand-left-inner","hair-strand-right-inner","iris-shade-left","iris-shade-right"])
   assert.ok(strokes.some(stroke=>stroke.id===id),"missing refined anime detail "+id);
+});
+
+
+test("long side-hair ink seams do not descend across the clothing silhouette",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ assert.ok(!strokes.some(stroke=>stroke.id==="hair-side-seam-left"||stroke.id==="hair-side-seam-right"));
 });
