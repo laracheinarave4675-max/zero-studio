@@ -59,6 +59,15 @@ test("identity eye compares normalized facial and anatomical landmarks", () => {
   assert.equal(drift.measurements.find(item => item.name === "chin").withinTolerance, false);
 });
 
+test("identity eye fails closed when a required model-sheet landmark is missing", () => {
+  const reference = { leftEye: { x: .35, y: .4 }, rightEye: { x: .65, y: .4 }, chin: { x: .5, y: .8 } };
+  const partial = compareLandmarks(reference, { leftEye: reference.leftEye, chin: reference.chin });
+  assert.equal(partial.passed, false);
+  assert.deepEqual(partial.missing, ["rightEye"]);
+  assert.equal(partial.compared, 2);
+  assert.equal(partial.measurements.find(item => item.name === "rightEye").deviation, null);
+});
+
 test("anatomy eye compares a current approved pose guide to locked Character DNA proportions", () => {
   const points = {
     root:[.50,.52], pelvis:[.50,.58], chest:[.50,.36], neck:[.50,.26], head:[.50,.16],
@@ -94,6 +103,14 @@ test("color eye compares named model-sheet palette swatches", () => {
   const mismatch = comparePalette(reference, { ...reference, hair: "#ffffff" });
   assert.equal(mismatch.passed, false);
   assert.ok(mismatch.maxDistance > 100);
+});
+
+test("color eye fails closed when a required model-sheet swatch is missing", () => {
+  const reference = { hair: "#28334b", skin: "#efc4b1", jacket: "#71999c" };
+  const partial = comparePalette(reference, { hair: reference.hair, skin: reference.skin });
+  assert.equal(partial.passed, false);
+  assert.deepEqual(partial.missing, ["jacket"]);
+  assert.equal(partial.compared, 2);
 });
 
 test("fill eye detects incomplete color coverage and color leakage outside a closed region", () => {
