@@ -19,13 +19,24 @@ Last updated: 2026-11-21 (UTC)
 - Deployment: PR #14 remains open as Draft on feat/digital-artist-engine. No merge or production deployment occurred. The Vercel free build-rate limit remains a constraint; no paid upgrade or fallback was used.
 - Budget remains $0. The long-term target remains 24 independently authored drawings per second. No generated image/video output is accepted as the final artwork.
 
+## D-031 initial implementation — internal eyes and Anime Craft curriculum
+
+- Added `app/digital-artist-eyes.mjs`, a local deterministic analysis module. It measures raster alpha bounds/coverage/centroid/perimeter and coarse palette; stroke geometry, pressure range, path length and sharp turns; named model-sheet landmark deviations; named palette differences; and actual inside-coverage/outside-leakage for raster region fills.
+- Connected the local eye panel to the editor's current frame. It reads each Digital Artist raster layer locally (downsampled to at most 960×540 for the initial inspection), reports visible coverage/bounds, dominant colors, operation counts, stroke geometry and review state. Region-fill checks sample pixels inside and outside each intended polygon and report leakage.
+- The initial eye system is a measurable inspection aid, not a professional art critic yet. The named-landmark and reference-palette comparison helpers are implemented and tested, but they are not yet connected to an approved Character DNA/model-sheet record; detailed facial identity, anatomy scoring, visual hierarchy, line continuity and automated corrections still need work.
+- Added `app/anime-artist-curriculum.mjs`: 15 ordered anime craft skills covering gesture/silhouette, head/face, anime eyes/expressions, hair masses, body anatomy, hands/feet, costume/folds, perspective/camera, inking, flat colors, cel shadows/light, materials/highlights, model-sheet identity, shot composition and animation continuity. Each skill includes prerequisites, lessons, exercises and measurable evaluation targets.
+- Added reference-card provenance/rights validation for study, training and commercial-production purposes, and practice-task creation that explicitly requires native raster brush operations and forbids final-image generation. This is a curriculum and learning framework; it does not mean a neural artist has already been trained on these examples.
+- Added an in-editor skill browser that displays the staged curriculum and its exercises/metrics. Actual execution of exercises, a curated and populated rights-cleared reference library, and learning from approved corrections remain future work.
+- Verified on HEAD `536ee9b49b989fbd5770fea66cadbb0252d80fe6`: Drawing engine run #2449 passed all 376 tests (0 failures); Hybrid raster/SVG run #639 passed all 376 tests and its raster-brush proof/export jobs. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44935929615 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44935929613.
+- PR #14 remains open as Draft and unmerged. No production deployment occurred.
+
 ## Immediate next steps — D-031 artist-first direction
 
-1. Build the artist's internal silhouette, anatomy, line-art, color/light and identity eyes, with measurable defect reports tied to pixel regions and stroke IDs.
-2. Improve native anime drawing tools: tapered clean inking, organic hair/cloth brush behavior, closed fills, clean flats, cel shadows and highlights.
-3. Create the authorized Anime Craft Library and structured drawing exercises from approved model sheets and rights-cleared examples.
-4. Connect the eyes to the existing correction/replay system, then draw and visually review one complete character.
-5. Only after the still passes should we return to the independent 24-drawings/second animation path.
+1. Connect the landmark and palette comparison eyes to approved Character DNA/model-sheet data so identity drift can be measured from real project references.
+2. Expand the current eyes from geometric/pixel metrics to stronger silhouette, anatomy, line continuity and cel-shadow/lighting checks with actionable regions and stroke IDs.
+3. Improve native anime drawing tools: tapered clean inking, organic hair/cloth brush behavior, robust masks/fills, clean flats, cel shadows and highlights.
+4. Populate the authorized Anime Craft Library and let the artist execute exercises, store attempts, compare results and learn from approved corrections.
+5. Draw and visually review one complete original character; only after that should we return to independent 24-drawings/second animation.
 
 ## Optional external visual-model research — 2026-11-21
 
