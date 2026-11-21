@@ -108,3 +108,14 @@ test("rear hair outline is segmented so its hidden lower edge cannot ink across 
  for(const id of ["hair-top-contour","hair-left-contour","hair-right-contour"])
   assert.ok(strokes.some(stroke=>stroke.id===id),"missing visible-only hair contour "+id);
 });
+
+
+test("anime cel-shadow planes use smooth sampled contours and semantic clipping",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const id of ["face-shadow","jaw-shadow","neck-shadow","garment-shadow"]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke,"missing cel-shadow plane "+id);
+  assert.ok(stroke.points.length>=30,"shadow contour should be smoothly sampled: "+id);
+  assert.ok(stroke.clipPolygon?.length>=3,"shadow plane must be clipped to its semantic silhouette: "+id);
+ }
+});
