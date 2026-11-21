@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -901,6 +901,45 @@ function collectDigitalArtistStrokeRecords(){
  });
  return records;
 }
+function rebuildDigitalArtistRasterLayerDataUrl(layer,strokes){
+ if(!layer||layer.type!=="raster")throw Error("طبقة Raster صالحة مطلوبة لإعادة الرسم");
+ const width=Number(layer.width),height=Number(layer.height);
+ if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>8*1024*1024)throw Error("أبعاد طبقة التصحيح تتجاوز حد الذاكرة الآمن");
+ const scratch=document.createElement("canvas");scratch.width=width;scratch.height=height;
+ const ctx=scratch.getContext("2d");if(!ctx)throw Error("تعذر إنشاء سطح Raster لإعادة الرسم");
+ for(const stroke of strokes){
+  const options=stroke.options||{};
+  const mapped=mapPointsToRaster(stroke.points,WIDTH,HEIGHT,width,height,options.size??1);
+  if(stroke.kind==="raster-region-fill")fillRasterRegion(ctx,mapped.points,options);
+  else drawRasterBrushStroke(ctx,mapped.points,{...options,size:mapped.size});
+ }
+ const dataUrl=scratch.toDataURL("image/png"),prefix="data:image/png;base64,";
+ if(typeof dataUrl!=="string"||!dataUrl.startsWith(prefix))throw Error("تعذر ترميز طبقة التصحيح إلى PNG");
+ const encodedLength=dataUrl.length-prefix.length,decodedBytes=Math.floor(encodedLength*3/4);
+ if(dataUrl.length>24*1024*1024||decodedBytes>16*1024*1024)throw Error("حجم الطبقة بعد التصحيح تجاوز الحد الآمن");
+ return dataUrl;
+}
+function applyDigitalArtistStrokeCorrection(){
+ const record=collectDigitalArtistStrokeRecords().find(item=>item.key===selectedDigitalArtistStrokeKey);
+ const input=$("digitalArtistStrokeEditInput"),button=$("digitalArtistStrokeApplyEditBtn"),details=$("digitalArtistStrokeDetails");
+ if(!record||!input||!button||button.disabled)return;
+ try{
+  const edit=JSON.parse(input.value);
+  const corrected=validateDigitalArtistStrokeEdit(record.stroke,edit);
+  const nextStrokes=record.layer.strokes.map(stroke=>stroke.id===record.stroke.id?corrected:stroke);
+  const nextDataUrl=rebuildDigitalArtistRasterLayerDataUrl(record.layer,nextStrokes);
+  snapshot();
+  record.layer.strokes=nextStrokes;
+  record.layer.dataUrl=nextDataUrl;
+  record.layer.mimeType="image/png";
+  rasterSurfaces.invalidate(record.layer);
+  buttons();
+  render();
+  if(details)details.textContent="تم حفظ تصحيح "+corrected.id+" وإعادة تنفيذ "+nextStrokes.length+" عملية في الطبقة من سجلها الأصلي. عادت الضربة إلى انتظار المراجعة.";
+ }catch(error){
+  if(details)details.textContent="لم يُحفظ التصحيح: "+(error?.message||String(error));
+ }
+}
 function renderDigitalArtistStrokePreview(record){
  const preview=$("digitalArtistStrokePreview");
  if(!preview)return;
@@ -939,6 +978,7 @@ function renderDigitalArtistStrokeReview(){
   select.replaceChildren(new Option("لا توجد ضربات فنان بعد",""));
   details.textContent="نفّذ خطة الفنان لعرض عملياتها هنا.";
   renderDigitalArtistStrokePreview(null);
+  const editInput=$("digitalArtistStrokeEditInput"),applyEdit=$("digitalArtistStrokeApplyEditBtn");if(editInput)editInput.value="";if(applyEdit)applyEdit.disabled=true;
   for(const id of ["digitalArtistStrokePrevBtn","digitalArtistStrokeNextBtn","digitalArtistStrokeApproveBtn","digitalArtistStrokeRejectBtn","digitalArtistStrokeResetBtn"]){const button=$(id);if(button)button.disabled=true;}
   return;
  }
@@ -955,6 +995,9 @@ function renderDigitalArtistStrokeReview(){
  const review=record.stroke.review==="approved"?"معتمدة":record.stroke.review==="rejected"?"مرفوضة":"بانتظار المراجعة";
  const kind=record.stroke.kind==="raster-region-fill"?"تعبئة منطقة مغلقة":"ضربة فرشاة";
  details.textContent="الإطار "+(record.frameIndex+1)+" · "+record.layer.name+" · "+record.stroke.id+" · "+kind+" · "+(record.stroke.points?.length||0)+" نقطة · الحالة: "+review+"\n"+record.stroke.intent;
+ const editInput=$("digitalArtistStrokeEditInput"),applyEdit=$("digitalArtistStrokeApplyEditBtn");
+ if(editInput)editInput.value=JSON.stringify({intent:record.stroke.intent,points:record.stroke.points,options:record.stroke.options},null,2);
+ if(applyEdit)applyEdit.disabled=false;
  renderDigitalArtistStrokePreview(record);
  const prev=$("digitalArtistStrokePrevBtn"),next=$("digitalArtistStrokeNextBtn");
  if(prev)prev.disabled=index<=0;
@@ -985,6 +1028,7 @@ function mountDigitalArtistStrokeReview(){
  $("digitalArtistStrokeApproveBtn").onclick=()=>setDigitalArtistStrokeReview("approved");
  $("digitalArtistStrokeRejectBtn").onclick=()=>setDigitalArtistStrokeReview("rejected");
  $("digitalArtistStrokeResetBtn").onclick=()=>setDigitalArtistStrokeReview("pending");
+ $("digitalArtistStrokeApplyEditBtn").onclick=()=>applyDigitalArtistStrokeCorrection();
 }
 function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
