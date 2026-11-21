@@ -263,13 +263,52 @@ function normalizeAnimationProduction(raw){
  if(frameSignatures.length!==completedFrames||frameSignatures.some(value=>typeof value!=="string"||!/^[0-9a-f]{16}$/i.test(value)))throw Error("سجل الرسومات المنجزة غير صالح");
  return{format:"zero-studio-animation-job",version:1,id:raw.id.slice(0,120),description,continuityNote,fps,durationSeconds,totalFrames,batchSize,batchCount,completedFrames,nextBatchIndex,baseFrameCount,layerNames,frameSignatures,backgroundMode:raw.backgroundMode===true};
 }
+function normalizeAnimeAutoDrawingRecord(raw){
+ if(raw===undefined||raw===null)return null;
+ if(!raw||raw.format!=="zero-studio-auto-drawing-frame"||raw.version!==1||
+    typeof raw.batchId!=="string"||!/^anime-auto-[a-z0-9_-]{6,100}$/i.test(raw.batchId)||
+    !Number.isInteger(raw.frameIndex)||raw.frameIndex<0||raw.frameIndex>=24||
+    typeof raw.assetId!=="string"||!raw.assetId.trim()||raw.assetId.length>160||
+    !/^[a-f0-9]{64}$/i.test(String(raw.contentHash||""))||
+    !/^[a-f0-9]{64}$/i.test(String(raw.sourceSignature||""))||
+    raw.mimeType!=="image/png"||raw.alpha!==true||
+    !Number.isInteger(raw.width)||!Number.isInteger(raw.height)||
+    raw.width<1||raw.height<1||raw.width>8192||raw.height>8192){
+  throw Error("بيانات رسمة الأنمي الآلية أو بصمتها غير صالحة");
+ }
+ const source=raw.review||{};
+ const keys=["identity","anatomy","lineQuality","timing"];
+ if(!["pending","approved","rejected"].includes(source.status)||
+    !keys.every(key=>typeof source[key]==="boolean")){
+  throw Error("مراجعة رسمة الأنمي الآلية غير مكتملة");
+ }
+ const complete=keys.every(key=>source[key]===true);
+ if(source.status==="approved"&&!complete)throw Error("لا يمكن اعتماد رسمة أنمي آلية قبل اجتياز جميع فحوص المراجعة");
+ return{
+  format:"zero-studio-auto-drawing-frame",version:1,batchId:raw.batchId,
+  frameIndex:raw.frameIndex,assetId:raw.assetId,
+  contentHash:String(raw.contentHash).toLowerCase(),
+  sourceSignature:String(raw.sourceSignature).toLowerCase(),
+  mimeType:"image/png",width:raw.width,height:raw.height,alpha:true,
+  review:{
+   status:complete?"approved":source.status==="rejected"?"rejected":"pending",
+   identity:source.identity,anatomy:source.anatomy,lineQuality:source.lineQuality,
+   timing:source.timing,note:String(source.note||"").replace(/[\\u0000-\\u001f]/g,"").slice(0,600)
+  }
+ };
+}
+
 export function normalizeProject(p){
  if(!p||p.format!=="zero-studio"||![1,2].includes(p.version)||!Array.isArray(p.frames)||!p.frames.length||p.frames.length>MAX_FRAMES)throw Error("ملف ZERO STUDIO غير صالح");
  const frames=p.frames.map(f=>{
   if(p.version===1||Array.isArray(f.paths)){const l=createLayer("الرسومات");l.operations=(f.paths||[]).map(x=>({id:uid("op"),kind:"stroke",path:validatePath(x)}));return{id:typeof f.id==="string"?f.id:uid("frame"),layers:[l]}}
   if(!Array.isArray(f.layers)||!f.layers.length||f.layers.length>MAX_LAYERS)throw Error("طبقات الإطار غير صالحة");
   const animeRaster=f.animeRaster===undefined||f.animeRaster===null?null:validateAnimeFrameRasterAsset(f.animeRaster);
-  return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer),...(animeRaster?{animeRaster}:{})};
+  const animeAutoDrawing=normalizeAnimeAutoDrawingRecord(f.animeAutoDrawing);
+  if(animeAutoDrawing&&!f.layers.some(layer=>layer?.type==="raster"&&typeof layer.dataUrl==="string")){
+   throw Error("رسمة الأنمي الآلية لا ترتبط بطبقة Raster محفوظة");
+  }
+  return{id:typeof f.id==="string"?f.id:uid("frame"),layers:f.layers.map(normalizeLayer),...(animeRaster?{animeRaster}:{}),...(animeAutoDrawing?{animeAutoDrawing}:{})};
  });
  const rasterHashes=frames.map(frame=>frame.animeRaster?.contentHash).filter(Boolean);
  const rasterAssetIds=frames.map(frame=>frame.animeRaster?.assetId).filter(Boolean);
