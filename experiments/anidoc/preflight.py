@@ -65,7 +65,7 @@ def main() -> int:
     checkpoint_status = {name: path.exists() for name, path in required.items()}
     vram_gib = round(gpu_memory_mib / 1024, 2) if gpu_memory_mib else None
     source_ready = root.is_dir()
-    python_compatible = (3, 8) <= sys.version_info[:2] < (3, 11)
+    python_compatible = sys.version_info[:2] == (3, 8)
     cuda_ready = torch_cuda is True
     gpu_ready = bool(gpu_name and gpu_memory_mib and gpu_memory_mib >= 14 * 1024)
     checkpoints_ready = all(checkpoint_status.values())
@@ -73,7 +73,7 @@ def main() -> int:
     report = {
         "python": sys.version.split()[0],
         "ani_doc_source_present": source_ready,
-        "python_compatible_range_3_8_to_3_10": python_compatible,
+        "python_3_8_recommended": python_compatible,
         "nvidia_smi_present": bool(nvidia_smi),
         "torch_cuda_available": torch_cuda,
         "torch_diagnostic_error": torch_error,
