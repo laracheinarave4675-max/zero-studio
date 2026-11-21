@@ -737,3 +737,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Anima is a promising anime-focused model for tests, but its model card shows a non-commercial license; do not use it for commercial production unless terms are separately cleared. Z-Image-Turbo is marked Apache-2.0 but is not yet shown to meet the anime quality target and still needs GPU compute.
 - No paid provider has been selected or connected. No account was created and no service was called to generate images. The next proof should use existing free public Spaces, if available, with a small repeatable background and character-sheet test.
 - The 24 independently drawn images/second goal remains unchanged; do not pretend limited free quotas can generate it continuously. Report constraints honestly and preserve the zero-dollar gate.
+
+
+## Digital Artist eye reliability update — 2026-11-21
+
+- Tightened identity and palette comparison: every landmark and named color in the approved reference must be present in the current drawing. Missing features are reported and force a failed comparison rather than being silently ignored.
+- Added regression tests for missing eye landmarks and missing palette swatches.
+- Branch `feat/digital-artist-engine` at `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d` passed 381/381 Node tests. Drawing engine runs #2490 and #2491 succeeded; Hybrid raster/SVG run #659 succeeded, including the Canvas2D portrait renderer and artifact upload.
+- The existing eye panel still measures pixels, stroke geometry, region fills and approved anatomy guides. This update does not claim neural vision, automatic facial landmark extraction, model training, or professional visual acceptance.
+- PR #14 remains Draft and unmerged. No production deployment; $0 budget maintained.
