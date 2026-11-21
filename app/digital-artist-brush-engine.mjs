@@ -12,7 +12,7 @@ const ROLE_ORDER = new Map(DIGITAL_ARTIST_BRUSH_ROLES.map((role, index) => [role
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 function validateClipPolygon(value, id) {
   if (!Array.isArray(value) || value.length < 3 || value.length > 20000) fail("Clip mask for " + id + " must be a polygon.");
-  return value.map(point => { const x=Number(point?.x), y=Number(point?.y); if (![x,y].every(Number.isFinite)||x<0||y<0||x>1920||y>1080) fail("Clip mask for " + id + " is outside the canvas."); return {x,y}; });
+  return value.map(point => { const x=Number(Array.isArray(point)?point[0]:point?.x), y=Number(Array.isArray(point)?point[1]:point?.y); if (![x,y].every(Number.isFinite)||x<0||y<0||x>1920||y>1080) fail("Clip mask for " + id + " is outside the canvas."); return {x,y}; });
 }
 const fail = message => { throw new Error(message); };
 const safeId = (value, label) => {
