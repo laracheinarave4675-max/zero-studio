@@ -199,6 +199,43 @@ export function drawRasterBrushStroke(context,points,options={}){
  }
  return{dabCount:dabs.length,brush,blendMode:options.erase?"destination-out":blendMode,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
 }
+/**
+ * Paint a closed semantic region directly into a transparent raster layer.
+ * The polygon is supplied by the artist planner as boundary points; Canvas2D
+ * rasterizes the interior with antialiased edges. No image payload or bitmap
+ * mask is embedded in the plan.
+ */
+export function fillRasterRegion(context, points, options = {}) {
+ if (!context || typeof context.save !== "function" || typeof context.fill !== "function" || typeof context.beginPath !== "function") {
+  throw Error("سياق تعبئة المنطقة النقطية غير صالح");
+ }
+ if (!Array.isArray(points) || points.length < 3 || points.length > 20000) throw Error("حدود منطقة التعبئة تحتاج إلى ثلاث نقاط على الأقل");
+ const clean = points.map(point => {
+  const x = Number(point?.x), y = Number(point?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x > 1920 || y > 1080) throw Error("نقطة حدود المنطقة خارج مساحة الرسم");
+  return { x, y };
+ });
+ const color = String(options.color || "#243348");
+ if (!/^#[0-9a-f]{6}$/i.test(color)) throw Error("لون منطقة التعبئة غير صالح");
+ const opacity = Number(options.opacity ?? 1);
+ if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) throw Error("شفافية منطقة التعبئة غير صالحة");
+ const blendMode = String(options.blendMode || "normal");
+ if (!Object.hasOwn(RASTER_BLEND_MODES, blendMode)) throw Error("نمط مزج منطقة التعبئة غير مدعوم");
+ context.save();
+ try {
+  context.globalAlpha = opacity;
+  context.globalCompositeOperation = RASTER_BLEND_MODES[blendMode];
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(clean[0].x, clean[0].y);
+  for (let index = 1; index < clean.length; index++) context.lineTo(clean[index].x, clean[index].y);
+  context.closePath();
+  context.fill();
+ } finally {
+  context.restore();
+ }
+ return { pointCount: clean.length, color, opacity, blendMode, renderMode: "closed-region-fill" };
+}
 export function mapPointsToRaster(points,canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize){
  const values=[canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize].map(Number);
  if(values.some(value=>!Number.isFinite(value)||value<=0))throw Error("أبعاد مساحة الرسم غير صالحة");
