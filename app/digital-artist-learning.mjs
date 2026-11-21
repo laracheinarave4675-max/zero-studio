@@ -132,7 +132,7 @@ export function evaluateArtistSkillProgress(record) {
 export function recommendNextArtistPractice(record) {
   const progress = evaluateArtistSkillProgress(record);
   const candidates = progress.skills.filter(item => !item.mastered && item.prerequisitesMet);
-  candidates.sort((a, b) => a.averageScore - b.averageScore || a.level - b.level);
+  candidates.sort((a, b) => Number(b.status === "practicing") - Number(a.status === "practicing") || a.averageScore - b.averageScore || a.level - b.level);
   const selected = candidates[0] ?? progress.skills.find(item => !item.mastered) ?? null;
   if (!selected) return null;
   const skill = SKILLS.get(selected.skillId);
