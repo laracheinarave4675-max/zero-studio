@@ -242,3 +242,10 @@ This is a meaningful bridge from observations to actual brush-engine commands, b
 
 
 The Digital Artist panel now exposes this bridge: a user can paste a validated vision report, generate a brush-plan draft, inspect/edit the plan in the existing JSON editor, and explicitly approve before executing it on new raster layers. Loading the fixed brush-engine demo returns to the ordinary manual-plan path. The panel clearly labels the report as externally supplied; it does not imply an image has been analyzed. This provides a working manual handoff while the free vision-model integration is unresolved.
+
+
+### Free local vision inference handoff
+
+The panel links to the official Hugging Face `SmolVLM-256M-Instruct-WebGPU` static Space and provides a constrained JSON prompt for anime-reference observations. The user runs the model in a WebGPU-capable browser, copies its structured observations into ZERO STUDIO, and uploads the same reference image. ZERO STUDIO computes SHA-256 locally using Web Crypto and rejects a supplied digest mismatch before generating a plan. The image bytes are not sent by the ZERO STUDIO report-to-plan adapter.
+
+This is a practical $0 inference route candidate, but remains a manual handoff. It is not an embedded model runtime or a connected Space API. Model weights must be downloaded to the browser and the user's Android GPU/browser compatibility and speed still require a real device test. The small VLM's coordinate estimates are approximate; all observations remain subject to confidence filtering and explicit human approval.
