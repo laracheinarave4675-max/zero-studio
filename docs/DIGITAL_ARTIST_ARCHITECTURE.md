@@ -8,15 +8,69 @@ Build an AI digital artist that actually draws anime artwork through explicit, o
 
 The authored source of truth is the set of separate raster layers plus their ordered, editable brush-stroke logs. A flattened raster composite is only a preview/export artifact and is never accepted as an image-generation output.
 
+## The artist's own eyes — D-031
+
+The artist must be able to inspect its own canvas. A general-purpose external vision-language model is **not** a required dependency for perception, planning or drawing. The "eyes" are a collection of focused analysis passes, each returning measurable defects, evidence locations and suggested corrections.
+
+### Specialist eyes
+
+1. **Silhouette eye:** reads the composite and semantic layers at thumbnail and full resolution; measures outer contours, closed shapes, negative space, overlaps, gaps, tangencies and disconnected regions. It checks whether fills leak past their intended boundaries.
+2. **Construction/anatomy eye:** checks head/body ratios, facial landmark placement, centerlines, joint positions, limb relationships, balance, perspective and pose constraints against Character DNA and the approved drawing brief.
+3. **Line-art eye:** measures edge continuity, stroke smoothness, taper, pressure hierarchy, thickness consistency, joins, accidental crossings, open contours and stray marks.
+4. **Color/light eye:** checks flat-color coverage, palette consistency, region separation, cel-shadow shapes, highlight placement, material grouping and whether the shading agrees with the chosen light direction.
+5. **Identity eye:** compares model-sheet landmarks, face shape, eye design, hair masses, costume motifs, accessories and palette swatches with the approved Character DNA. It should detect design drift without replacing the character with a freshly generated picture.
+6. **Continuity eye (animation stage):** compares independently authored drawings across time for identity drift, anatomy jumps, costume changes, line-weight flicker and inconsistent lighting.
+
+### How the eyes operate
+
+Each pass receives a rendered preview, selected layer images, stroke history, Character DNA and task constraints. The initial implementation should favor deterministic tools already compatible with Android and a $0 budget:
+- raster sampling, image pyramids, color histograms and palette-distance checks;
+- edge maps, connected components, contour extraction, hole/gap detection and geometric measurements;
+- region masks and alpha-boundary checks for closed fills and paint leakage;
+- landmark and proportion constraints from the existing Character DNA/anatomy modules;
+- stroke-log analysis for pressure, length, direction, taper and overlap;
+- before/after metrics and visual crops so the artist can identify exactly where a defect occurs.
+
+The critic combines the results into a prioritized report: defect type, pixel/region location, affected layer and stroke IDs, severity, confidence, and a correction proposal. The correction loop edits those original operations and replays the affected layer. It must never "fix" an error by generating or inserting a replacement image. External specialist models may later provide optional second opinions, but the artist must remain useful when they are unavailable.
+
+## Anime craft library and learning curriculum
+
+"Teaching anime" means teaching the craft and the conventions of anime drawing, not merely adding an anime keyword to a generic model. Build a structured library of authorized model sheets, construction examples, annotated drawings, layer breakdowns, palette studies, process recordings and correction examples.
+
+The curriculum should be explicit and testable:
+- shape language, gesture and silhouette design;
+- anime head construction, facial proportions, eyes, brows, nose and mouth;
+- hair as large masses first, then locks, clumps and strand accents;
+- hands, body proportions, pose, perspective and foreshortening;
+- costume construction, folds, seams, accessories and material cues;
+- clean inking, line hierarchy, taper, pressure, stabilizing and organic contours;
+- flat-color grouping, clean region boundaries, cel shadows, cast shadows, highlights and lighting;
+- expressions, model sheets, character turnarounds, camera views and shot-to-shot design consistency.
+
+Every reference item must carry its source, rights/permission, artist or owner credit where required, allowed purpose, style/technique tags, drawing stage and any annotations. Prefer user-approved character model sheets and art the project owns or has permission to use. Never scrape an arbitrary image board and assume that public visibility grants training or commercial rights.
+
+Learning should begin with small, measurable drawing exercises: draw the same eye in several angles; construct the same head in front/three-quarter/profile; draw hair masses without changing the silhouette; fill a closed face/skin region without leakage; apply two-tone cel shading under a fixed light; ink a curve with controlled taper; preserve a model-sheet character across a pose change. Store approved plans, stroke logs, corrections and evaluation scores as structured examples.
+
+Large-model training is not the first step. Start with a reference library, deterministic analysis, specialist rules and small component models only when their licenses, data and free compute are suitable. Do not train from non-commercial data for a commercial use case.
+
+## Two governing ZERO STUDIO goals
+
+1. Build a genuine anime production studio that can create a professional animated series.
+2. Build a genuine digital anime artist that authors its drawings through native editable marks, improves through its own eyes and art education, and ultimately supports 24 independently authored drawings per second.
+
+The digital artist is a foundational department of the studio, not a separate end product. Every improvement to its perception, inking, color, shading, correction and identity consistency must move both goals forward.
+
+
 ## What the artist is
 
-The digital artist is a software system with five cooperating parts:
+The digital artist is a software system with six cooperating parts:
 
-1. **Art director / reasoning brain:** interprets the shot brief and character reference, decides pose, composition, drawing order, layers, line hierarchy, and required detail.
-2. **Character memory:** stores the approved model-sheet identity, measured proportions, face/hair/costume details, palette, canonical view, and source digest. It provides constraints, not a flattened picture to trace.
-3. **Spatial anatomy guide:** uses the existing Character DNA, key drawings, and optional 3D pose reference to constrain joints, proportions, perspective, balance, and contact. It is guide-only; it does not deform or render final character art.
-4. **Drawing hand:** converts the plan into ordered, pressure-sensitive native raster brush commands on separate transparent layers. Each mark records its purpose, layer, brush profile, point samples, pressure, size, color, opacity, texture, blend mode, and sequence. SVG paths are optional geometry helpers only.
-5. **Art critic / correction loop:** inspects a temporary render, compares it to the approved reference and task, returns prioritized defects, and revises the original brush commands/layer strokes (or optional guide paths). It must not replace a flawed drawing with a newly generated image.
+1. **Art director / reasoning brain:** decides pose, composition, drawing order, semantic layers, line hierarchy and the next drawing action. It must be able to plan from the brief, approved references, project state and internal analysis without waiting for an external VLM.
+2. **Character memory:** stores the approved model-sheet identity, measured proportions, face/hair/costume details, palette, canonical views and source digest. It provides constraints, not a flattened picture to trace.
+3. **Spatial anatomy guide:** uses the existing Character DNA, key drawings and optional 3D pose reference to constrain joints, proportions, perspective, balance and contact. It is guide-only; it does not deform or render final character art.
+4. **Artist's eyes:** several internal perception passes inspect silhouette, anatomy, line art, color/light, identity and (later) frame continuity. They return measurable defects tied to pixel regions, layers and stroke IDs.
+5. **Drawing hand:** converts the plan into ordered, pressure-sensitive native raster brush commands on separate transparent layers. Each mark records its purpose, layer, brush profile, point samples, pressure, size, color, opacity, texture, blend mode and sequence. SVG paths are optional geometry helpers only.
+6. **Art critic / correction loop:** combines the eyes' reports, prioritizes defects, edits original brush commands/layer strokes and replays affected layers. It must not replace a flawed drawing with a newly generated image.
 
 ## Production sequence
 
@@ -73,7 +127,7 @@ The original optional geometry command contract in `app/digital-artist-engine.mj
 - Compilation into native vector layers and a replayable one-stroke-at-a-time command stream.
 - Structural audit that distinguishes editable vector operations from generated image payloads.
 
-This optional geometry contract is an infrastructure milestone, not the final-art path. The raster-first contract in `app/digital-artist-brush-engine.mjs` is the approved route for final character art. Neither contract yet means an AI model autonomously drew a complete production-quality anime character. The next milestone is to connect a vision-capable planner to the raster contract and then connect its reviewed brush stream to the existing editor preview/approval/layer commit UI.
+This optional geometry contract is an infrastructure milestone, not the final-art path. The raster-first contract in `app/digital-artist-brush-engine.mjs` is the approved route for final character art. Neither contract yet means an AI model autonomously drew a complete production-quality anime character. The next milestone is to strengthen the artist's internal eyes and anime craft library, then connect their measurable critique to the raster contract and the editor's correction/replay loop. External vision models remain optional helpers, never prerequisites.
 
 ## Training and improvement strategy
 
