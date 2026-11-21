@@ -795,3 +795,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Visual review: the fixture reads as a centered anime head-and-shoulders portrait with dark hair, facial features, brown eyes, and teal clothing. It is a coherent basic study, not yet a production-quality character illustration; hair shapes and face/eye construction remain simplified.
 - The region audit lists eight fill groups; only one reports `passed: true`. Several other groups show incomplete interior coverage (approximately 49%–88%), while one eye-white group has about 3.1% outside leakage. This confirms the quality eye is catching real fill defects rather than merely reporting success.
 - Next visual-engine improvements should target closed contour accuracy and region coverage before adding more decorative detail.
+
+
+### Organic vision contours — 2026-11-21
+
+- Extended the provider-neutral vision report contract with optional normalized polygon contours for semantic regions (3–512 points), while retaining legacy bounding boxes for backward compatibility.
+- Contour validation now checks normalized coordinates, consecutive duplicate points, measurable polygon area, containment inside the declared region box, and proper self-crossings.
+- The vision-to-brush planner now converts supplied contours directly into native raster region-fill polygons; it only falls back to a rectangle when no contour is present and emits an explicit warning in that case.
+- Updated the SmolVLM handoff prompt to request organic region outlines (8–64 points) for face, hair, eyes and clothing. These remain approximate model observations and require human review.
+- Added regression tests for contour preservation, invalid/degenerate/self-crossing/out-of-bounds contours, polygon-to-raster coordinate conversion, and legacy rectangle fallback.
+- Important verification limit: these commits were made through the GitHub Contents API; no fresh Actions run has yet been observed for this head. The latest verified green Actions runs remain on the earlier documented commit. No latest-head test pass is claimed.
+- Vercel's most recent listed preview for this branch still points to an earlier commit, not this contour update. No production deployment or merge was performed.
