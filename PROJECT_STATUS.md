@@ -1,5 +1,29 @@
 # ZERO STUDIO — Project Status
 
+Last updated: 2026-11-21 (UTC)
+
+## D-029 Digital Artist foundation — 2026-11-21
+
+- The user approved a new strategic direction: build an AI digital artist that actually draws via explicit, editable, ordered strokes and vector operations, never by image/video generation.
+- Added docs/DIGITAL_ARTIST_ARCHITECTURE.md as the governing design for the artist brain, Character DNA, anatomy guide, vector drawing hand, critique/correction loop, research roles, training strategy, and first visual acceptance test.
+- Recorded D-029 in DECISIONS.md. It supersedes the AI-authorship restriction in D-021/D-023 only for explicit editable Digital Artist commands; existing human-paint imports and source-preservation rules remain supported.
+- Added app/digital-artist-engine.mjs: provider-neutral plan validation, semantic layer ordering, stroke/tool/intent metadata, SVG path validation and canvas bounds, raster-payload rejection, command-stream compilation, replayable one-stroke steps, and structural audit.
+- Added tests/digital-artist-engine.test.mjs covering valid plan compilation, one-step replay access, image payload rejection, duplicate IDs, supported tools, stage order, geometry bounds, malformed paths, and identity digest validation.
+- Current isolated branch: feat/digital-artist-engine, based on feat/anime-raster-keyframe-motion-engine. The branch has not been merged or deployed.
+- **Not yet completed:** run the new tests in GitHub Actions; connect a vision-capable drawing planner to the command contract; wire replay/preview/approval/commit into the editor UI; produce and visually inspect one complete approved-reference character drawing. The current module is a validated command foundation, not yet an autonomous or production-quality artist.
+- No image-generation inference was used for the new Digital Artist code. No paid compute, merge, or production deployment was used.
+
+## Immediate next steps
+
+1. Verify the Digital Artist engine and regression tests in GitHub Actions.
+2. Connect the model-side drawing planner to emit this provider-neutral command format (text/vector commands only).
+3. Add step-by-step stroke replay and layer-level review to the Android editor.
+4. Run the first still-character test from a blank canvas and review visual identity, anatomy, line quality, flats and shadows before attempting animation.
+
+---
+
+# ZERO STUDIO — Project Status
+
 Last updated: 2026-11-20 (UTC)
 
 ## D-028 anatomy-guided animation engine — 2026-11-20
