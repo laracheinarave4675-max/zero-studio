@@ -193,7 +193,7 @@ test("Digital Artist eyes and anime curriculum are exposed in the editor without
 });
 
 
-import { compareAnimeEyeDesign, compareAnimeHairFlow } from "../app/digital-artist-eyes.mjs";
+import { compareAnimeEyeDesign, compareAnimeFaceDesign, compareAnimeHairFlow } from "../app/digital-artist-eyes.mjs";
 
 const animeEyeLandmarks = () => ({
   faceLeft:{x:.2,y:.5}, faceRight:{x:.8,y:.5},
@@ -278,4 +278,33 @@ test("anime eye and hair comparison reject non-finite tolerance settings", () =>
     {id:"c",root:{x:.3,y:.1},tip:{x:.4,y:.2}}
   ];
   assert.throws(() => compareAnimeHairFlow(clumps,clumps,{angleTolerance:"invalid"}), /tolerance/);
+});
+
+const animeFaceLandmarks = () => ({
+  faceTop:{x:.5,y:.15}, faceLeft:{x:.25,y:.35}, faceRight:{x:.75,y:.35},
+  cheekLeft:{x:.27,y:.5}, cheekRight:{x:.73,y:.5},
+  jawLeft:{x:.35,y:.72}, jawRight:{x:.65,y:.72}, chin:{x:.5,y:.85},
+  noseTip:{x:.5,y:.55}, mouthCenter:{x:.5,y:.68},
+  leftEyeCenter:{x:.4,y:.42}, rightEyeCenter:{x:.6,y:.42},
+  leftBrow:{x:.4,y:.32}, rightBrow:{x:.6,y:.32}
+});
+
+test("compareAnimeFaceDesign compares this character's face ratios without imposing a universal template", () => {
+  const reference=animeFaceLandmarks();
+  const match=compareAnimeFaceDesign(reference,structuredClone(reference));
+  assert.equal(match.passed,true);
+  assert.equal(match.compared,9);
+  assert.equal(match.measurementScope,"normalized-approved-face-landmarks-not-pixel-inference");
+  const changed=structuredClone(reference);
+  changed.jawLeft={x:.43,y:.72};
+  const drift=compareAnimeFaceDesign(reference,changed);
+  assert.equal(drift.passed,false);
+  assert.ok(drift.failures.includes("jawWidth"));
+});
+
+test("anime face comparison rejects missing landmarks and invalid tolerances", () => {
+  const reference=animeFaceLandmarks();
+  const missing={...reference}; delete missing.chin;
+  assert.throws(()=>compareAnimeFaceDesign(reference,missing),/chin/);
+  assert.throws(()=>compareAnimeFaceDesign(reference,reference,{jawWidthTolerance:"invalid"}),/tolerance/);
 });
