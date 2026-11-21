@@ -22,3 +22,12 @@ test("artist learning UI never describes deterministic assessment as neural trai
   assert.match(app, /ليست تدريباً تلقائياً لنموذج عصبي/);
   assert.match(html, /لا يدّعي تدريب نموذج عصبي/);
 });
+
+test("learning assessments are restricted to skills with direct measurable evidence", async () => {
+  const app = await readFile(new URL("../app/app.js", import.meta.url), "utf8");
+  assert.match(app, /skillId==="head-and-face"\|\|skillId==="body-anatomy"/);
+  assert.match(app, /skillId==="anime-inking"/);
+  assert.match(app, /skillId==="flat-color-groups"/);
+  assert.match(app, /لم نربط هذه المهارة بعد بمقاييس عين موثوقة/);
+  assert.match(app, /anatomy\.measurements\.length<3/);
+});
