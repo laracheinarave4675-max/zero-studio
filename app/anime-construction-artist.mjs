@@ -59,7 +59,7 @@ export function buildAnimeConstructionModel({
     center:{x:clamp(chin.x+lean,0,1),y:shoulderY},
     right:{x:clamp(chin.x+shoulderHalf+tilt,0,1),y:shoulderY-tilt*.35}
   };
-  const waistCenter={x:shoulders.center.x+lean,y:Math.min(.99,shoulderY+height*.66)};
+  const waistCenter={x:shoulders.center.x+lean,y:Math.min(.91,shoulderY+height*.55)};
   const waistWidth=shoulderHalf*1.05;
   const waist={center:waistCenter,width:waistWidth};
   const ribcage={center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.2},width:shoulderHalf*1.45,height:height*.34};
