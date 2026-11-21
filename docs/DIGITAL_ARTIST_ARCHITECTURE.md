@@ -223,3 +223,12 @@ GitHub Actions at application HEAD `a9f4449b848854623fde0d0172598c86b4ad112a` pa
 ### Updated acceptance gate
 
 The first complete character must be drawn from a blank canvas using separate editable raster layers and individually replayable native brush strokes. No embedded/generated image payload is allowed. It is acceptable to use SVG only for hidden construction guides or optional geometric helpers, not as a substitute for organic line art or painted color.
+
+
+### Vision observation boundary — 2026-11-21
+
+Added `app/digital-artist-vision-contract.mjs` as a provider-neutral boundary between image understanding and drawing. It validates a SHA-256-bound reference report containing subject/style/composition, normalized facial or anatomical landmarks, bounded semantic regions, palette swatches, identity locks, and per-observation confidence. `buildAnimeVisionDrawingBrief` filters high-confidence guides and regions while retaining uncertain observations in an explicit review queue.
+
+This is a contract and deterministic adapter only. It does **not** run a vision model, infer image content, create brush strokes, or claim autonomous drawing. The next integration must call an actual vision-capable model on the approved character reference, parse its response through this validator, then have a separate geometry planner author native Canvas2D brush commands. Low-confidence observations must remain reviewable; the model must never be allowed to inject image payloads or bypass the native brush-plan validator.
+
+The Hugging Face account connection is authenticated, and model discovery identified Qwen2.5-VL-3B-Instruct plus the smaller SmolVLM-256M-Instruct candidate. No successful inference was completed in this pass, so neither model is described as connected or tested. The vision-to-brush pipeline remains an explicit unfinished milestone.
