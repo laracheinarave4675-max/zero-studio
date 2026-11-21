@@ -26,6 +26,13 @@ Last updated: 2026-11-21 (UTC)
 3. Add automated critique that edits the existing stroke records and uses the tested replay route.
 4. Produce and visually review one complete character before starting independent 24-FPS animation drawings.
 
+## Vision-planner provider check — 2026-11-21
+
+- Inspected the authenticated Hugging Face integration and candidate Qwen3-VL models/spaces. Qwen3-VL-2B-Instruct (Apache-2.0) and the Qwen3-VL Demo Space are promising visual-analysis candidates; the demo accepts an image plus a prompt and exposes 2B/4B/8B choices.
+- The attempted smoke-test inference was **not executed**: the Space requested a 60-second ZeroGPU allocation while the connected free account had only 42 seconds remaining in its current daily quota. No provider inference or paid fallback ran.
+- Hugging Face's current docs state that free accounts receive 5 minutes/day of ZeroGPU time, while current Inference Providers pricing lists no monthly credits for Free users. Therefore the planner must not depend on paid Inference Providers and must fail closed when free quota is exhausted.
+- Candidate references: https://huggingface.co/spaces/baohuynhbk14/Qwen3-VL-Demo and https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct. No Space was modified, no model was connected to ZERO STUDIO, and the vision-planner inference milestone remains pending.
+
 ## D-029 / D-030 architecture record
 
 - D-029 approved an AI digital artist that authors explicit, editable drawing operations rather than final image/video generation. The initial vector-first command contract remains optional infrastructure for guides and selected geometry.
