@@ -7,11 +7,11 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null,animeAutoDrawingBusy=false,animeAutoDrawingStopRequested=false;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null,activeKimonoWalkChart=null,selectedDigitalArtistStrokeKey=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null,animeAutoDrawingBusy=false,animeAutoDrawingStopRequested=false;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null,activeKimonoWalkChart=null,selectedDigitalArtistStrokeKey=null,latestDigitalArtistInspection=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -1050,6 +1050,53 @@ async function saveArtistAssessmentFromLatestReport(){
   artistLearningStatus();status.textContent+="\\nتم حفظ محاولة "+skillId+" بنتيجة "+Math.round(attempt.score*100)+"% من "+checks.length+" قياسات. هذا سجل تقدم وليس تدريباً لنموذج عصبي.";
  }catch(error){if(status)status.textContent="لم يُحفظ التقييم: "+(error?.message||String(error));}
 }
+function ensureArtistLearningRecord(){
+ if(!project.artistLearning)project.artistLearning=createArtistLearningRecord();
+ return project.artistLearning;
+}
+function renderDigitalArtistLearning(){
+ const record=ensureArtistLearningRecord(),progress=evaluateArtistSkillProgress(record);
+ const summary=$("digitalArtistLearningSummary"),nextNode=$("digitalArtistNextPractice"),historyNode=$("digitalArtistLearningHistory");
+ if(summary)summary.textContent="المهارات المتقنة: "+progress.summary.mastered+" / "+progress.summary.totalSkills+" · قيد التدريب: "+progress.summary.practicing+" · لم تبدأ: "+progress.summary.notStarted+" · المحاولات المسجلة: "+record.attempts.length;
+ if(nextNode){
+  const next=recommendNextArtistPractice(record);
+  nextNode.textContent=next?"التدريب التالي: "+next.skillId+" — "+next.reason+"\nالتمارين: "+next.exercises.join(" | ")+"\nمعايير القياس: "+next.metrics.join(" · "):"اكتمل المنهج وفق سجلات التقييم الحالية.";
+ }
+ if(historyNode){
+  const recent=record.attempts.slice(-8).reverse();
+  historyNode.textContent=recent.length?recent.map(item=>item.skillId+" · "+Math.round(item.score*100)+"% · "+(item.passed?"اجتاز":"يحتاج إلى تدريب")+" · "+item.observedAt).join("\n"):"لا توجد تقييمات محفوظة بعد.";
+ }
+ const button=$("recordDigitalArtistAssessmentBtn");
+ if(button)button.disabled=!latestDigitalArtistInspection||latestDigitalArtistInspection.frame!==current;
+}
+async function recordLatestDigitalArtistAssessment(){
+ const status=$("digitalArtistLearningStatus"),button=$("recordDigitalArtistAssessmentBtn");
+ if(!latestDigitalArtistInspection||latestDigitalArtistInspection.frame!==current)throw Error("افحص الإطار الحالي أولاً قبل تسجيل محاولة تدريب.");
+ if(!globalThis.crypto?.subtle)throw Error("SHA-256 غير متاح في هذا المتصفح.");
+ const select=$("animeArtistSkillSelect"),skillId=select?.value;
+ if(!skillId)throw Error("اختر مهارة من منهج الأنمي أولاً.");
+ const report=latestDigitalArtistInspection;
+ const checks=[
+  {id:"visible-raster-output",passed:report.analyzedLayers>0&&report.visiblePixels>0},
+  {id:"region-fill-quality",passed:report.fillEyes.length>0&&report.fillEyes.every(item=>item.passed===true)},
+  {id:"stroke-geometry-quality",passed:report.strokeWarnings.length===0},
+  {id:"anatomy-reference-check",passed:!!report.characterIdentity?.anatomy&&!report.characterIdentity.anatomy.skipped&&report.characterIdentity.anatomy.passed===true}
+ ];
+ const canonical=JSON.stringify({frame:report.frame,operations:report.operations,visiblePixels:report.visiblePixels,fillEyes:report.fillEyes,strokeWarnings:report.strokeWarnings,characterIdentity:report.characterIdentity,layerEyes:report.layerEyes});
+ const digestBytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical));
+ const reportDigest=Array.from(new Uint8Array(digestBytes),byte=>byte.toString(16).padStart(2,"0")).join("");
+ const record=ensureArtistLearningRecord();
+ snapshot();
+ recordArtistAssessment(record,{id:uid("artist-assessment"),skillId,reportDigest,checks});
+ renderDigitalArtistLearning();
+ if(status)status.textContent="سُجلت المحاولة بواقع "+checks.filter(item=>item.passed).length+"/"+checks.length+" فحوص ناجحة. هذه نتيجة تقييم موثق وليست تدريباً تلقائياً لنموذج عصبي.";
+ if(button)button.disabled=true;
+}
+function mountDigitalArtistLearning(){
+ const button=$("recordDigitalArtistAssessmentBtn");
+ if(button&&!button.dataset.bound){button.dataset.bound="true";button.onclick=()=>recordLatestDigitalArtistAssessment().catch(error=>{$("digitalArtistLearningStatus").textContent="تعذر تسجيل التقييم: "+error.message;});}
+ renderDigitalArtistLearning();
+}
 function mountAnimeArtistCurriculum(){
  const select=$("animeArtistSkillSelect"),details=$("animeArtistSkillDetails");
  if(!select||!details||select.dataset.bound==="true")return;
@@ -1163,6 +1210,8 @@ async function inspectDigitalArtistEyes(){
    }))
   };
   report.correctionPlan=buildArtistCorrectionPlan(report);
+  latestDigitalArtistInspection=report;
+  renderDigitalArtistLearning();
   status.textContent=[
    "فحص الفنان — الإطار "+report.frame,
    "عين البنية: "+report.analyzedLayers+" طبقات، "+report.visiblePixels.toLocaleString("en-US")+" بكسل ظاهر",
@@ -1798,4 +1847,4 @@ $("applyCommandsBtn").onclick=()=>{try{const d=JSON.parse($("commandInput").valu
 function stop(){playing=false;clearInterval(timer);$("playBtn").textContent="▶ معاينة"}$("playBtn").onclick=()=>{if(playing){stop();render();return}if(project.frames.length<2)return;playing=true;$("playBtn").textContent="■ إيقاف";let i=current;timer=setInterval(()=>{i=(i+1)%project.frames.length;current=i;renderFrame(art,frame());$("frameInfo").textContent="الإطار "+(i+1)+" من "+project.frames.length},1000/+$("fpsSelect").value)};
 $("focusDrawingBtn").onclick=()=>{$("drawingWorkspace").scrollIntoView({behavior:"smooth",block:"start"});resetCanvasView();};
 $("newProjectBtn").onclick=()=>{if(!confirm("بدء مشروع جديد؟ احفظ عملك الحالي أولاً"))return;stop();snapshot(false,true);project=createProject("مشروع جديد");current=0;activeLayerId=frame().layers[0].id;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();resetRigModel();$("projectName").value="مشروع جديد";$("saveState").textContent="مشروع جديد";render()};
-if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));try{mountDigitalArtistBrushPanel();mountAnimeArtistCurriculum();render();resetRigModel();renderCharacterLibrary();wireAnimeAnatomyCalibration();renderAnimeAnatomyDNASelect();$("appRuntimeStatus").hidden=true}catch(error){const panel=$("appRuntimeStatus");panel.hidden=false;panel.textContent="تعذر تهيئة واجهة الرسم: "+(error?.message||String(error));console.error("ZERO STUDIO startup failed",error)}})();
+if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));try{ensureArtistLearningRecord();mountDigitalArtistBrushPanel();mountAnimeArtistCurriculum();mountDigitalArtistLearning();render();resetRigModel();renderCharacterLibrary();wireAnimeAnatomyCalibration();renderAnimeAnatomyDNASelect();$("appRuntimeStatus").hidden=true}catch(error){const panel=$("appRuntimeStatus");panel.hidden=false;panel.textContent="تعذر تهيئة واجهة الرسم: "+(error?.message||String(error));console.error("ZERO STUDIO startup failed",error)}})();
