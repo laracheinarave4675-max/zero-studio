@@ -73,3 +73,12 @@ test("correction output is bounded, explicit about rule-based feedback and never
   assert.ok(plan.suggestions.every(item => item.autoApplied === false && item.requiresArtistApproval === true));
   assert.throws(() => buildArtistCorrectionPlan(null), /inspection report/);
 });
+
+test("editor inspection imports and displays the correction plan", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const app = await readFile(new URL("../app/app.js", import.meta.url), "utf8");
+  assert.match(app, /buildArtistCorrectionPlan/);
+  assert.match(app, /report\.correctionPlan=buildArtistCorrectionPlan\(report\)/);
+  assert.match(app, /اقتراحات التصحيح/);
+  assert.match(app, /لا تعدّل الرسم أو تعتمد الضربات تلقائياً/);
+});
