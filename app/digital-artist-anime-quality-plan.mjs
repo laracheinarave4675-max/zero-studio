@@ -84,7 +84,9 @@ export function createDigitalArtistAnimeQualityPlan() {
     ]},
     {id:"ink",name:"06 Clean anime line art",role:"clean-line",strokes:[
       outline("face-ink","Ink the open cheek and chin contour without drawing a line across the forehead.",faceJaw,6),
-      line("hair-top-contour","Ink only the visible outer crown contour.","ink","#302538",8,join(bezier([720,430],[620,170],[820,75],[970,92],18),bezier([970,92],[1160,55],[1300,205],[1305,420],18)),{opacity:.96}),\n      line("hair-left-contour","Ink the visible left outer hair edge above the shoulder.","ink","#302538",8,join(bezier([720,430],[665,465],[635,560],[635,680],12)),{opacity:.96,clipPolygon:leftHairClip}),\n      line("hair-right-contour","Ink the visible right outer hair edge above the shoulder.","ink","#302538",8,join(bezier([1305,420],[1325,500],[1325,600],[1310,690],12)),{opacity:.96,clipPolygon:rightHairClip}),
+      line("hair-top-contour","Ink only the visible outer crown contour.","ink","#302538",8,join(bezier([720,430],[620,170],[820,75],[970,92],18),bezier([970,92],[1160,55],[1300,205],[1305,420],18)),{opacity:.96}),
+      line("hair-left-contour","Ink the visible left outer hair edge above the shoulder.","ink","#302538",8,join(bezier([720,430],[665,465],[635,560],[635,680],12)),{opacity:.96,clipPolygon:leftHairClip}),
+      line("hair-right-contour","Ink the visible right outer hair edge above the shoulder.","ink","#302538",8,join(bezier([1305,420],[1325,500],[1325,600],[1310,690],12)),{opacity:.96,clipPolygon:rightHairClip}),
       line("hair-crown-seam-left","Define the crown flow without crossing the face.","ink","#40334e",4,join(bezier([730,290],[750,205],[825,145],[905,135],12)),{opacity:.9,clipPolygon:hairBack}),
       line("hair-crown-seam-right","Define the opposite crown flow within the hair mass.","ink","#40334e",4,join(bezier([1015,135],[1110,145],[1195,220],[1225,310],12)),{opacity:.9,clipPolygon:hairBack}),
       outline("shoulder-ink","Ink the clothing silhouette with tapered pressure.",shoulder,7),
