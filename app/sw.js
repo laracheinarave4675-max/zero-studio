@@ -12,7 +12,7 @@ const FILES=[
   "./anime-anatomy-engine.mjs","./kimono-side-walk-chart.mjs",
   "./anime-auto-drawing-engine.mjs"
 ];
-const isAppCode=url=>/\\.(?:html|css|m?js)$/i.test(url.pathname);
+const isAppCode=url=>/\.(?:html|css|m?js)$/i.test(url.pathname);
 self.addEventListener("install",event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
 });
