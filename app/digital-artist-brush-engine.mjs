@@ -114,7 +114,7 @@ export function compileDigitalArtistBrushPlan(input) {
         brush: stroke.brush,
         points: stroke.points.map(point => ({ ...point })),
         options: {
-          size: stroke.size, color: stroke.color, opacity: stroke.opacity,
+          brush: stroke.brush, size: stroke.size, color: stroke.color, opacity: stroke.opacity,
           texture: stroke.texture, blendMode: stroke.blendMode, seed: stroke.seed,
           pressureSensitive: stroke.pressureSensitive, erase: stroke.erase
         }
