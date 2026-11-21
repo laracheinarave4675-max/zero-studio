@@ -7,8 +7,8 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
-import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
+import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
 (()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null,animeAutoDrawingBusy=false,animeAutoDrawingStopRequested=false;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null,activeKimonoWalkChart=null,selectedDigitalArtistStrokeKey=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
@@ -1098,11 +1098,27 @@ async function inspectDigitalArtistEyes(){
   layerEyes.forEach(layer=>layer.raster.dominantPalette.forEach(item=>palette.set(item.color,(palette.get(item.color)||0)+item.pixels)));
   const topColors=[...palette.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6).map(([color])=>color);
   const approvals=frameRecords.reduce((acc,record)=>{acc[record.stroke.review||"pending"]=(acc[record.stroke.review||"pending"]||0)+1;return acc;},{});
+  const selectedDNAId=$("animeAnatomyDNASelect")?.value||"";
+  const selectedDNA=(project.animeCharacterDNA||[]).find(item=>item.characterAssetId===selectedDNAId);
+  let anatomyEye=null;
+  if(selectedDNA){
+   try{
+    const dna=validateAnimeCharacterDNA(selectedDNA);
+    const savedKey=(dna.keyDrawings||[]).find(item=>item.frame===current&&item.approved===true);
+    const liveGuide=animeAnatomyActive&&animeAnatomyView?.value===dna.canonicalView&&
+     Object.keys(animeAnatomyPoints).length===ANIME_ANATOMY_JOINTS.length
+      ?{view:dna.canonicalView,joints:animeAnatomyPoints}
+      :savedKey?.guide||null;
+    if(liveGuide)anatomyEye=compareAnatomyGuideToDNA(dna,liveGuide,{relativeTolerance:.15});
+    else anatomyEye={skipped:true,passed:null,reason:"no-approved-current-frame-guide",compared:0,measurements:[]};
+   }catch(error){anatomyEye={skipped:true,passed:null,reason:"invalid-character-dna",message:error?.message||String(error),compared:0,measurements:[]};}
+  }
   const report={
    version:1,frame:current+1,analyzedLayers:layerEyes.length,operations:allGeometry.length,
    visiblePixels:totalVisible,topColors,
    operationKinds:{fills:allGeometry.filter(item=>item.kind==="region-fill").length,brushes:allGeometry.filter(item=>item.kind==="brush-stroke").length},
    approvals,
+   characterIdentity:{characterAssetId:selectedDNA?.characterAssetId||null,characterName:selectedDNA?.name||null,anatomy:anatomyEye},
    fillEyes:layerEyes.flatMap(layer=>layer.fillEyes.map(fill=>({layer:layer.name,...fill}))),
    layerEyes:layerEyes.map(layer=>({
     name:layer.name,role:layer.role,visible:layer.visible,
@@ -1119,6 +1135,7 @@ async function inspectDigitalArtistEyes(){
    "عين الخط: "+report.operations+" عملية؛ "+report.operationKinds.brushes+" ضربات فرشاة و"+report.operationKinds.fills+" تعبئات مغلقة",
    "العين اللونية: "+(topColors.join(" · ")||"لا توجد ألوان قابلة للقياس"),
    "عين التعبئة: "+report.fillEyes.filter(item=>item.passed).length+"/"+report.fillEyes.length+" مناطق اجتازت اختبار التغطية والتسرب"+(report.fillEyes.some(item=>!item.passed)?" — "+report.fillEyes.filter(item=>!item.passed).map(item=>item.id).join("، "):""),
+   "عين التشريح: "+(!anatomyEye?"اختر هوية Character DNA معتمدة":anatomyEye.skipped?(anatomyEye.reason==="no-approved-current-frame-guide"?"لا توجد وضعية معتمدة لهذا الإطار بعد":anatomyEye.reason==="camera-view-mismatch"?"تغير منظور الكاميرا؛ تم تخطي المقارنة":"تعذر استخدام مرجع الهوية"):anatomyEye.passed?"نسب العظام ضمن هامش 15% من Character DNA":"توجد انحرافات في "+anatomyEye.measurements.filter(item=>!item.passed).map(item=>item.name).join("، ")),
    "مراجعة العمليات: "+Object.entries(approvals).map(([key,value])=>key+" "+value).join("، "),
    ...report.layerEyes.map(layer=>layer.name+": "+(layer.bounds?"حدود "+layer.bounds.width+"×"+layer.bounds.height:"طبقة فارغة")+"، تغطية "+(layer.alphaCoverage*100).toFixed(1)+"%")
   ].join("\n");
