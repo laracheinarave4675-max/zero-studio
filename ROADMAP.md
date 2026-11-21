@@ -168,7 +168,7 @@ The new primary character-art direction is an AI digital artist that draws throu
 - [x] Define a versioned, provider-neutral plan schema with semantic art stages and individual stroke/tool/intent metadata.
 - [x] Validate SVG operations, bounds, IDs, layer sequence and reject embedded raster/image payloads.
 - [x] Compile plans into editable semantic vector layers and replayable one-stroke steps.
-- [ ] Pass the Digital Artist module tests in GitHub Actions.
+- [x] Pass the Digital Artist module and regression tests in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
 - [ ] Connect a vision-capable model planner to produce validated stroke plans from a brief plus approved character reference, without image-generation output.
 - [ ] Integrate stroke-by-stroke replay, layer preview, approval/rejection and commit into the Android workspace.
 - [ ] Produce one complete full-body character from a blank canvas; inspect the editable paths and visual quality against the approved model sheet.
@@ -188,11 +188,15 @@ This supersedes the vector-first character-art choice in D-029. The character Di
 - [x] Add a versioned raster brush-plan contract with semantic layers, per-point pressure, brush profile, size, color, opacity, texture, blend mode, seed, intent and replay order.
 - [x] Compile plans into native raster brush commands with `vectorRequired: false`.
 - [x] Add unit tests for the raster-first command contract and validation.
-- [ ] Verify the new module and all regression tests in GitHub Actions.
-- [ ] Add an execution adapter that paints compiled commands into native transparent raster layers and preserves the ordered stroke log for replay/editing.
+- [x] Verify the raster command contract and regression suite in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
+- [x] Add an executor adapter that paints compiled commands into native transparent raster layers, preserves stroke IDs/intents/source/points/options, finalizes layers, and rolls back failed runs.
+- [x] Integrate a minimal Digital Artist panel into the editor to load a brush plan, execute it with progress, and create separate raster layers.
+- [x] Add a deterministic 54-stroke / 7-layer portrait fixture to exercise the editor execution path; this is a test fixture, not an AI-authored drawing.
+- [x] Add tests for command ordering, layer finalization, rollback, malformed stream rejection, and native project stroke-history compatibility.
 - [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
-- [ ] Add visual critique that revises brush commands and layer content, not a regenerated image.
-- [ ] Produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
+- [ ] Add individual-stroke replay/scrubbing, correction, layer preview, review and approval controls.
+- [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
+- [ ] Run the fixture in a real browser, inspect its rendered output, then produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
 - [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
 
 **Important:** The older D-029 vector command contract remains optional infrastructure for geometric guides and selected contours. It is not the acceptance route for final anime character art. No generated image/video, no paid compute, no merge/deploy without user approval.
