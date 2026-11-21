@@ -41,7 +41,7 @@ const report={
  authoredSource:"deterministic hand-authored general anime drawing study",
  modelInferenceUsed:false,generatedImageUsed:false,externalImageGeneration:false,
  canvas:{width,height},layers,strokeCount:result.strokeCount,layerCount:result.layerCount,
- fillCount:layers.reduce((n,x)=>n+x.fillCount,0),rasterEye:eye,strokeGeometry:geometry,
+ fillCount:layers.reduce((n,x)=>n+x.fillCount,0),clippedOperationCount:stream.commands.filter(command=>command.options?.clipPolygon?.length>=3).length,clipMasks:stream.commands.filter(command=>command.options?.clipPolygon?.length>=3).map(command=>({strokeId:command.strokeId,pointCount:command.options.clipPolygon.length})),rasterEye:eye,strokeGeometry:geometry,
  note:"This benchmark tests general anime drawing craft before any user character likeness test. It is not a vision-model inference or final artistic acceptance."
 };
 await writeFile(out+"/report.json",JSON.stringify(report,null,2));
