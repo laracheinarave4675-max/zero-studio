@@ -6,7 +6,7 @@
 - Started an isolated One-to-All motion-transfer experiment on `experiment/one-to-all-motion-transfer`, stacked on the AniDoc preflight branch.
 - Added `docs/HYBRID_MOTION_EXPERIMENT.md`, `experiments/one-to-all/README.md`, and `experiments/one-to-all/RESULTS.md`.
 - Confirmed the division of roles: One-to-All is the motion-transfer candidate; AniDoc is a downstream reference-conditioned line-art/colorization tool and does not create arbitrary motion from a still image; ZERO STUDIO retains review, continuity, cleanup, project management, and delivery.
-- Identified the official free Kaggle T4 16 GB + ComfyUI route for One-to-All 1.3B, plus candidate 1.3B v2 / FP8 T5 / VAE files. The complete runtime package and workflow have not yet been executed.
+- Identified the official free Kaggle T4 16 GB + ComfyUI route for One-to-All 1.3B, plus candidate 1.3B v2 / FP8 T5 / VAE files. The complete runtime package and workflow have not yet been executed.\n- Added `experiments/one-to-all/package_motion_reference.py` and two local tests. A synthetic 7-frame / 12-FPS clip passed native-rate extraction, timestamp/hash manifest, contact-sheet, ZIP, and no-overwrite checks; no real model video was processed.
 - Attempted the public AniDoc Space with the existing ZERO STUDIO gallery reference and official sample motion video. Hugging Face rejected the call before inference because 60 seconds were requested and only 42 seconds of free ZeroGPU quota remained. No video was generated.
 - **Not yet verified:** One-to-All inference on Kaggle, actual ZERO STUDIO character identity retention, visual motion quality, import into a native project, or Android playback.
 - No model weights or user artwork were committed. No paid compute, merge, or production deployment was used.
