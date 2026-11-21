@@ -878,3 +878,10 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Corrected all four causes: updated the 90% assertion, prioritize previously practiced but weak skills, aligned the engine test with deep validation, and removed the redundant temporary controls/handler/import in favor of the single canonical learning panel.
 - Added deep imported-ledger checks and a regression test that rejects a forged score inconsistent with its stored pass/fail checks.
 - Latest code/test commits after those fixes have not yet produced a retrievable Actions result. Do not describe the integrated suite as passing until a new run confirms it. The earlier run's renderer proof passed; the node test jobs failed.
+
+### CI verification — anime drawing practice head `d58d2abf784044159467d4d6027dc4d350296bc4`
+
+- Drawing engine run #2686 passed all 420 Node tests (0 failures), including the detailed anime study and UI integration tests.
+- Hybrid raster/SVG run #747 passed all 420 Node tests (0 failures); the native five-brush proof and Digital Artist portrait render/artifact upload also succeeded.
+- An earlier run caught a stale reference to a removed assessment button; the obsolete reference was removed before the passing runs.
+- This confirms software contracts and renderer execution only. It does not establish professional anime drawing quality, autonomous neural learning, or Android device acceptance.
