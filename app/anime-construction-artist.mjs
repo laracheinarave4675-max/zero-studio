@@ -99,11 +99,6 @@ export function buildAnimeConstructionModel({
     {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:1},
     {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:-1}
   ];
-  const cubicPoints=(a,b,c,d,count=18)=>Array.from({length:count+1},(_,i)=>{
-    const t=i/count,u=1-t;
-    return {x:u*u*u*a.x+3*u*u*t*b.x+3*u*t*t*c.x+t*t*t*d.x,y:u*u*u*a.y+3*u*u*t*b.y+3*u*t*t*c.y+t*t*t*d.y};
-  });
-  const joinPoints=(...parts)=>parts.flatMap((part,index)=>index?part.slice(1):part);
   const hairBackSilhouette=joinPoints(
     cubicPoints({x:x+width*.5,y:y-height*.09},{x:x+width*1.35,y:y-height*.08},{x:x+width*1.32,y:y+height*.75},{x:x+width*1.18,y:y+height*1.58},22),
     cubicPoints({x:x+width*1.18,y:y+height*1.58},{x:x+width*.95,y:y+height*1.78},{x:x+width*.15,y:y+height*1.78},{x:x-width*.18,y:y+height*1.55},18),
