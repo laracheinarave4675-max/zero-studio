@@ -445,6 +445,211 @@ function updateAnimeRasterControls(){
  $("auditAnimeRasterFramesBtn").disabled=!ready;
  $("exportAnimeRasterSequenceBtn").disabled=true;
 }
+
+async function removeAnimeBlueBackdrop(imageDataUrl){
+ const image=new Image();
+ await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error("تعذر فتح الإطار الذي ولّده محرك التحريك."));image.src=imageDataUrl});
+ if(!image.naturalWidth||!image.naturalHeight||image.naturalWidth>4096||image.naturalHeight>4096)throw Error("أبعاد الإطار المولّد غير صالحة.");
+ const canvas=document.createElement("canvas");canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+ const context=canvas.getContext("2d",{willReadFrequently:true});if(!context)throw Error("تعذر إنشاء سطح معالجة Raster شفاف.");
+ context.drawImage(image,0,0,canvas.width,canvas.height);
+ const pixels=context.getImageData(0,0,canvas.width,canvas.height);
+ const matte=removeAnimeChromaKeyFromRgba(pixels.data);
+ pixels.data.set(matte.data);context.putImageData(pixels,0,0);
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+ if(!blob||blob.type!=="image/png"||blob.size<128)throw Error("تعذر حفظ رسمة الأنمي كـ PNG شفاف.");
+ return{blob,dataUrl:await readBlobAsDataUrl(blob),width:canvas.width,height:canvas.height,matte};
+}
+function getAnimeAutoDrawingLayer(targetFrame,frameIndex){
+ return targetFrame?.layers?.find(item=>item.type==="raster"&&item.name==="Anime Auto Drawing "+String(frameIndex+1).padStart(2,"0")&&typeof item.dataUrl==="string")||null;
+}
+async function loadAnimeAutoIdentityReference(galleryId){
+ const response=await fetch("/api/gallery-image?id="+encodeURIComponent(galleryId),{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok||payload.ok!==true||typeof payload.imageDataUrl!=="string")throw Error(payload.message||payload.error||"تعذر تحميل ورقة تصميم الشخصية من معرض الإنتاج.");
+ const reference=await normalizeCharacterReference(payload.imageDataUrl,"ورقة تصميم الهوية المعتمدة");
+ return reference.dataUrl;
+}
+function ensureAnimeAutoSequence(action,galleryId){
+ const active=project.animeAutoSequence;
+ if(active&&active.status!=="complete")return active;
+ if(project.frames.length+24>MAX_FRAMES)throw Error("لا توجد مساحة كافية لإضافة 24 إطاراً جديداً دون حذف رسومات المشروع الحالية.");
+ const batchId=("anime-auto-"+uid("shot")).replace(/[^a-z0-9_-]/gi,"").toLowerCase();
+ const baseFrameIndex=project.frames.length;
+ for(let index=0;index<24;index++){
+  const next=createFrame();
+  next.layers[0].name="ZERO-AUTO:"+batchId+":"+String(index).padStart(2,"0");
+  project.frames.push(next);
+ }
+ project.animeAutoSequence={
+  format:"zero-studio-anime-auto-sequence",version:1,batchId,baseFrameIndex,
+  fps:24,durationSeconds:1,totalFrames:24,action:String(action||"").trim(),
+  characterReferenceGalleryId:galleryId,status:"paused"
+ };
+ current=baseFrameIndex;activeLayerId=frame().layers[0].id;selection=null;render();
+ return project.animeAutoSequence;
+}
+async function generateAnimeAutoWalkSequence(){
+ if(animeAutoDrawingBusy)return;
+ const button=$("startAnimeAutoDrawingBtn"),stopButton=$("stopAnimeAutoDrawingBtn"),statusNode=$("animeAutoDrawingStatus");
+ animeAutoDrawingBusy=true;animeAutoDrawingStopRequested=false;
+ if(button)button.disabled=true;if(stopButton)stopButton.disabled=false;
+ const setStatus=message=>{if(statusNode)statusNode.textContent=message};
+ try{
+  setStatus("يفحص الاستوديو الاتصال وحاجز منع الرسوم قبل إنشاء أي إطار…");
+  const probe=await fetch("/api/images",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+  const probePayload=await probe.json().catch(()=>({}));
+  if(!probe.ok||probePayload.ok!==true)throw Error(probePayload.message||probePayload.error||"محرك الصور غير متصل.");
+  if(probePayload.inferenceStarted===true)throw Error("فشل فحص الأمان: بدأ استدعاء توليد غير متوقع أثناء الفحص.");
+  if(probePayload.animeAutoFreeTierConfirmed!==true)throw Error("أوقفت العملية لحماية الميزانية: لم أتمكن من إثبات تفعيل وضع مجاني فقط على Vercel وCloudflare معاً. لم يتم إنشاء الإطارات ولم يُستدعَ نموذج الصور.");
+  let sequence=project.animeAutoSequence;
+  const galleryId=sequence&&sequence.status!=="complete"?sequence.characterReferenceGalleryId:KIMONO_WALK_REFERENCE.galleryAssetId;
+  const identityReference=await loadAnimeAutoIdentityReference(galleryId);
+  if(!sequence||sequence.status==="complete"){
+   const action=$("animeMotionAction").value.trim();
+   if(!action)throw Error("أدخل وصف الحركة أولاً.");
+   sequence=ensureAnimeAutoSequence(action,galleryId);
+  }
+  const plan=createAnimeAutoDrawingPlan({action:sequence.action,characterName:"the approved long-black-haired kimono character"});
+  sequence.status="running";
+  const generatedFrames=new Map(),knownHashes=new Set();
+  let completed=0;
+  for(let index=0;index<24;index++){
+   const target=project.frames[sequence.baseFrameIndex+index];
+   const record=target?.animeAutoDrawing;
+   const savedLayer=getAnimeAutoDrawingLayer(target,index);
+   if(record&&record.batchId===sequence.batchId&&savedLayer){
+    const verifiedHash=await sha256Hex(blobFromBase64DataUrl(savedLayer.dataUrl,"image/png"));
+    if(verifiedHash!==record.contentHash)throw Error("بصمة الرسمة المحفوظة للإطار "+(index+1)+" لا تطابق محتواها. أوقف الاستئناف لحماية التسلسل.");
+    if(knownHashes.has(verifiedHash))throw Error("يوجد إطار مكرر داخل التسلسل الآلي؛ لن أتابع إنتاج نسخة مكررة.");
+    knownHashes.add(verifiedHash);
+    const reference=await normalizeCharacterReference(savedLayer.dataUrl,"رسم سابق للإطار "+(index+1));
+    generatedFrames.set(index,reference.dataUrl);completed++;
+   }else if(record||savedLayer){
+    throw Error("بيانات الإطار "+(index+1)+" غير متطابقة؛ لا يمكن استئناف التسلسل بأمان.");
+   }
+  }
+  const order=createAnimeAutoDrawingOrder(plan);
+  setStatus("بدأ محرك التحريك: "+completed+"/24 رسمة موجودة. ينتج الوضعيات المفتاحية أولاً ثم الإطارات الوسيطة، رسماً كاملاً جديداً لكل إطار.");
+  for(const index of order){
+   if(animeAutoDrawingStopRequested)break;
+   if(generatedFrames.has(index))continue;
+   const request=createAnimeAutoDrawingRequest(plan,index,{identityReference,generatedFrames});
+   setStatus("يرسم FLUX.2 الإطار "+(index+1)+"/24 — "+(request.frameKind==="key-drawing"?"وضعية مفتاحية":"إطار وسيط")+". لا يتم نسخ رسمة الإطار السابق.");
+   const response=await fetch("/api/images",{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({
+    prompt:request.prompt,model:request.model,aspectRatio:request.aspectRatio,
+    references:request.references,referenceRoles:request.referenceRoles,workload:"anime-auto-drawing"
+   })});
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok||payload.ok!==true||typeof payload.imageDataUrl!=="string"||!payload.imageDataUrl.startsWith("data:image/")){
+    throw Error(payload.message||payload.error||("تعذر توليد الإطار "+(index+1)+" (HTTP "+response.status+")."));
+   }
+   const poseReference=await normalizeCharacterReference(payload.imageDataUrl,"وضعية مولدة للإطار "+(index+1));
+   const transparent=await removeAnimeBlueBackdrop(payload.imageDataUrl);
+   const contentHash=await sha256Hex(transparent.blob);
+   if(knownHashes.has(contentHash))throw Error("أعاد النموذج رسمة مطابقة لإطار سابق عند الإطار "+(index+1)+". أوقفت التسلسل بدلاً من احتسابها رسماً مستقلاً.");
+   const target=project.frames[sequence.baseFrameIndex+index];
+   const added=addRasterLayer(target,{name:"Anime Auto Drawing "+String(index+1).padStart(2,"0"),dataUrl:transparent.dataUrl,mimeType:"image/png",width:transparent.width,height:transparent.height});
+   const sourceFrame=sourceFrameWithoutAnimeRaster(target);
+   const sourceSignature=await sha256Hex(frameSvg(sourceFrame,"anime-auto-final-"+target.id,[]));
+   target.animeAutoDrawing={
+    format:"zero-studio-auto-drawing-frame",version:1,batchId:sequence.batchId,
+    frameIndex:index,assetId:uid("anime-auto-art"),contentHash,sourceSignature,
+    mimeType:"image/png",width:transparent.width,height:transparent.height,alpha:true,
+    review:{status:"pending",identity:false,anatomy:false,lineQuality:false,timing:false,note:"Generated independently by the automatic animation engine; awaiting visual review."}
+   };
+   knownHashes.add(contentHash);generatedFrames.set(index,poseReference.dataUrl);completed++;
+   current=sequence.baseFrameIndex+index;activeLayerId=added.id;render();
+   setStatus("اكتمل رسم الإطار "+(index+1)+"/24 بصيغة PNG شفافة مستقلة. الرسومات الموجودة: "+completed+"/24. المراجعة الفنية ما زالت مطلوبة.");
+  }
+  sequence.status=completed===24?"complete":"paused";
+  if(sequence.status==="complete"){
+   setStatus("اكتمل توليد 24 رسمة أنمي مستقلة. جميعها محفوظة في الخط الزمني كطبقات PNG شفافة منفصلة، ولم تُعتمد فنياً بعد. راجع كل إطار قبل التصدير.");
+   await auditAnimeAutoDrawingSequence(false);
+  }else{
+   setStatus("توقف التوليد بأمان عند "+completed+"/24. الرسومات المكتملة محفوظة في المشروع ويمكن استئناف الباقي لاحقاً.");
+  }
+  render();
+ }catch(error){
+  if(project.animeAutoSequence&&project.animeAutoSequence.status==="running")project.animeAutoSequence.status="paused";
+  setStatus("توقف محرك التحريك: "+(error.message||"خطأ غير معروف")+". لم يتم استخدام أي بديل مدفوع.");
+  render();
+ }finally{
+  animeAutoDrawingBusy=false;
+  if(button)button.disabled=false;if(stopButton)stopButton.disabled=true;
+ }
+}
+function requestStopAnimeAutoDrawing(){
+ if(!animeAutoDrawingBusy)return;
+ animeAutoDrawingStopRequested=true;
+ const node=$("animeAutoDrawingStatus");
+ if(node)node.textContent="سيوقف المحرك بعد انتهاء طلب الإطار الجاري، ويحفظ ما أُنجز حتى الآن.";
+}
+function saveAnimeAutoDrawingReview(){
+ const record=frame().animeAutoDrawing;
+ if(!record){setStatus("لا يوجد رسم أنمي آلي في الإطار الحالي لمراجعته.",false);return}
+ const review={
+  identity:$("animeReviewIdentity").checked,
+  anatomy:$("animeReviewAnatomy").checked,
+  lineQuality:$("animeReviewLineQuality").checked,
+  timing:$("animeReviewTiming").checked
+ };
+ const complete=Object.values(review).every(Boolean);
+ record.review={status:complete?"approved":"pending",...review,note:complete?"Artist review completed in ZERO STUDIO.":"Artist review is incomplete."};
+ render();updateAnimeRasterControls();
+ const audit=$("animeAutoDrawingAuditStatus");
+ if(audit)audit.textContent=complete?"تم اعتماد مراجعة الإطار "+(record.frameIndex+1)+".":"حُفظت المراجعة الجزئية؛ لا يزال هذا الإطار غير معتمد.";
+}
+async function auditAnimeAutoDrawingSequence(exportZip=false){
+ try{
+  const sequence=project.animeAutoSequence;
+  if(!sequence)throw Error("لا يوجد تسلسل أنمي آلي في المشروع.");
+  const entries=[],records=[],hashes=new Set();let missing=0,approved=0,stale=0;
+  for(let index=0;index<24;index++){
+   const target=project.frames[sequence.baseFrameIndex+index],record=target?.animeAutoDrawing;
+   const imageLayer=getAnimeAutoDrawingLayer(target,index);
+   if(!record||record.batchId!==sequence.batchId||record.frameIndex!==index||!imageLayer){missing++;continue}
+   const blob=blobFromBase64DataUrl(imageLayer.dataUrl,"image/png");
+   const hash=await sha256Hex(blob);
+   const signature=await sha256Hex(frameSvg(sourceFrameWithoutAnimeRaster(target),"anime-auto-final-"+target.id,[]));
+   if(hash!==record.contentHash||signature!==record.sourceSignature){stale++;continue}
+   if(hashes.has(hash))throw Error("توجد بصمتان متطابقتان بين رسومات التسلسل.");
+   hashes.add(hash);records.push({frameIndex:index,filename:"frames/frame-"+String(index+1).padStart(4,"0")+".png",assetId:record.assetId,contentHash:hash,sourceSignature:signature,review:record.review});
+   if(record.review?.status==="approved")approved++;
+   if(exportZip){
+    const encoded=imageLayer.dataUrl.slice(imageLayer.dataUrl.indexOf(",")+1),binary=atob(encoded),bytes=new Uint8Array(binary.length);
+    for(let offset=0;offset<binary.length;offset++)bytes[offset]=binary.charCodeAt(offset);
+    entries.push({name:"frames/frame-"+String(index+1).padStart(4,"0")+".png",data:bytes});
+   }
+  }
+  const complete=missing===0&&stale===0&&records.length===24&&hashes.size===24;
+  const report="الرسومات المستقلة: "+records.length+"/24 · المراجعة الفنية المعتمدة: "+approved+"/24 · المفقودة: "+missing+" · البصمات المتغيرة: "+stale;
+  const statusNode=$("animeAutoDrawingAuditStatus");
+  if(!exportZip){
+   if(statusNode)statusNode.textContent=report+(complete?" — التسلسل مكتمل تقنياً.":" — لم يكتمل بعد.");
+   $("exportAnimeAutoSequenceBtn").disabled=!(complete&&approved===24);
+   return{complete,approved,missing,stale,unique:hashes.size};
+  }
+  if(!complete||approved!==24)throw Error("التصدير محظور حتى تكتمل 24 رسمة فريدة وتُعتمد مراجعة كل إطار على حدة. "+report);
+  entries.push({name:"manifest.json",data:JSON.stringify({
+   format:"zero-studio-auto-anime-drawings",version:1,fps:24,durationSeconds:1,
+   targetUniqueDrawingsPerSecond:24,batchId:sequence.batchId,
+   characterReferenceGalleryId:sequence.characterReferenceGalleryId,
+   action:sequence.action,drawingCount:24,reviewStatus:"all-24-approved",frames:records
+  },null,2)});
+  if(entries.filter(item=>/^frames\/frame-\d{4}\.png$/.test(item.name)).length!==24)throw Error("حزمة التصدير لا تحتوي على 24 صورة PNG مستقلة بالضبط.");
+  const archive=createZip(entries);
+  if(!(archive instanceof Uint8Array)||archive.length<1024||archive[0]!==0x50||archive[1]!==0x4b)throw Error("ملف ZIP الناتج غير صالح.");
+  download("zero-studio-ai-anime-24-independent-drawings.zip",new Blob([archive],{type:"application/zip"}));
+  if(statusNode)statusNode.textContent="تم تصدير 24 رسمة PNG مستقلة بعد اعتماد المراجعات الأربع لكل إطار.";
+  return{complete:true,approved:24};
+ }catch(error){
+  $("exportAnimeAutoSequenceBtn").disabled=true;
+  const statusNode=$("animeAutoDrawingAuditStatus");
+  if(statusNode)statusNode.textContent="تعذر الفحص أو التصدير: "+error.message;
+  return null;
+ }
+}
 function animeRasterStatus(message,ok=true){
  const node=$("animeRasterAuditStatus");node.textContent=message;
  node.style.color=ok?"var(--accent)":"#ff9999";
