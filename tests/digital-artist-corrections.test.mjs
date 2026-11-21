@@ -59,6 +59,7 @@ test("anatomy deviations create one correction per failed measured bone, not for
   assert.equal(plan.suggestions[0].skillId, "body-anatomy");
   assert.equal(plan.suggestions[0].severity, "high");
   assert.equal(plan.suggestions[1].severity, "medium");
+  assert.deepEqual(plan.suggestions.map(item => item.targetMeasurement), ["upperArmL", "shinR"]);
   const skipped = buildArtistCorrectionPlan({ characterIdentity: { anatomy: { skipped: true, passed: null } } });
   assert.equal(skipped.summary.total, 0);
 });
