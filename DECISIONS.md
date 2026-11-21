@@ -311,3 +311,13 @@ These eyes are measurement and critique tools, not image generators. They may co
 **Guardrails:** no generated image/video output as final art; no paid inference, GPU, subscriptions, or fallbacks; Android-first; preserve separate editable layers and ordered stroke history; no merge or production deployment without user approval.
 
 **Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and ROADMAP.md.
+
+
+## D-032 — Identity and palette eyes must fail closed on missing reference features (2026-11-21)
+
+- `compareLandmarks()` and `comparePalette()` now evaluate every feature in the approved reference, not only the intersection with the current drawing.
+- Missing facial/anatomical landmarks or named palette swatches are explicit failures with a `missing` list; they can no longer disappear from the denominator and produce a false pass.
+- Present features retain normalized-coordinate and RGB-distance checks. Reports distinguish measured features from missing ones; an incomplete comparison cannot pass.
+- Regression tests cover missing eye landmarks and missing costume/hair palette swatches.
+- Verified on `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d`: Drawing engine run #2490 passed all 381 tests. Drawing engine run #2491 also passed; Hybrid raster/SVG run #659 passed its Node tests and Canvas2D renderer/artifact jobs.
+- This is a stronger deterministic identity-checking foundation, not yet a learned visual model or a full facial-recognition system. Facial landmark extraction from a rendered character and palette extraction against an approved model sheet remain to be connected.
