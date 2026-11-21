@@ -23,6 +23,8 @@ test("three-quarter construction scales the far eye and shifts the head axis",()
  const threeQuarter=buildAnimeConstructionModel({viewYaw:.72});
  assert.notEqual(threeQuarter.eyes[0].bounds.width,threeQuarter.eyes[1].bounds.width);
  assert.notEqual(front.head.axes.centerline.from.x,threeQuarter.head.axes.centerline.from.x);
+ assert.notEqual(front.hair[5].root.x,threeQuarter.hair[5].root.x);
+ assert.notDeepEqual(front.ears[0].outline,threeQuarter.ears[0].outline);
 });
 
 test("hair clumps require independent ids and normalized, in-canvas control points",()=>{
