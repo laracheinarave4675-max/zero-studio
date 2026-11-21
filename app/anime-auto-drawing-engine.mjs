@@ -40,7 +40,7 @@ const isImageDataUrl = value => typeof value === "string" &&
   value.length <= 720 * 1024;
 
 export function createAnimeAutoDrawingPlan({ action, characterName = "the approved kimono character" } = {}) {
-  const brief = clean(action || "A restrained, natural one-second side-view walk with readable weight transfer, fixed foot contacts, gentle arm counter-swing, and controlled hair and kimono follow-through.");
+  const brief = clean(action || "A restrained, natural one-second side-view walk with readable weight transfer, fixed foot contacts, gentle arm counter-swing, and controlled hair and kimono follow-through.", 320);
   const name = clean(characterName, 100) || "the approved character";
   if (!brief) fail("A motion description is required.");
   return {
