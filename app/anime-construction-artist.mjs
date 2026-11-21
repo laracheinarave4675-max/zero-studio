@@ -55,7 +55,7 @@ export function buildAnimeConstructionModel({
   };
   const torso={
     neck,shoulders,
-    ribcage:{center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.28},width:shoulderHalf*1.45,height:height*.46},
+    ribcage:{center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.2},width:shoulderHalf*1.45,height:height*.34},
     waist:{center:{x:shoulders.center.x+lean,y:Math.min(.99,shoulderY+height*.66)},width:shoulderHalf*1.05}
   };
 
