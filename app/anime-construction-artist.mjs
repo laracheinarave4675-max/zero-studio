@@ -83,20 +83,34 @@ export function buildAnimeConstructionModel({
   const torso={neck,shoulders,ribcage,waist,outline:torsoOutline};
 
   const eyes=head.eyes.map((eye,index)=>{
-    const b=eye.bounds,cx=eye.center.x,cy=eye.center.y;
-    const irisCenter={x:cx+(index===0?1:-1)*b.width*.025,y:cy+b.height*.045};
-    const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.245,b.height*.455,32);
-    const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.025,b.width*.12,b.height*.29,28);
-    const upperLid=Array.from({length:17},(_,i)=>{
-      const t=i/16,px=cx-b.width*.5+b.width*t;
-      return {x:px,y:cy-b.height*.075-Math.sin(Math.PI*t)*b.height*.47};
+    const b=eye.bounds,cx=eye.center.x,cy=eye.center.y,side=index===0?-1:1;
+    const outerLift=b.height*.095*(1-Math.abs(yaw)*.18);
+    const innerDrop=b.height*.018;
+    const left={x:cx-b.width*.5,y:cy+(side<0?-outerLift:innerDrop)};
+    const right={x:cx+b.width*.5,y:cy+(side>0?-outerLift:innerDrop)};
+    const upperLid=Array.from({length:25},(_,i)=>{
+      const t=i/24;
+      const base=left.y+(right.y-left.y)*t;
+      const arch=Math.sin(Math.PI*t)*b.height*.43;
+      const peak=Math.sin(Math.PI*Math.min(1,t*1.12))*b.height*.045;
+      return {x:cx-b.width*.5+b.width*t,y:base-arch-peak};
     });
-    const lowerLid=Array.from({length:17},(_,i)=>{
-      const t=i/16,px=cx-b.width*.5+b.width*t;
-      return {x:px,y:cy+b.height*.075+Math.sin(Math.PI*t)*b.height*.37};
+    const lowerLid=Array.from({length:25},(_,i)=>{
+      const t=i/24;
+      const base=left.y+(right.y-left.y)*t;
+      return {x:cx-b.width*.5+b.width*t,y:base+b.height*.08+Math.sin(Math.PI*t)*b.height*.31};
     });
     const sclera=[...upperLid,...lowerLid.slice().reverse()];
-    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:(index===0?-1:1)!==(yaw>=0?1:-1)};
+    const irisCenter={x:cx-side*b.width*.055,y:cy+b.height*.035};
+    const irisScale=eye.nearSide?1:.92;
+    const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.245*irisScale,b.height*.43*irisScale,32);
+    const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.025,b.width*.115*irisScale,b.height*.265*irisScale,28);
+    const upperCrease=upperLid.map((point,i)=>({x:point.x,y:point.y-b.height*(.13+.025*Math.sin(Math.PI*i/24))}));
+    const lashFan=[0,1,2].map(i=>({
+      from:{x:left.x+b.width*.035*i,y:left.y-b.height*.025*i},
+      to:{x:left.x-b.width*(.08+.025*i),y:left.y-b.height*(.17+.035*i)}
+    }));
+    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperCrease,lashFan,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:!eye.nearSide,nearSide:eye.nearSide,outerCorner:side<0?left:right,innerCorner:side<0?right:left};
   });
 
   const defaultGuides=[
