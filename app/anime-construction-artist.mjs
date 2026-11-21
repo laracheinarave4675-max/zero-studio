@@ -78,8 +78,8 @@ export function buildAnimeConstructionModel({
   const eyes=head.eyes.map((eye,index)=>{
     const b=eye.bounds,cx=eye.center.x,cy=eye.center.y;
     const irisCenter={x:cx+(index===0?1:-1)*b.width*.025,y:cy+b.height*.045};
-    const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.205,b.height*.39,28);
-    const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.035,b.width*.105,b.height*.25,24);
+    const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.245,b.height*.455,32);
+    const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.025,b.width*.12,b.height*.29,28);
     const upperLid=Array.from({length:17},(_,i)=>{
       const t=i/16,px=cx-b.width*.5+b.width*t;
       return {x:px,y:cy-b.height*.075-Math.sin(Math.PI*t)*b.height*.47};
