@@ -57,3 +57,25 @@ A passing inference is not the same as a passing visual review. A passing visual
 ## Current blocker
 
 The connected Hugging Face account had only 42 seconds of free ZeroGPU quota remaining when the AniDoc test was attempted, while the Space requested 60 seconds. One-to-All is not deployed through Hugging Face Inference Providers. The practical next route is the upstream Kaggle T4 notebook, subject to free accelerator availability. No model weights have been downloaded and no GPU inference has been run from this repository.
+
+## Package the generated result for review
+
+After the ComfyUI workflow produces its MP4, extract every decoded source frame without changing its native frame rate:
+
+```bash
+python experiments/one-to-all/package_motion_reference.py \\
+  --input /path/to/motion_transfer.mp4 \\
+  --output /path/to/zero-studio-motion-reference \\
+  --reference-asset-id YOUR_ZERO_STUDIO_GALLERY_ASSET_ID \\
+  --driving-video-id driving-clip-01
+```
+
+The script creates:
+- `frames/frame_000000.png` … one PNG for every actual decoded source frame;
+- `contact_sheet.png` with frame numbers and native timestamps;
+- `motion_manifest.json` with native FPS, dimensions, duration, source IDs, model/checkpoint, and SHA-256 hashes;
+- `motion-reference-frames.zip` containing the manifest, contact sheet, and frame PNGs.
+
+It deliberately does not interpolate, duplicate, or convert FPS, and labels the package as a motion reference rather than final artwork. The generated MP4 remains separately available at its original path.
+
+Dependencies, if missing in the notebook runtime: `pip install -r experiments/one-to-all/requirements.txt`.
