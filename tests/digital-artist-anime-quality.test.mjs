@@ -38,12 +38,12 @@ test("general benchmark uses organic multi-sample contours and real editable bru
 test("anime benchmark clips hair highlights and skin shadows to semantic masks",()=>{
  const plan=createDigitalArtistAnimeQualityPlan();
  const strokes=plan.layers.flatMap(layer=>layer.strokes);
- for(const id of ["hair-ribbon-left","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow"]){
+ for(const id of ["hair-ribbon-left","hair-ribbon-mid","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow","jaw-shadow","neck-shadow","hair-shadow-left","garment-shadow","eye-lower-left","eye-lower-right"]){
   const stroke=strokes.find(item=>item.id===id);
   assert.ok(stroke?.clipPolygon?.length>=3,"missing semantic clip mask for "+id);
  }
  const stream=compileDigitalArtistBrushPlan(plan);
- for(const id of ["hair-ribbon-left","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow"]){
+ for(const id of ["hair-ribbon-left","hair-ribbon-mid","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow","jaw-shadow","neck-shadow","hair-shadow-left","garment-shadow","eye-lower-left","eye-lower-right"]){
   const command=stream.commands.find(item=>item.strokeId===id);
   assert.ok(command?.options?.clipPolygon?.length>=3,"clip mask was not preserved in compiled command "+id);
  }
@@ -72,4 +72,16 @@ test("anime iris, pupil and eye highlights are clipped to their own sclera",()=>
   assert.ok(stroke,"missing eye operation "+id);
   assert.equal(Array.isArray(stroke.clipPolygon)&&stroke.clipPolygon.length>=3,expected,"eye operation must be clipped: "+id);
  }
+});
+
+
+test("brush plan rejects semantic clipping masks outside the fixed canvas",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layer=plan.layers.find(item=>item.strokes.some(stroke=>stroke.id==="hair-ribbon-left"));
+ const stroke=layer.strokes.find(item=>item.id==="hair-ribbon-left");
+ const original=stroke.clipPolygon;
+ stroke.clipPolygon=[{x:-1,y:0},{x:10,y:0},{x:10,y:10}];
+ assert.throws(()=>compileDigitalArtistBrushPlan(plan),/outside the canvas/i);
+ stroke.clipPolygon=original;
+ assert.doesNotThrow(()=>compileDigitalArtistBrushPlan(plan));
 });
