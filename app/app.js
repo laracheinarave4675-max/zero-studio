@@ -1105,7 +1105,7 @@ async function inspectDigitalArtistEyes(){
    try{
     const dna=validateAnimeCharacterDNA(selectedDNA);
     const savedKey=(dna.keyDrawings||[]).find(item=>item.frame===current&&item.approved===true);
-    const liveGuide=animeAnatomyActive&&animeAnatomyView?.value===dna.canonicalView&&
+    const liveGuide=animeAnatomyActive&&$("animeAnatomyView")?.value===dna.canonicalView&&
      Object.keys(animeAnatomyPoints).length===ANIME_ANATOMY_JOINTS.length
       ?{view:dna.canonicalView,joints:animeAnatomyPoints}
       :savedKey?.guide||null;
