@@ -14,7 +14,7 @@ export const DEFAULT_TV_ANIME_STYLE_PROFILE = Object.freeze({
     jawWidth: 0.72, cheekWidth: 0.94, chinRoundness: 0.12
   }),
   eyes: Object.freeze({
-    widthToFace: 0.205, heightToWidth: 0.58, centerOffsetToFace: 0.225,
+    widthToFace: 0.205, heightToWidth: 0.82, centerOffsetToFace: 0.225,
     irisToEyeHeight: 0.82, upperLidWeight: 1.55, lowerLidWeight: 0.62,
     farEyeScaleAtFullYaw: 0.78, asymmetryAllowance: 0.06
   }),
@@ -36,7 +36,7 @@ const numericPaths = [
   ["head","eyeLine",0.35,0.55],["head","browLine",0.25,0.48],
   ["head","noseBase",0.52,0.78],["head","mouthLine",0.65,0.9],
   ["head","jawWidth",0.45,0.95],["head","cheekWidth",0.7,1],
-  ["eyes","widthToFace",0.12,0.3],["eyes","heightToWidth",0.25,0.7],
+  ["eyes","widthToFace",0.12,0.3],["eyes","heightToWidth",0.25,0.9],
   ["eyes","centerOffsetToFace",0.15,0.32],["eyes","irisToEyeHeight",0.55,1],
   ["eyes","upperLidWeight",1,2.5],["eyes","lowerLidWeight",0.3,1.2],
   ["eyes","farEyeScaleAtFullYaw",0.5,1],["eyes","asymmetryAllowance",0,0.15],
