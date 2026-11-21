@@ -896,3 +896,17 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Comparison results are included in the canonical inspection digest. The learning ledger still refuses eye/hair skill scoring until actual raster-linked evidence and trustworthy measurements are available.
 - CI on commit `a19d0b94fcc42910dcb46b60821f4af64fef5a7e` exposed a syntax error in the new tolerance helper. It was corrected in subsequent commits (`f5db0fa`, `730a46e`, `04e09ea`, `8c1da74`). A fresh CI result for the corrected head is not yet available; do not claim it passes.
 - No Android visual test, no autonomous model training, no PR merge, no production deployment, and no production Worker changes.
+
+## Digital Artist completion pass — 2026-11-21 (face, contours, CI repair)
+
+- Repaired a literal escaped-newline syntax defect in the anime-eye comparison module. The defect had blocked the full test suite and deterministic portrait renderer.
+- Tightened all anime-eye tolerance options to reject non-finite values instead of allowing NaN to silently bypass comparisons.
+- Added character-specific anime face proportion comparison for face aspect, cheek width, jaw width, lower-face ratio, nose/mouth levels, mouth-to-chin spacing, brow-to-eye gap, and eye spacing. It compares against each character's approved landmarks and does not impose a universal anime template.
+- Connected face comparison to the Arabic Digital Artist review panel and mapped failed measurements to actionable head-and-face exercises.
+- Vision contours supplied in a validated report now generate both polygon region fills and a closed native ink-brush contour stroke on a separate clean-line layer. Missing contours remain an explicitly warned rectangular fallback.
+- The editor already includes local alpha-connected raster contour extraction with bounded component/point counts; its report labels this as pixel-boundary geometry, not semantic eye/hair recognition.
+- Added regression coverage for face ratios, invalid tolerance rejection, organic contour fill+ink planning, and explicit rectangle fallback.
+- Updated the hybrid raster workflow to run on `feat/digital-artist-engine`.
+- Verified commit `38e128c5d2515c3606cf9f237798711a535a2afe`: Drawing engine tests run #2748 passed; Hybrid raster/SVG run #787 passed; both brush proof and Digital Artist portrait artifacts uploaded successfully.
+- This verifies code paths and deterministic raster rendering only. It does not establish professional anime quality, successful SmolVLM inference, Android WebGPU compatibility, or physical Android touch/stylus performance.
+- No PR merge or production deployment has occurred in this pass.
