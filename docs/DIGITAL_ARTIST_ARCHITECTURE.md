@@ -130,13 +130,17 @@ ZERO STUDIO already contains a native Canvas2D raster brush engine in `app/raste
 
 `app/digital-artist-brush-engine.mjs` defines `zero-studio-digital-artist-brush-plan` v1 and compiles it to a native Canvas2D raster command stream. It validates semantic layer order, identity digest, per-sample pressure and bounds, brush presets, color, size, texture, blend mode, and stroke IDs. It explicitly declares `vectorRequired: false`.
 
-### First renderer integration proof — 2026-11-21
+### Renderer and operation-review milestone — 2026-11-21
 
-The editor now executes compiled raster plans through the native brush engine and stores individual stroke history on separate persistent raster layers. A deterministic 54-stroke / 7-layer fixture is rendered in CI to a composite PNG and seven transparent layer PNGs. It is an execution fixture, not a vision-model drawing.
+The editor executes compiled raster plans through the native brush engine and stores each artist operation on separate persistent raster layers. The shared seven-layer test fixture now contains 56 operations: 14 closed region fills plus 42 native brush strokes. CI renders a composite PNG and seven transparent layer PNGs.
 
-Visual inspection of that fixture found that the flat-color pass currently creates broad horizontal bands over the face and clothing. This is a known quality defect, not an accepted anime result. Improve region filling and silhouette-constrained paint before evaluating the artist's visual quality.
+The versioned brush plan accepts explicit region-fill polygon boundaries. The validator and executor check polygon point counts, coordinate bounds, color, opacity and blend mode. The Canvas2D fill helper paints the closed polygon into the raster layer; no bitmap or generated-image payload is inserted into the plan. The flat-color sample was changed from horizontal bands to separate face, hair, ears, neck, eye-white, fringe and clothing regions.
 
-GitHub Actions on branch HEAD `f8f6e2019c0e76edd26530cc63e6ce8fae6b15b8` passed 353/353 tests in both Drawing engine run #2330 and Hybrid raster/SVG run #581. This confirms code and renderer integration, not artistic quality or Android performance.
+The editor now provides individual operation selection, isolated preview, previous/next navigation, approve/reject/reset controls, and persisted review state. These decisions are stored in native project history and can be undone. This is a review gate, not yet full point editing or corrected-stroke replay.
+
+Visual inspection of the latest CI composite confirms that the broad horizontal bands are gone and that the main color regions and eye whites are filled. The sample still has rough silhouette/line alignment and unfinished costume/hair details. It remains a deterministic hand-authored renderer fixture, not a model-authored image or visually accepted production character.
+
+GitHub Actions at HEAD `f3fb38792a5e8b5c1afc76f95c49217ae402f8dd` passed 357/357 tests in Drawing engine run #2371. Hybrid raster/SVG run #601 passed its test and Canvas2D proof jobs and uploaded the composite plus seven layer PNGs. This confirms code and renderer integration, not artistic quality, AI autonomy or Android performance.
 
 ### Updated acceptance gate
 
