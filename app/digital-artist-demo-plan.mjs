@@ -1,6 +1,7 @@
 export function createDigitalArtistDemoPlan(){
  const pointList=values=>values.map(([x,y],index)=>({x,y,pressure:(index===0||index===values.length-1)?0.24:0.48+((index%3)*0.16)}));
  const stroke=(id,intent,brush,color,size,values,extra={})=>({id,intent,brush,color,size,points:pointList(values),...extra});
+ const region=(id,intent,color,values,extra={})=>({id,intent,kind:"region-fill",color,points:pointList(values),...extra});
  return{
   format:"zero-studio-digital-artist-brush-plan",version:1,title:"Anime portrait — native brush execution study",
   identity:{characterAssetId:"zero-demo-anime-face"},
@@ -13,6 +14,20 @@ export function createDigitalArtistDemoPlan(){
    {id:"rough","name":"02 · Rough sketch",role:"rough-sketch",strokes:[
     stroke("rough-hair","Block in the hair silhouette.","graphite","#77747e",8,[[755,480],[735,345],[790,220],[900,155],[1035,155],[1145,235],[1190,365],[1165,500]]),
     stroke("rough-body","Block in the neck and shoulders.","graphite","#77747e",7,[[875,690],[875,790],[800,820],[690,900],[640,1010],[960,1040],[1280,1010],[1230,900],[1120,820],[1045,790],[1045,690]])
+   ]},
+   {id:"flats",name:"04 · Flat colors",role:"flat-color",strokes:[
+    region("hair-cap-fill","Fill the crown inside the outer hair silhouette.","#34384c",[[760,465],[738,350],[785,250],[875,175],[975,150],[1080,190],[1150,275],[1180,390],[1150,485],[1115,410],[1095,330],[1040,280],[970,255],[900,275],[840,335],[790,425]]),
+    region("hair-left-lock-fill","Fill the long left hair lock within its contour.","#34384c",[[770,405],[748,525],[755,680],[790,800],[855,885],[900,850],[865,760],[840,650],[820,535],[810,440]]),
+    region("hair-right-lock-fill","Fill the long right hair lock within its contour.","#34384c",[[1150,405],[1172,525],[1165,680],[1130,800],[1065,885],[1020,850],[1055,760],[1080,650],[1100,535],[1110,440]]),
+    region("skin-face-fill","Fill the enclosed face silhouette with the warm skin base.","#efc4b1",[[800,390],[835,370],[885,360],[960,365],[1035,360],[1085,370],[1120,390],[1115,500],[1085,610],[1020,685],[960,710],[900,685],[835,610],[805,500]]),
+    region("skin-ear-left-fill","Fill the left ear inside its outline.","#efc4b1",[[790,485],[765,475],[752,505],[775,550],[802,552]]),
+    region("skin-ear-right-fill","Fill the right ear inside its outline.","#efc4b1",[[1130,485],[1155,475],[1168,505],[1145,550],[1118,552]]),
+    region("neck-skin-fill","Fill the neck shape between the jaw and clothing.","#efc4b1",[[895,685],[1025,685],[1022,785],[1060,820],[1015,850],[960,865],[905,850],[860,820],[898,785]]),
+    region("hair-bang-left-fill","Fill the left fringe lock without crossing the face contour.","#34384c",[[790,355],[850,290],[900,280],[925,440],[885,410],[850,380]]),
+    region("hair-bang-center-fill","Fill the central fringe lock inside its ink contour.","#34384c",[[900,245],[970,220],[1030,270],[1000,435],[970,390],[940,350]]),
+    region("hair-bang-right-fill","Fill the right fringe lock inside its ink contour.","#34384c",[[1040,275],[1105,300],[1145,380],[1090,430],[1070,360]]),
+    region("cloth-main-fill","Fill the complete upper clothing silhouette.","#71999c",[[875,800],[800,825],[710,890],[665,990],[790,1010],[960,1030],[1130,1010],[1255,990],[1210,890],[1120,825],[1045,800],[1020,850],[960,880],[900,850]]),
+    region("cloth-collar-fill","Paint the inner collar panel within the clothing shape.","#9bb8b1",[[890,810],[960,885],[1030,810],[1015,900],[960,935],[905,900]])
    ]},
    {id:"ink","name":"03 · Clean line art",role:"clean-line",strokes:[
     stroke("face-outline","Ink the cheeks, jaw and chin.","ink","#28232e",8,[[790,390],[795,500],[835,615],[900,690],[960,715],[1020,690],[1085,615],[1125,500],[1130,390]]),
@@ -37,20 +52,6 @@ export function createDigitalArtistDemoPlan(){
     stroke("neck-left","Draw the left neck contour.","ink","#302832",7,[[890,680],[895,790],[870,825]]),
     stroke("neck-right","Draw the right neck contour.","ink","#302832",7,[[1030,680],[1025,790],[1050,825]]),
     stroke("shoulders","Draw the shoulder and upper clothing contours.","ink","#302832",9,[[875,800],[800,825],[710,890],[665,990],[960,1030],[1255,990],[1210,890],[1120,825],[1045,800]])
-   ]},
-   {id:"flats","name":"04 · Flat colors",role:"flat-color",strokes:[
-    stroke("skin-band-1","Lay the first warm skin base band.","gouache","#efc4b1",46,[[850,385],[960,388],[1070,385]]),
-    stroke("skin-band-2","Fill the upper face with skin tone.","gouache","#efc4b1",52,[[820,435],[960,438],[1100,435]]),
-    stroke("skin-band-3","Fill the eye and cheek area.","gouache","#efc4b1",56,[[805,490],[960,493],[1115,490]]),
-    stroke("skin-band-4","Continue the skin base through the cheeks.","gouache","#efc4b1",58,[[820,545],[960,548],[1100,545]]),
-    stroke("skin-band-5","Fill the lower face.","gouache","#efc4b1",52,[[845,600],[960,603],[1075,600]]),
-    stroke("skin-band-6","Finish the chin base tone.","gouache","#efc4b1",42,[[890,650],[960,653],[1030,650]]),
-    stroke("hair-fill-1","Lay the dark hair base across the crown.","gouache","#34384c",62,[[805,235],[900,205],[1010,205],[1110,250]]),
-    stroke("hair-fill-2","Fill the upper hair mass.","gouache","#34384c",56,[[780,300],[900,270],[1040,275],[1145,335]]),
-    stroke("hair-fill-3","Add the dark side locks.","gouache","#34384c",54,[[775,370],[770,520],[790,675],[830,800]]),
-    stroke("hair-fill-4","Add the opposite side lock.","gouache","#34384c",54,[[1145,370],[1150,520],[1130,675],[1090,800]]),
-    stroke("neck-base","Lay the neck base color.","gouache","#efc4b1",38,[[925,735],[930,790],[945,820]]),
-    stroke("cloth-base","Lay the jacket base color.","gouache","#71999c",72,[[735,925],[850,900],[960,915],[1070,900],[1185,925]])
    ]},
    {id:"shadow","name":"05 · Shadows",role:"shadow",strokes:[
     stroke("left-cheek-shadow","Add a soft left cheek shadow.","watercolor","#bd8889",30,[[820,555],[850,565],[875,555]],{opacity:.5,texture:.45}),
