@@ -859,3 +859,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Latest code SHA: `02cd7c8633852b92b9f61e792aa29e8024baeaab`. Drawing engine and Hybrid raster/SVG CI runs were queued for this commit; no pass result has been observed yet.
 - PR #14 remains draft; no merge or production deployment.
 
+
+## D-035 CI feedback and regression fixes — 2026-11-21
+
+- The first integrated Actions run on `02cd7c8633852b92b9f61e792aa29e8024baeaab` completed with 409/413 tests passing. Syntax checks passed; the native raster portrait proof job passed.
+- Four test failures were identified: an outdated flat-color correction assertion (expected 88% after the agreed threshold was raised to 90%), a recommender tie-breaking issue that preferred an untouched skill over a weak skill already practiced, an engine test expecting the previous validation error wording, and a DOM test detecting a duplicate temporary assessment button.
+- Corrected all four causes: updated the 90% assertion, prioritize previously practiced but weak skills, aligned the engine test with deep validation, and removed the redundant temporary controls/handler/import in favor of the single canonical learning panel.
+- Added deep imported-ledger checks and a regression test that rejects a forged score inconsistent with its stored pass/fail checks.
+- Latest code/test commits after those fixes have not yet produced a retrievable Actions result. Do not describe the integrated suite as passing until a new run confirms it. The earlier run's renderer proof passed; the node test jobs failed.
