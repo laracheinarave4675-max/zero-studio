@@ -1088,6 +1088,8 @@ function mountDigitalArtistLearning(){
  renderDigitalArtistLearning();
 }
 function mountAnimeArtistCurriculum(){
+ const compareButton=$("compareAnimeDesignLandmarksBtn");
+ if(compareButton&&compareButton.dataset.bound!=="true"){compareButton.dataset.bound="true";compareButton.onclick=compareAnimeDesignLandmarks;}
  const select=$("animeArtistSkillSelect"),details=$("animeArtistSkillDetails");
  const difficulty=$("animeArtistDifficulty"),startButton=$("startAnimeArtistPracticeBtn"),sessionNode=$("animeArtistPracticeSession");
  if(!select||!details||select.dataset.bound==="true")return;
