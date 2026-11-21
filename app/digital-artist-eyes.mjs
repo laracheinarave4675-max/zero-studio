@@ -132,6 +132,58 @@ export function compareLandmarks(reference, current, options = {}) {
   };
 }
 
+const ANATOMY_BONE_PAIRS = Object.freeze({
+  upperArmL:["shoulderL","elbowL"], lowerArmL:["elbowL","wristL"],
+  upperArmR:["shoulderR","elbowR"], lowerArmR:["elbowR","wristR"],
+  thighL:["hipL","kneeL"], shinL:["kneeL","ankleL"],
+  thighR:["hipR","kneeR"], shinR:["kneeR","ankleR"],
+  torso:["pelvis","chest"], neck:["chest","neck"], head:["neck","head"]
+});
+
+/**
+ * Compare an approved pose guide with the character's fixed anatomical DNA.
+ * Uses the same 16:9 normalized drawing-space metric as the anatomy engine.
+ * This evaluates proportion drift, not visual contour accuracy.
+ */
+export function compareAnatomyGuideToDNA(dna, guide, options = {}) {
+  if (!dna || dna.format !== "zero-studio-character-dna" || dna.version !== 1 ||
+      !dna.anchorGuide?.joints || !dna.boneLengths) fail("An approved Character DNA record is required.");
+  if (!guide || !guide.joints || typeof guide.joints !== "object") fail("A calibrated current anatomy guide is required.");
+  if (String(guide.view || "") !== String(dna.canonicalView || "")) {
+    return {
+      compared: 0, skipped: true, passed: null, reason: "camera-view-mismatch",
+      referenceView: dna.canonicalView, currentView: guide.view || null, measurements: []
+    };
+  }
+  const tolerance = Number.isFinite(Number(options.relativeTolerance))
+    ? clamp(Number(options.relativeTolerance), 0, 1) : 0.15;
+  const point = (source, name) => {
+    const x = Number(source?.[name]?.x), y = Number(source?.[name]?.y);
+    if (![x, y].every(Number.isFinite) || x < 0 || x > 1 || y < 0 || y > 1) {
+      fail("The current anatomy guide is missing a valid " + name + " landmark.");
+    }
+    return { x, y };
+  };
+  const length = (a, b) => Math.hypot((b.x - a.x) * (16 / 9), b.y - a.y);
+  const measurements = Object.entries(ANATOMY_BONE_PAIRS).map(([name, [from, to]]) => {
+    const expected = Number(dna.boneLengths[name]);
+    if (!Number.isFinite(expected) || expected <= 0) fail("Character DNA has no valid " + name + " measurement.");
+    const actual = length(point(guide.joints, from), point(guide.joints, to));
+    const ratio = actual / expected;
+    const deviation = Math.abs(ratio - 1);
+    return { name, expected, actual, scaleRatio: ratio, relativeDeviation: deviation, passed: deviation <= tolerance };
+  });
+  return {
+    compared: measurements.length,
+    skipped: false,
+    meanRelativeDeviation: measurements.reduce((sum, item) => sum + item.relativeDeviation, 0) / measurements.length,
+    maxRelativeDeviation: Math.max(...measurements.map(item => item.relativeDeviation)),
+    relativeTolerance: tolerance,
+    passed: measurements.every(item => item.passed),
+    measurements
+  };
+}
+
 /** The color eye: compare approved named palette swatches against a rendered palette. */
 export function comparePalette(reference, current, options = {}) {
   if (!reference || !current || typeof reference !== "object" || typeof current !== "object") fail("Two named palettes are required.");
