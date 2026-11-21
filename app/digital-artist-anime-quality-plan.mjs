@@ -85,10 +85,8 @@ export function createDigitalArtistAnimeQualityPlan() {
     {id:"ink",name:"06 Clean anime line art",role:"clean-line",strokes:[
       outline("face-ink","Ink the open cheek and chin contour without drawing a line across the forehead.",faceJaw,6),
       outline("hair-back-ink","Ink the large rear hair silhouette.",hairBack,9),
-      line("hair-crown-seam-left","Define the crown flow without crossing the face.","ink","#302538",5,join(bezier([730,290],[750,205],[825,145],[905,135],12)),{opacity:.82,clipPolygon:hairBack}),
-      line("hair-crown-seam-right","Define the opposite crown flow within the hair mass.","ink","#302538",5,join(bezier([1015,135],[1110,145],[1195,220],[1225,310],12)),{opacity:.82,clipPolygon:hairBack}),
-      line("hair-side-seam-left","Separate the outer left hair lock.","ink","#302538",4,join(bezier([650,520],[635,680],[670,845],[750,960],14)),{opacity:.8,clipPolygon:leftHairClip}),
-      line("hair-side-seam-right","Separate the outer right hair lock.","ink","#302538",4,join(bezier([1305,520],[1320,680],[1280,845],[1200,960],14)),{opacity:.8,clipPolygon:rightHairClip}),
+      line("hair-crown-seam-left","Define the crown flow without crossing the face.","ink","#40334e",4,join(bezier([730,290],[750,205],[825,145],[905,135],12)),{opacity:.9,clipPolygon:hairBack}),
+      line("hair-crown-seam-right","Define the opposite crown flow within the hair mass.","ink","#40334e",4,join(bezier([1015,135],[1110,145],[1195,220],[1225,310],12)),{opacity:.9,clipPolygon:hairBack}),
       outline("shoulder-ink","Ink the clothing silhouette with tapered pressure.",shoulder,7),
       outline("eye-left-ink","Ink the expressive left eyelid.",leftEye,7),
       outline("eye-right-ink","Ink the expressive right eyelid.",rightEye,7),
@@ -132,7 +130,7 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("nose-bridge","Suggest a delicate nose bridge and tip.","ink","#d69b91",2,[[970,500],[968,530],[980,545]],{opacity:.65,clipPolygon:face}),
       line("lower-lip","Separate the lower lip with a soft tapered accent.","gouache","#c77e82",3,[[945,640],[970,646],[990,640]],{opacity:.7,clipPolygon:face}),
       line("hair-strand-crown-left","Add a short crown strand following hair growth.","ink","#665a72",2,[[790,245],[835,205],[890,180]],{opacity:.7,clipPolygon:hairBack}),
-      line("hair-strand-crown-right","Add a second crown strand following hair growth.","ink","#665a72",2,[[1040,175],[1100,190],[1140,235]],{opacity:.7,clipPolygon:hairBack})
+      line("hair-strand-crown-right","Add a second crown strand following hair growth.","ink","#665a72",2,[[1040,175],[1100,190],[1140,235]],{opacity:.7,clipPolygon:hairBack}),\n      line("hair-strand-top-left","Add a fine curved strand over the upper left crown.","ink","#766983",2,join(bezier([760,265],[790,190],[860,155],[925,150],12)),{opacity:.8,clipPolygon:hairBack}),\n      line("hair-strand-top-right","Add a fine curved strand over the upper right crown.","ink","#766983",2,join(bezier([1000,150],[1080,155],[1150,195],[1190,265],12)),{opacity:.8,clipPolygon:hairBack}),\n      line("hair-strand-left-inner","Add a short directional strand on the upper left side lock.","ink","#766983",2,join(bezier([680,390],[670,455],[675,520],[695,575],10)),{opacity:.72,clipPolygon:leftHairClip}),\n      line("hair-strand-right-inner","Add a short directional strand on the upper right side lock.","ink","#766983",2,join(bezier([1250,390],[1270,455],[1265,520],[1245,575],10)),{opacity:.72,clipPolygon:rightHairClip})
     ]}
   ];
   return {
