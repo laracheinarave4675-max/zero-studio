@@ -62,7 +62,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.8,clump.flow))
   ];
   const highlights=[
-    ...model.hair.flatMap(clump=>clump.strands.map((strand,index)=>stroke("hair-sheen-"+clump.id+"-"+index,"Place a narrow reflected-light ribbon that follows the local hair-clump curvature.","ink",index?"#887b9a":"#c0b3c9",index?2.8:4.2,strand,{opacity:index?.5:.78}))),
+    ...model.hair.flatMap(clump=>clump.strands.map((strand,index)=>stroke("hair-sheen-"+clump.id+(index?"-"+index:""),"Place a narrow reflected-light ribbon that follows the local hair-clump curvature.","ink",index?"#887b9a":"#c0b3c9",index?2.8:4.2,strand,{opacity:index?.5:.78}))),
     ...model.eyes.map(eye=>stroke(eye.id+"-iris-upper-rim","Define the upper iris rim beneath the eyelid.","ink","#694a57",1.8,eye.iris.slice(5,15),{opacity:.8}))
   ];
   const lightFromLeft=model.shadows.light.x<0;
