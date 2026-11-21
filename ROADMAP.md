@@ -217,4 +217,22 @@ The two governing goals remain: build a real anime production studio, and build 
 
 **Implementation order:** internal silhouette/anatomy/line/color/identity analysis → strengthen brushes, fills, inking, cel shading and highlights → create a rights-cleared anime model-sheet and craft library → connect visual critique to stroke correction/replay → produce and review one complete original character → evaluate the 24-independent-drawings/second animation path.
 
+**Initial implementation delivered — 2026-11-21**
+- [x] Add deterministic raster eyes for visible bounds, alpha coverage, centroid, perimeter and dominant palette.
+- [x] Add stroke-geometry inspection for sample count, length, bounds, pressure range and sharp turns.
+- [x] Add named landmark and named palette comparison primitives for later model-sheet identity checks.
+- [x] Add actual region-fill pixel sampling for interior coverage and outside leakage.
+- [x] Connect a local eyes report to the editor's current-frame Digital Artist layers, including layer coverage, palette, operation review state and fill checks.
+- [x] Add a 15-skill anime craft curriculum with staged prerequisites, lessons, practical exercises and evaluation metrics.
+- [x] Add reference provenance/rights validation for study, training and commercial-production purposes, plus native-raster-only practice tasks and an editor curriculum browser.
+- [x] Verify the first eyes/curriculum milestone: HEAD 536ee9b49b989fbd5770fea66cadbb0252d80fe6 passed 376/376 tests in both Drawing engine run #2449 and Hybrid raster/SVG run #639; raster proof/export jobs passed.
+
+**Still pending**
+- [ ] Connect landmark and palette comparisons to the actual approved Character DNA/model-sheet data.
+- [ ] Extend the eyes from metrics to specific visual diagnosis: anatomy, contour defects, line continuity/taper, shadow/light direction and corrective coordinates.
+- [ ] Populate the authorized Anime Craft Library with real approved examples, annotated model sheets and legally usable process examples. The curriculum catalog alone is not training data.
+- [ ] Let the artist execute curriculum tasks, store its authored stroke logs, compare results and learn only from reviewed/approved corrections.
+- [ ] Improve native brush and paint quality, then demonstrate a complete visually reviewed original anime character.
+
+
 Data acquisition must be rights-aware: record provenance and permitted use for every reference. Manga109 general data is academic non-commercial; Manga109-s has a separate limited commercial-use permission with restrictions. Do not use a non-commercial dataset for commercial learning/output.
