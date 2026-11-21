@@ -46,6 +46,25 @@
 </select>
 <button id="startAnimeKeyDrawingBtn" class="secondary full" type="button">تسجيل الإطار الحالي كوضعية مفتاحية كاملة</button>
 <button id="buildAnimeMotionPlanBtn" class="primary full" type="button">إنشاء خطة حركة 24 إطاراً وتصديرها</button>
+<button id="applyKimonoWalkPresetBtn" class="secondary full" type="button">تجهيز اختبار المشي الجانبي لهذه الشخصية</button>
+<div class="kimono-walk-reference">
+<a href="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" target="_blank" rel="noopener noreferrer" aria-label="فتح ورقة تصميم الشخصية الأصلية">
+<img id="kimonoWalkReferenceImage" src="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" alt="ورقة تصميم الشخصية بثلاث زوايا — أمامية وجانبية وخلفية" loading="lazy">
+</a>
+<p class="note">مرجع الهوية: حافظ على الوجه والشعر الأسود الطويل والكيمونو العاجي والوردي والحزام والصنادل. هذه صورة مرجعية فقط وليست إطاراً متحركاً.</p>
+</div>
+<p class="note">قالب المشي يحدد خمس وضعيات مفتاحية مقترحة عند الإطارات 1 و7 و13 و19 و24. يجب رسم 24 وضعية كاملة مستقلة، مع إعادة رسم الشعر والأكمام وثنيات الكيمونو والساقين والصنادل في كل إطار. لا تُستخدم صورة المرجع أو أدلة المفاصل كرسومات نهائية.</p>
+<div id="animeWalkTaskPanel" class="anime-walk-task-panel" hidden>
+<div class="anime-walk-task-header"><strong id="animeWalkTaskHeading">مهمة الإطار</strong><span id="animeWalkTaskTime"></span></div>
+<p id="animeWalkTaskDescription" class="note"></p>
+<p id="animeWalkTaskState" class="anime-walk-task-state"></p>
+<div id="animeWalkProgress" class="anime-walk-progress"></div>
+<div class="button-grid">
+<button id="animeWalkFramePrevBtn" class="secondary" type="button">الإطار السابق</button>
+<button id="animeWalkFrameNextBtn" class="secondary" type="button">الإطار التالي</button>
+</div>
+<div id="animeWalkTaskList" class="anime-walk-task-grid" aria-label="التنقل بين مهام الإطارات الأربعة والعشرين"></div>
+</div>
 <p class="note">لإثبات المشي الأول: جهّز 24 إطاراً في الخط الزمني، ثم سجّل رسمة مفتاحية معتمدة في الإطار 1 والإطار 24، ويمكن إضافة وضعيات بينهما. كل إطار وسيط سيبقى رسمة كاملة مستقلة مطلوب رسمها يدوياً.</p>
 <div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button">تهيئة خط زمني من 24 إطاراً مستقلاً</button>
 <label class="toggle" id="animeAnatomyGuideToggleLabel" hidden><input id="animeAnatomyGuideToggle" type="checkbox" checked> عرض دليل المفاصل فوق لوحة الرسم أثناء الرسم</label>
