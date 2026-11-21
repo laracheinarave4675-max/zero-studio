@@ -924,6 +924,7 @@ function applyDigitalArtistStrokeCorrection(){
  const input=$("digitalArtistStrokeEditInput"),button=$("digitalArtistStrokeApplyEditBtn"),details=$("digitalArtistStrokeDetails");
  if(!record||!input||!button||button.disabled)return;
  try{
+  if(record.layer.locked)throw Error("افتح قفل الطبقة قبل تصحيح ضرباتها");
   const edit=JSON.parse(input.value);
   const corrected=validateDigitalArtistStrokeEdit(record.stroke,edit);
   const nextStrokes=record.layer.strokes.map(stroke=>stroke.id===record.stroke.id?corrected:stroke);
