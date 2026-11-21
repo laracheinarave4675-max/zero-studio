@@ -14,7 +14,7 @@ Each of the 24 exposures is fully painted from the character drawing grammar ont
 
 ## Important fidelity limit
 
-This is an authored procedural interpretation of the model sheet, not a pixel-exact reconstruction. Three orthographic views do not fully specify hidden anatomy, cloth folds for every pose, expressions, or exact line placement. An immutable metadata fingerprint proves that the software kept its own design record unchanged; it does not prove that every rendered pixel matches the source sheet. Visual comparison against the model sheet and artist-quality acceptance are still required before production.
+This is an authored procedural interpretation of the model sheet, not a pixel-exact reconstruction. Three orthographic views do not fully specify hidden anatomy, cloth folds for every pose, expressions, or exact line placement. An immutable metadata fingerprint proves that the software kept its own design record unchanged; it does not prove that every rendered pixel matches the source sheet. A first visual comparison showed remaining gaps in facial delicacy, hair rendering, sleeve/hand construction, costume detail, and the readability of the walk. The current result is a procedural study, not a matched production character. Visual comparison against the model sheet and artist-quality acceptance are still required before production.
 
 ## Acceptance gate
 
