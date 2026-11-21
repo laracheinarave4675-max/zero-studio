@@ -64,7 +64,7 @@ test("rejects duplicate observation ids and invalid confidence thresholds", () =
 
 test("sanitizes control characters and caps untrusted identity notes", () => {
   const value = report();
-  value.subject = "Anime\\nportrait\\u0000";
+  value.subject = "Anime\nportrait\u0000";
   value.identityLocks = Array.from({ length: 40 }, (_, index) => "lock-" + index);
   value.notes = Array.from({ length: 30 }, (_, index) => "note-" + index);
   const result = validateAnimeVisionReport(value);
