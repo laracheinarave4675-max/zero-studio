@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA,compareAnimeEyeDesign,compareAnimeHairFlow}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA,compareAnimeEyeDesign,compareAnimeFaceDesign,compareAnimeHairFlow}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1151,12 +1151,17 @@ async function compareAnimeDesignLandmarks(){
   const payload=JSON.parse(raw);
   if(!payload||typeof payload!=="object"||!payload.eyes)throw Error("يلزم قسم eyes وفيه reference وcurrent.");
   const eyeComparison=compareAnimeEyeDesign(payload.eyes.reference,payload.eyes.current);
+  let faceComparison=null;
+  if(payload.face){
+   faceComparison=compareAnimeFaceDesign(payload.face.reference,payload.face.current,payload.face.tolerances||{});
+  }
   let hairComparison=null;
   if(payload.hair){
    hairComparison=compareAnimeHairFlow(payload.hair.reference,payload.hair.current,{headWidth:payload.hair.headWidth??1});
   }
   const report=latestDigitalArtistInspection||{frame:current,operations:0,visiblePixels:0,fillEyes:[],strokeWarnings:[],layerEyes:[],characterIdentity:null};
   report.animeEyeComparison=eyeComparison;
+  if(faceComparison)report.animeFaceComparison=faceComparison;
   if(hairComparison)report.animeHairFlowComparison=hairComparison;
   report.correctionPlan=buildArtistCorrectionPlan(report);
   latestDigitalArtistInspection=report;
@@ -1166,6 +1171,7 @@ async function compareAnimeDesignLandmarks(){
    "مقارنة تصميم الأنمي اكتملت اعتماداً على المعالم التي أدخلتها.",
    "العيون: "+(eyeComparison.passed?"مطابقة ضمن هامش السماح":"تحتاج إلى تصحيح "+eyeFailed+" قياسات من "+eyeComparison.compared),
    ...eyeComparison.checks.filter(item=>!item.passed).map(item=>"• "+item.id+" — الانحراف "+(Number.isFinite(item.deviation)?item.deviation.toFixed(3):"خارج حدود العين")),
+   ...(faceComparison?["الوجه: "+(faceComparison.passed?"نسب الوجه مطابقة":"تحتاج إلى تصحيح "+faceComparison.failures.length+" قياسات من "+faceComparison.compared),...faceComparison.checks.filter(item=>!item.passed).map(item=>"• الوجه / "+item.id+" — الانحراف "+item.deviation.toFixed(3))]:[]),
    ...(hairComparison?["الشعر: "+(hairComparison.passed?"اتجاه الكتل مطابق":"تحتاج "+hairFailed+" كتل إلى التصحيح"),...hairComparison.checks.filter(item=>!item.passed).map(item=>"• كتلة "+item.id)]:[]),
    "تم إنشاء "+report.correctionPlan.summary.total+" اقتراح تصحيح مرتبط بمهارات الأنمي.",
    ...report.correctionPlan.suggestions.slice(0,8).map((item,index)=>(index+1)+". ["+item.skillId+"] "+item.title+" — "+item.action+" تمرين: "+item.exercise+" معيار النجاح: "+item.success),
