@@ -40,7 +40,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
         fill(eye.id+"-sclera","Fill the almond-shaped sclera bounded by upper and lower lids.","#fff9f2",eye.sclera),
         fill(eye.id+"-iris","Fill the iris inside its eye boundary.","#9d625a",eye.iris,{clipPolygon:eye.sclera.map(px)}),
         fill(eye.id+"-pupil","Fill the pupil inside its eye boundary.","#30283b",eye.pupil,{clipPolygon:eye.sclera.map(px)}),
-        fill(eye.id+"-catchlight","Add a small catchlight to make the eye read as glossy and alive.","#ffffff",ellipsePoints(center.x-eye.bounds.width*.035,center.y-eye.bounds.height*.12,eye.bounds.width*.035,eye.bounds.height*.1,12),{clipPolygon:eye.sclera.map(px)})
+        fill(eye.id+"-catchlight","Add a small catchlight to make the eye read as glossy and alive.","#ffffff",ellipsePoints(center.x-eye.bounds.width*.045,center.y-eye.bounds.height*.14,eye.bounds.width*.045,eye.bounds.height*.12,12),{clipPolygon:eye.sclera.map(px)})
       ];
     })
   ];
@@ -64,7 +64,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.5,clump.flow))
   ];
   const highlights=[
-    ...model.hair.map(clump=>stroke("hair-sheen-"+clump.id,"Add a restrained reflected-light strand along the hair flow.","ink","#796d89",2.8,clump.flow.slice(3,Math.max(5,clump.flow.length-4)),{opacity:.62})),
+    ...model.hair.map(clump=>stroke("hair-sheen-"+clump.id,"Add a restrained reflected-light strand along the hair flow.","ink","#a99bb5",4.2,clump.flow.slice(3,Math.max(5,clump.flow.length-4)),{opacity:.72})),
     ...model.eyes.map(eye=>stroke(eye.id+"-iris-upper-rim","Define the upper iris rim beneath the eyelid.","ink","#694a57",1.8,eye.iris.slice(5,15),{opacity:.8}))
   ];
   const shadowLeft=model.head.landmarks.cheekLeft.x;
