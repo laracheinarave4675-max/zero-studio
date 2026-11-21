@@ -51,6 +51,8 @@ jobs:
         run: node scripts/render-digital-artist-anime-quality.mjs
       - name: Render the construction-driven anime artist study
         run: node scripts/render-anime-construction-study.mjs
+      - name: Render the three-view anime identity continuity sheet
+        run: node scripts/render-anime-three-view-sheet.mjs
       - name: Upload brush proof sheet
         uses: actions/upload-artifact@v4
         with:
@@ -77,5 +79,12 @@ jobs:
         with:
           name: zero-studio-anime-construction-study
           path: artifacts/anime-construction-study/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload three-view anime identity continuity sheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-three-view-sheet
+          path: artifacts/anime-three-view-sheet/
           if-no-files-found: error
           retention-days: 14
