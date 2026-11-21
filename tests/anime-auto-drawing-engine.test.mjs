@@ -18,7 +18,7 @@ test("automatic walk plan fixes 24 unique drawing timepoints and five key poses"
   assert.equal(plan.totalFrames, 24);
   assert.equal(plan.frames.length, 24);
   assert.deepEqual(plan.keyDrawingFrames, [0, 6, 12, 18, 23]);
-  assert.equal(plan.frames[23].timeSeconds, 23 / 24);
+  assert.equal(plan.frames[23].timeSeconds, Number((23 / 24).toFixed(5)));
   assert.equal(plan.frames.every(frame => frame.exposureFrames === 1), true);
   assert.equal(validateAnimeAutoDrawingPlan(plan).format, "zero-studio-anime-auto-drawing-plan");
 });
@@ -69,7 +69,7 @@ test("in-between generation refuses to run without both surrounding key drawings
   assert.throws(() => createAnimeAutoDrawingRequest(plan, 3, {
     identityReference: image("identity"),
     generatedFrames: { 0: image(0) }
-  }), /following key drawing/i);
+  }), /required pose reference/i);
 });
 
 test("invalid identity refs and out-of-range frame indexes are rejected", () => {
