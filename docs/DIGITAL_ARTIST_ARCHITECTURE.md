@@ -259,3 +259,10 @@ The browser handoff prompt now asks for approximate organic outlines of visible 
 
 
 **Verification update:** the initial contour regression run caught a dropped contour field in the intermediate drawing brief. That propagation defect was corrected, and the resulting head passed 402/402 Drawing engine tests plus the Hybrid raster/SVG regression and raster proof jobs (2026-11-21). This validates the software path and fixtures, not the accuracy of a real vision model's contours.
+
+## Evidence-led artist progression — D-032
+
+A separate learning ledger now records measured outcomes against the 15-skill Anime Craft curriculum (`app/digital-artist-learning.mjs`). It stores a bounded sequence of assessment IDs, report digests and individual pass/fail checks. Skill mastery requires three consecutive assessments scoring at least 85%, and all prerequisite skills must already be mastered in curriculum order. The recommender returns exercises and evaluation metrics for the weakest skill whose prerequisites are satisfied.
+
+This provides a measurable progress history without pretending that deterministic rules train a neural model. It does not yet verify report contents from the digest, persist the ledger in the editor UI, or alter drawings automatically. Those are separate integration and validation tasks.
+
