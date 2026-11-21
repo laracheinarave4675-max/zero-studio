@@ -106,7 +106,7 @@ export function createDigitalArtistAnimeQualityPlan() {
     ]},
     {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
       line("hair-ribbon-left","Paint a long curved reflected ribbon clipped to the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2,clipPolygon:leftHairClip}),
-      line("hair-ribbon-mid","Paint a fine highlight following the crown without crossing the face.","gouache","#9c8da9",8,join(bezier([900,125],[850,155],[820,195],[800,235],14)),{opacity:.62,texture:.18}),
+      line("hair-ribbon-mid","Paint a fine highlight following the crown inside the hair silhouette.","gouache","#9c8da9",8,join(bezier([900,125],[850,155],[820,195],[800,235],14)),{opacity:.62,texture:.18,clipPolygon:hairBack}),
       line("hair-ribbon-right","Paint a tapered highlight clipped to the right hair mass.","gouache","#81768f",11,join(bezier([1240,320],[1270,500],[1260,720],[1210,870],16)),{opacity:.62,texture:.2,clipPolygon:rightHairClip}),
       line("hair-strands-left","Add fine directional strands inside the left hair mass.","ink","#554b65",2,join(bezier([675,430],[655,570],[685,730],[750,865],14)),{opacity:.65,clipPolygon:leftHairClip}),
       line("hair-strands-right","Add fine directional strands inside the right hair mass.","ink","#554b65",2,join(bezier([1240,430],[1280,580],[1260,740],[1200,865],14)),{opacity:.65,clipPolygon:rightHairClip})
@@ -117,9 +117,9 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("fold-right-1","Describe the right sleeve fold.","ink","#887a9d",3,[[1260,900],[1205,940],[1170,990]]),
       line("fold-right-2","Add a secondary garment crease.","ink","#a194ae",2,[[1290,945],[1240,975],[1210,1015]]),
       line("bodice-seams","Add the garment seam and waist construction.","ink","#b8a7c1",2,[[820,870],[900,925],[970,950],[1040,925],[1120,870]]),
-      line("cheek-blush","Blend a restrained blush across both cheeks.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2}),
+      line("cheek-blush","Blend a restrained blush across the left cheek inside the face.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2,clipPolygon:face}),\n      line("cheek-blush-right","Blend a restrained blush across the right cheek inside the face.","watercolor","#e98e9b",22,[[1065,565],[1090,575],[1115,565]],{opacity:.38,texture:.2,clipPolygon:face}),
       line("eye-lower-left","Add the soft lower lash line.","ink","#806477",3,[[820,475],[865,510],[925,480]]),
-      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]])
+      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]]),\n      line("eye-upper-left-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[820,455],[805,442],[790,435]]),\n      line("eye-upper-right-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[1125,455],[1145,442],[1160,435]]),\n      line("iris-light-left","Add a curved warm reflection within the left iris.","gouache","#e8a77d",3,[[862,470],[878,480],[894,478]],{opacity:.8,clipPolygon:leftEye}),\n      line("iris-light-right","Add a curved warm reflection within the right iris.","gouache","#e8a77d",3,[[1032,470],[1048,480],[1064,478]],{opacity:.8,clipPolygon:rightEye}),\n      line("nose-bridge","Suggest a delicate nose bridge and tip.","ink","#d69b91",2,[[970,500],[968,530],[980,545]],{opacity:.65,clipPolygon:face}),\n      line("lower-lip","Separate the lower lip with a soft tapered accent.","gouache","#c77e82",3,[[945,640],[970,646],[990,640]],{opacity:.7,clipPolygon:face}),\n      line("hair-strand-crown-left","Add a short crown strand following hair growth.","ink","#665a72",2,[[790,245],[835,205],[890,180]],{opacity:.7,clipPolygon:hairBack}),\n      line("hair-strand-crown-right","Add a second crown strand following hair growth.","ink","#665a72",2,[[1040,175],[1100,190],[1140,235]],{opacity:.7,clipPolygon:hairBack})
     ]}
   ];
   return {
