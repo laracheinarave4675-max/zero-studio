@@ -165,6 +165,16 @@
 <label class="field-label" for="animeArtistSkillSelect">مهارة الرسم</label>
 <select id="animeArtistSkillSelect" class="text-input"></select>
 <div id="animeArtistSkillDetails" class="status" role="status" aria-live="polite">حمّل منهج الفنان لعرض المهارات.</div>
+<div class="artist-learning-panel" style="margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px">
+<strong>ذاكرة خبرة الفنان — سجل التقدم</strong>
+<p class="note">يسجل نتائج فحص الإطار الحالي داخل ملف المشروع. لا يدّعي تدريب نموذج عصبي؛ الإتقان يتطلب ثلاث نتائج قوية متتالية مع اجتياز المتطلبات السابقة.</p>
+<div id="digitalArtistLearningSummary" class="status" role="status" aria-live="polite">لا توجد بيانات تقدم.</div>
+<div id="digitalArtistNextPractice" class="status" role="status" aria-live="polite">افحص رسمة لتحديد التدريب التالي.</div>
+<button id="recordDigitalArtistAssessmentBtn" class="primary full" type="button" disabled>سجّل نتيجة فحص الإطار كتقييم لهذه المهارة</button>
+<div id="digitalArtistLearningStatus" class="status" role="status" aria-live="polite">يُتاح التسجيل بعد فحص رسم الإطار الحالي.</div>
+<strong>آخر التقييمات المحفوظة</strong>
+<div id="digitalArtistLearningHistory" class="status" role="status" aria-live="polite">لا توجد تقييمات بعد.</div>
+</div>
 <strong>مراجعة ضربات الفنان — ضربة بضربة</strong>
 <p class="note">اختر أي ضربة أو منطقة تعبئة لمعاينتها منفردة. يمكنك التنقل بينها واعتمادها أو رفضها؛ لا تُغيّر المراجعة بكسلات الرسم نفسها.</p>
 <label class="field-label" for="digitalArtistStrokeSelect">الضربة المحددة</label>
