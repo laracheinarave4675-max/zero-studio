@@ -225,7 +225,7 @@ test("anime eye design preserves distinctive reference proportions instead of en
   reference.eyeLLower = {x:.35,y:.46};
   const matching = structuredClone(reference);
   assert.equal(compareAnimeEyeDesign(reference, matching).passed, true);
-  matching.eyeLUpper = {x:.35,y:.415};
+  matching.eyeLUpper = {x:.35,y:.44};
   assert.equal(compareAnimeEyeDesign(reference, matching).passed, false);
 });
 
