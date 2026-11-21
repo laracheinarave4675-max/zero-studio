@@ -1,0 +1,45 @@
+# Android Test Plan — ZERO STUDIO
+
+These checks have not yet been performed on the user's physical Android phone.
+
+- [ ] Open over HTTPS in Chrome or another modern Android browser.
+- [ ] Confirm Arabic RTL layout and no horizontal overflow.
+- [ ] Draw with finger; confirm strokes track pointer without page scrolling.
+- [ ] Draw with stylus if available; verify actual reported pressure and compare the variable-width outline brush against ordinary finger input.
+- [ ] Change color and stroke width.
+- [ ] Draw a line, rectangle, and ellipse; test filled and unfilled variants.
+- [ ] Zoom in/out, reset view, and pan the canvas while zoomed; verify drawing coordinates remain correct.
+- [ ] Undo and redo strokes.
+- [ ] Select a visible vector path, drag it to move, change its color/width, duplicate and delete it; verify undo/redo. Test selection and edit rejection on a locked layer.
+- [ ] Add/delete/select/reorder/rename layers; toggle visibility and lock state.
+- [ ] Interrupt a stroke with Android pointer cancellation and confirm the incomplete stroke is discarded.
+- [ ] Verify vector eraser removes earlier strokes but preserves later strokes and other layers.
+- [ ] Save and reopen a v1 project; confirm it migrates to a single layer per frame.
+- [ ] Save and reopen a v2 multi-layer project including eraser masks.
+- [ ] Add, duplicate, select, and delete frames.
+- [ ] Generate 1, 2, 3, and 5 in-between frames between compatible keyframes; confirm mismatched path topology/colors are rejected.
+- [ ] Confirm onion-skin display of previous frame.
+- [ ] Preview at 6, 12, and 24 playback FPS.
+- [ ] Run the unique-drawing cadence audit on a sequence with repeated frames and on 24 individually changed drawings; verify unique count and rate.
+- [ ] Save a .zero project, reload it, and compare frame contents.
+- [ ] Export SVG sequence JSON and inspect SVG output in another viewer.
+- [ ] Export the ZIP bundle, open it with Android Files/archive manager, and verify `project.zero`, `manifest.json`, and frame SVG files are present.
+- [ ] Insert Nori in all three views and its four pose/facial expression presets; check editable parts and recolor its palette.
+- [ ] Export the 11-cell SVG model sheet, confirm proportion guides are present/editable, and open it in a separate Android SVG viewer/editor.
+- [ ] Export a .zchar character model, import it into a fresh project, and compare its editable layer parts.
+- [ ] Draw a custom character in a frame, convert it into a saved character model, add it to another frame, and verify all parts remain editable. Test rejection when the source frame contains unmerged eraser operations.
+- [ ] Save multiple models in the project-local character library, load/remove them, save the .zero project, reopen it, and verify the library persists.
+- [ ] Insert a character, copy the same instance into the next frame, update its pose there, and verify instance identity persists across save/open and in-between generation.
+- [ ] Drag each wrist/ankle end-effector in the rig editor and confirm the elbow/knee moves smoothly without visible limb stretching; drag elbow/knee and verify segment lengths remain stable.
+- [ ] Drag the gold torso and head anchors; verify the torso carries limb anchors and the head group moves independently.
+- [ ] Rotate the head from −60° to +60° and verify the head/hair/face paths rotate together around the anchor without moving the torso.
+- [ ] Lean the complete character from −45° to +45° and verify all limb joints and paths rotate together around the torso anchor.
+- [ ] Try reaching beyond the joint range and confirm the IK solver clamps the pose safely.
+- [ ] Save two compatible Nori poses to the project library, blend them at 0%, 50%, and 100%, add the resulting editable vector pose to frames, and verify the transition visually.
+- [ ] Enter a Gemini API key and generate a text-only vector proposal; verify no key is written to project or ZIP files.
+- [ ] Approve and reject proposals; confirm rejected proposals do not modify the project and approved paths are undoable.
+- [ ] Test airplane/offline mode after first successful load.
+- [ ] Rotate device and verify drawing surface usability.
+- [ ] Test larger project and note memory/performance limits.
+
+Do not mark any item complete until observed on the physical device.

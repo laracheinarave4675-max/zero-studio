@@ -1,0 +1,32 @@
+name: OmniSVG native vector background test
+on:
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - "scripts/run-omnisvg-background-tests.py"
+      - ".github/workflows/omnisvg-background-test.yml"
+  workflow_dispatch:
+concurrency:
+  group: zero-studio-omnisvg-background-test
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install hosted Space client and SVG preview renderer
+        run: pip install gradio_client cairosvg
+      - name: Generate three native SVG anime environment candidates
+        run: python scripts/run-omnisvg-background-tests.py
+      - name: Upload editable SVGs and preview images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-omnisvg-background-tests
+          path: artifacts/omnisvg-background-tests/
+          if-no-files-found: warn
+          retention-days: 14

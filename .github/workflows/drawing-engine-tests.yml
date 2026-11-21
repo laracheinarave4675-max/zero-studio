@@ -1,0 +1,17 @@
+name: Drawing engine tests
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check app/app.js && node --check app/character-model.mjs && node --check app/character-library.mjs && node --check app/backgrounds.mjs && node --check app/engine.mjs && node --check app/zip.mjs && node --check app/gemini-drawing.mjs
+      - run: node --check app/scene-production.mjs && node --check app/animation-production.mjs && node --check app/frame-history.mjs && node --check app/animation-worker.mjs && node --check app/sw.js
+      - run: node --test tests/*.test.mjs

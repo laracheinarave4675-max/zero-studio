@@ -1,0 +1,15 @@
+import{writeFile,mkdir}from"node:fs/promises";
+import{createProject,uid,validatePath,SVG_DEFS}from"../app/engine.mjs";
+import{renderMeshEnvironment}from"../app/mesh-scene-renderer.mjs";
+const plan={version:1,camera:{position:[9,8,19],target:[0,2.4,0]},sky:"#c9ded9",sun:"#f3d39a",sunDirection:[-.55,.9,.35],building:{width:9,height:4.5,depth:4.5,wall:"#d8c6a8",roof:"#514b48",windows:[{x:-3.5,y:1.4,width:1.3,height:1.5},{x:-1.5,y:1.4,width:1.3,height:1.5},{x:.5,y:1.4,width:1.3,height:1.5}],door:{x:2.5,y:0,width:1.2,height:2.7},sign:{x:-1.5,y:3.6,width:3.2,height:.6},awning:{x:-3.8,y:2.9,width:4.6,height:.6,color:"#a64c43"}},trees:[{x:-8,z:-3,scale:1.2,color:"#477255"},{x:8,z:-4,scale:1.1,color:"#6d916a"},{x:11,z:4,scale:1.3,color:"#477255"}],shrubs:[{x:-5,z:3,scale:1,color:"#6f925d"},{x:4,z:4,scale:1.2,color:"#8aa66f"},{x:5,z:-2,scale:.8,color:"#73965f"}],poles:[{x:9,z:0,height:8},{x:13,z:-3,height:7}],van:{x:-9,z:5,width:2.8,depth:1.6}};
+const result=renderMeshEnvironment(plan);
+const project=createProject("ZERO STUDIO — True 3D mesh to SVG showcase");
+const frame=project.frames[0];frame.layers=[];
+for(const l of result.layers)frame.layers.push({id:uid("layer"),name:l.name,visible:true,locked:false,operations:l.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))});
+const esc=s=>String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;");
+const body=frame.layers.map(l=>'<g data-layer="'+esc(l.name)+'">'+l.operations.map(o=>'<path d="'+esc(o.path.d)+'" fill="'+esc(o.path.fill)+'" stroke="'+esc(o.path.stroke)+'" stroke-width="'+o.path.width+'" stroke-linejoin="round" stroke-linecap="round"/>').join("")+'</g>').join("");
+await mkdir("artifacts/3d-mesh-showcase",{recursive:true});
+await writeFile("artifacts/3d-mesh-showcase/environment-3d.zero",JSON.stringify(project));
+await writeFile("artifacts/3d-mesh-showcase/environment-3d.svg",'<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+SVG_DEFS+body+'</svg>');
+await writeFile("artifacts/3d-mesh-showcase/report.json",JSON.stringify({source:"hand-authored 3D semantic blueprint; not a Gemini-generated scene",renderer:"ZERO 3D mesh projection with per-face directional lighting to editable SVG paths",layers:result.layers.map(l=>({name:l.name,paths:l.operations.length})),totalPaths:result.totalOperations,editable:true,visualQualityStatus:"awaiting-human-review",camera:result.camera,blueprint:plan},null,2));
+console.log(JSON.stringify({layers:result.layers.length,totalPaths:result.totalOperations}));

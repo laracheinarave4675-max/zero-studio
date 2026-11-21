@@ -28,3 +28,81 @@ This file records decisions that must not be changed silently. Add dated entries
 
 ## D-007 — Specialized departments are workflow roles until implemented
 **Decision:** Departments such as writing, character design, keyframes, in-betweens, cleanup, coloring, continuity review, sound, editing, and production management describe the intended organization. Do not claim autonomous agents exist until their orchestration and outputs are implemented and tested.
+
+## D-008 — Character assets stay portable and project-local
+**Decision:** Character models must remain editable and portable. Standalone character files use validated `.zchar` packages; a project may store up to 100 validated character models in `project.characterLibrary`, persisted inside `.zero` files. Do not upload character art to an external service by default.
+
+## D-009 — Measure unique drawings separately from playback
+**Decision:** Report the count of distinct visible vector-art signatures and average unique drawings per second separately from playback FPS. Ignore frame and operation IDs when comparing signatures. A cadence report is a structural measurement only; it does not certify artistic quality or prove that every frame was freshly hand-drawn.
+
+## D-010 — Rig pose interpolation requires compatible editable models
+**Decision:** Character pose blending may only run when both validated models have compatible rig versions, the same view, part order/visibility, SVG path topology, and per-part colors. Rebuild intermediate limb geometry with the constrained IK solver; reject incompatible models instead of guessing or rasterizing.
+
+## D-011 — Preserve character instance identity across animation frames
+**Decision:** Inserted character parts carry a shared instance ID and per-layer part membership. Copying or updating a character in another frame preserves that identity while assigning fresh drawing-operation IDs. In-between frames retain the instance metadata. This provides a foundation for later synchronized multi-frame edits without flattening the artwork.
+
+
+## D-012 — Background artwork is editable vector geometry
+**Decision:** Background presets and final background artwork must be authored as validated editable SVG path operations and remain layered project assets; do not replace them with generated raster imagery.
+
+**Implication:** Starter scenes may be inserted as editable layer groups, but they are not considered a complete background department until perspective/layout, reusable props, depth/parallax, and continuity workflows are implemented and reviewed.
+
+
+## D-013 — AI is the scene artist, not a preset selector (2026-11-18)
+**Decision:** The production workflow must let the AI interpret a scene brief and create the requested artwork as multiple named, editable vector layers. Starter presets are optional references, never a ceiling on what the artist can draw.
+
+**Implication:** The AI may plan composition and layer breakdown, then produce validated SVG path operations for each layer. The studio previews the full proposal and commits it only after approval. Do not use raster image/video generation as a substitute. The user should not need to understand implementation details or manually coordinate technical departments.
+
+## D-014 — User-facing collaboration style (2026-11-18)
+**Decision:** The user is not expected to understand software engineering or production terminology. Explain progress in simple Arabic, avoid jargon and unnecessary technical questions, and work directly in the repository wherever possible. The user values deep, creative thinking and expects the assistant to take initiative. Short instructions such as “continue”, “go ahead”, or “okay” mean continue working toward the agreed finished result, not provide only a status update. Do not ask the user to copy/paste code, operate Git, manage files, or coordinate technical departments when the connected tools can do that work.
+
+**Implication:** Keep detailed technical notes, tests, limitations, and continuation state in repository documents. Report meaningful outcomes in plain Arabic, distinguish completed from pending work, and never imply that a project is finished until all acceptance checks are met. The user should be treated as the creative owner/director; the assistant owns the technical execution and should proactively choose the next sensible implementation step within the agreed constraints.
+
+
+## D-015 — High-volume animation is ordered independent vector drawings (2026-11-18)
+**Decision:** Long animation must be planned and ingested in small, ordered, resumable batches. Each accepted frame is a complete editable vector drawing; 24 unique drawings per second remains the target.
+
+**Implication:** The engine may enforce a structural ceiling and batch size for mobile safety, but a structural capacity limit does not prove device performance or artistic quality. Validate batch identity, timing, layer continuity, SVG paths, and duplicate frames before appending. Save progress in the project. Do not replace the requirement with still-image motion or keyframe tweening. Provider selection and API quotas are separate decisions and remain deferred until the user requests that discussion.
+
+
+## D-016 — Free SVG provider choice must not become a per-frame quota trap (2026-11-18)
+**Decision:** Keep provider choice separate from the vector drawing engine. Prefer native SVG/path output and provider-neutral structured drawing data; never rely on raster output plus vector tracing. A free tier is not assumed to be unlimited.
+
+**Implication:** Evaluate services using actual request, token, output-size, privacy, and reset limits. Explore having the AI author a scene-specific vector drawing specification which the local renderer can execute into a complete, independently stored SVG drawing for every frame, but only accept that approach after a 240-frame prototype passes the unique-drawing cadence audit, full-scene completeness, continuity, and artistic review. Do not replace the 24 independent drawings/second target with a static image, SVG animation element, or simple keyframe tween.
+
+**Provider status:** OmniSVG, OpenRouter, Groq, Cerebras, local llama.cpp, and other options are research candidates only. No live provider has been selected or connected as of this decision.
+
+## D-017 — 2D-first cinematic anime art direction (2026-11-18)
+
+**Decision:** ZERO STUDIO's visual target is cinematic 2D anime background painting with selective 3D assistance. The final artwork must read as 2D first. A full-scene low-poly 3D render is not an acceptable replacement.
+
+**2D responsibilities:** final environment surfaces, organic foliage, architectural/material detail, selective linework, color design, shadows/highlights, atmospheric perspective and final compositing are authored as editable 2D drawings/paths and bounded vector material effects.
+
+**3D responsibilities:** camera/perspective guides, rough layout/blockout, spatial/occlusion references, optional shadow/reflection guides and selected props only. 3D mesh output is advisory unless its final style is deliberately flattened and visually matched to the 2D artwork.
+
+**Production implication:** background painting and character animation use different art grammars. Backgrounds target the user's three cinematic environment references; characters require separate anime model sheets, clean line art, cel color keys, expressive drawings and frame-by-frame cleanup.
+
+**Acceptance gate:** create and visually review three editable scenes (urban store, rural ramen shop, forest house). Passing code tests or increasing path count does not count as artistic acceptance. The 24 unique full-scene drawings/second requirement remains unchanged for animation.
+
+**Durable art specification:** `docs/ANIME_ART_DIRECTION.md`.
+
+
+## D-018 — Static background assets with independently redrawn animation layers (2026-11-19)
+
+**Decision:** Adopt the standard anime production separation of environment backgrounds and animated foreground elements. A finished background is painted once as an editable layered vector asset and may be reused for the duration of a shot while the camera/layout remains fixed. Characters and every other moving element are drawn as new, independently authored vector artwork at each of the required 24 timepoints per second.
+
+**Frame definition:** Each playback timepoint is composited from the approved background asset plus that timepoint's newly drawn animated layers. The background's intentional reuse does not count as a new drawing. The moving artwork must meet 24 unique drawings per second; do not substitute duplicated moving frames, raster transforms, video, or tween-only motion. If the camera moves or the background visibly changes, the affected environment layers must also be redrawn or generated as distinct editable frames at the required cadence.
+
+**Implication:** The animation project must track background asset identity/version separately from per-frame animated layers, preserve layer order and continuity, and export a complete visible composite for every timestamp. Validate unique moving-art signatures independently from playback FPS and from the reused background.
+
+## D-019 — Visual critique-and-revision loop (2026-11-19)
+
+**Decision:** A generated scene is a draft until it has been rendered to a temporary preview, visually critiqued, revised as editable vector operations, and reviewed by the user. Raster previews are allowed only as temporary inspection inputs; they are not final artwork and are never imported as replacement scene content.
+
+**Review dimensions:** composition, perspective, architecture, foliage, material differentiation, lighting, atmosphere, line/edge quality, focal hierarchy, scene-specific detail, and consistency with the approved 2D anime art direction.
+
+**Implication:** Implement a bounded review cycle: render preview → vision-capable critique → prioritized corrections → apply corrections to SVG paths/material parameters → render again. Record the critique and iteration count. A model must never claim to have inspected an image it was not actually given. Human visual approval remains the acceptance gate.
+
+## D-020 — Vector-first material texture; raster texture deferred (2026-11-19)
+
+**Decision:** Keep final artwork editable and vector-first for the current quality milestone. Use SVG gradients, patterns, organic paths, selective filters, and procedural material marks to improve painterly richness. Temporary raster previews are permitted for visual review. Do not add raster texture layers to final artwork until a separate measured comparison demonstrates that vector methods cannot meet the target and the user approves that change.

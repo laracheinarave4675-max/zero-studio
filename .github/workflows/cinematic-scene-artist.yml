@@ -1,0 +1,53 @@
+name: Cinematic anime scene artist test
+on:
+  workflow_dispatch:
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - "scripts/run-gemini-scene-artist-test.mjs"
+      - "scripts/run-gemini-2d-anime-tests.mjs"
+      - "tests/anime-vector-artist.test.mjs"
+      - "scripts/render-environment-showcase.mjs"
+      - "scripts/render-3d-mesh-showcase.mjs"
+      - "app/mesh-scene-renderer.mjs"
+      - "app/anime-background-painter.mjs"
+      - "scripts/render-anime-2d-tests.mjs"
+      - "tests/anime-background-painter.test.mjs"
+      - "tests/mesh-scene-renderer.test.mjs"
+      - "app/scene-production.mjs"
+      - "app/environment-art.mjs"
+      - "tests/environment-art.test.mjs"
+      - ".github/workflows/cinematic-scene-artist.yml"
+concurrency:
+  group: zero-studio-cinematic-scene-artist
+  cancel-in-progress: true
+jobs:
+  scene-artist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check procedural renderers
+        run: node --check app/environment-art.mjs && node --check app/mesh-scene-renderer.mjs && node --check app/anime-background-painter.mjs
+      - name: Validate semantic art direction and procedural renderer
+        run: node --test tests/environment-art.test.mjs tests/mesh-scene-renderer.test.mjs tests/scene-production.test.mjs tests/anime-background-painter.test.mjs tests/anime-vector-artist.test.mjs
+      - name: Render three editable 2D anime background tests
+        run: node scripts/render-anime-2d-tests.mjs
+      - name: Install SVG-to-PNG preview renderer
+        run: npm install --no-save @resvg/resvg-js
+      - name: Generate three real 2D anime background scenes with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.5-flash-lite
+        run: node scripts/run-gemini-2d-anime-tests.mjs
+      - name: Upload editable scene and preview SVG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-cinematic-scene-artist-test
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

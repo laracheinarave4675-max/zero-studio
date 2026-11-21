@@ -1,0 +1,32 @@
+name: ZERO STUDIO — 10 second vector animation production
+on:
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - ".github/workflows/gemini-animation-production.yml"
+      - "scripts/run-gemini-animation-production.mjs"
+concurrency:
+  group: zero-studio-gemini-street-production
+  cancel-in-progress: false
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate 240 independent vector drawings at 24 drawings per second
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3.1-flash-lite
+        run: node scripts/run-gemini-animation-production.mjs
+      - name: Upload editable ZERO project and SVG frame sequence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-10-second-street-animation
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14

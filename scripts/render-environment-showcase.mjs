@@ -1,0 +1,15 @@
+import{writeFile,mkdir}from"node:fs/promises";
+import{createProject,uid,validatePath,SVG_DEFS}from"../app/engine.mjs";
+import{renderEnvironmentScene}from"../app/environment-art.mjs";
+const plan={version:1,sky:"#c9ded9",sun:"#f3d39a",mountains:["M 0 510 C 240 320 450 390 720 510 Q 1030 340 1320 490 T 1920 470 L 1920 1080 L 0 1080 Z","M 0 570 Q 420 420 820 540 T 1920 520 L 1920 1080 L 0 1080 Z","M 0 610 Q 500 500 950 590 T 1920 570 L 1920 1080 L 0 1080 Z"],trees:[{x:80,y:780,scale:1.1,depth:"far"},{x:420,y:760,scale:.72,depth:"far"},{x:1740,y:770,scale:1,depth:"mid"},{x:1880,y:970,scale:1.25,depth:"near"}],building:{x:470,y:190,width:1000,height:600,roofHeight:250,wall:"#d8c6a8",roof:"#514b48",windows:[{x:90,y:300,width:150,height:135},{x:285,y:300,width:150,height:135},{x:490,y:300,width:150,height:135},{x:690,y:300,width:150,height:135}],door:{x:830,y:380,width:120,height:205},sign:{x:245,y:255,width:390,height:75},awning:{x:65,y:455,width:650,height:75,color:"#a64c43"}},shrubs:[{x:350,y:800,scale:1.1},{x:1500,y:1000,scale:1.3},{x:160,y:1020,scale:1}],road:{},poles:[{x:1650,y:810,height:430},{x:1880,y:760,height:370}],van:{x:130,y:850,width:170,height:88}};
+const proposal=renderEnvironmentScene(plan);
+const project=createProject("ZERO STUDIO — Cinematic 2.5D environment renderer showcase");
+const frame=project.frames[0];frame.layers=[];
+for(const source of proposal.layers)frame.layers.push({id:uid("layer"),name:source.name,visible:true,locked:false,operations:source.operations.map(path=>({id:uid("op"),kind:"stroke",path:validatePath(path)}))});
+const esc=s=>String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;");
+const body=frame.layers.map(l=>'<g data-layer="'+esc(l.name)+'">'+l.operations.map(o=>'<path d="'+esc(o.path.d)+'" fill="'+esc(o.path.fill)+'" stroke="'+esc(o.path.stroke)+'" stroke-width="'+o.path.width+'" stroke-linejoin="round" stroke-linecap="round"/>').join("")+'</g>').join("");
+await mkdir("artifacts/showcase",{recursive:true});
+await writeFile("artifacts/showcase/environment-renderer-showcase.zero",JSON.stringify(project));
+await writeFile("artifacts/showcase/environment-renderer-showcase.svg",'<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+SVG_DEFS+body+'</svg>');
+await writeFile("artifacts/showcase/report.json",JSON.stringify({source:"hand-authored semantic blueprint; not a Gemini-generated scene",renderer:"ZERO procedural cinematic 2.5D SVG renderer",layers:proposal.layers.map(l=>({name:l.name,paths:l.operations.length})),totalPaths:proposal.totalOperations,editable:true,visualQualityStatus:"awaiting-human-review",blueprint:plan},null,2));
+console.log(JSON.stringify({layers:proposal.layers.length,totalPaths:proposal.totalOperations}));

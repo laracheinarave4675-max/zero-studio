@@ -1,0 +1,30 @@
+name: OmniSVG native vector environment-art experiment
+on:
+  push:
+    branches: ["feature/mobile-drawing-workspace"]
+    paths:
+      - "scripts/run-omnisvg-vector-test.py"
+      - "scripts/run-omnisvg-simple-asset.py"
+      - ".github/workflows/omnisvg-vector-test.yml"
+  workflow_dispatch:
+jobs:
+  vector-art-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Gradio client
+        run: python -m pip install --upgrade pip gradio_client
+      - name: Generate one native SVG anime environment study
+        run: python scripts/run-omnisvg-simple-asset.py
+      - name: Upload native SVG and generation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-omnisvg-vector-art-test
+          path: artifacts/omnisvg/
+          if-no-files-found: warn
+          retention-days: 7
