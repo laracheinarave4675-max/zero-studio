@@ -11,7 +11,7 @@ import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";imp
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
-(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null,animeAutoDrawingBusy=false,animeAutoDrawingStopRequested=false;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null,activeKimonoWalkChart=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
+(()=>{"use strict";const rasterSurfaces=createPersistentRasterSurfaceManager({createCanvas:()=>document.createElement("canvas"),loadImage:src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(Error("تعذر فتح صورة الطبقة النقطية."));image.src=src})});const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";const TIMELINE_PAGE_SIZE=24;let project=createProject(),current=0,activeLayerId=project.frames[0].layers[0].id,tool="raster-pencil",drawing=false,points=[],startPoint=null,activePointerType="mouse",history=[],future=[],playing=false,timer=null,animeAutoDrawingBusy=false,animeAutoDrawingStopRequested=false;const canvas=$("drawingCanvas"),art=$("artLayer"),onion=$("onionLayer"),proposal=$("proposalLayer"),selectionLayer=$("selectionLayer"),nodeEditLayer=$("nodeEditLayer"),active=$("activeStroke"),rigCanvas=$("characterRigCanvas"),rigArt=$("characterRigArt"),rigBones=$("characterRigBones"),rigHandles=$("characterRigHandles"),animeAnatomyCanvas=$("animeAnatomyCanvas"),animeAnatomySource=$("animeAnatomySource"),animeAnatomyMarkers=$("animeAnatomyMarkers"),animeAnatomyConstructionLayer=$("animeAnatomyConstructionLayer");let proposedLayers=[],proposalTarget=null,selectedCharacterModel=null,selection=null,selectionDrag=null,nodeEditing=false,nodeDrag=null,panGesture=null,rigModel=null,rigDrag=null,animeAnatomyActive=false,animeAnatomyStep=0,animeAnatomyPoints={},animeAnatomyDraggingKey=null,animeAnatomyMode="dna",activeAnimeDNAId=null,activeAnimeMotionPlan=null,activeAnimeAnatomySequence=null,activeKimonoWalkChart=null,selectedDigitalArtistStrokeKey=null;const frame=()=>project.frames[current],layer=()=>frame().layers.find(l=>l.id===activeLayerId)||frame().layers[0];
 const ANIME_ANATOMY_LABELS=[
  {key:"root",label:"مركز الجسم"}, {key:"pelvis",label:"مركز الحوض"},
  {key:"chest",label:"مركز الصدر"}, {key:"neck",label:"قاعدة الرقبة"},
@@ -888,9 +888,108 @@ function wireAnimeAnatomyCalibration(){
 }
 function syncAnimeRasterReviewControls(){const review=frame().animeAutoDrawing?.review||frame().animeRaster?.review||{};$("animeReviewIdentity").checked=review.identity===true;$("animeReviewAnatomy").checked=review.anatomy===true;$("animeReviewLineQuality").checked=review.lineQuality===true;$("animeReviewTiming").checked=review.timing===true}
 
+function collectDigitalArtistStrokeRecords(){
+ const records=[];
+ project.frames.forEach((frameData,frameIndex)=>{
+  (frameData.layers||[]).forEach(layerData=>{
+   if(layerData.type!=="raster"||!Array.isArray(layerData.strokes))return;
+   layerData.strokes.forEach(stroke=>{
+    if(stroke?.source!=="digital-artist")return;
+    records.push({key:frameIndex+"|"+layerData.id+"|"+stroke.id,frameIndex,layer:layerData,stroke});
+   });
+  });
+ });
+ return records;
+}
+function renderDigitalArtistStrokePreview(record){
+ const preview=$("digitalArtistStrokePreview");
+ if(!preview)return;
+ const ctx=preview.getContext("2d");
+ if(!ctx)return;
+ const width=preview.width,height=preview.height;
+ ctx.clearRect(0,0,width,height);
+ ctx.fillStyle="#fff";ctx.fillRect(0,0,width,height);
+ ctx.strokeStyle="#e1ddd5";ctx.lineWidth=1;ctx.strokeRect(.5,.5,width-1,height-1);
+ if(!record)return;
+ try{
+  const points=record.stroke.points||[];
+  if(!points.length)return;
+  const xs=points.map(point=>Number(point.x)),ys=points.map(point=>Number(point.y));
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const rangeX=Math.max(1,maxX-minX),rangeY=Math.max(1,maxY-minY),padding=42;
+  const scale=Math.min((width-padding*2)/rangeX,(height-padding*2)/rangeY);
+  const offsetX=(width-rangeX*scale)/2-minX*scale,offsetY=(height-rangeY*scale)/2-minY*scale;
+  const mapped=points.map(point=>({x:point.x*scale+offsetX,y:point.y*scale+offsetY,pressure:Number(point.pressure??1)}));
+  if(record.stroke.kind==="raster-region-fill"){
+   fillRasterRegion(ctx,mapped,record.stroke.options||{});
+  }else{
+   const options=record.stroke.options||{};
+   drawRasterBrushStroke(ctx,mapped,{...options,size:Math.max(.5,Number(options.size||8)*scale)});
+  }
+ }catch(error){
+  ctx.fillStyle="#9b3342";ctx.font="16px sans-serif";ctx.fillText("تعذرت معاينة هذه الضربة",18,30);
+ }
+}
+function renderDigitalArtistStrokeReview(){
+ const select=$("digitalArtistStrokeSelect"),details=$("digitalArtistStrokeDetails");
+ if(!select||!details)return;
+ const records=collectDigitalArtistStrokeRecords();
+ if(!records.length){
+  selectedDigitalArtistStrokeKey=null;
+  select.replaceChildren(new Option("لا توجد ضربات فنان بعد",""));
+  details.textContent="نفّذ خطة الفنان لعرض عملياتها هنا.";
+  renderDigitalArtistStrokePreview(null);
+  for(const id of ["digitalArtistStrokePrevBtn","digitalArtistStrokeNextBtn","digitalArtistStrokeApproveBtn","digitalArtistStrokeRejectBtn","digitalArtistStrokeResetBtn"]){const button=$(id);if(button)button.disabled=true;}
+  return;
+ }
+ if(!records.some(record=>record.key===selectedDigitalArtistStrokeKey))selectedDigitalArtistStrokeKey=records[0].key;
+ select.replaceChildren();
+ records.forEach((record,index)=>{
+  const option=document.createElement("option");
+  option.value=record.key;
+  option.textContent=(index+1)+"/"+records.length+" · "+record.layer.name+" · "+record.stroke.id+" — "+record.stroke.intent;
+  select.append(option);
+ });
+ select.value=selectedDigitalArtistStrokeKey;
+ const index=records.findIndex(record=>record.key===selectedDigitalArtistStrokeKey),record=records[index];
+ const review=record.stroke.review==="approved"?"معتمدة":record.stroke.review==="rejected"?"مرفوضة":"بانتظار المراجعة";
+ const kind=record.stroke.kind==="raster-region-fill"?"تعبئة منطقة مغلقة":"ضربة فرشاة";
+ details.textContent="الإطار "+(record.frameIndex+1)+" · "+record.layer.name+" · "+record.stroke.id+" · "+kind+" · "+(record.stroke.points?.length||0)+" نقطة · الحالة: "+review+"\n"+record.stroke.intent;
+ renderDigitalArtistStrokePreview(record);
+ const prev=$("digitalArtistStrokePrevBtn"),next=$("digitalArtistStrokeNextBtn");
+ if(prev)prev.disabled=index<=0;
+ if(next)next.disabled=index>=records.length-1;
+ const approve=$("digitalArtistStrokeApproveBtn"),reject=$("digitalArtistStrokeRejectBtn"),reset=$("digitalArtistStrokeResetBtn");
+ if(approve)approve.disabled=record.stroke.review==="approved";
+ if(reject)reject.disabled=record.stroke.review==="rejected";
+ if(reset)reset.disabled=!record.stroke.review||record.stroke.review==="pending";
+}
+function moveDigitalArtistStrokeSelection(direction){
+ const records=collectDigitalArtistStrokeRecords(),index=records.findIndex(record=>record.key===selectedDigitalArtistStrokeKey);
+ const target=records[index+direction];
+ if(!target)return;
+ selectedDigitalArtistStrokeKey=target.key;renderDigitalArtistStrokeReview();
+}
+function setDigitalArtistStrokeReview(review){
+ const record=collectDigitalArtistStrokeRecords().find(item=>item.key===selectedDigitalArtistStrokeKey);
+ if(!record)return;
+ snapshot();record.stroke.review=review;buttons();renderDigitalArtistStrokeReview();
+}
+function mountDigitalArtistStrokeReview(){
+ const select=$("digitalArtistStrokeSelect");
+ if(!select||select.dataset.bound==="true")return;
+ select.dataset.bound="true";
+ select.addEventListener("change",()=>{selectedDigitalArtistStrokeKey=select.value;renderDigitalArtistStrokeReview();});
+ $("digitalArtistStrokePrevBtn").onclick=()=>moveDigitalArtistStrokeSelection(-1);
+ $("digitalArtistStrokeNextBtn").onclick=()=>moveDigitalArtistStrokeSelection(1);
+ $("digitalArtistStrokeApproveBtn").onclick=()=>setDigitalArtistStrokeReview("approved");
+ $("digitalArtistStrokeRejectBtn").onclick=()=>setDigitalArtistStrokeReview("rejected");
+ $("digitalArtistStrokeResetBtn").onclick=()=>setDigitalArtistStrokeReview("pending");
+}
 function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
  if(!input||!loadButton||!runButton||!statusNode)return;
+ mountDigitalArtistStrokeReview();
  loadButton.onclick=()=>{
   input.value=JSON.stringify(createDigitalArtistDemoPlan(),null,2);
   statusNode.textContent="تم تحميل مثال بورتريه من 7 طبقات. هذه خطة اختبار ثابتة للتحقق من الفرشاة والتنفيذ، وليست ناتج نموذج ذكاء اصطناعي.";
@@ -966,7 +1065,7 @@ function mountDigitalArtistBrushPanel(){
  };
 }
 
-function render(){syncAnimeRasterReviewControls();renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderAnimeAnatomyConstructionOverlay();updateAnimeRasterControls();renderKimonoWalkTaskNavigator();renderFrames();renderLayers();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
+function render(){syncAnimeRasterReviewControls();renderFrame(art,frame());if($("onionToggle").checked&&current>0)renderFrame(onion,project.frames[current-1],.18,false);else onion.replaceChildren();renderAnimeAnatomyConstructionOverlay();updateAnimeRasterControls();renderKimonoWalkTaskNavigator();renderFrames();renderLayers();renderDigitalArtistStrokeReview();renderCharacterInstances();renderSelection();$("frameInfo").textContent="الإطار "+(current+1)+" من "+project.frames.length;$("frameCount").textContent=project.frames.length+" إطار";$("canvasHint").style.display=frame().layers.some(l=>l.operations.some(o=>o.kind==="stroke"))||(project.animationBackground||[]).length?"none":"block";renderAnimationProduction();buttons()}
 function renderFrames(){const list=$("frameList");list.replaceChildren();const start=Math.floor(current/TIMELINE_PAGE_SIZE)*TIMELINE_PAGE_SIZE,end=Math.min(project.frames.length,start+TIMELINE_PAGE_SIZE);for(let i=start;i<end;i++){const f=project.frames[i],b=document.createElement("button");b.className="frame-thumb"+(i===current?" selected":"");b.type="button";b.setAttribute("aria-label","اختيار الإطار "+(i+1));const thumb=document.createElementNS(NS,"svg");thumb.setAttribute("viewBox","0 0 1920 1080");const bg=document.createElementNS(NS,"rect");bg.setAttribute("width",WIDTH);bg.setAttribute("height",HEIGHT);bg.setAttribute("fill","#fff");thumb.appendChild(bg);[...(project.animationBackground||[]),...f.layers].forEach((l,n)=>renderLayerInto(thumb,l,n,"thumb-"+i));b.appendChild(thumb);if(f.animeRaster){const reviewDot=document.createElement("span");reviewDot.className="frame-raster-status"+(f.animeRaster.review?.status==="approved"?" approved":" pending");reviewDot.textContent=f.animeRaster.review?.status==="approved"?"✓":"•";reviewDot.title=f.animeRaster.review?.status==="approved"?"رسمة PNG مستقلة معتمدة":"رسمة PNG محفوظة وتحتاج مراجعة";reviewDot.setAttribute("aria-label",reviewDot.title);b.appendChild(reviewDot)}if(f.animeAutoDrawing){const autoDot=document.createElement("span");autoDot.className="frame-raster-status"+(f.animeAutoDrawing.review?.status==="approved"?" approved":" pending");autoDot.textContent=f.animeAutoDrawing.review?.status==="approved"?"✓":"•";autoDot.title=f.animeAutoDrawing.review?.status==="approved"?"رسمة أنمي مولدة ومراجعة":"رسمة أنمي مولدة وتحتاج مراجعة بصرية";autoDot.setAttribute("aria-label",autoDot.title);b.appendChild(autoDot)}const n=document.createElement("span");n.textContent=i+1;b.appendChild(n);b.onclick=()=>{stop();current=i;activeLayerId=frame().layers[0].id;selection=null;selectionDrag=null;clearProposal();render()};list.appendChild(b)}$("framePageInfo").textContent="الإطارات "+(start+1)+"–"+end+" من "+project.frames.length;$("framePagePrev").disabled=start===0;$("framePageNext").disabled=end>=project.frames.length;$("frameJumpInput").max=String(project.frames.length);$("frameJumpInput").value=String(current+1)}
 function renderLayers(){$("layerList").replaceChildren();frame().layers.forEach((l,i)=>{const row=document.createElement("div");row.className="layer-row"+(l.id===activeLayerId?" selected":"");const select=document.createElement("button");select.className="layer-select";select.textContent=(l.type==="raster"?"▧ ":"✎ ")+l.name;select.setAttribute("aria-label",(l.type==="raster"?"طبقة صورة: ":"طبقة متجهية: ")+l.name);select.onclick=()=>{activeLayerId=l.id;renderLayers()};const action=(label,title,fn)=>{const b=document.createElement("button");b.className="layer-mini";b.textContent=label;b.title=title;b.onclick=fn;return b};const rename=action("✎","إعادة تسمية الطبقة",()=>{const input=document.createElement("input");input.className="layer-rename-input";input.value=l.name;input.maxLength=80;input.setAttribute("aria-label","اسم الطبقة");const save=action("✓","حفظ الاسم",()=>{const name=input.value.trim();if(!name||name.length>80){status("اسم الطبقة يجب أن يكون من 1 إلى 80 حرفاً.",false);return}snapshot();renameLayer(frame(),l.id,name);renderLayers()});const cancel=action("×","إلغاء",()=>renderLayers());row.replaceChildren(input,save,cancel);input.focus();input.select();input.onkeydown=e=>{if(e.key==="Enter")save.click();if(e.key==="Escape")cancel.click()}});const vis=action(l.visible?"◉":"○","إظهار أو إخفاء",()=>{snapshot();l.visible=!l.visible;render()});const lock=action(l.locked?"🔒":"🔓","قفل أو فتح",()=>{snapshot();l.locked=!l.locked;renderLayers()});const up=action("↑","رفع الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,1))render();else{history.pop();buttons()}});const down=action("↓","خفض الطبقة",()=>{snapshot();if(reorderLayer(frame(),l.id,-1))render();else{history.pop();buttons()}});row.append(select,rename,vis,lock,up,down);$("layerList").appendChild(row)})}
 function renderNodeHandles(){
