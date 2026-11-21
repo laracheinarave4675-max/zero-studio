@@ -93,11 +93,13 @@ export function buildAnimeConstructionModel({
   });
 
   const guides=hairGuides??[
-    {id:"fringe-left",root:{x:x+width*.22,y:y+height*.1},control1:{x:x+width*.04,y:y+height*.03},control2:{x:x+width*.12,y:y+height*.28},tip:{x:x+width*.29,y:y+height*.34},rootWidth:width*.34,tipWidth:width*.003,side:1},
-    {id:"fringe-center",root:{x:x+width*.46,y:y+height*.025},control1:{x:x+width*.6,y:y+height*.04},control2:{x:x+width*.48,y:y+height*.25},tip:{x:x+width*.52,y:y+height*.34},rootWidth:width*.38,tipWidth:width*.003,side:1},
-    {id:"fringe-right",root:{x:x+width*.78,y:y+height*.1},control1:{x:x+width*.98,y:y+height*.03},control2:{x:x+width*.88,y:y+height*.28},tip:{x:x+width*.7,y:y+height*.34},rootWidth:width*.34,tipWidth:width*.003,side:-1},
-    {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:1},
-    {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:-1}
+    {id:"fringe-left",root:{x:x+width*.16,y:y+height*.1},control1:{x:x+width*.015,y:y+height*.035},control2:{x:x+width*.08,y:y+height*.24},tip:{x:x+width*.22,y:y+height*.34},rootWidth:width*.18,tipWidth:width*.002,side:1},
+    {id:"fringe-left-center",root:{x:x+width*.32,y:y+height*.035},control1:{x:x+width*.24,y:y+height*.005},control2:{x:x+width*.3,y:y+height*.22},tip:{x:x+width*.39,y:y+height*.32},rootWidth:width*.17,tipWidth:width*.002,side:1},
+    {id:"fringe-center",root:{x:x+width*.49,y:y+height*.005},control1:{x:x+width*.64,y:y+height*.025},control2:{x:x+width*.46,y:y+height*.24},tip:{x:x+width*.51,y:y+height*.35},rootWidth:width*.2,tipWidth:width*.002,side:1},
+    {id:"fringe-right-center",root:{x:x+width*.68,y:y+height*.035},control1:{x:x+width*.78,y:y+height*.005},control2:{x:x+width*.7,y:y+height*.22},tip:{x:x+width*.61,y:y+height*.32},rootWidth:width*.17,tipWidth:width*.002,side:-1},
+    {id:"fringe-right",root:{x:x+width*.84,y:y+height*.1},control1:{x:x+width*.985,y:y+height*.035},control2:{x:x+width*.92,y:y+height*.24},tip:{x:x+width*.78,y:y+height*.34},rootWidth:width*.18,tipWidth:width*.002,side:-1},
+    {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.14,tipWidth:width*.002,side:1},
+    {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.14,tipWidth:width*.002,side:-1}
   ];
   const hairBackSilhouette=joinPoints(
     cubicPoints({x:x+width*.5,y:y-height*.09},{x:x+width*1.35,y:y-height*.08},{x:x+width*1.32,y:y+height*.75},{x:x+width*1.18,y:y+height*1.58},22),
