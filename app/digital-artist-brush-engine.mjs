@@ -4,7 +4,7 @@ export const DIGITAL_ARTIST_BRUSH_FORMAT = "zero-studio-digital-artist-brush-pla
 export const DIGITAL_ARTIST_BRUSH_VERSION = 1;
 export const DIGITAL_ARTIST_BRUSH_CANVAS = Object.freeze({ width: 1920, height: 1080 });
 export const DIGITAL_ARTIST_BRUSH_ROLES = Object.freeze([
-  "construction", "rough-sketch", "clean-line", "flat-color",
+  "construction", "rough-sketch", "flat-color", "clean-line",
   "shadow", "highlight", "detail", "correction"
 ]);
 export const DIGITAL_ARTIST_BRUSHES = Object.freeze(Object.keys(RASTER_BRUSH_PRESETS));
@@ -48,12 +48,33 @@ export function validateDigitalArtistBrushPlan(input) {
     previousRole = roleIndex;
     if (!Array.isArray(layer.strokes) || !layer.strokes.length) fail("Layer " + name + " must contain at least one brush stroke.");
     const strokes = layer.strokes.map((stroke, strokeIndex) => {
-      if (!stroke || typeof stroke !== "object" || Array.isArray(stroke)) fail("A brush stroke must be an object.");
+      if (!stroke || typeof stroke !== "object" || Array.isArray(stroke)) fail("A brush operation must be an object.");
       const strokeId = safeId(stroke.id, "Stroke id");
       if (strokeIds.has(strokeId)) fail("Duplicate stroke id: " + strokeId + ".");
       strokeIds.add(strokeId);
       const intent = String(stroke.intent ?? "").trim().slice(0, 180);
-      if (!intent) fail("Every brush stroke needs a drawing intent.");
+      if (!intent) fail("Every brush operation needs a drawing intent.");
+      const kind = String(stroke.kind ?? "brush-stroke");
+      if (kind === "region-fill") {
+        if (!Array.isArray(stroke.points) || stroke.points.length < 3 || stroke.points.length > 20000) fail("A region fill needs a closed polygon with at least three points.");
+        const points = stroke.points.map(point => {
+          const x = Number(point?.x), y = Number(point?.y);
+          if (![x, y].every(Number.isFinite) || x < 0 || y < 0 || x > 1920 || y > 1080) fail("A fill boundary is outside the drawing canvas or has invalid coordinates.");
+          return { x, y, pressure: 1 };
+        });
+        totalSamples += points.length;
+        if (totalSamples > 500000) fail("The brush plan exceeds the 500,000-point editable stroke-history limit.");
+        const color = String(stroke.color ?? "#29232b");
+        if (!/^#[0-9a-f]{6}$/i.test(color)) fail("Region fill color must be a six-digit hex color.");
+        const opacity = Number(stroke.opacity ?? 1);
+        if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) fail("Region fill opacity must be between 0 and 1.");
+        const blendMode = String(stroke.blendMode ?? "normal");
+        if (!Object.hasOwn(RASTER_BLEND_MODES, blendMode)) fail("Unsupported region fill blend mode.");
+        total++;
+        if (total > 2400) fail("The brush plan exceeds the 2400-operation safety limit.");
+        return { id: strokeId, layerId: id, sequence: strokeIndex, intent, kind, points, color, opacity, blendMode, seed: Number.isInteger(stroke.seed) ? stroke.seed : 1 };
+      }
+      if (kind !== "brush-stroke") fail("Unsupported Digital Artist operation kind: " + kind + ".");
       const brush = String(stroke.brush ?? "ink");
       if (!DIGITAL_ARTIST_BRUSHES.includes(brush)) fail("Unsupported raster brush: " + brush + ".");
       if (!Array.isArray(stroke.points) || !stroke.points.length || stroke.points.length > 20000) fail("Brush stroke points are invalid.");
@@ -75,10 +96,10 @@ export function validateDigitalArtistBrushPlan(input) {
       if (!/^#[0-9a-f]{6}$/i.test(color)) fail("Brush color must be a six-digit hex color.");
       const seed = Number.isInteger(stroke.seed) ? stroke.seed : 1;
       total++;
-      if (total > 2400) fail("The brush plan exceeds the 2400-stroke safety limit.");
+      if (total > 2400) fail("The brush plan exceeds the 2400-operation safety limit.");
       return {
-        id: strokeId, layerId: id, sequence: strokeIndex, intent, brush,
-        points, size, color, opacity, texture, blendMode, seed,
+        id: strokeId, layerId: id, sequence: strokeIndex, intent, kind,
+        brush, points, size, color, opacity, texture, blendMode, seed,
         pressureSensitive: stroke.pressureSensitive !== false,
         erase: stroke.erase === true
       };
@@ -106,7 +127,14 @@ export function compileDigitalArtistBrushPlan(input) {
     visible: layer.visible,
     locked: layer.locked,
     commands: layer.strokes.map(stroke => {
-      const command = {
+      const command = stroke.kind === "region-fill" ? {
+        kind: "raster-region-fill",
+        strokeId: stroke.id,
+        layerId: "artist-raster-" + layer.id,
+        intent: stroke.intent,
+        points: stroke.points.map(point => ({ ...point })),
+        options: { color: stroke.color, opacity: stroke.opacity, blendMode: stroke.blendMode, seed: stroke.seed }
+      } : {
         kind: "raster-brush-stroke",
         strokeId: stroke.id,
         layerId: "artist-raster-" + layer.id,
