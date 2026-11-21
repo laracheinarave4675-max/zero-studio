@@ -200,7 +200,8 @@ export function drawRasterBrushStroke(context,points,options={}){
  if(!Object.hasOwn(RASTER_BLEND_MODES,blendMode))throw Error("نمط مزج ضربات الفرشاة غير مدعوم");
  context.save();
  try{
-  context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];\n  applyRasterClip(context, options.clipPolygon);
+  context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];
+  applyRasterClip(context, options.clipPolygon);
   if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
   else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
   else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
@@ -236,7 +237,8 @@ export function fillRasterRegion(context, points, options = {}) {
  context.save();
  try {
   context.globalAlpha = opacity;
-  context.globalCompositeOperation = RASTER_BLEND_MODES[blendMode];\n  applyRasterClip(context, options.clipPolygon);
+  context.globalCompositeOperation = RASTER_BLEND_MODES[blendMode];
+  applyRasterClip(context, options.clipPolygon);
   context.fillStyle = color;
   context.beginPath();
   context.moveTo(clean[0].x, clean[0].y);
