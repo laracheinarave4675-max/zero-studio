@@ -7,7 +7,7 @@ import {executeDigitalArtistBrushStream} from "../app/digital-artist-brush-execu
 import {drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster} from "../app/raster-brushes.mjs";
 
 const width=1920,height=1080,out="artifacts/anime-three-view-sheet";
-const views=[{id:"left-three-quarter",yaw:-.42,center:.1667},{id:"front",yaw:0,center:.5},{id:"right-three-quarter",yaw:.42,center:.8333}];
+const views=[{id:"left-three-quarter",yaw:-.65,center:.1667},{id:"front",yaw:0,center:.5},{id:"right-three-quarter",yaw:.65,center:.8333}];
 const sheet=createCanvas(width,height),sheetCtx=sheet.getContext("2d");
 sheetCtx.fillStyle="#f5e9e1";sheetCtx.fillRect(0,0,width,height);
 const summaries=[];
