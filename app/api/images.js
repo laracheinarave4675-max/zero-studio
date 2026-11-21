@@ -99,8 +99,21 @@ module.exports = async function handler(req, res) {
       }
 
       if (upstream.status === 400 && payload.error === "invalid_prompt") {
-        const freeTierConfirmed =
+        let workerHealth = {};
+        try {
+          const healthResponse = await fetch(workerBaseUrl + "/health", {
+            method: "GET",
+            cache: "no-store",
+            redirect: "error",
+          });
+          if (healthResponse.ok) workerHealth = await readPayload(healthResponse);
+        } catch {}
+        const appFreeTierConfirmed =
           String(process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED || "") === "true";
+        const workerGuardConfirmed =
+          workerHealth.animeAutoFreeTierGuard === true &&
+          workerHealth.animeAutoFreeTierConfirmed === true;
+        const freeTierConfirmed = appFreeTierConfirmed && workerGuardConfirmed;
         return send(res, 200, {
           ok: true,
           routeConfigured: true,
@@ -111,8 +124,8 @@ module.exports = async function handler(req, res) {
           inferenceStarted: false,
           animeAutoFreeTierConfirmed: freeTierConfirmed,
           message: freeTierConfirmed
-            ? "الاتصال ورمز الوصول مؤكدان، ومحرك التحريك مضبوط على وضع الخطة المجانية فقط. لم يبدأ أي توليد."
-            : "الاتصال ورمز الوصول صحيحان، لكن إعداد الخطة المجانية الآمنة في Vercel غير مفعّل. لم يبدأ أي توليد.",
+            ? "الاتصال ورموز الوصول وحاجز الخطة المجانية فقط مؤكدة في Vercel وCloudflare. لم يبدأ أي توليد."
+            : "الاتصال يعمل، لكن لا يمكن إثبات وجود حاجز الخطة المجانية فقط على خادمي Vercel وCloudflare معاً. لم يبدأ أي توليد.",
         });
       }
 
