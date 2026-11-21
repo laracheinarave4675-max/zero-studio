@@ -200,7 +200,7 @@ This supersedes the vector-first character-art choice in D-029. The character Di
 - [x] Visually inspect the latest render and confirm the broad horizontal flat-color bands are gone; record remaining silhouette/line-art defects.
 - [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
 - [x] Add per-operation selection, isolated preview, previous/next navigation, approve/reject/reset review controls, and persistent review state.
-- [ ] Add editable point/brush correction and safe corrected-operation replay/scrubbing.
+- [x] Add validated per-operation point/pressure/brush-style correction, replay the full ordered raster layer from a scratch surface, commit atomically, refuse locked layers, and reset edited marks to pending review.
 - [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
 - [ ] Run the fixture in a real browser, inspect its rendered output, then produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
 - [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
