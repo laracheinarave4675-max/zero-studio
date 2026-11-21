@@ -29,7 +29,7 @@ export function createApprovedKimonoCharacterProfile(){
  return deepFreeze({format:"zero-studio-approved-character-profile",version:1,characterId:FIXED_DESIGN.id,name:"الشخصية ذات الكيمونو العاجي والوردي",referenceGalleryId:FIXED_DESIGN.referenceGalleryId,canonicalView:FIXED_DESIGN.canonicalView,referenceViews:[...FIXED_DESIGN.referenceViews],identity:FIXED_DESIGN,identityLock:"hard-locked-v1",identityFingerprint:"approved-kimono-girl-v1:ivory-rose-sakura-long-black-hair-side-profile",sourceImageIsReferenceOnly:true,sourceImageDrawnIntoFrames:false});
 }
 export function validateApprovedKimonoProfile(profile){
- if(!profile||profile.format!=="zero-studio-approved-character-profile"||profile.characterId!==APPROVED_KIMONO_ID||profile.identityLock!=="hard-locked-v1"||profile.identity!==FIXED_DESIGN)throw Error("Approved character identity is missing or has been modified.");
+ if(!profile||profile.format!=="zero-studio-approved-character-profile"||profile.characterId!==APPROVED_KIMONO_ID||profile.identityLock!=="hard-locked-v1"||profile.identityFingerprint!=="approved-kimono-girl-v1:ivory-rose-sakura-long-black-hair-side-profile"||profile.referenceGalleryId!==APPROVED_KIMONO_GALLERY_ID||profile.identity!==FIXED_DESIGN)throw Error("Approved character identity is missing or has been modified.");
  return profile;
 }
 export function createApprovedKimonoWalkPoses(){
