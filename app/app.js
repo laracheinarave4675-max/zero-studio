@@ -1093,6 +1093,7 @@ async function inspectDigitalArtistEyes(){
    layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,geometries,meanLength,pressureSamples,fillEyes});
   }
   const allGeometry=layerEyes.flatMap(layer=>layer.geometries);
+  const strokeWarnings=allGeometry.flatMap(item=>item.warnings.map(code=>({id:item.id,code,intent:item.intent})));
   const totalVisible=layerEyes.reduce((sum,layer)=>sum+layer.raster.visiblePixels,0);
   const palette=new Map();
   layerEyes.forEach(layer=>layer.raster.dominantPalette.forEach(item=>palette.set(item.color,(palette.get(item.color)||0)+item.pixels)));
@@ -1117,7 +1118,7 @@ async function inspectDigitalArtistEyes(){
    version:1,frame:current+1,analyzedLayers:layerEyes.length,operations:allGeometry.length,
    visiblePixels:totalVisible,topColors,
    operationKinds:{fills:allGeometry.filter(item=>item.kind==="region-fill").length,brushes:allGeometry.filter(item=>item.kind==="brush-stroke").length},
-   approvals,
+   approvals,strokeWarnings,
    characterIdentity:{characterAssetId:selectedDNA?.characterAssetId||null,characterName:selectedDNA?.name||null,anatomy:anatomyEye},
    fillEyes:layerEyes.flatMap(layer=>layer.fillEyes.map(fill=>({layer:layer.name,...fill}))),
    layerEyes:layerEyes.map(layer=>({
@@ -1136,6 +1137,7 @@ async function inspectDigitalArtistEyes(){
    "العين اللونية: "+(topColors.join(" · ")||"لا توجد ألوان قابلة للقياس"),
    "عين التعبئة: "+report.fillEyes.filter(item=>item.passed).length+"/"+report.fillEyes.length+" مناطق اجتازت اختبار التغطية والتسرب"+(report.fillEyes.some(item=>!item.passed)?" — "+report.fillEyes.filter(item=>!item.passed).map(item=>item.id).join("، "):""),
    "عين التشريح: "+(!anatomyEye?"اختر هوية Character DNA معتمدة":anatomyEye.skipped?(anatomyEye.reason==="no-approved-current-frame-guide"?"لا توجد وضعية معتمدة لهذا الإطار بعد":anatomyEye.reason==="camera-view-mismatch"?"تغير منظور الكاميرا؛ تم تخطي المقارنة":"تعذر استخدام مرجع الهوية"):anatomyEye.passed?"نسب العظام ضمن هامش 15% من Character DNA":"توجد انحرافات في "+anatomyEye.measurements.filter(item=>!item.passed).map(item=>item.name).join("، ")),
+   "عين جودة الخط: "+(strokeWarnings.length?strokeWarnings.length+" ملاحظة في "+[...new Set(strokeWarnings.map(item=>item.id))].join("، "):"لم تُكتشف عيوب هندسية واضحة في الضربات"),
    "مراجعة العمليات: "+Object.entries(approvals).map(([key,value])=>key+" "+value).join("، "),
    ...report.layerEyes.map(layer=>layer.name+": "+(layer.bounds?"حدود "+layer.bounds.width+"×"+layer.bounds.height:"طبقة فارغة")+"، تغطية "+(layer.alphaCoverage*100).toFixed(1)+"%")
   ].join("\n");
