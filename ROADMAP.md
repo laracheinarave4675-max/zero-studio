@@ -297,6 +297,7 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [x] Preserve explicit warning/fallback behavior when a vision region has only a bounding box.
 - [x] Add regression tests for face measurements, contour-to-brush conversion, and invalid inputs.
 - [x] Verify Drawing engine run #2748 and Hybrid raster/SVG run #787 on commit `38e128c5`; native brush and portrait proof artifacts uploaded.
+- [x] Execute the first controlled three-view character-sheet test through native Canvas2D brush operations and inspect the exported raster/layer report.
 - [ ] Run the actual first artist drawing test on the user's Android device and visually accept/revise the resulting artwork.
 - [ ] Connect a free vision model successfully on Android, or keep manual observation handoff clearly labeled until that is proven.
 
@@ -312,3 +313,13 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - The preview is isolated from production. Vercel's daily free build limit remains a separate constraint; the Cloudflare Pages preview is the available test deployment.
 - PR #14 remains Draft and unmerged. No production Worker or existing image service was modified.
 - Remaining acceptance gate: user-side Android drawing test and visual review. No successful embedded vision inference or autonomous neural training is claimed.
+
+
+## First selected-character brush execution — 2026-11-21
+
+- [x] Retrieve the exact selected gallery reference and preserve its front/side/back views.
+- [x] Execute a 1920×1080 three-view study with seven semantic raster layers and export each layer separately.
+- [x] Verify 168 operations, 71 region fills, zero stroke-geometry warnings, and successful Drawing engine / Hybrid raster CI runs #2787 / #826.
+- [ ] Improve likeness from the visual review: refine face/profile proportions, hair-clump flow, kimono/sleeve contours, and flower detail.
+- [ ] Connect successful free on-device vision inference; the current plan is manually authored and must not be described as model-generated observations.
+- [ ] Run and accept the result in the user's Android app; this CI render is not the device acceptance test.
