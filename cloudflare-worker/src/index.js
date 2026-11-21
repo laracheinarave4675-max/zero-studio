@@ -374,6 +374,18 @@ async function handle(request, env) {
     }
   }
 
+  const allowedReferenceRoles = new Set(["identity", "pose", "continuity"]);
+  let referenceRoles = references.map(() => "identity");
+  if (input.referenceRoles !== undefined) {
+    if (!Array.isArray(input.referenceRoles) ||
+        input.referenceRoles.length !== references.length ||
+        input.referenceRoles.some((role, index) =>
+          !allowedReferenceRoles.has(role) || (index === 0 && role !== "identity"))) {
+      return json({ error: "invalid_reference_roles", message: "Reference roles must match the image list and start with identity." }, 400, cors);
+    }
+    referenceRoles = input.referenceRoles;
+  }
+
   let seed;
   if (input.seed !== undefined) {
     if (!Number.isInteger(input.seed) || input.seed < 0 || input.seed > 2147483647) {
@@ -386,8 +398,28 @@ async function handle(request, env) {
     let result;
     if (modelKey === "flux-2-klein-4b") {
       const form = new FormData();
+      const identityImages = referenceRoles
+        .map((role, index) => role === "identity" ? index : -1)
+        .filter(index => index >= 0);
+      const poseImages = referenceRoles
+        .map((role, index) => role === "pose" ? index : -1)
+        .filter(index => index >= 0);
+      const continuityImages = referenceRoles
+        .map((role, index) => role === "continuity" ? index : -1)
+        .filter(index => index >= 0);
+      const roleInstructions = [
+        identityImages.length
+          ? "Identity authority images: " + identityImages.join(", ") + ". They define face, eye design, hair, costume, palette, accessories and body proportions. Preserve these exactly."
+          : "",
+        poseImages.length
+          ? "Pose-only images: " + poseImages.join(", ") + ". Use them only for body pose, silhouette, timing and limb placement. Do not copy their character design."
+          : "",
+        continuityImages.length
+          ? "Motion-continuity images: " + continuityImages.join(", ") + ". Use them only for temporal continuity and the immediately preceding action. Redraw the character fully."
+          : ""
+      ].filter(Boolean).join(" ");
       const conditionedPrompt = references.length
-        ? "Use image 0 as the primary character identity reference. Treat every additional reference image as the same character from another view or detail. Preserve the same face, hair, eye design, outfit, costume colors, accessories, and body proportions. Change only the pose, camera angle, expression, or scene requested by the user; do not redesign or replace the character. User direction: " + prompt
+        ? roleInstructions + " User direction: " + prompt
         : prompt;
       form.append("prompt", conditionedPrompt);
       form.append("width", String(outputSize.width));
