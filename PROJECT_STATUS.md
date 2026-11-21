@@ -778,3 +778,12 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - The generated plan remains a draft. The Execute button is disabled until the user explicitly checks the approval control; loading the fixed brush demo returns to the normal manual execution flow.
 - The UI explains that this does not yet analyze an image and that region boxes are approximate. No image is uploaded or sent to a model by this bridge.
 - This connects the report validator → geometry planner → existing brush-plan editor → native Canvas2D executor as a usable manual pipeline, while actual model inference and organic contour extraction remain unfinished.
+
+
+### Free browser vision route — 2026-11-21
+
+- Identified the official `HuggingFaceTB/SmolVLM-256M-Instruct-WebGPU` Space, which is listed as Running and uses a static browser app for the SmolVLM-256M-Instruct model. This avoids the paid hosted inference provider path; model inference is intended to run on the user's browser WebGPU device.
+- The Digital Artist panel now links to that Space, supplies a structured anime-reference prompt, and lets the user paste its JSON observations back into ZERO STUDIO.
+- The user uploads the same reference image into ZERO STUDIO. The app computes its SHA-256 digest locally with Web Crypto and binds the report to that exact file before accepting the observations. A supplied digest mismatch is rejected.
+- The generated plan remains an unapproved draft until the user checks the approval control. The report-to-plan step still uses bounding-box approximations and requires visual review.
+- This is a manual browser handoff, not an embedded model runtime or automatic Space API connection. The Space may require initial model downloads and a WebGPU-capable browser/device; mobile performance and inference quality have not yet been validated on the user's Android device.
