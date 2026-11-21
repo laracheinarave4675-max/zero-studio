@@ -136,11 +136,11 @@ The editor executes compiled raster plans through the native brush engine and st
 
 The versioned brush plan accepts explicit region-fill polygon boundaries. The validator and executor check polygon point counts, coordinate bounds, color, opacity and blend mode. The Canvas2D fill helper paints the closed polygon into the raster layer; no bitmap or generated-image payload is inserted into the plan. The flat-color sample was changed from horizontal bands to separate face, hair, ears, neck, eye-white, fringe and clothing regions.
 
-The editor now provides individual operation selection, isolated preview, previous/next navigation, approve/reject/reset controls, and persisted review state. These decisions are stored in native project history and can be undone. This is a review gate, not yet full point editing or corrected-stroke replay.
+The editor now provides individual operation selection, isolated preview, previous/next navigation, approve/reject/reset controls, and persisted review state. It also provides a JSON correction editor for intent, point/pressure geometry, brush profile/style, and region-fill styling. A validated correction rebuilds the target raster layer from its complete ordered stroke log on a scratch Canvas2D surface, checks PNG size, and commits only on success; locked layers are not editable. Editing resets the corrected operation to pending review, and the pre-correction state remains undoable.
 
 Visual inspection of the latest CI composite confirms that the broad horizontal bands are gone and that the main color regions and eye whites are filled. Construction and rough-sketch layers remain preserved as editable references but are hidden in the composite. The sample still has rough silhouette/line alignment and unfinished costume/hair details. It remains a deterministic hand-authored renderer fixture, not a model-authored image or visually accepted production character.
 
-GitHub Actions at HEAD `9bacac06d08040dc75054b73a9d7cd56ebdad2eb` passed 357/357 tests in Drawing engine run #2381. Hybrid raster/SVG run #606 passed its test and Canvas2D proof jobs and uploaded the composite plus seven layer PNGs. This confirms code and renderer integration, not artistic quality, AI autonomy or Android performance.
+GitHub Actions at application HEAD `a9f4449b848854623fde0d0172598c86b4ad112a` passed 361/361 tests in Drawing engine run #2396. Hybrid raster/SVG run #614 completed the Canvas2D renderer proof and artifact upload successfully; its node-test job was still running at the time of this update. The renderer artifact includes the composite and seven layer PNGs. This confirms code and renderer integration, not artistic quality, AI autonomy or Android performance.
 
 ### Updated acceptance gate
 
