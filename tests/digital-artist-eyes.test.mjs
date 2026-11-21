@@ -210,7 +210,7 @@ test("anime eye design eye compares approved eye proportions, pair spacing and i
   const current = animeEyeLandmarks();
   const result = compareAnimeEyeDesign(reference, current);
   assert.equal(result.passed, true);
-  assert.equal(result.compared, 13);
+  assert.equal(result.compared, 17);
   assert.equal(result.measurementScope, "normalized-approved-landmarks-not-pixel-inference");
   current.eyeLIris = {x:.48,y:.49};
   const drift = compareAnimeEyeDesign(reference, current);
