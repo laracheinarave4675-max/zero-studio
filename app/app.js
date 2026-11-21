@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1074,15 +1074,20 @@ async function inspectDigitalArtistEyes(){
    const records=frameRecords.filter(record=>record.layer.id===layer.id);
    const geometries=records.map(record=>analyzeStrokeGeometry(record.stroke));
    const pressureSamples=geometries.filter(item=>item.kind==="brush-stroke"&&item.sampleCount>1);
-   const fillEyes=[];
+   const fillEyes=[],fillGroups=new Map();
    const stride=Math.max(1,Math.floor(Math.max(inspectionWidth,inspectionHeight)/360));
    for(const record of records.filter(item=>item.stroke.kind==="raster-region-fill")){
+    const color=String(record.stroke.options?.color||"#000000").toLowerCase();
     const mapped=mapPointsToRaster(record.stroke.points,WIDTH,HEIGHT,inspectionWidth,inspectionHeight,1);
-    const fill=inspectRegionFill(pixels,mapped.points,record.stroke.options?.color||"#000000",{
+    if(!fillGroups.has(color))fillGroups.set(color,[]);
+    fillGroups.get(color).push({record,points:mapped.points});
+   }
+   for(const [color,group] of fillGroups){
+    const fill=inspectRegionFillGroup(pixels,group.map(item=>item.points),color,{
      stride,margin:Math.max(3,Math.round(8*inspectionScale)),
      colorTolerance:28,minimumCoverage:.88,maximumLeakage:.005
     });
-    fillEyes.push({id:record.stroke.id,intent:record.stroke.intent,...fill});
+    for(const item of group)fillEyes.push({id:item.record.stroke.id,intent:item.record.stroke.intent,color,groupRegions:group.length,...fill});
    }
    const meanLength=geometries.length?geometries.reduce((sum,item)=>sum+item.length,0)/geometries.length:0;
    layerEyes.push({name:layer.name,role:layer.role,visible:layer.visible!==false,raster,geometries,meanLength,pressureSamples,fillEyes});
