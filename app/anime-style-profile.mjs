@@ -74,7 +74,7 @@ export function deriveAnimeHeadConstruction({bounds, viewYaw=0, profile=DEFAULT_
   const at=ratio=>y+height*ratio;
   const project=(localX,depth=0)=>{
     const normalizedX=localX-.5;
-    return cx+width*(normalizedX*cosYaw+depth*sinYaw*.34);
+    return cx+width*(normalizedX*cosYaw+direction*depth*sinYaw*.34);
   };
   const eyeY=at(style.head.eyeLine),browY=at(style.head.browLine);
   const noseY=at(style.head.noseBase),mouthY=at(style.head.mouthLine);
