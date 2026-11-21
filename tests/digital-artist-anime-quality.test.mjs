@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createCanvas } from "@napi-rs/canvas";
+import { drawRasterBrushStroke, fillRasterRegion } from "../app/raster-brushes.mjs";
 import { createDigitalArtistAnimeQualityPlan } from "../app/digital-artist-anime-quality-plan.mjs";
 import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
 
@@ -45,4 +47,19 @@ test("anime benchmark clips hair highlights and skin shadows to semantic masks",
   const command=stream.commands.find(item=>item.strokeId===id);
   assert.ok(command?.options?.clipPolygon?.length>=3,"clip mask was not preserved in compiled command "+id);
  }
+});
+
+
+test("native Canvas2D renderer clips brush strokes and fills at semantic mask boundaries",()=>{
+ const canvas=createCanvas(100,100),ctx=canvas.getContext("2d");
+ const clipPolygon=[{x:5,y:5},{x:45,y:5},{x:45,y:95},{x:5,y:95}];
+ drawRasterBrushStroke(ctx,[{x:10,y:50,pressure:1},{x:90,y:50,pressure:1}],{brush:"ink",size:12,color:"#222222",clipPolygon});
+ const pixels=ctx.getImageData(0,0,100,100).data;
+ assert.ok(pixels[(50*100+20)*4+3]>0,"stroke should remain inside the clip");
+ assert.equal(pixels[(50*100+80)*4+3],0,"stroke must not leak outside the clip");
+ const fillCanvas=createCanvas(100,100),fillCtx=fillCanvas.getContext("2d");
+ fillRasterRegion(fillCtx,[{x:0,y:0},{x:90,y:0},{x:90,y:90},{x:0,y:90}],{color:"#ff0000",clipPolygon});
+ const fillPixels=fillCtx.getImageData(0,0,100,100).data;
+ assert.ok(fillPixels[(30*100+30)*4+3]>0,"fill should remain inside the clip");
+ assert.equal(fillPixels[(30*100+70)*4+3],0,"fill must not leak outside the clip");
 });
