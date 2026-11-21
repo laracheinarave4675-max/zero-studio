@@ -249,3 +249,16 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [ ] Replace point-estimated contours with segmentation/mask-derived boundaries if the small VLM cannot produce reliable outlines.
 
 - [ ] Publish a non-production preview from the corrected head so the new contour prompt and review UI can be checked in a browser.
+
+## Phase 4 — Digital Artist learning loop (D-033)
+
+- [x] Add a bounded evidence-led skill ledger with prerequisite and repeated-assessment mastery gates.
+- [x] Persist the ledger inside project files and preserve it through normalization/import/export.
+- [x] Connect current-frame inspection reports to explicit user-approved assessment saving.
+- [x] Display project learning progress and recommend the next measured curriculum exercise.
+- [x] Refuse skill scoring where the required domain-specific measurements are not implemented.
+- [ ] Add specialist eyes for face landmarks, hair-mass structure, costume folds, light/shadow grouping and model-sheet identity.
+- [ ] Connect the learning ledger to reviewed before/after correction pairs without claiming neural training.
+- [ ] Run CI on the integrated editor and validate project round trips in a browser.
+- [ ] Test the complete loop on the user's Android device.
+
