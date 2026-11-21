@@ -34,7 +34,7 @@ export function validateDigitalArtistBrushPlan(input) {
 
   const ids = new Set();
   const strokeIds = new Set();
-  let previousRole = -1, total = 0;
+  let previousRole = -1, total = 0, totalSamples = 0;
   const layers = input.layers.map((layer, layerIndex) => {
     if (!layer || typeof layer !== "object" || Array.isArray(layer)) fail("Layer " + (layerIndex + 1) + " is invalid.");
     const id = safeId(layer.id, "Layer id");
@@ -63,6 +63,8 @@ export function validateDigitalArtistBrushPlan(input) {
         if (pressure < 0.06 || pressure > 1) fail("Brush pressure must be between 0.06 and 1.");
         return { x, y, pressure };
       });
+      totalSamples += points.length;
+      if (totalSamples > 500000) fail("The brush plan exceeds the 500,000-point editable stroke-history limit.");
       const size = Number(stroke.size ?? 8), opacity = Number(stroke.opacity ?? 1), texture = Number(stroke.texture ?? 0.35);
       if (!Number.isFinite(size) || size < 0.5 || size > 240) fail("Brush size is outside the supported range.");
       if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) fail("Brush opacity must be between 0 and 1.");
