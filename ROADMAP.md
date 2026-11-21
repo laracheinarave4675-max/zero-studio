@@ -275,3 +275,16 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [ ] Run CI on the integrated editor and validate project round trips in a browser.
 - [ ] Test the complete loop on the user's Android device.
 
+
+## Phase 5 — Japanese anime specialist eyes (D-034)
+
+- [x] Compare left/right anime eye width, aspect ratio, slant, iris/pupil placement, iris containment, and pair spacing against approved landmarks.
+- [x] Compare named hair clump root-to-tip direction and length against the approved model sheet.
+- [x] Generate targeted eye/gaze and hair-mass correction drills from failed measurements.
+- [x] Add Arabic editor controls to compare supplied reference/current landmark maps.
+- [x] Include specialist comparison results in the inspection evidence digest.
+- [ ] Connect the model-reported landmarks to verified source-reference and current-raster evidence; do not infer mastery from manually typed coordinates.
+- [ ] Implement raster-based eye contour/iris segmentation and hair-mass boundary/flow extraction.
+- [ ] Extend specialist eyes to face planes, jaw proportions, brows, hands, costume folds, cel-shadow grouping and material response.
+- [ ] Run corrected full CI and inspect actual outputs on Android before claiming acceptance.
+
