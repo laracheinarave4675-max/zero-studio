@@ -41,6 +41,7 @@ export function createDigitalArtistAnimeQualityPlan() {
     bezier([1340,820],[1240,745],[1120,740],[1050,700],14),
     bezier([1050,700],[1000,790],[940,790],[890,700],10)
   );
+  const neckClip = join(bezier([875,670],[880,750],[850,805],[815,835],12),bezier([815,835],[940,900],[1060,875],[1110,820],12),bezier([1110,820],[1050,770],[1040,720],[1045,670],12));
   const leftEye = join(bezier([810,455],[850,405],[920,410],[950,460],10),bezier([950,460],[925,515],[850,520],[810,455],10));
   const rightEye = join(bezier([990,460],[1025,405],[1095,405],[1135,455],10),bezier([1135,455],[1100,520],[1025,515],[990,460],10));
   const layers = [
@@ -58,7 +59,7 @@ export function createDigitalArtistAnimeQualityPlan() {
     ]},
     {id:"skin-flats",name:"03 Skin and facial planes",role:"flat-color",strokes:[
       fill("face-base","Fill the face with a clean warm skin tone.","#f4cbb7",face),
-      fill("neck-base","Connect jaw and shoulders with a believable neck.","#efbda9",join(bezier([875,670],[880,750],[850,805],[815,835],12),bezier([815,835],[940,900],[1060,875],[1110,820],12),bezier([1110,820],[1050,770],[1040,720],[1045,670],12))),
+      fill("neck-base","Connect jaw and shoulders with a believable neck.","#efbda9",neckClip),
       fill("ear-left","Place the left ear inside the hair silhouette.","#efbda9",join(bezier([790,480],[730,440],[720,520],[790,575],10),bezier([790,575],[815,550],[810,505],[790,480],8))),
       fill("ear-right","Place the right ear inside the hair silhouette.","#efbda9",join(bezier([1130,475],[1190,435],[1210,510],[1135,575],10),bezier([1135,575],[1110,545],[1110,500],[1130,475],8)))
     ]},
@@ -99,10 +100,10 @@ export function createDigitalArtistAnimeQualityPlan() {
     ]},
     {id:"cel-shadows",name:"07 Cel shadows",role:"shadow",strokes:[
       fill("face-shadow","Place a deliberate shadow plane under the fringe, clipped to skin.","#d99f9d",[[795,365],[900,395],[970,390],[1050,390],[1130,365],[1110,445],[1060,470],[970,455],[870,475],[810,440]],{opacity:.62,clipPolygon:face}),
-      fill("jaw-shadow","Add a compact jaw shadow following the chin.","#d99a99",[[835,620],[900,690],[970,720],[1040,690],[1100,620],[1070,680],[970,750],[870,680]],{opacity:.48}),
-      fill("neck-shadow","Give the neck a readable cast shadow.","#c98791",[[875,700],[970,750],[1050,700],[1040,795],[970,835],[890,790]],{opacity:.58}),
-      fill("hair-shadow-left","Add a cool shadow ribbon to the left hair.","#171d31",[[690,430],[750,490],[760,720],[825,940],[780,900],[710,740]],{opacity:.68}),
-      fill("garment-shadow","Create a broad under-collar shadow plane.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72})
+      fill("jaw-shadow","Add a compact jaw shadow following the chin, clipped to skin.","#d99a99",[[835,620],[900,690],[970,720],[1040,690],[1100,620],[1070,680],[970,750],[870,680]],{opacity:.48,clipPolygon:face}),
+      fill("neck-shadow","Give the neck a readable cast shadow, clipped to the neck.","#c98791",[[875,700],[970,750],[1050,700],[1040,795],[970,835],[890,790]],{opacity:.58,clipPolygon:neckClip}),
+      fill("hair-shadow-left","Add a cool shadow ribbon clipped to the left hair mass.","#171d31",[[690,430],[750,490],[760,720],[825,940],[780,900],[710,740]],{opacity:.68,clipPolygon:leftHairClip}),
+      fill("garment-shadow","Create an under-collar shadow clipped to the clothing silhouette.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72,clipPolygon:shoulder})
     ]},
     {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
       line("hair-ribbon-left","Paint a long curved reflected ribbon clipped to the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2,clipPolygon:leftHairClip}),
@@ -119,8 +120,8 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("bodice-seams","Add the garment seam and waist construction.","ink","#b8a7c1",2,[[820,870],[900,925],[970,950],[1040,925],[1120,870]]),
       line("cheek-blush","Blend a restrained blush across the left cheek inside the face.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2,clipPolygon:face}),
       line("cheek-blush-right","Blend a restrained blush across the right cheek inside the face.","watercolor","#e98e9b",22,[[1065,565],[1090,575],[1115,565]],{opacity:.38,texture:.2,clipPolygon:face}),
-      line("eye-lower-left","Add the soft lower lash line.","ink","#806477",3,[[820,475],[865,510],[925,480]]),
-      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]]),
+      line("eye-lower-left","Add the soft lower lash line clipped to the left eye.","ink","#806477",3,[[820,475],[865,510],[925,480]],{clipPolygon:leftEye}),
+      line("eye-lower-right","Add the soft lower lash line clipped to the right eye.","ink","#806477",3,[[995,480],[1055,510],[1125,475]],{clipPolygon:rightEye}),
       line("eye-upper-left-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[820,455],[805,442],[790,435]]),
       line("eye-upper-right-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[1125,455],[1145,442],[1160,435]]),
       line("iris-light-left","Add a curved warm reflection within the left iris.","gouache","#e8a77d",3,[[862,470],[878,480],[894,478]],{opacity:.8,clipPolygon:leftEye}),
