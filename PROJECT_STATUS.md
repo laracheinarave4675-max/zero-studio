@@ -2,26 +2,27 @@
 
 Last updated: 2026-11-21 (UTC)
 
-## D-030 Raster-first Digital Artist — native execution and rendered proof
+## D-030 Raster-first Digital Artist — contour fill and stroke review milestone
 
-- The approved drawing hand is the existing native Canvas2D raster brush engine. SVG remains optional for guides and selected geometry; it is not the final-art requirement.
-- Added `app/digital-artist-brush-executor.mjs`: strict validation, ordered layer/stroke execution, per-layer finalization, progress callbacks and rollback of all created layers after failure.
-- Connected the executor to `app/app.js` and added a Digital Artist panel in `app/index.html`. A brush-plan JSON can now create transparent native raster layers and call the existing `drawRasterBrushStroke` Canvas2D renderer.
-- Extracted the shared seven-layer / 54-stroke deterministic sample into `app/digital-artist-demo-plan.mjs`. It is a reproducible test fixture, not AI inference or a user-approved character.
-- Native project normalization retains each stroke's ID, intent, source, pressure points and brush settings. Older manual raster strokes remain compatible.
-- Added `scripts/render-digital-artist-demo.mjs`, which executes the same 54 commands through the actual Canvas2D brush renderer and exports the composite plus seven separate transparent layer PNGs. Added a regression test for the shared fixture.
-- **Verified on HEAD `f8f6e2019c0e76edd26530cc63e6ce8fae6b15b8`:** GitHub Actions Drawing engine run #2330 passed syntax checks and all 353 tests (0 failures); Hybrid raster/SVG run #581 also passed all 353 tests and completed the brush and Digital Artist PNG proof exports. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44932294627 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44932294625.
-- **Visual inspection finding:** the 54-stroke demo is a mechanical renderer proof, not an accepted anime drawing. Its skin/clothing flats appear as broad horizontal bands; the fill method needs improvement before any visual-quality claim.
-- **Not yet implemented:** a vision-capable planner that interprets the approved character reference and creates the brush plan; individual-stroke scrub/replay, correction and approval UI; a full AI-authored character; visual-quality acceptance; and physical Android testing.
-- **Deployment:** Vercel reports a free build-rate-limit failure for this branch preview. No paid upgrade or fallback was used. The branch remains isolated and PR #14 remains open as a draft; no merge or production deployment occurred.
-- Budget remains $0. The long-term target remains 24 independently authored drawings per second. No image/video-generation output is accepted as final Digital Artist artwork.
+- Native Canvas2D raster brush strokes remain the only required final-art drawing hand. SVG stays optional for guides and selected geometric helpers.
+- Added explicit region-fill plan operations. The validator checks polygon points, canvas bounds, color, opacity, blend mode and operation limits; the executor validates them before painting.
+- Added fillRasterRegion() to render closed artist-authored polygon boundaries into transparent native raster layers with antialiased Canvas2D edges. The plan contains vector boundary points, not embedded image or bitmap payloads.
+- Replaced the 12 horizontal flat-color test bands with 14 closed semantic region fills for hair, face, ears, neck, eye whites, fringe and clothing. The deterministic fixture now contains 56 total operations on seven layers (14 fills plus 42 brush marks).
+- Connected polygon fills to the editor, native project stroke history, and the CI Canvas2D renderer. Region type and individual review state survive project normalization.
+- Added a stroke-review panel: select an individual artist operation, preview it in isolation, move to previous/next, and mark it approved/rejected/reset to pending. Review changes use project history/undo. This is operation-level inspection and approval; editing points or safely replaying a corrected operation is still pending.
+- CI now verifies representative pixels inside face, hair, eye-white and clothing polygons and a control pixel outside the silhouette. This guards against accidental flat-color bands and spill at those probe points; it does not prove every region is anatomically perfect.
+- Verified on HEAD f3fb38792a5e8b5c1afc76f95c49217ae402f8dd: Drawing engine run #2371 passed syntax checks and all 357 tests (0 failures); Hybrid raster/SVG run #601 passed its node-test and renderer proof jobs and uploaded the composite plus seven separate layer PNGs. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44933455032 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44933455055.
+- Visual inspection: the latest CI render no longer has the broad horizontal flat-color bands. The face, hair masses, eye whites and clothing regions are visibly filled. The current deterministic portrait still has rough silhouette/outline alignment and incomplete costume/hair refinement; it is a renderer-and-region-fill proof, not an approved production anime character.
+- Not yet implemented/verified: vision-capable model planner that reads an approved reference and autonomously authors a brush plan; editing selected point geometry/brush parameters from the review UI; corrected-stroke replay; automated critique against a real approved character; full-body character; professional visual approval; physical Android testing.
+- Deployment: PR #14 remains open as Draft on feat/digital-artist-engine. No merge or production deployment occurred. The Vercel free build-rate limit remains a constraint; no paid upgrade or fallback was used.
+- Budget remains $0. The long-term target remains 24 independently authored drawings per second. No generated image/video output is accepted as the final artwork.
 
 ## Immediate next steps
 
-1. Improve flat-color region painting so it follows the character silhouette rather than producing broad bands; retain the native brush/stroke source.
-2. Connect a vision-capable planner to an approved character reference and make it emit only validated native-brush commands, with no image-generation output.
-3. Add individual-stroke replay/scrubbing, correction, layer review, approval and safe re-execution.
-4. Produce and visually review one complete character before starting the independently drawn 24-FPS animation path.
+1. Improve hair/costume silhouettes and fill/ink alignment on the deterministic proof, then visually inspect all layers.
+2. Add safe point/brush editing and corrected-operation replay to the review panel.
+3. Connect a free, vision-capable planner only after the interface contract is ready; verify a real inference request before claiming model integration.
+4. Produce and visually review one complete character before starting independent 24-FPS animation drawings.
 
 ## D-029 / D-030 architecture record
 
