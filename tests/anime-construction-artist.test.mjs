@@ -54,3 +54,10 @@ test("construction audit reports geometry defects without claiming visual qualit
  assert.ok(audit.findings.some(item=>item.code==="lid-hierarchy"));
  assert.equal(audit.checks.visualQualityMeasured,false);
 });
+
+test("high-yaw construction records far-side ear occlusion and projected silhouette",()=>{
+ const model=buildAnimeConstructionModel({viewYaw:.92});
+ assert.ok(model.head.silhouette.length>=16);
+ assert.ok(model.ears.some(ear=>ear.farSide&&ear.visible===false));
+ assert.ok(model.ears.some(ear=>!ear.farSide&&ear.visible===true));
+});
