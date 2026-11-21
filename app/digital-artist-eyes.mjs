@@ -153,39 +153,49 @@ export function comparePalette(reference, current, options = {}) {
   };
 }
 
-/** The fill eye: sample real pixels inside and around one intended closed region. */
-export function inspectRegionFill(imageData, polygon, expectedColor, options = {}) {
+/** The fill eye: inspect one or more same-color polygons as a single semantic region group. */
+export function inspectRegionFillGroup(imageData, polygons, expectedColor, options = {}) {
   const { width, height, data } = validatePixels(imageData);
-  if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) fail("Fill inspection requires a polygon with at least three points.");
-  const points = polygon.map(point => {
-    const x = Number(point?.x), y = Number(point?.y);
-    if (![x, y].every(Number.isFinite) || x < 0 || y < 0 || x >= width || y >= height) fail("Fill inspection polygon is outside the raster.");
-    return { x, y };
+  if (!Array.isArray(polygons) || polygons.length < 1 || polygons.length > 512) fail("Fill inspection needs 1–512 region polygons.");
+  const normalized = polygons.map((polygon, polygonIndex) => {
+    if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) fail("Fill polygon " + (polygonIndex + 1) + " needs at least three points.");
+    return polygon.map(point => {
+      const x = Number(point?.x), y = Number(point?.y);
+      if (![x, y].every(Number.isFinite) || x < 0 || y < 0 || x >= width || y >= height) fail("Fill inspection polygon is outside the raster.");
+      return { x, y };
+    });
   });
   const [r, g, b] = hexToRgb(expectedColor);
   const tolerance = Number.isFinite(Number(options.colorTolerance)) ? clamp(Number(options.colorTolerance), 0, 441.7) : 28;
   const stride = Number.isInteger(options.stride) ? clamp(options.stride, 1, 64) : 3;
   const margin = Number.isInteger(options.margin) ? clamp(options.margin, 0, 128) : 12;
-  const minX = Math.max(0, Math.floor(Math.min(...points.map(p => p.x)) - margin));
-  const maxX = Math.min(width - 1, Math.ceil(Math.max(...points.map(p => p.x)) + margin));
-  const minY = Math.max(0, Math.floor(Math.min(...points.map(p => p.y)) - margin));
-  const maxY = Math.min(height - 1, Math.ceil(Math.max(...points.map(p => p.y)) + margin));
+  const allPoints = normalized.flat();
+  const minX = Math.max(0, Math.floor(Math.min(...allPoints.map(p => p.x)) - margin));
+  const maxX = Math.min(width - 1, Math.ceil(Math.max(...allPoints.map(p => p.x)) + margin));
+  const minY = Math.max(0, Math.floor(Math.min(...allPoints.map(p => p.y)) - margin));
+  const maxY = Math.min(height - 1, Math.ceil(Math.max(...allPoints.map(p => p.y)) + margin));
   let insideSamples = 0, insideMatches = 0, outsideSamples = 0, outsideMatches = 0;
   for (let y = minY; y <= maxY; y += stride) {
     for (let x = minX; x <= maxX; x += stride) {
-      const inside = pointInPolygon(x + 0.5, y + 0.5, points);
+      const inside = normalized.some(polygon => pointInPolygon(x + 0.5, y + 0.5, polygon));
       const offset = (y * width + x) * 4, alpha = data[offset + 3];
       const match = alpha > 16 && Math.hypot(data[offset] - r, data[offset + 1] - g, data[offset + 2] - b) <= tolerance;
       if (inside) { insideSamples++; if (match) insideMatches++; }
       else { outsideSamples++; if (match) outsideMatches++; }
     }
   }
+  const insideCoverage = insideSamples ? insideMatches / insideSamples : 0;
+  const outsideLeakage = outsideSamples ? outsideMatches / outsideSamples : 0;
   return {
-    expectedColor, insideSamples, insideMatches,
-    insideCoverage: insideSamples ? insideMatches / insideSamples : 0,
-    outsideSamples, outsideMatches,
-    outsideLeakage: outsideSamples ? outsideMatches / outsideSamples : 0,
-    passed: insideSamples > 0 && insideMatches / insideSamples >= (options.minimumCoverage ?? 0.9) &&
-      (outsideSamples ? outsideMatches / outsideSamples : 0) <= (options.maximumLeakage ?? 0.02)
+    expectedColor, regionCount: normalized.length,
+    insideSamples, insideMatches, insideCoverage,
+    outsideSamples, outsideMatches, outsideLeakage,
+    passed: insideSamples > 0 && insideCoverage >= (options.minimumCoverage ?? 0.9) &&
+      outsideLeakage <= (options.maximumLeakage ?? 0.02)
   };
+}
+
+/** The single-region convenience form of the fill eye. */
+export function inspectRegionFill(imageData, polygon, expectedColor, options = {}) {
+  return inspectRegionFillGroup(imageData, [polygon], expectedColor, options);
 }
