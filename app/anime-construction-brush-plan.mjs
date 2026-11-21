@@ -70,14 +70,15 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
   const headWidth=model.head.bounds.width,headHeight=model.head.bounds.height;
   const faceCenter=model.head.bounds.projectedCenter;
   const nose=model.head.landmarks.noseBase,mouth=model.head.landmarks.mouthCenter,chin=model.head.landmarks.chin;
+  const shadowTop={x:nose.x+shadowDirection*headWidth*.018,y:model.head.axes.noseY-headHeight*.015};
+  const shadowMid={x:faceCenter+shadowDirection*headWidth*.19,y:model.head.axes.noseY+headHeight*.16};
+  const shadowLow={x:chin.x+shadowDirection*headWidth*.025,y:chin.y-headHeight*.035};
+  const shadowMouth={x:mouth.x+shadowDirection*headWidth*.04,y:model.head.axes.mouthY+headHeight*.025};
   const shadowPoints=[
-    {x:nose.x+shadowDirection*headWidth*.018,y:model.head.axes.noseY-headHeight*.015},
-    {x:nose.x+shadowDirection*headWidth*.065,y:model.head.axes.noseY+headHeight*.055},
-    {x:faceCenter+shadowDirection*headWidth*.22,y:model.head.axes.noseY+headHeight*.19},
-    {x:faceCenter+shadowDirection*headWidth*.17,y:model.head.axes.mouthY+headHeight*.10},
-    {x:chin.x+shadowDirection*headWidth*.025,y:chin.y-headHeight*.035},
-    {x:mouth.x+shadowDirection*headWidth*.045,y:model.head.axes.mouthY+headHeight*.025},
-    {x:nose.x+shadowDirection*headWidth*.012,y:model.head.axes.noseY+headHeight*.025}
+    ...quadraticPoints(shadowTop,{x:faceCenter+shadowDirection*headWidth*.11,y:model.head.axes.noseY+headHeight*.015},shadowMid,9),
+    ...quadraticPoints(shadowMid,{x:faceCenter+shadowDirection*headWidth*.20,y:model.head.axes.mouthY-headHeight*.025},shadowLow,9).slice(1),
+    ...quadraticPoints(shadowLow,{x:mouth.x+shadowDirection*headWidth*.08,y:model.head.axes.mouthY+headHeight*.07},shadowMouth,9).slice(1),
+    ...quadraticPoints(shadowMouth,{x:nose.x+shadowDirection*headWidth*.025,y:model.head.axes.noseY+headHeight*.045},shadowTop,9).slice(1)
   ];
   const shadows=[fill("face-cast-shadow","Place a compact cheek-plane cel shadow on the side opposite the key light, following the cheek-to-jaw turn.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px),opacity:.68})];
   const plan={
