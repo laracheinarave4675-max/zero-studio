@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   analyzeRasterPixels, analyzeStrokeGeometry, compareLandmarks,
   comparePalette, inspectRegionFill
@@ -75,4 +76,22 @@ test("fill eye rejects invalid or out-of-raster polygon geometry", () => {
   const imageData = { width: 4, height: 4, data: new Uint8ClampedArray(64) };
   assert.throws(() => inspectRegionFill(imageData, [{ x: 1, y: 1 }, { x: 2, y: 2 }], "#ffffff"), /three points/);
   assert.throws(() => inspectRegionFill(imageData, [{ x: 1, y: 1 }, { x: 9, y: 2 }, { x: 2, y: 3 }], "#ffffff"), /outside/);
+});
+
+test("Digital Artist eyes and anime curriculum are exposed in the editor without external vision calls", async () => {
+  const [html, app] = await Promise.all([
+    readFile(new URL("../app/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../app/app.js", import.meta.url), "utf8")
+  ]);
+  for (const id of ["digitalArtistEyesBtn", "digitalArtistEyesReport", "animeArtistSkillSelect", "animeArtistSkillDetails"]) {
+    assert.equal((html.match(new RegExp('id="' + id + '"', "g")) || []).length, 1, "expected one " + id);
+  }
+  assert.match(app, /analyzeRasterPixels/);
+  assert.match(app, /analyzeStrokeGeometry/);
+  assert.match(app, /function inspectDigitalArtistEyes\(/);
+  assert.match(app, /eyesButton\.onclick=\(\)=>inspectDigitalArtistEyes\(\)/);
+  assert.match(app, /function mountAnimeArtistCurriculum\(/);
+  assert.match(app, /mountAnimeArtistCurriculum\(\)/);
+  assert.match(app, /getAnimeArtistCurriculum\(\)/);
+  assert.match(app, /inspectionScale=Math\.min\(1,960\/width,540\/height\)/);
 });
