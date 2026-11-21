@@ -63,3 +63,13 @@ test("native Canvas2D renderer clips brush strokes and fills at semantic mask bo
  assert.ok(fillPixels[(30*100+30)*4+3]>0,"fill should remain inside the clip");
  assert.equal(fillPixels[(30*100+70)*4+3],0,"fill must not leak outside the clip");
 });
+
+
+test("anime iris, pupil and eye highlights are clipped to their own sclera",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const [id,expected] of [["iris-left",true],["pupil-left",true],["glint-left",true],["iris-right",true],["pupil-right",true],["glint-right",true]]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke,"missing eye operation "+id);
+  assert.equal(Array.isArray(stroke.clipPolygon)&&stroke.clipPolygon.length>=3,expected,"eye operation must be clipped: "+id);
+ }
+});
