@@ -65,20 +65,21 @@
 </div>
 <div id="animeWalkTaskList" class="anime-walk-task-grid" aria-label="التنقل بين مهام الإطارات الأربعة والعشرين"></div>
 </div>
-<p class="note">محرك التحريك هو المسؤول عن إنتاج الرسومات، وليس عليك رسم أي إطار. يولّد خمس وضعيات مفتاحية أولاً (1 و7 و13 و19 و24)، ثم ينشئ 19 رسمة وسيطة كاملة، مع الحفاظ على ورقة التصميم كمرجع ثابت للهوية واستخدام الوضعيات السابقة لتوجيه الحركة فقط.</p>
+<p class="note">مسار توليد صور الحركة السابق أُوقف. مولد الصور مخصص لتصميم الشخصية والخلفيات، أما الحركة فتحتاج محرك رسم مستقل. افتح المختبر النقطي لتجربة الرسم المحلي دون استدعاء FLUX.</p>
 <div class="anime-auto-drawing-panel" id="animeAutoDrawingPanel">
-<div class="section-heading"><strong>محرك الرسم والتحريك الآلي — 24 رسمة مستقلة</strong><span class="pill">24 FPS</span></div>
-<p class="note">كل صورة تُرسم من جديد بواسطة محرك الصور، ثم تُحوّل محلياً إلى PNG شفاف وتحفظ كطبقة مستقلة داخل الخط الزمني. لا تُستخدم دمية أو تشويه للشخصية أو إطارات SVG هندسية. يجب أن تراجع الرسومات بصرياً قبل اعتمادها وتصديرها.</p>
+<div class="section-heading"><strong>مسار الصور السابق — متوقف للحركة</strong><span class="pill">موقوف</span></div>
+<p class="note">لن نستخدم FLUX لإنتاج إطارات الحركة. هذا يمنع التوليد المتكرر واستهلاك الحصة وتغيّر هوية الشخصية. مسار الصور يبقى لتصميم الشخصية والخلفيات فقط.</p>
 <div class="button-grid">
-<button id="startAnimeAutoDrawingBtn" class="primary full" type="button">توليد 24 رسمة أنمي تلقائياً</button>
-<button id="stopAnimeAutoDrawingBtn" class="secondary full" type="button" disabled>إيقاف بعد الإطار الجاري</button>
+<button id="startAnimeAutoDrawingBtn" class="primary full" type="button" disabled>توليد إطارات بالصور — متوقف</button>
+<button id="stopAnimeAutoDrawingBtn" class="secondary full" type="button" disabled>لا توجد مهمة صور جارية</button>
 </div>
-<div id="animeAutoDrawingStatus" class="status" role="status" aria-live="polite">لم يبدأ توليد الإطارات. سيُفحص الاتصال وحدود الخطة المجانية أولاً دون استهلاك حصة.</div>
+<div id="animeAutoDrawingStatus" class="status" role="status" aria-live="polite">تم تعطيل توليد الصور للحركة. استخدم المختبر النقطي لتجربة الرسم المحلي.</div>
 <div class="button-grid">
-<button id="auditAnimeAutoSequenceBtn" class="secondary" type="button" disabled>فحص تسلسل الرسومات</button>
-<button id="exportAnimeAutoSequenceBtn" class="primary" type="button" disabled>تصدير 24 PNG بعد المراجعة</button>
+<button id="auditAnimeAutoSequenceBtn" class="secondary" type="button" disabled>فحص التسلسل القديم</button>
+<button id="exportAnimeAutoSequenceBtn" class="primary" type="button" disabled>تصدير التسلسل القديم</button>
 </div>
-<div id="animeAutoDrawingAuditStatus" class="status" role="status" aria-live="polite">لا توجد رسومات آلية مكتملة بعد.</div>
+<div id="animeAutoDrawingAuditStatus" class="status" role="status" aria-live="polite">لا يوجد تسلسل صور آلي صالح.</div>
+<a href="./raster-engine-test.html" style="display:block;text-align:center;margin-top:10px;padding:11px;border:1px solid var(--accent);border-radius:10px;color:var(--accent);text-decoration:none">فتح مختبر الرسم النقطي المستقل</a>
 </div>
 <div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button" hidden>تهيئة خط زمني من 24 إطاراً مستقلاً</button>
 <label class="toggle" id="animeAnatomyGuideToggleLabel" hidden><input id="animeAnatomyGuideToggle" type="checkbox" checked> عرض دليل المفاصل فوق لوحة الرسم أثناء الرسم</label>
