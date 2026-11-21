@@ -79,7 +79,8 @@ export function analyzeStrokeGeometry(stroke) {
     return { x, y, pressure };
   });
   let length = 0, sharpTurns = 0, minPressure = 1, maxPressure = 0;
-  const angles = [];
+  let duplicateSegments = 0, tinySegments = 0, abruptPressureChanges = 0;
+  const angles = [], segmentLengths = [];
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
@@ -87,8 +88,15 @@ export function analyzeStrokeGeometry(stroke) {
     minPressure = Math.min(minPressure, p.pressure); maxPressure = Math.max(maxPressure, p.pressure);
     if (i > 0) {
       const dx = p.x - points[i - 1].x, dy = p.y - points[i - 1].y;
-      length += Math.hypot(dx, dy);
-      if (Math.hypot(dx, dy) > 0.001) angles.push(Math.atan2(dy, dx));
+      const segmentLength = Math.hypot(dx, dy);
+      length += segmentLength;
+      segmentLengths.push(segmentLength);
+      if (segmentLength <= 0.001) duplicateSegments++;
+      else {
+        if (segmentLength < 0.35) tinySegments++;
+        angles.push(Math.atan2(dy, dx));
+      }
+      if (Math.abs(p.pressure - points[i - 1].pressure) >= 0.45) abruptPressureChanges++;
     }
   }
   for (let i = 1; i < angles.length; i++) {
@@ -101,6 +109,19 @@ export function analyzeStrokeGeometry(stroke) {
     intent: String(stroke.intent ?? ""),
     kind: stroke.kind === "raster-region-fill" ? "region-fill" : "brush-stroke",
     sampleCount: points.length, length, sharpTurns,
+    segmentQuality: {
+      segmentCount: segmentLengths.length, duplicateSegments, tinySegments,
+      abruptPressureChanges,
+      minimumSegmentLength: segmentLengths.length ? Math.min(...segmentLengths) : 0,
+      meanSegmentLength: segmentLengths.length ? length / segmentLengths.length : 0
+    },
+    warnings: [
+      ...(length <= 0.001 && stroke.kind !== "raster-region-fill" ? ["zero-length-stroke"] : []),
+      ...(duplicateSegments ? ["duplicate-consecutive-points"] : []),
+      ...(tinySegments > Math.max(3, segmentLengths.length * 0.2) ? ["over-sampled-micro-segments"] : []),
+      ...(sharpTurns > Math.max(2, angles.length * 0.35) ? ["excessive-direction-changes"] : []),
+      ...(abruptPressureChanges > Math.max(2, segmentLengths.length * 0.25) ? ["unstable-pressure"] : [])
+    ],
     bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
     pressureRange: { min: minPressure, max: maxPressure, spread: maxPressure - minPressure },
     closed: stroke.kind === "raster-region-fill" || (points.length > 2 && distance(points[0], points[points.length - 1]) <= 2)
