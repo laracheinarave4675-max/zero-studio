@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1130,6 +1130,7 @@ async function inspectDigitalArtistEyes(){
     fillFailed:layer.fillEyes.filter(fill=>!fill.passed).length
    }))
   };
+  report.correctionPlan=buildArtistCorrectionPlan(report);
   status.textContent=[
    "فحص الفنان — الإطار "+report.frame,
    "عين البنية: "+report.analyzedLayers+" طبقات، "+report.visiblePixels.toLocaleString("en-US")+" بكسل ظاهر",
@@ -1139,6 +1140,8 @@ async function inspectDigitalArtistEyes(){
    "عين التشريح: "+(!anatomyEye?"اختر هوية Character DNA معتمدة":anatomyEye.skipped?(anatomyEye.reason==="no-approved-current-frame-guide"?"لا توجد وضعية معتمدة لهذا الإطار بعد":anatomyEye.reason==="camera-view-mismatch"?"تغير منظور الكاميرا؛ تم تخطي المقارنة":"تعذر استخدام مرجع الهوية"):anatomyEye.passed?"نسب العظام ضمن هامش 15% من Character DNA":"توجد انحرافات في "+anatomyEye.measurements.filter(item=>!item.passed).map(item=>item.name).join("، ")),
    "عين جودة الخط: "+(strokeWarnings.length?strokeWarnings.length+" ملاحظة في "+[...new Set(strokeWarnings.map(item=>item.id))].join("، "):"لم تُكتشف عيوب هندسية واضحة في الضربات"),
    "مراجعة العمليات: "+Object.entries(approvals).map(([key,value])=>key+" "+value).join("، "),
+   "اقتراحات التصحيح: "+(report.correctionPlan.summary.total?report.correctionPlan.summary.total+" اقتراحاً ("+report.correctionPlan.summary.high+" مهم، "+report.correctionPlan.summary.medium+" متوسط)\\n"+report.correctionPlan.suggestions.slice(0,8).map((item,index)=>(index+1)+". ["+item.skillId+"] "+item.title+(item.targetStrokeId?" · "+item.targetStrokeId:"")+"\\n   السبب: "+item.diagnosis+"\\n   التصحيح: "+item.action+"\\n   تمرين: "+item.exercise+"\\n   معيار النجاح: "+item.success).join("\\n"):"لا توجد اقتراحات تصحيح آلية القواعد لهذا الفحص"),
+   "ملاحظة: هذه توصيات تعليمية مبنية على قواعد القياس، ولا تعدّل الرسم أو تعتمد الضربات تلقائياً.",
    ...report.layerEyes.map(layer=>layer.name+": "+(layer.bounds?"حدود "+layer.bounds.width+"×"+layer.bounds.height:"طبقة فارغة")+"، تغطية "+(layer.alphaCoverage*100).toFixed(1)+"%")
   ].join("\n");
   status.dataset.report=JSON.stringify(report);
