@@ -347,3 +347,13 @@ These eyes are measurement and critique tools, not image generators. They may co
 **Evidence boundary:** These checks compare supplied/model-reported landmarks; they do not detect landmarks directly from pixels. Hair clump root-tip comparison is not strand segmentation. The results may guide human correction but cannot be used to claim visual understanding or skill mastery until tied to verified reference and current raster evidence.
 
 **Output:** Continue using native editable raster brush strokes for final drawing. Comparison helpers do not generate or edit artwork automatically.
+
+## D-035 — Character-specific face measurements and reviewed contour inking (2026-11-21)
+
+**Decision:** Face geometry is evaluated against each character's approved model sheet. The comparison measures face aspect, cheek/jaw width, lower-face ratio, nose and mouth levels, mouth-to-chin spacing, brow-to-eye gap, and eye spacing. It must not impose one universal anime face template.
+
+**Contour policy:** When a validated vision report includes a reviewed polygon contour, the planner creates a native raster region fill and a separate closed ink-brush outline. A bounding-box-only region may still be used as a clearly warned approximation; it must never be described as contour segmentation.
+
+**Evidence boundary:** Local alpha-connected raster contour extraction measures pixel boundaries and connected components only. It does not identify semantic parts such as eyes, hair, skin, or clothing. Model-reported landmarks remain externally supplied observations until a real vision inference run is demonstrated.
+
+**Acceptance:** Unit tests and deterministic renderer artifacts verify software behavior, not artistic quality. The first actual drawing must still be visually reviewed on the user's Android device.
