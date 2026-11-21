@@ -105,3 +105,27 @@ Only after one still passes the visual gate should we ask the artist to draw a s
 - Never claim artistic acceptance from unit tests alone.
 - Preserve the existing SVG editor, raster asset support, anatomy engine, native .zero format, gallery, and production workflows.
 - Work on an isolated branch until code and visual acceptance are established. No production deployment or merge without the user's approval.
+
+
+## Critical refinement — Raster-first brush artist (D-030)
+
+SVG is **not required** for the Digital Artist and must not be the only drawing medium. The previous vector-first proposal is retained only as an optional structural/geometry representation for construction guides, selected clean contours, vector editing, or shape masks. It is not the mandatory final-art renderer.
+
+ZERO STUDIO already contains a native Canvas2D raster brush engine in `app/raster-brushes.mjs`, with graphite, ink, gouache, watercolor and foliage presets; pressure-aware samples; tapered continuous ribbons; grain/bristle texture; opacity; erasing; and blend modes. The studio also has persistent raster surfaces and native raster layers. This is a much better starting point for the artist's drawing hand than forcing every mark into SVG.
+
+### Updated drawing hand
+
+- The AI emits ordered brush-stroke commands: point samples (x/y/pressure), brush preset, size, color, opacity, texture, blend mode, seed, erase flag, intent and semantic layer.
+- ZERO STUDIO's native raster brush engine executes the commands onto separate transparent raster layers.
+- Each stroke remains an individually recorded, replayable command, even though the rendered pigment is raster. Editing can replay a layer from its stroke log after a correction; do not flatten the whole character into one bitmap.
+- Use natural brush profiles for rough construction, organic tapered ink, painted flats, cel-shadow passes and highlights. Add more specialized anime inking profiles (pressure taper, nib angle, speed response, stabilizer, dry-brush edge) through the existing brush engine.
+- SVG remains optional for pose skeletons, anatomical guides, simple masks, geometric construction and selected editable contours. It must never be a mandatory dependency for final character art.
+- A flattened PNG is only a preview/export artifact. The source project must retain separate layers and the ordered brush-stroke log.
+
+### New command contract
+
+`app/digital-artist-brush-engine.mjs` defines `zero-studio-digital-artist-brush-plan` v1 and compiles it to a native Canvas2D raster command stream. It validates semantic layer order, identity digest, per-sample pressure and bounds, brush presets, color, size, texture, blend mode, and stroke IDs. It explicitly declares `vectorRequired: false`.
+
+### Updated acceptance gate
+
+The first complete character must be drawn from a blank canvas using separate editable raster layers and individually replayable native brush strokes. No embedded/generated image payload is allowed. It is acceptable to use SVG only for hidden construction guides or optional geometric helpers, not as a substitute for organic line art or painted color.
