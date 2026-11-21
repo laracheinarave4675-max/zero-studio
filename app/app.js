@@ -494,6 +494,9 @@ function ensureAnimeAutoSequence(action,galleryId){
  return project.animeAutoSequence;
 }
 async function generateAnimeAutoWalkSequence(){
+ const statusNode=$("animeAutoDrawingStatus");
+ if(statusNode)statusNode.textContent="تم إيقاف توليد الصور للحركة نهائياً في هذا المسار. افتح مختبر الرسم النقطي المحلي بدلاً منه.";
+ return;
  if(animeAutoDrawingBusy)return;
  const button=$("startAnimeAutoDrawingBtn"),stopButton=$("stopAnimeAutoDrawingBtn"),statusNode=$("animeAutoDrawingStatus");
  animeAutoDrawingBusy=true;animeAutoDrawingStopRequested=false;
