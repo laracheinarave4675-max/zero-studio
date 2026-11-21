@@ -178,3 +178,21 @@ The new primary character-art direction is an AI digital artist that draws throu
 
 **Non-claims:** the schema and unit tests do not prove autonomous drawing, professional anime quality, or visual identity retention. No image/video generation is permitted in the final-art authoring path.
 
+
+
+## D-030 correction — Raster-first Digital Artist (2026-11-21)
+
+This supersedes the vector-first character-art choice in D-029. The character Digital Artist uses native pressure-sensitive Canvas2D raster brush strokes on separate layers as its primary drawing medium. SVG is optional for construction guides, skeletons, simple masks, and selected geometry; it is not required for final line art, flats, shadows, or details.
+
+- [x] Confirm and document the existing raster brush and persistent raster-surface engines as the primary drawing hand.
+- [x] Add a versioned raster brush-plan contract with semantic layers, per-point pressure, brush profile, size, color, opacity, texture, blend mode, seed, intent and replay order.
+- [x] Compile plans into native raster brush commands with `vectorRequired: false`.
+- [x] Add unit tests for the raster-first command contract and validation.
+- [ ] Verify the new module and all regression tests in GitHub Actions.
+- [ ] Add an execution adapter that paints compiled commands into native transparent raster layers and preserves the ordered stroke log for replay/editing.
+- [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
+- [ ] Add visual critique that revises brush commands and layer content, not a regenerated image.
+- [ ] Produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
+- [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
+
+**Important:** The older D-029 vector command contract remains optional infrastructure for geometric guides and selected contours. It is not the acceptance route for final anime character art. No generated image/video, no paid compute, no merge/deploy without user approval.
