@@ -7,7 +7,8 @@ test("construction model derives head, eye systems, torso and hair from one norm
  assert.equal(model.format,"zero-studio-anime-construction-model");
  assert.equal(model.head.derivedFromHeadBounds,true);
  assert.equal(model.eyes.length,2);
- assert.equal(model.hair.length,5);
+ assert.equal(model.hair.length,7);
+ assert.ok(model.hair.filter(clump=>clump.id.startsWith("fringe-")).every(clump=>clump.widthProfile.rootWidth<=.06));
  assert.ok(model.torso.ribcage.width>model.torso.waist.width);
  assert.ok(model.folds.length>=3);
  assert.ok(model.shadows.light);
