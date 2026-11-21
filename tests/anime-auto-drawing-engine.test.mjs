@@ -77,3 +77,27 @@ test("invalid identity refs and out-of-range frame indexes are rejected", () => 
   assert.throws(() => createAnimeAutoDrawingRequest(plan, 0, { identityReference: "https://example.com/model.png" }), /compressed PNG/i);
   assert.throws(() => createAnimeAutoDrawingRequest(plan, 24, { identityReference: image("identity") }), /between 0 and 23/i);
 });
+
+test("chroma-key extraction makes the flat blue background transparent while retaining character pixels", async () => {
+  const { removeAnimeChromaKeyFromRgba } = await import("../app/anime-auto-drawing-engine.mjs");
+  const pixels = new Uint8ClampedArray([
+    0, 174, 239, 255,       // exact blue backdrop
+    18, 22, 28, 255,        // dark hair / line art
+    246, 226, 190, 255      // ivory costume
+  ]);
+  const result = removeAnimeChromaKeyFromRgba(pixels);
+  assert.equal(result.data[3], 0);
+  assert.equal(result.data[7], 255);
+  assert.equal(result.data[11], 255);
+  assert.ok(result.transparentPixels >= 1);
+  assert.ok(result.opaquePixels >= 2);
+});
+
+test("chroma-key extraction retains antialiased edge coverage and rejects images without a key background", async () => {
+  const { removeAnimeChromaKeyFromRgba } = await import("../app/anime-auto-drawing-engine.mjs");
+  const mixed = new Uint8ClampedArray([128, 214, 247, 255, 15, 20, 25, 255]);
+  const result = removeAnimeChromaKeyFromRgba(mixed);
+  assert.ok(result.data[3] > 0 && result.data[3] < 255);
+  assert.equal(result.data[7], 255);
+  assert.throws(() => removeAnimeChromaKeyFromRgba(new Uint8ClampedArray([40, 40, 40, 255])), /both a removable blue backdrop/i);
+});
