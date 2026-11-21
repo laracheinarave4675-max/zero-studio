@@ -18,7 +18,7 @@
 <select id="animeAnatomyRightContact" class="text-input">
 <option value="unknown" selected>غير محددة</option><option value="planted">ثابتة على الأرض</option><option value="swing">في حركة</option><option value="airborne">مرفوعة</option>
 </select>
-<button id="startAnimeAnatomyBtn" class="primary full" type="button">ابدأ تحديد نقاط الشخصية على الرسم الحالي</button>
+<button id="startAnimeAnatomyBtn" class="primary full" type="button" hidden>ابدأ تحديد نقاط الشخصية على الرسم الحالي</button>
 <div id="animeAnatomyAnnotator" hidden>
 <div class="anatomy-step"><strong id="animeAnatomyStepTitle">النقطة 1 من 19</strong><span id="animeAnatomyStepHint">حدد مركز الجسم</span></div>
 <svg id="animeAnatomyCanvas" viewBox="0 0 1920 1080" role="img" aria-label="تحديد النقاط التشريحية على الرسم المرجعي">
@@ -44,9 +44,9 @@
 <select id="animeKeyDrawingEase" class="text-input">
 <option value="linear">خطي</option><option value="ease-in">تسارع تدريجي</option><option value="ease-out">تباطؤ تدريجي</option><option value="ease-in-out" selected>تسارع وتباطؤ</option>
 </select>
-<button id="startAnimeKeyDrawingBtn" class="secondary full" type="button">تسجيل الإطار الحالي كوضعية مفتاحية كاملة</button>
-<button id="buildAnimeMotionPlanBtn" class="primary full" type="button">إنشاء خطة حركة 24 إطاراً وتصديرها</button>
-<button id="applyKimonoWalkPresetBtn" class="secondary full" type="button">تجهيز اختبار المشي الجانبي لهذه الشخصية</button>
+<button id="startAnimeKeyDrawingBtn" class="secondary full" type="button" hidden>تسجيل الإطار الحالي كوضعية مفتاحية كاملة</button>
+<button id="buildAnimeMotionPlanBtn" class="primary full" type="button" hidden>إنشاء خطة حركة 24 إطاراً وتصديرها</button>
+<button id="applyKimonoWalkPresetBtn" class="secondary full" type="button">اختيار حركة المشي الجانبي للشخصية</button>
 <div class="kimono-walk-reference">
 <a href="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" target="_blank" rel="noopener noreferrer" aria-label="فتح ورقة تصميم الشخصية الأصلية">
 <img id="kimonoWalkReferenceImage" src="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" alt="ورقة تصميم الشخصية بثلاث زوايا — أمامية وجانبية وخلفية" loading="lazy">
@@ -80,7 +80,7 @@
 </div>
 <div id="animeAutoDrawingAuditStatus" class="status" role="status" aria-live="polite">لا توجد رسومات آلية مكتملة بعد.</div>
 </div>
-<div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button">تهيئة خط زمني من 24 إطاراً مستقلاً</button>
+<div id="animeMotionPlanStatus" class="status" role="status" aria-live="polite">لم تُنشأ خطة حركة بعد.</div><button id="prepareAnime24FrameBtn" class="secondary full" type="button" hidden>تهيئة خط زمني من 24 إطاراً مستقلاً</button>
 <label class="toggle" id="animeAnatomyGuideToggleLabel" hidden><input id="animeAnatomyGuideToggle" type="checkbox" checked> عرض دليل المفاصل فوق لوحة الرسم أثناء الرسم</label>
 <div class="anime-raster-review" id="animeRasterReviewPanel">
 <strong>مراجعة الرسمة النهائية للإطار الحالي</strong>
