@@ -13,7 +13,7 @@ test("selected kimono reference is rendered as three distinct native-brush views
   assert.equal(plan.format, "zero-studio-digital-artist-brush-plan");
   assert.equal(plan.identity.characterAssetId, REFERENCE_ID);
   assert.equal(plan.layers.length, 7);
-  assert.ok(stream.strokeCount >= 100);
+  assert.ok(stream.audit.strokeCount >= 100);
   assert.ok(strokes.length >= 100);
 
   for (const view of ["front", "side", "back"]) {
