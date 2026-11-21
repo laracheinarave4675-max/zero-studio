@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   analyzeRasterPixels, analyzeStrokeGeometry, compareLandmarks,
-  comparePalette, inspectRegionFill, inspectRegionFillGroup
+  comparePalette, inspectRegionFill, inspectRegionFillGroup,
+  compareAnatomyGuideToDNA
 } from "../app/digital-artist-eyes.mjs";
+import { createAnimeCharacterDNA } from "../app/anime-anatomy-engine.mjs";
 
 test("raster eye measures silhouette bounds, coverage, centroid and dominant palette", () => {
   const width = 5, height = 4, data = new Uint8ClampedArray(width * height * 4);
@@ -55,6 +57,35 @@ test("identity eye compares normalized facial and anatomical landmarks", () => {
   const drift = compareLandmarks(reference, { ...reference, chin: { x: .62, y: .8 } }, { tolerance: .05 });
   assert.equal(drift.passed, false);
   assert.equal(drift.measurements.find(item => item.name === "chin").withinTolerance, false);
+});
+
+test("anatomy eye compares a current approved pose guide to locked Character DNA proportions", () => {
+  const points = {
+    root:[.50,.52], pelvis:[.50,.58], chest:[.50,.36], neck:[.50,.26], head:[.50,.16],
+    shoulderL:[.43,.37], elbowL:[.35,.47], wristL:[.30,.56],
+    shoulderR:[.57,.37], elbowR:[.65,.47], wristR:[.70,.56],
+    hipL:[.46,.59], kneeL:[.44,.75], ankleL:[.43,.91], toeL:[.38,.93],
+    hipR:[.54,.59], kneeR:[.56,.75], ankleR:[.57,.91], toeR:[.62,.93]
+  };
+  const guide = {
+    view:"side",
+    contacts:{footL:"planted",footR:"swing"},
+    joints:Object.fromEntries(Object.entries(points).map(([name,[x,y]])=>[name,{x,y}]))
+  };
+  const dna=createAnimeCharacterDNA({
+    characterAssetId:"eyes-character",characterBibleId:"eyes-bible",anchorGuide:guide
+  });
+  const match=compareAnatomyGuideToDNA(dna,guide);
+  assert.equal(match.passed,true);
+  assert.equal(match.compared,11);
+  const drifted=structuredClone(guide);
+  drifted.joints.wristL.y+=.12;
+  const mismatch=compareAnatomyGuideToDNA(dna,drifted,{relativeTolerance:.1});
+  assert.equal(mismatch.passed,false);
+  assert.ok(mismatch.measurements.some(item=>item.name==="lowerArmL"&&!item.passed));
+  const otherView=compareAnatomyGuideToDNA(dna,{...guide,view:"front"});
+  assert.equal(otherView.skipped,true);
+  assert.equal(otherView.passed,null);
 });
 
 test("color eye compares named model-sheet palette swatches", () => {
