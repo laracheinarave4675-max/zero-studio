@@ -148,3 +148,7 @@ Next: connect this contract to the existing character-reference and raster compo
 - Development branch: `feat/anime-raster-keyframe-motion-engine`
 - Base: `feat/anime-character-motion-proof` (existing art-generation and character-reference work preserved).
 - No merge, production deployment, paid service, GPU rental, or provider fallback is authorized by this architecture decision.
+
+## 8. Preview deployment path (2026-11-21)
+
+The anime raster preview is deployed through the repository's linked Git integration: commit changes to `feat/anime-raster-keyframe-motion-engine` and let Vercel create the branch preview. Do not use the Vercel deployment-create API as a fallback when its daily API deployment limit is reached. This path is preview-only; it does not merge the branch or deploy production.
