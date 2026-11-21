@@ -444,6 +444,12 @@ function updateAnimeRasterControls(){
  $("saveAnimeRasterFrameBtn").disabled=!ready||current>=24;
  $("auditAnimeRasterFramesBtn").disabled=!ready;
  $("exportAnimeRasterSequenceBtn").disabled=true;
+ const sequence=project.animeAutoSequence;
+ const autoFrames=sequence?project.frames.slice(sequence.baseFrameIndex,sequence.baseFrameIndex+24):[];
+ const autoComplete=!!sequence&&autoFrames.length===24&&autoFrames.every((item,index)=>item?.animeAutoDrawing?.batchId===sequence.batchId&&item.animeAutoDrawing.frameIndex===index&&getAnimeAutoDrawingLayer(item,index));
+ const autoApproved=autoComplete&&autoFrames.every(item=>item.animeAutoDrawing.review?.status==="approved");
+ $("auditAnimeAutoSequenceBtn").disabled=!sequence;
+ $("exportAnimeAutoSequenceBtn").disabled=!autoApproved||animeAutoDrawingBusy;
 }
 
 async function removeAnimeBlueBackdrop(imageDataUrl){
