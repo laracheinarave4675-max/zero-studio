@@ -102,7 +102,23 @@ export function buildAnimeVisionBrushPlan(report, {
       blendMode: "normal",
       seed: 1
     });
-    if (!Array.isArray(region.contour)) warnings.push("Region " + region.id + " uses a rectangular bounding-box approximation; supply a reviewed contour for accurate organic edges.");
+    if (Array.isArray(region.contour)) {
+      const outlinePoints = regionPolygon(region);
+      outlinePoints.push({ ...outlinePoints[0] });
+      ensure("clean-line").push({
+        id: "vision-outline-" + safeId(region.id),
+        intent: "Ink reviewed contour: " + (region.label || region.id),
+        brush: "ink",
+        points: outlinePoints,
+        size: /eye|eyebrow|mouth|nose/i.test(region.label) ? 3 : 4.5,
+        color: "#29232b",
+        opacity: 0.86,
+        texture: 0.08,
+        seed: 1
+      });
+    } else {
+      warnings.push("Region " + region.id + " uses a rectangular bounding-box approximation; supply a reviewed contour for accurate organic edges.");
+    }
   }
 
   const layers = ROLE_ORDER.filter(role => buckets.has(role)).map(role => ({
@@ -132,7 +148,7 @@ export function buildAnimeVisionBrushPlan(report, {
       requiresHumanApproval: approveObservations !== true,
       reviewQueue: brief.reviewQueue,
       warnings: [...new Set(warnings)],
-      approximation: "normalized-landmarks-and-rectangular-region-bounds",
+      approximation: "reviewed-contour-polygons-with-explicit-rectangle-fallback",
       nativeRasterBrushPlan: true,
       imageGenerationUsed: false,
       inferencePerformed: false,
