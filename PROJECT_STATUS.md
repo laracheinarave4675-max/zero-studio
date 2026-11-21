@@ -1,3 +1,45 @@
+# ZERO STUDIO — Project Status
+
+Last updated: 2026-11-20 (UTC)
+
+## D-028 anatomy-guided animation engine — 2026-11-20
+
+- The user approved replacing repeated per-frame image generation with a stable Character DNA and anatomy-guided independent drawing workflow.
+- Recorded D-028 in DECISIONS.md. It supersedes D-027's per-frame still-image request approach for final character animation; D-027 remains history for the earlier prototype.
+- Added docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md as the current source of truth.
+- Added app/anime-anatomy-engine.mjs: validated identity/proportion data, approved full key-drawing records, smooth joint construction interpolation, limb-length constraints, planted-foot anchors, center-of-mass sampling, and guide-only anatomical construction previews.
+- Added independent 24-FPS artist drawing tasks. Each frame requires a complete redraw, its own transparent PNG/WebP asset, a unique content hash, and explicit identity/anatomy/line-quality/timing review.
+- Added tests/anime-anatomy-engine.test.mjs for identity locking, proportion measurement, key-drawing approval, interpolation, foot anchoring, guide-only rendering, duplicate prevention, and the 24-approved-unique-drawings audit.
+- The geometry is reference material only. It does not deform the source character, generate final character pixels, or substitute for artist-authored drawings.
+- The prior per-frame still-image request builder is legacy-only for this animation direction and must not be used to produce final motion frames.
+- Added a mobile-first on-canvas Character DNA calibration panel: annotate 19 anatomical landmarks over the current drawing, set view/foot contact, save the identity into the native .zero project, and export the DNA record.
+- Extended native project normalization and large-project undo metadata to preserve Character DNA records.
+- Character DNA now stores a SHA-256 signature of its originating timeline drawing. Key-drawing approval, motion-plan creation, and plan restoration refuse to proceed if that original drawing is missing or changed.
+- Corrected a malformed async declaration in the motion-plan restoration path and added a regression assertion.
+- Android history budgeting now counts final animation PNG payloads as well as raster-layer images. Once heavy raster assets exceed 2 MiB, history uses frame-local snapshots; shared animation-background state is preserved by undo/redo.
+- Added regression coverage for the immutable character anchor, raster-aware history selection, and shared-background undo/redo.
+- GitHub Actions is green on branch HEAD `fd9ee5c92393f99f41c6551d804cac6274b13d70`: syntax checks passed and 291/291 tests passed (0 failures).
+- **Not yet verified:** annotate the user's approved real character, create and approve 24 real artist drawings, play the completed walk on Android, and obtain visual identity/anatomy/line-quality approval from the user.
+- The latest READY Vercel preview currently points to older commit `072b27c0`; the newer drawing workflow is not yet deployed. Vercel reported its free-tier deployment rate limit (>100/day). No production deployment, Cloudflare deployment, paid service, or merge to main was initiated.
+
+dation — 2026-11-20
+
+- User-approved decision D-027: preserve the existing character and background generation departments; focus development on the missing anime animation department.
+- New workflow: motion/timing chart → spatial pose blocking guide → complete 2D key drawings → individually reviewed raster in-between/cleanup drawings → raster frame assembly.
+- 3D pose rigs are references only. Puppet deformation, single-image warping, SVG path animation, held copies, and generic text-to-video output are not accepted as final animation.
+- Added `docs/ANIME_KEYFRAME_MOTION_ENGINE.md` and D-027 in `DECISIONS.md`.
+- Added `app/anime-motion-engine.mjs`: validated 24 FPS plan, ordered key-pose schedule, guide-only joint sampling, independent PNG/WebP drawing records, duplicate-raster rejection, and materialization into native ZERO STUDIO raster layers.
+- Added `tests/anime-motion-engine.test.mjs` for schedule, guide interpolation, image identity/hash uniqueness, missing-frame accounting, native Raster project-frame materialization and input validation.
+- Added experimental `POST /v1/anime/segment` on the isolated Worker branch using Cloudflare Images `segment=foreground`/BiRefNet, with gallery-ID validation, origin/token auth, PNG checks, free-limit stop/no-paid-fallback handling, and Vercel proxy `app/api/anime-segment.js`.
+- Worker and Vercel proxy tests cover auth, invalid IDs, PNG output, and free-tier cap handling. This is mocked/unit-tested only; it is not deployed and no live transformation has been run.
+- The Worker now also requires the explicit runtime flag `ANIME_SEGMENTATION_FREE_TIER_CONFIRMED=true` before any transformation. The flag is intentionally unset by default; no live conversion or billing has been initiated.
+- Existing character/background generation, FLUX.2 reference conditioning, raster surface, SVG, and character assets are unchanged.
+- The old SVG frame-generation proof is marked as a visually rejected historical experiment; it is preserved, not deleted.
+- Branch: `feat/anime-raster-keyframe-motion-engine`. Automated tests must pass before this foundation is considered code-verified. The key drawing provider, in-between model, visual result, UI integration, and Android test are not yet implemented.
+- No merge, production deployment, paid endpoint, or GPU rental.
+
+---
+
 # Production gallery milestone — 2026-11-20
 
 - Added a Cloudflare Workers KV namespace named `ZERO STUDIO Production Gallery` (free Workers KV tier; namespace ID is configured in `cloudflare-worker/wrangler.toml`).

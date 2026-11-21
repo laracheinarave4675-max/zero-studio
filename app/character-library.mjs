@@ -32,5 +32,8 @@ export function loadCharacterFromLibrary(project,assetId){
 export function removeCharacterFromLibrary(project,assetId){
  const library=ensureLibrary(project),index=library.findIndex(item=>item.id===assetId);
  if(index<0)throw Error("الشخصية غير موجودة في المكتبة");
+ if((project.animeCharacterDNA||[]).some(dna=>dna.characterModelAssetId===assetId)){
+  throw Error("لا يمكن حذف هذا النموذج لأنه مرتبط بهوية تشريحية محفوظة. احذف الهوية أو غيّر مرجعها أولاً.");
+ }
  return library.splice(index,1)[0];
 }

@@ -81,20 +81,54 @@ module.exports = async function handler(req, res) {
           "Authorization": "Bearer " + token,
           "Origin": appOrigin,
         },
-        body: JSON.stringify({ prompt: "" }),
+        body: JSON.stringify({ prompt: "", workload: "anime-auto-drawing" }),
       });
       const payload = await readPayload(upstream);
 
-      if (upstream.status === 400 && payload.error === "invalid_prompt") {
+      if (upstream.status === 503 && payload.error === "anime_free_tier_not_confirmed") {
         return send(res, 200, {
           ok: true,
           routeConfigured: true,
           workerReachable: true,
           tokenVerified: true,
           provider: "cloudflare-workers-ai",
-          model: "@cf/black-forest-labs/flux-1-schnell",
           inferenceStarted: false,
-          message: "الاتصال ورمز الوصول صحيحان. لم يتم تشغيل النموذج أو استهلاك الحصة.",
+          animeAutoFreeTierConfirmed: false,
+          message: "تم التحقق من الاتصال، لكن إعداد الخطة المجانية الآمنة لمحرك التحريك لم يُفعّل في Cloudflare.",
+        });
+      }
+
+      if (upstream.status === 400 && payload.error === "invalid_prompt") {
+        let workerHealth = {};
+        try {
+          const healthResponse = await fetch(workerBaseUrl + "/health", {
+            method: "GET",
+            cache: "no-store",
+            redirect: "error",
+          });
+          if (healthResponse.ok) workerHealth = await readPayload(healthResponse);
+        } catch {}
+        const appFreeTierConfirmed =
+          String(process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED || "") === "true";
+        const workerGuardConfirmed =
+          workerHealth.animeAutoFreeTierGuard === true &&
+          workerHealth.animeAutoFreeTierConfirmed === true;
+        const freeTierConfirmed = appFreeTierConfirmed && workerGuardConfirmed;
+        return send(res, 200, {
+          ok: true,
+          routeConfigured: true,
+          workerReachable: true,
+          tokenVerified: true,
+          provider: "cloudflare-workers-ai",
+          model: "@cf/black-forest-labs/flux-2-klein-4b",
+          inferenceStarted: false,
+          animeAutoFreeTierConfirmed: freeTierConfirmed,
+          appFreeTierConfirmed,
+          workerFreeTierGuard: workerHealth.animeAutoFreeTierGuard === true,
+          workerFreeTierConfirmed: workerHealth.animeAutoFreeTierConfirmed === true,
+          message: freeTierConfirmed
+            ? "الاتصال ورموز الوصول وحاجز الخطة المجانية فقط مؤكدة في Vercel وCloudflare. لم يبدأ أي توليد."
+            : "فحص مجاني دون توليد: Vercel=" + (appFreeTierConfirmed ? "OK" : "OFF") + "، Cloudflare guard=" + (workerHealth.animeAutoFreeTierGuard === true ? "OK" : "OFF") + "، Cloudflare confirmation=" + (workerHealth.animeAutoFreeTierConfirmed === true ? "OK" : "OFF") + ". لم يبدأ أي توليد.",
         });
       }
 
@@ -154,6 +188,16 @@ module.exports = async function handler(req, res) {
   }
 
   const input = req.body && typeof req.body === "object" ? req.body : {};
+  if (input.workload !== undefined && input.workload !== "anime-auto-drawing") {
+    return send(res, 400, { error: "invalid_workload", message: "نوع مهمة التوليد غير مدعوم." });
+  }
+  if (input.workload === "anime-auto-drawing" &&
+      String(process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED || "") !== "true") {
+    return send(res, 503, {
+      error: "anime_free_tier_not_confirmed",
+      message: "توليد الإطارات متوقف لحماية الميزانية. لم يُستدعَ محرك الذكاء الاصطناعي لأن وضع الخطة المجانية غير مؤكد."
+    });
+  }
   const prompt = typeof input.prompt === "string" ? input.prompt.trim() : "";
   if (!prompt || prompt.length > MAX_PROMPT_LENGTH) {
     return send(res, 400, { error: "invalid_prompt", message: "اكتب وصفاً من 1 إلى 1800 حرف." });
@@ -167,6 +211,16 @@ module.exports = async function handler(req, res) {
     return send(res, 400, { error: referenceValidation.error, message: referenceValidation.message });
   }
   const references = referenceValidation.references;
+  const allowedReferenceRoles = new Set(["identity", "pose", "continuity"]);
+  const referenceRoles = input.referenceRoles;
+  if (referenceRoles !== undefined &&
+      (!Array.isArray(referenceRoles) || referenceRoles.length !== references.length ||
+       referenceRoles.some((role, index) => !allowedReferenceRoles.has(role) || (index === 0 && role !== "identity")))) {
+    return send(res, 400, {
+      error: "invalid_reference_roles",
+      message: "يجب تحديد دور صالح لكل صورة مرجعية، ويجب أن يكون المرجع الأول مرجع الهوية."
+    });
+  }
   const aspectRatio = input.aspectRatio === undefined ? "16:9" : input.aspectRatio;
   if (model === "flux-2-klein-4b" && aspectRatio !== "16:9" && aspectRatio !== "1:1") {
     return send(res, 400, { error: "invalid_aspect_ratio", message: "اختر 16:9 أو 1:1." });
@@ -186,8 +240,12 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         prompt: "Professional Japanese 2D anime illustration, polished anime art direction, clear composition, expressive hand-painted visual design. " + prompt,
         model,
+        ...(input.workload ? { workload: input.workload } : {}),
         ...(model === "flux-1-schnell" ? { steps: 4 } : { aspectRatio }),
-        ...(references.length ? { references } : {}),
+        ...(references.length ? {
+          references,
+          ...(referenceRoles ? { referenceRoles } : {}),
+        } : {}),
       }),
     });
 

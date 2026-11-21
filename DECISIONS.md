@@ -196,3 +196,46 @@ ZERO STUDIO's primary drawing medium is a native Canvas2D raster engine, followi
 **First milestone:** Audit the existing code and provider research, then compare current specialist models/services and produce a small representative character-sheet/background proof. Do not start LoRA training or a wholesale engine rewrite before this evaluation.
 
 See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
+
+
+## D-027 — Anime key-drawing and independent raster in-between pipeline (2026-11-20)
+
+**Status:** Explicitly approved by the user. This is the governing animation architecture under D-026.
+
+**Problem statement:** Character and background artwork already have a working specialist generation/asset pipeline. Animation is the missing production department. Do not rebuild the art-generation engine or redirect the project to manual drawing as its only motion solution.
+
+**Decision:** Animate through anime production drawings: motion direction and timing charts → spatial pose blocking → full 2D key drawings → individually reviewed in-between/cleanup drawings → raster frame assembly. The existing still-image art department may create individual key drawings using approved Character Bible/model-sheet references; no generic text-to-video clip is accepted as the final result.
+
+**Spatial guide boundary:** A lightweight 3D skeleton/pose proxy may solve body orientation, camera, perspective, depth, foot contacts, arcs and pose timing. It is a guide only. Never deform/rotate/warp the approved character image with a puppet rig and present that as final animation.
+
+**Final frame contract:** Every timestamp has its own complete PNG/lossless-WebP drawing, own asset identity and content hash, plus references/provenance/review state. In-between tools may propose standalone raster drawings between two approved key drawings, but their output must be reviewed per frame. No copied stills, held exposures, pixel warps, SVG path animation or generic video output count as an independent drawing.
+
+**Target:** Exactly 24 distinct moving-art raster drawings per second. A fixed approved background may be composited beneath those frames without being counted as a moving drawing. The 24-drawing target is not reduced.
+
+**Model/provider status:** No in-between model or provider is selected. ToonCrafter and frame-specific reference-conditioned still generation are research candidates only. The repository must not assume an always-on free GPU endpoint or use paid inference/GPU fallback. FLUX.2's documented multi-reference input is useful for the existing key-drawing workflow but does not guarantee precise pose control or character identity; those must be measured on the real character.
+
+**Visual acceptance:** Identity (face/profile, hair, costume, proportions, palette), anatomy, silhouette, contact, balance, timing, spacing, cloth/hair follow-through, camera continuity and 24 unique raster drawings must all pass review. A passing test or frame count is not artistic acceptance.
+
+**Preservation:** Keep the existing character/background generation, Character Bible, reference-conditioning, gallery, raster and SVG engines intact. The old SVG motion proof is archived as a failed visual experiment, not deleted. No merge or production deploy without explicit permission.
+
+**Implementation:** `docs/ANIME_KEYFRAME_MOTION_ENGINE.md` defines the workflow. `app/anime-motion-engine.mjs` implements the first provider-neutral planning and independent-raster drawing contract.
+
+
+## D-028 — Anatomy-guided independent character drawings (2026-11-20)
+
+**Decision:** Supersede the per-frame still-image generation approach in D-027 for character animation. Repeatedly regenerating the character for every timepoint is not an acceptable motion engine because reference conditioning cannot guarantee stable identity, anatomy, hands, face, costume, or linework. Keep the approved character design as an immutable identity source and build movement from anatomy data and complete artist-approved drawings.
+
+**Production path:** Canonical Character DNA and measured proportions → complete artist-authored key drawings → motion/timing chart → smooth joint-trajectory construction guides with limb-length constraints and planted-foot anchors → complete independent artist redraw for every output timepoint → transparent raster frame review and assembly.
+
+**Hard exclusions:** no per-frame generative still requests as the animation method; no text-to-video; no single-image cut-out puppet; no mesh/rig deformation of approved artwork; no path tween or vector interpolation presented as final anime art; no held/copy frames. A skeleton, proxy, or anatomy canvas is a guide only and must never be accepted as character artwork.
+
+**Cadence:** retain the exact target of 24 distinct, independently drawn raster images per second. Each frame must have its own asset ID and unique content hash and pass identity, anatomy, line-quality, and timing review. A unit test or a 24-slot schedule does not prove an animation exists or that it is artistically acceptable.
+
+**Implementation:** add the provider-neutral anatomy engine in `app/anime-anatomy-engine.mjs`, with validated Character DNA, approved key-drawing records, smooth guide interpolation, two-bone constraints, planted-foot anchors, guide-only construction previews, independent transparent raster frame records, duplicate rejection, and per-frame review gates. The former per-frame still request helper remains legacy-only and must not be used for the approved animation path.
+
+**Limits:** a new camera view, major foreshortening, or occlusion change requires additional complete key drawings and possibly a view-specific Character DNA record. Hair, hands, facial features, cloth folds, overlaps, and final linework remain full redraw responsibilities. The mobile editor now has first-pass Character DNA calibration, key-drawing registration, anatomy-guide overlay, PNG frame storage/review, and ZIP export controls; actual-character annotation and visual proof remain pending.
+
+**Change control:** Android-first, $0 budget, no paid provider/GPU, no production deployment, and no merge to `main` under this decision.
+
+**Raster acceptance implementation:** The editor stores each complete drawing as a per-frame transparent PNG generated from that frame's actual drawing layers. SHA-256 hashes identify the PNG bytes and the canonical SVG source. Editing a frame after capture invalidates the stored raster for approval; tampered bytes and repeated hashes are rejected. The ZIP sequence is available only after 24 unique PNGs pass identity, anatomy, line-quality, and timing review. The shared static background is exported separately once. CI verified 290 tests with zero failures on branch HEAD `4221ec7664ebd3bc6e360b528cd5594c1067b76b`; this is software verification only, not proof of a visually accepted animation.
+

@@ -43,3 +43,13 @@ test("character library survives ZERO project serialization and normalization",(
  assert.equal(loaded.view,"back");
  assert.equal(loaded.pose,"sit");
 });
+
+test("character library prevents removal of a model linked to anime character DNA",()=>{
+ const project=createProject(),entry=saveCharacterToLibrary(project,createNoriModel());
+ project.animeCharacterDNA.push({characterModelAssetId:entry.id});
+ assert.throws(()=>removeCharacterFromLibrary(project,entry.id),/مرتبط بهوية تشريحية محفوظة/);
+ assert.equal(project.characterLibrary.length,1);
+ project.animeCharacterDNA=[];
+ removeCharacterFromLibrary(project,entry.id);
+ assert.equal(project.characterLibrary.length,0);
+});

@@ -326,3 +326,187 @@ test("lists saved gallery metadata only after bearer authentication", async () =
   assert.equal(payload.items[0].title, "Scene");
   assert.match(payload.items[0].shareUrl, /gallery\/12345678/);
 });
+
+
+test("anime foreground segmentation returns a transparent PNG using Cloudflare Images BiRefNet", async () => {
+  const id = "11111111-1111-4111-8111-111111111111";
+  const store = new Map([["gallery:" + id, JSON.stringify({
+    imageDataUrl: "data:image/png;base64,aGVsbG8=",
+    mimeType: "image/png",
+    bytes: 5,
+  })]]);
+  const gallery = { async get(key) { return store.get(key) || null; } };
+  const originalFetch = globalThis.fetch;
+  let captured;
+  globalThis.fetch = async (url, options) => {
+    captured = { url: String(url), image: options?.cf?.image };
+    return new Response(new Uint8Array([137, 80, 78, 71]), {
+      status: 200,
+      headers: { "content-type": "image/png" },
+    });
+  };
+  try {
+    const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "image/png");
+    assert.equal(response.headers.get("x-zero-segmentation"), "cloudflare-images-birefnet");
+    assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [137, 80, 78, 71]);
+    assert.equal(captured.url, "https://worker.example/gallery/" + id);
+    assert.deepEqual(captured.image, { segment: "foreground", format: "png" });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("anime foreground segmentation refuses to run until the Images Free tier is explicitly confirmed", async () => {
+  const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const gallery = { async get() { return JSON.stringify({
+    imageDataUrl: "data:image/png;base64,aGVsbG8=", mimeType: "image/png", bytes: 5,
+  }); } };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response(new Uint8Array([137,80,78,71]), { status: 200, headers: { "content-type": "image/png" } }); };
+  try {
+    const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery,
+    });
+    assert.equal(response.status, 503);
+    const payload = await response.json();
+    assert.equal(payload.error, "free_tier_not_confirmed");
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("anime foreground segmentation requires auth and an existing gallery source before transformation", async () => {
+  let calls = 0;
+  const gallery = { async get() { return null; } };
+  const e = { ...env(), GALLERY: gallery };
+  const unauthorized = await worker.fetch(request("/v1/anime/segment", {
+    sourceId: "11111111-1111-4111-8111-111111111111",
+  }, { Authorization: "Bearer wrong" }), e);
+  assert.equal(unauthorized.status, 401);
+  const missing = await worker.fetch(request("/v1/anime/segment", {
+    sourceId: "11111111-1111-4111-8111-111111111111",
+  }), e);
+  assert.equal(missing.status, 404);
+  const invalid = await worker.fetch(request("/v1/anime/segment", { sourceId: "not-a-uuid" }), e);
+  assert.equal(invalid.status, 400);
+  assert.equal(calls, 0);
+});
+
+test("anime foreground segmentation stops safely at the free transformation limit without a paid fallback", async () => {
+  const id = "22222222-2222-4222-8222-222222222222";
+  const gallery = { async get() { return JSON.stringify({
+    imageDataUrl: "data:image/png;base64,aGVsbG8=", mimeType: "image/png", bytes: 5,
+  }); } };
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response("9422: image transformations free limit exceeded", { status: 400 }); };
+  try {
+    const response = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
+    });
+    assert.equal(response.status, 429);
+    const payload = await response.json();
+    assert.equal(payload.error, "free_transformation_limit_reached");
+    assert.equal(payload.retryable, false);
+    assert.match(payload.message, /لم تُفرض رسوم/);
+    assert.equal(calls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("anime foreground segmentation rejects failed or non-PNG model output", async () => {
+  const id = "33333333-3333-4333-8333-333333333333";
+  const gallery = { async get() { return JSON.stringify({
+    imageDataUrl: "data:image/png;base64,aGVsbG8=", mimeType: "image/png", bytes: 5,
+  }); } };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response("model temporarily unavailable", { status: 503 });
+  try {
+    const failed = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
+    });
+    assert.equal(failed.status, 502);
+    assert.equal((await failed.json()).error, "segmentation_failed");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  globalThis.fetch = async () => new Response("not a png", { status: 200, headers: { "content-type": "image/jpeg" } });
+  try {
+    const invalid = await worker.fetch(request("/v1/anime/segment", { sourceId: id }), {
+      ...env(), GALLERY: gallery, ANIME_SEGMENTATION_FREE_TIER_CONFIRMED: "true",
+    });
+    assert.equal(invalid.status, 502);
+    assert.equal((await invalid.json()).error, "invalid_segmentation_output");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("FLUX.2 separates identity, pose and continuity references in its conditioning prompt", async () => {
+  let captured;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "redraw a complete intermediate walk frame",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    references: Array(4).fill(CHARACTER_REFERENCE_PNG),
+    referenceRoles: ["identity", "pose", "pose", "continuity"]
+  }), env(async (_model, input) => {
+    const form = await new Response(input.multipart.body, {
+      headers: { "content-type": input.multipart.contentType }
+    }).formData();
+    captured = form.get("prompt");
+    return { image: "iVBORw0KGgo=" };
+  }));
+  assert.equal(response.status, 200);
+  assert.match(captured, /Identity authority images: 0/);
+  assert.match(captured, /Pose-only images: 1, 2/);
+  assert.match(captured, /Motion-continuity images: 3/);
+});
+
+test("FLUX.2 rejects invalid semantic reference roles without inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "redraw",
+    model: "flux-2-klein-4b",
+    references: [CHARACTER_REFERENCE_PNG],
+    referenceRoles: ["pose"]
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_reference_roles");
+  assert.equal(calls, 0);
+});
+
+test("automated anime drawing refuses inference until the Worker free-only setting is confirmed", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "one anime walk drawing",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    workload: "anime-auto-drawing"
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "anime_free_tier_not_confirmed");
+  assert.equal(calls, 0);
+});
+
+test("automated anime drawing can use inference only when the free-only setting is explicitly enabled", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "one anime walk drawing",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    workload: "anime-auto-drawing"
+  }), {
+    ...env(async () => { calls++; return { image: "iVBORw0KGgo=" }; }),
+    ANIME_AI_FREE_TIER_CONFIRMED: "true"
+  });
+  assert.equal(response.status, 200);
+  assert.equal(calls, 1);
+});

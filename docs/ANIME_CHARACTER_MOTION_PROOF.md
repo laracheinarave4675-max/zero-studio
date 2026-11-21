@@ -1,5 +1,7 @@
 # Referenced anime character motion proof
 
+> **Archived visual experiment — not approved for production animation.** This legacy branch proved that a 24-frame job could run structurally, but the resulting character drawings did not maintain the identity and anime drawing quality required by the user. Do not continue this SVG prompt-based motion method as the main animation engine. The approved direction is [Anime Key-Drawings and Raster In-Between Engine](ANIME_KEYFRAME_MOTION_ENGINE.md). Existing code, test artifacts, and branch history are preserved for audit and comparison only.
+
 ## Goal
 
 Test whether the approved FLUX.2 character design can be translated into an actual short, editable, frame-by-frame motion study while preserving its visible identity. This is a proof stage, not a claim of production-quality animation.

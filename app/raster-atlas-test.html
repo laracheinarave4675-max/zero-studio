@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827"><title>ZERO STUDIO — مكتبة التفاصيل النقطية</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1120;--panel:#121d2d;--line:#2a3a50;--text:#edf3ff;--muted:#aab8cc;--accent:#65d8bd;--warn:#f2c77b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:16px 18px;border-bottom:1px solid var(--line);background:#101827}header small{display:block;color:var(--muted);margin-top:4px}
+main{max-width:1100px;margin:auto;padding:14px;display:grid;gap:12px}section{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:13px}
+h1{font-size:20px;margin:0 0 8px}h2{font-size:15px;margin:0 0 8px}p{color:var(--muted);font-size:13px;line-height:1.7;margin:7px 0}
+.ok{border-right:3px solid var(--accent);background:#14332f;padding:9px 11px;border-radius:7px;color:#c2f1e6}
+.warning{border-right:3px solid var(--warn);background:#29241c;padding:9px 11px;border-radius:7px;color:#f6dfb7}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}button{background:#23334a;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--text);font:inherit;font-size:13px}button.primary{background:#2c756e}button:disabled{opacity:.45}
+.reference{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.reference img{width:100%;height:auto;object-fit:contain;border-radius:8px;background:#fff}
+.viewer{min-height:330px;display:grid;place-items:center;background:#fff;border-radius:9px;overflow:hidden}.viewer canvas{max-height:65vh;max-width:100%;width:auto;object-fit:contain}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.stat{border:1px solid var(--line);border-radius:8px;padding:9px;min-width:0}.stat strong{display:block;color:var(--accent);font-size:20px;overflow-wrap:anywhere}.stat span{font-size:11px;color:var(--muted)}
+#atlasGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.asset{padding:7px;background:#1b293d;border:1px solid var(--line);border-radius:8px;min-width:0}.asset img{width:100%;height:150px;object-fit:contain;background:#fff;border-radius:5px}.asset span{display:block;text-align:center;font-size:11px;color:var(--muted);padding-top:5px}
+#frameGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.thumb{padding:4px;min-width:0;background:#1b293d}.thumb.active{outline:2px solid var(--accent)}.thumb img{display:block;width:100%;aspect-ratio:256/720;object-fit:contain;background:#fff;border-radius:5px}.thumb span{display:block;font-size:10px;text-align:center;padding:3px;color:var(--muted)}
+#frameSlider{width:100%;accent-color:var(--accent)}#status{font-size:12px;color:var(--accent);min-height:24px;margin-top:8px}
+@media(max-width:650px){.reference{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}#atlasGrid{grid-template-columns:repeat(2,minmax(0,1fr))}#frameGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><strong>ZERO STUDIO</strong><small>مختبر مكتبة التفاصيل النقطية — Reference-preserving Raster Atlas</small></header>
+<main>
+<section>
+<h1>إعادة استخدام الرسم الأصلي ورسم منطقة الحركة فقط</h1>
+<p>هذا الاختبار لا يعيد اختراع الشخصية. يستخرج قصاصات نقطية من ورقة التصميم المعتمدة بدقتها الأصلية، ويعيد رسم لوحة المنظر الجانبي على لوحة جديدة في كل إطار، ثم يرسم القدمين من جديد داخل منطقة حركة محددة.</p>
+<div class="ok">قفل بصري بالبكسلات: كل ما يقع خارج منطقة القدمين يبقى مطابقاً للمرجع نفسه، وليس مجرد تطابق في وصف الشخصية.</div>
+<div class="warning">هذا إثبات أولي محدود: حركة القدمين فقط. الرأس والشعر والكيمونو والكم والحزام تبقى ثابتة تماماً. لم نصل بعد إلى دورة مشي كاملة للجسم والملابس.</div>
+<div class="toolbar">
+<button id="buildBtn" class="primary">استخراج المكتبة ورسم 24 إطاراً</button>
+<button id="playBtn" disabled>▶ تشغيل 24 FPS</button>
+<button id="downloadBtn" disabled>تنزيل الإطار PNG</button>
+</div>
+<div id="status" role="status" aria-live="polite">جارٍ تحميل ورقة التصميم الأصلية…</div>
+</section>
+<section>
+<h2>ورقة التصميم والرسمة المركبة</h2>
+<div class="reference">
+<div><p>المرجع الأصلي — أمام / جانب / خلف</p><img id="sourceSheet" src="/gallery/be172712-e073-4d06-9587-eec7e6c62a84" alt="ورقة التصميم الأصلية"/></div>
+<div><p>المنظر الجانبي بعد إعادة التركيب النقطي</p><div class="viewer"><canvas id="preview" width="256" height="720"></canvas></div><label>الإطار <strong id="frameNumber">—</strong> / 24</label><input id="frameSlider" type="range" min="1" max="24" value="1" disabled/></div>
+</div>
+</section>
+<section>
+<h2>مكتبة الأصول المستخرجة من الرسم الأصلي</h2>
+<p>كل بطاقة قصاصة أصلية من ورقة التصميم، دون إعادة توليد أو إعادة رسم أو تغيير حجم القصاصة.</p>
+<div id="atlasGrid"></div>
+</section>
+<section>
+<h2>فحص الحفاظ على الهوية</h2>
+<div class="stats">
+<div class="stat"><strong id="frameCount">0</strong><span>إطارات مركبة</span></div>
+<div class="stat"><strong id="uniqueCount">0</strong><span>بصمات إطار فريدة</span></div>
+<div class="stat"><strong id="identityStable">—</strong><span>ثبات منطقة الهوية</span></div>
+<div class="stat"><strong id="inferenceCount">0</strong><span>استدعاءات مولّد الصور</span></div>
+</div>
+<p>التدقيق يحسب بصمة البكسلات للمنطقة الثابتة أعلى القدمين، ويقارنها عبر الإطارات الأربعة والعشرين. كما يرفض الإطارات المتطابقة تماماً.</p>
+<div id="auditText" class="warning">لم يبدأ التدقيق.</div>
+</section>
+<section><h2>الإطارات الأربعة والعشرون</h2><div id="frameGrid"></div></section>
+</main>
+<script type="module">
+import {createApprovedKimonoRasterAtlas,renderApprovedKimonoAtlasWalkCycle} from "./approved-kimono-raster-atlas.mjs";
+const $=id=>document.getElementById(id);
+let cycle=null,atlas=null,index=0,timer=null;
+const labels={sideFigure:"المنظر الجانبي الكامل",faceAndHair:"الوجه والشعر",sleeveAndPattern:"الكم والزخرفة",obiAndCord:"الحزام والرباط",kimonoPattern:"زخارف الكيمونو",hemAndLowerEdge:"حافة الكيمونو",originalSandals:"الصنادل الأصلية"};
+function stop(){if(timer!==null)clearInterval(timer);timer=null;$("playBtn").textContent="▶ تشغيل 24 FPS";}
+function showFrame(i){
+ if(!cycle)return;index=Math.max(0,Math.min(23,i));const frame=cycle.frames[index];
+ const img=new Image();img.onload=()=>{const c=$("preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);};img.src=frame.pngDataUrl;
+ $("frameSlider").value=String(index+1);$("frameNumber").textContent=String(index+1);
+ [...$("frameGrid").children].forEach((el,k)=>el.classList.toggle("active",k===index));
+}
+function showAtlas(){
+ const grid=$("atlasGrid");grid.replaceChildren();
+ for(const [name,canvas] of Object.entries(atlas.assets)){
+  const card=document.createElement("div");card.className="asset";
+  const img=document.createElement("img");img.alt=labels[name]||name;img.src=canvas.toDataURL("image/png");
+  const label=document.createElement("span");label.textContent=labels[name]||name;card.append(img,label);grid.append(card);
+ }
+}
+function showFrames(){
+ const grid=$("frameGrid");grid.replaceChildren();
+ cycle.frames.forEach((frame,i)=>{
+  const b=document.createElement("button");b.className="thumb";b.type="button";
+  const img=document.createElement("img");img.alt="الإطار "+(i+1);img.loading="lazy";img.src=frame.pngDataUrl;
+  const label=document.createElement("span");label.textContent=String(i+1).padStart(2,"0");
+  b.append(img,label);b.addEventListener("click",()=>{stop();showFrame(i);});grid.append(b);
+ });
+}
+async function loadImage(){
+ const image=$("sourceSheet");if(image.complete&&image.naturalWidth)return image;
+ await new Promise((resolve,reject)=>{image.addEventListener("load",resolve,{once:true});image.addEventListener("error",()=>reject(new Error("تعذر تحميل ورقة التصميم من معرض ZERO STUDIO.")),{once:true});});
+ return image;
+}
+$("buildBtn").addEventListener("click",async()=>{
+ stop();$("buildBtn").disabled=true;$("status").textContent="يتم استخراج القصاصات من ورقة التصميم…";
+ try{
+  const reference=await loadImage();
+  atlas=createApprovedKimonoRasterAtlas(reference,{createCanvas:()=>document.createElement("canvas")});
+  showAtlas();$("status").textContent="تم استخراج الأصول. يعاد الآن رسم 24 لوحة نقطية مستقلة…";
+  cycle=renderApprovedKimonoAtlasWalkCycle({atlas,createCanvas:()=>document.createElement("canvas")});
+  showFrames();showFrame(0);
+  $("frameCount").textContent=String(cycle.audit.frameCount);
+  $("uniqueCount").textContent=String(cycle.audit.uniqueFrameCount);
+  $("identityStable").textContent=cycle.audit.identityRegionStable?"مطابقة":"تغيّر";
+  $("inferenceCount").textContent=String(cycle.audit.modelInferenceCalls);
+  $("auditText").className=cycle.audit.identityRegionStable&&cycle.audit.meetsUniqueRasterCompositeTarget?"ok":"warning";
+  $("auditText").textContent="نتيجة الفحص: "+cycle.audit.uniqueFrameCount+"/24 إطارات فريدة؛ "+(cycle.audit.preservesPixelIdentityOutsideMotionZone?"منطقة الهوية ثابتة بكسلياً":"منطقة الهوية تغيّرت")+"؛ 0 مولد صور؛ 0 SVG؛ 0 تحريك دمى.";
+  $("playBtn").disabled=false;$("downloadBtn").disabled=false;$("frameSlider").disabled=false;
+  $("status").textContent="اكتمل تركيب الإطارات. هذا اختبار حركة القدمين فقط وليس دورة مشي كاملة.";
+ }catch(error){cycle=null;$("status").textContent="تعذر إكمال الاختبار: "+error.message;}
+ finally{$("buildBtn").disabled=false;}
+});
+$("playBtn").addEventListener("click",()=>{if(!cycle)return;if(timer!==null){stop();return;}$("playBtn").textContent="Ⅱ إيقاف";timer=setInterval(()=>showFrame((index+1)%24),1000/24);});
+$("frameSlider").addEventListener("input",event=>{stop();showFrame(Number(event.target.value)-1);});
+$("downloadBtn").addEventListener("click",()=>{if(!cycle)return;const a=document.createElement("a");a.href=cycle.frames[index].pngDataUrl;a.download="zero-studio-atlas-frame-"+String(index+1).padStart(2,"0")+".png";a.click();});
+</script>
+</body></html>

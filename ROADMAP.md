@@ -43,6 +43,26 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Prototype an AI-authored, scene-specific vector drawing program that emits a complete separate SVG document for every frame; retain the 24-unique-drawings/second acceptance test and reject static-image/tween shortcuts.
 - [x] No raster image-generation fallback; final artwork remains editable SVG paths.
 
+## Historical prototype direction — D-027 (superseded by D-028, 2026-11-20)
+
+This section records the earlier per-frame still-image/raster prototype only. Its uncompleted generation tasks are not approved next steps for character animation; use D-028 below.
+
+- [x] Preserve the existing character/background generation departments and Character Bible; animation is a separate missing department.
+- [x] Approve motion direction/timing charts → spatial pose guides → complete 2D key drawings → individually reviewed raster in-betweens/cleanup → raster frame assembly.
+- [x] Explicitly restrict 3D skeletons/rigs to pose-blocking references; do not render puppet deformation as final artwork.
+- [x] Add provider-neutral anime motion plan, key-pose schedule, pose-guide sampler, independent PNG/WebP frame records, and duplicate-raster cadence audit (`app/anime-motion-engine.mjs`).
+- [x] Materialize approved PNG/WebP drawings into native ZERO STUDIO project frames through the existing Raster layer engine.
+- [x] Add an experimental authenticated Cloudflare Images/BiRefNet foreground-segmentation endpoint and same-origin proxy; live staging and alpha-edge quality review remain pending.
+- [x] Gate every transformation behind an explicit `ANIME_SEGMENTATION_FREE_TIER_CONFIRMED=true` flag, disabled by default until the account plan is confirmed.
+- [ ] Connect key-pose requests to the existing still-image/reference-conditioning art department.
+- [ ] Benchmark identity-preserving key drawing on the existing approved character; check angle changes, face, hair, costume, silhouette and line quality.
+- [ ] Evaluate dedicated cartoon keyframe-in-between and frame-specific still-image approaches under the $0 compute rule; no model is selected yet.
+- [ ] Build raster contact sheet, per-frame review/replace workflow, and shot compositor integration.
+- [ ] Complete the one-second walk with 24 unique approved raster drawings and review the real playback.
+- [ ] Validate Android performance, checkpoint/recovery, transparent raster import, storage and export.
+
+The former SVG-generated motion branch is archived as a visually rejected experiment; its code is preserved but it is not the approved output route. See `docs/ANIME_KEYFRAME_MOTION_ENGINE.md`.
+
 ## Phase 3 — Character construction and animation proof of concept
 - [x] Add reusable Nori vector construction model (12 parts, semantic editable layers, versioned/validated schema).
 - [x] Add front/side/back starter model views.
@@ -118,3 +138,24 @@ A staged plan designed around Android-first use and a free-first budget. Milesto
 - [ ] Integrate imported hand-painted backgrounds with the existing timeline and frame compositor.
 - [ ] Physically test the complete round-trip and playback on the target Android phone.
 - [ ] Keep 24 independently drawn moving-art images per second as the acceptance target.
+
+
+## Current animation direction — D-028 (supersedes D-027 for final character motion)
+
+- [x] Record the user's approved direction: one stable Character DNA plus complete artist-authored key drawings and anatomy-guided construction.
+- [x] Add measured canonical bone proportions and a validated character-identity record.
+- [x] Add smooth guide interpolation, limb-length constraints, center-of-mass sampling, and planted-foot contact anchors.
+- [x] Make the anatomy renderer explicitly guide-only; never deform the source artwork or treat guide images as final art.
+- [x] Add 24 separate full-redraw tasks per second, independent transparent raster assets, duplicate-hash rejection, and frame-level review gates.
+- [x] Add regression tests for the new anatomy engine.
+- [x] Add mobile on-canvas Character DNA landmark calibration and save it in the native project.
+- [x] Preserve Character DNA through project reopen normalization and large-project undo history.
+- [ ] Run the new workflow on the user's actual approved character after annotating its joint landmarks and confirming its canonical view.
+- [x] Connect the anatomy guide and per-frame drawing tasks to the Android animation editor and native project timeline.
+- [ ] Add artist-editable contour/silhouette correction overlays while preserving the original key drawings.
+- [x] Add independent transparent PNG export and storage per native timeline frame, with SHA-256 content/source signatures.
+- [x] Add source-staleness checks, duplicate PNG rejection, four-part review gates, 24-frame audit, and ZIP package export with separate static background.
+- [ ] Draw and review all 24 distinct raster frames for the one-second walk; verify identity, hands, face, costume, foot contact, line quality, and timing.
+- [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests on the user's Android device.
+
+The previous per-frame image-generation request route is legacy-only and not an accepted animation method. See docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. Passing unit tests does not equal visual acceptance.

@@ -176,9 +176,86 @@ async function handleGallery(request, env, url) {
   }
   return json({ error: "method_not_allowed" }, 405, cors);
 }
+async function handleAnimeSegmentation(request, env, url) {
+  const origin = request.headers.get("Origin") || "";
+  const cors = corsHeaders(origin || env.STUDIO_ORIGIN || "*");
+  if (request.method === "OPTIONS") {
+    if (!isAllowedOrigin(origin, env)) return json({ error: "origin_not_allowed" }, 403);
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "method_not_allowed" }, 405, { ...cors, allow: "POST, OPTIONS" });
+  }
+  if (!isAllowedOrigin(origin, env)) return json({ error: "origin_not_allowed" }, 403, cors);
+  if (!env.GALLERY) return json({ error: "gallery_storage_unavailable" }, 503, cors);
+  if (!(await isAuthorized(request, env))) return json({ error: "unauthorized" }, 401, cors);
+
+  let input;
+  try { input = await request.json(); }
+  catch { return json({ error: "invalid_json" }, 400, cors); }
+  const id = String(input?.sourceId || "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: "invalid_source_id" }, 400, cors);
+
+  const stored = await env.GALLERY.get("gallery:" + id);
+  if (!stored) return json({ error: "source_image_not_found" }, 404, cors);
+  let asset;
+  try { asset = JSON.parse(stored); }
+  catch { return json({ error: "corrupt_asset" }, 500, cors); }
+  if (!["image/jpeg", "image/png", "image/webp"].includes(String(asset.mimeType || "")) ||
+      typeof asset.imageDataUrl !== "string" || asset.imageDataUrl.length > 4 * 1024 * 1024) {
+    return json({ error: "invalid_source_asset" }, 400, cors);
+  }
+
+  if (String(env.ANIME_SEGMENTATION_FREE_TIER_CONFIRMED || "") !== "true") {
+    return json({ error: "free_tier_not_confirmed", message: "يجب تأكيد أن حساب Cloudflare يستخدم خطة Images Free قبل تشغيل أي تحويل." }, 503, cors);
+  }
+
+  // Cloudflare Images uses BiRefNet to create a PNG foreground cutout.
+  // The Images Free plan includes 5,000 unique transformations/month; after
+  // the limit the platform returns an error. Never switch to a paid remover.
+  const sourceUrl = new URL("/gallery/" + id, url.origin).toString();
+  let transformed;
+  try {
+    transformed = await fetch(sourceUrl, {
+      cf: { image: { segment: "foreground", format: "png" } },
+    });
+  } catch {
+    return json({ error: "segmentation_unavailable", message: "تعذر تشغيل فصل الخلفية المجاني حالياً." }, 502, cors);
+  }
+  if (!transformed.ok) {
+    const detail = await transformed.text().catch(() => "");
+    const freeLimit = /9422|transformation.{0,30}limit|limit.{0,30}transformation|exceeded.{0,20}limit/i.test(detail);
+    return json({
+      error: freeLimit ? "free_transformation_limit_reached" : "segmentation_failed",
+      message: freeLimit
+        ? "انتهت حصة تحويلات الصور المجانية لهذا الشهر. لم تُفرض رسوم، ولم يتم استخدام بديل مدفوع."
+        : "لم يتمكن فصل الخلفية من معالجة هذه الصورة. احتفظ بالصورة الأصلية وجرّب لاحقاً.",
+      retryable: !freeLimit && transformed.status >= 500,
+    }, freeLimit ? 429 : 502, cors);
+  }
+  const mime = String(transformed.headers.get("content-type") || "").split(";")[0].toLowerCase();
+  if (mime !== "image/png") return json({ error: "invalid_segmentation_output" }, 502, cors);
+  const bytes = await transformed.arrayBuffer();
+  if (!bytes.byteLength || bytes.byteLength > 12 * 1024 * 1024) {
+    return json({ error: "segmentation_output_too_large" }, 502, cors);
+  }
+  return new Response(bytes, {
+    status: 200,
+    headers: {
+      ...cors,
+      "content-type": "image/png",
+      "cache-control": "no-store, max-age=0",
+      "content-disposition": "inline",
+      "x-content-type-options": "nosniff",
+      "x-zero-segmentation": "cloudflare-images-birefnet",
+    },
+  });
+}
+
 async function handle(request, env) {
   const url = new URL(request.url);
   if (url.pathname === "/v1/gallery" || url.pathname.startsWith("/gallery/")) return handleGallery(request, env, url);
+  if (url.pathname === "/v1/anime/segment") return handleAnimeSegmentation(request, env, url);
   if (request.method === "GET" && url.pathname === "/health") {
     return json({
       ok: true,
@@ -187,6 +264,8 @@ async function handle(request, env) {
       aiBindingConfigured: Boolean(env.AI),
       imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN),
       authVerifierConfigured: Boolean(env.STUDIO_ACCESS_TOKEN || env.STUDIO_ORIGIN),
+      animeAutoFreeTierGuard: true,
+      animeAutoFreeTierConfirmed: String(env.ANIME_AI_FREE_TIER_CONFIRMED || "") === "true",
     });
   }
 
@@ -240,6 +319,17 @@ async function handle(request, env) {
     input = JSON.parse(raw);
   } catch {
     return json({ error: "invalid_json" }, 400, cors);
+  }
+
+  if (input?.workload !== undefined && input.workload !== "anime-auto-drawing") {
+    return json({ error: "invalid_workload" }, 400, cors);
+  }
+  if (input?.workload === "anime-auto-drawing" &&
+      String(env.ANIME_AI_FREE_TIER_CONFIRMED || "") !== "true") {
+    return json({
+      error: "anime_free_tier_not_confirmed",
+      message: "Automated anime drawing is disabled until the Workers AI free-only account setting is verified. No inference was started."
+    }, 503, cors);
   }
 
   const prompt = typeof input?.prompt === "string" ? input.prompt.trim() : "";
@@ -297,6 +387,18 @@ async function handle(request, env) {
     }
   }
 
+  const allowedReferenceRoles = new Set(["identity", "pose", "continuity"]);
+  let referenceRoles = references.map(() => "identity");
+  if (input.referenceRoles !== undefined) {
+    if (!Array.isArray(input.referenceRoles) ||
+        input.referenceRoles.length !== references.length ||
+        input.referenceRoles.some((role, index) =>
+          !allowedReferenceRoles.has(role) || (index === 0 && role !== "identity"))) {
+      return json({ error: "invalid_reference_roles", message: "Reference roles must match the image list and start with identity." }, 400, cors);
+    }
+    referenceRoles = input.referenceRoles;
+  }
+
   let seed;
   if (input.seed !== undefined) {
     if (!Number.isInteger(input.seed) || input.seed < 0 || input.seed > 2147483647) {
@@ -309,8 +411,28 @@ async function handle(request, env) {
     let result;
     if (modelKey === "flux-2-klein-4b") {
       const form = new FormData();
+      const identityImages = referenceRoles
+        .map((role, index) => role === "identity" ? index : -1)
+        .filter(index => index >= 0);
+      const poseImages = referenceRoles
+        .map((role, index) => role === "pose" ? index : -1)
+        .filter(index => index >= 0);
+      const continuityImages = referenceRoles
+        .map((role, index) => role === "continuity" ? index : -1)
+        .filter(index => index >= 0);
+      const roleInstructions = [
+        identityImages.length
+          ? "Use image 0 as the primary character identity reference. Identity authority images: " + identityImages.join(", ") + ". They define face, eye design, hair, costume, palette, accessories and body proportions. Preserve these exactly."
+          : "",
+        poseImages.length
+          ? "Pose-only images: " + poseImages.join(", ") + ". Use them only for body pose, silhouette, timing and limb placement. Do not copy their character design."
+          : "",
+        continuityImages.length
+          ? "Motion-continuity images: " + continuityImages.join(", ") + ". Use them only for temporal continuity and the immediately preceding action. Redraw the character fully."
+          : ""
+      ].filter(Boolean).join(" ");
       const conditionedPrompt = references.length
-        ? "Use image 0 as the primary character identity reference. Treat every additional reference image as the same character from another view or detail. Preserve the same face, hair, eye design, outfit, costume colors, accessories, and body proportions. Change only the pose, camera angle, expression, or scene requested by the user; do not redesign or replace the character. User direction: " + prompt
+        ? roleInstructions + " User direction: " + prompt
         : prompt;
       form.append("prompt", conditionedPrompt);
       form.append("width", String(outputSize.width));
