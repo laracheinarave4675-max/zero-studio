@@ -128,3 +128,15 @@ test("keeps uncertain observations out of the plan and requires review by defaul
 test("rejects planner confidence outside the supported range", () => {
   assert.throws(() => buildAnimeVisionBrushPlan(report(), { minimumConfidence: 1.5 }), /between 0 and 1/);
 });
+
+test("orders shadow and highlight layers after flat colors", () => {
+  const value = report();
+  value.regions = [
+    { id: "hair-shadow", label: "Hair shadow", x: 0.2, y: 0.1, width: 0.2, height: 0.2, confidence: 0.95 },
+    { id: "hair-base", label: "Hair base", x: 0.1, y: 0.05, width: 0.6, height: 0.4, confidence: 0.95 },
+    { id: "eye-highlight", label: "Eye highlight", x: 0.4, y: 0.3, width: 0.05, height: 0.04, confidence: 0.95 }
+  ];
+  const result = buildAnimeVisionBrushPlan(value, { approveObservations: true });
+  assert.deepEqual(result.plan.layers.map(layer => layer.role), ["flat-color", "shadow", "highlight"]);
+  assert.doesNotThrow(() => compileDigitalArtistBrushPlan(result.plan));
+});
