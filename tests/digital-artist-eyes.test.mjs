@@ -152,5 +152,8 @@ test("Digital Artist eyes and anime curriculum are exposed in the editor without
   assert.match(app, /function mountAnimeArtistCurriculum\(/);
   assert.match(app, /mountAnimeArtistCurriculum\(\)/);
   assert.match(app, /getAnimeArtistCurriculum\(\)/);
+  assert.match(app, /validateAnimeCharacterDNA\(selectedDNA\)/);
+  assert.match(app, /compareAnatomyGuideToDNA\(dna,liveGuide/);
+  assert.match(app, /characterIdentity:\{characterAssetId/);
   assert.match(app, /inspectionScale=Math\.min\(1,960\/width,540\/height\)/);
 });
