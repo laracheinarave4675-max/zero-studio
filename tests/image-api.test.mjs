@@ -298,3 +298,35 @@ test("image API rejects invalid semantic reference roles before inference", asyn
     else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
   }
 });
+
+test("automatic anime generation is blocked before inference until the free-only account is confirmed", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldGuard = process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  delete process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response("{}"); };
+  try {
+    const res = responseRecorder();
+    await handler(request({ body: {
+      prompt: "one anime walk frame",
+      model: "flux-2-klein-4b",
+      aspectRatio: "16:9",
+      workload: "anime-auto-drawing"
+    } }), res);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.body.error, "anime_free_tier_not_confirmed");
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+    if (oldGuard === undefined) delete process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED;
+    else process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED = oldGuard;
+  }
+});
