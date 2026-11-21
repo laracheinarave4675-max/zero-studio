@@ -194,7 +194,7 @@ test("GET diagnostic verifies the Worker bearer token without starting inference
     if (String(url).endsWith("/health")) {
       return new Response(JSON.stringify({ animeAutoFreeTierGuard: true, animeAutoFreeTierConfirmed: false }), { status: 200 });
     }
-    observed = { url, options };
+    if (!observed) observed = { url, options };
     return new Response(JSON.stringify({ error: "invalid_prompt" }), { status: 400 });
   };
   try {
