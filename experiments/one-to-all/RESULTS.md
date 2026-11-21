@@ -19,7 +19,7 @@ Date: 2026-11-21
 - The upstream README documents a free Kaggle 16 GB T4 + ComfyUI route for the 1.3B model.
 - Candidate 1.3B v2 checkpoint and FP8 T5/VAE files were identified; the complete runtime package has not been downloaded or tested.
 
-## Current result
+## Local frame-packaging utility check\n\n- Added `package_motion_reference.py` to extract every decoded source frame at its native FPS, create a timestamped contact sheet, write a SHA-256 provenance manifest, and ZIP the review frames. It does not interpolate, duplicate, or change FPS.\n- Two local tests passed using a synthetic 7-frame, 12-FPS MP4: exact native frame count/FPS/timestamps, manifest and ZIP structure, and refusal to overwrite a non-empty output directory.\n- This validates only the packaging utility. It is not a One-to-All inference result or a character-quality result.\n\n## Current result
 
 **No character motion video has been generated yet.** The model choice and free execution route are better grounded, but the visual test is still pending.
 
