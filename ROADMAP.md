@@ -244,6 +244,8 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [x] Prefer reviewed contour polygons over rectangular bounds when creating native raster fill commands.
 - [x] Update the browser vision prompt to request organic character-part outlines.
 - [x] Add focused regression tests for contour conversion and compatibility fallback.
-- [ ] Run the new tests and full project suites on the latest branch head; current GitHub Contents API commits have not produced a fresh Actions result.
+- [x] Run the new tests and full project suites on the corrected latest code head; Drawing engine 402/402 and Hybrid raster/SVG plus raster proof all passed (runs 44942052300 and 44942052319).
 - [ ] Inspect a real model-authored contour report against an uploaded character reference and correct contour accuracy before approving fills.
 - [ ] Replace point-estimated contours with segmentation/mask-derived boundaries if the small VLM cannot produce reliable outlines.
+
+- [ ] Publish a non-production preview from the corrected head so the new contour prompt and review UI can be checked in a browser.
