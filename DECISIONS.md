@@ -321,3 +321,18 @@ These eyes are measurement and critique tools, not image generators. They may co
 - Regression tests cover missing eye landmarks and missing costume/hair palette swatches.
 - Verified on `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d`: Drawing engine run #2490 passed all 381 tests. Drawing engine run #2491 also passed; Hybrid raster/SVG run #659 passed its Node tests and Canvas2D renderer/artifact jobs.
 - This is a stronger deterministic identity-checking foundation, not yet a learned visual model or a full facial-recognition system. Facial landmark extraction from a rendered character and palette extraction against an approved model sheet remain to be connected.
+
+
+## D-033 — Anime-specific practice must teach drawing craft, not generic tool usage (2026-11-21)
+
+**Decision:** The Digital Artist's primary learning subject is Japanese anime drawing craft. General brush-operation tests are necessary but do not constitute artistic training.
+
+**Implementation:** Maintain detailed practice studies for every curriculum skill. Each study must include (1) a style-aware artistic principle, (2) a concrete drawing sequence, (3) common visual failure modes, (4) a visible deliverable, and (5) a skill-specific review rubric. Sessions may be scaled from foundation to advanced difficulty and should use the approved character reference where available.
+
+**Curriculum scope:** gesture and silhouette; anime head construction and facial planes; eyes, gaze and expressions; hair masses and strand flow; stylized anatomy and balance; hands and feet; costume construction and folds; perspective and foreshortening; anime inking and taper; flat-color region control; cel shadows and lighting; material highlights; model-sheet identity; composition; and independent drawing continuity.
+
+**Evaluation boundary:** A practice brief is not evidence of completed practice. Human visual review remains required for criteria not yet connected to a reliable raster/anatomy/identity measurement. Do not award skill mastery from generic stroke counts or an unrelated metric. Neural training is not claimed until a lawful dataset, training method, free compute path, and measured before/after improvement are actually demonstrated.
+
+**Drawing output:** All final marks remain editable native Canvas2D raster brush operations on semantic layers. The training module creates no image and cannot substitute generated pictures for the drawing exercise.
+
+**Constraints:** Android-first, $0 budget, rights-cleared references only, no paid fallback, no PR merge or production deployment without explicit user approval.
