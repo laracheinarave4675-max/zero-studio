@@ -6,7 +6,7 @@
 
 Build an AI digital artist that actually draws anime artwork through explicit, ordered, editable drawing operations. It must not create a finished picture by calling an image-generation or text-to-video model. The artist plans its work, selects tools, creates individual strokes/curves/fills, organizes layers, reviews the result, and corrects its own editable marks.
 
-A finished raster preview may be rendered from the editable source for display, but the raster is never the source of truth and is never accepted as an image-generation output.
+The authored source of truth is the set of separate raster layers plus their ordered, editable brush-stroke logs. A flattened raster composite is only a preview/export artifact and is never accepted as an image-generation output.
 
 ## What the artist is
 
