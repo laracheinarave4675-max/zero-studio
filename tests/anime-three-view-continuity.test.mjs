@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {buildAnimeConstructionModel} from "../app/anime-construction-artist.mjs";
 import {buildAnimeConstructionBrushPlan,compileAnimeConstructionBrushPlan} from "../app/anime-construction-brush-plan.mjs";
 
-const views=[{yaw:-.42,center:1/6},{yaw:0,center:.5},{yaw:.42,center:5/6}];
+const views=[{yaw:-.65,center:1/6},{yaw:0,center:.5},{yaw:.65,center:5/6}];
 const build=view=>buildAnimeConstructionModel({headBounds:{x:view.center-.08,y:.06,width:.16,height:.32},viewYaw:view.yaw});
 
 test("three-view model sheet keeps one style identity across mirrored three-quarter and front views",()=>{
@@ -16,6 +16,15 @@ test("three-view model sheet keeps one style identity across mirrored three-quar
  assert.notEqual(models[2].head.axes.centerline.from.x,models[1].head.axes.centerline.from.x);
  assert.notEqual(models[0].hair[5].root.x,models[1].hair[5].root.x);
  assert.notEqual(models[2].hair[5].root.x,models[1].hair[5].root.x);
+});
+
+test("three-quarter head silhouettes compress the far cheek and jaw plane",()=>{
+ const front=build(views[1]),left=build(views[0]),right=build(views[2]);
+ const facePoints=model=>buildAnimeConstructionBrushPlan(model).layers.find(layer=>layer.id==="flats").strokes.find(stroke=>stroke.id==="face-base").points;
+ const width=points=>Math.max(...points.map(point=>point.x))-Math.min(...points.map(point=>point.x));
+ assert.ok(width(facePoints(front))>width(facePoints(left)));
+ assert.ok(width(facePoints(front))>width(facePoints(right)));
+ assert.notDeepEqual(facePoints(left),facePoints(right));
 });
 
 test("three-quarter views correctly distinguish near and far eye scale",()=>{
