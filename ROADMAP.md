@@ -89,6 +89,19 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [x] Add a unique-drawing cadence audit that reports actual unique drawings per second separately from playback FPS.
 - [ ] Compare a true 24-unique-drawings/second workload with lower drawing counts without redefining the target.
 
+## Anime Digital Artist training — D-031
+
+- [x] Define a 15-skill anime craft curriculum with prerequisites and measurable targets.
+- [x] Add detailed Japanese animation drawing studies for every skill: visual principles, step-by-step drills, common mistakes, rubrics, and concrete deliverables.
+- [x] Add foundation/intermediate/advanced practice-session generation and connect it to the editor's Arabic training panel.
+- [x] Keep final artwork on native editable Canvas2D raster brush layers; the study/session generator never creates final images.
+- [x] Add regression tests for curriculum coverage and session contracts.
+- [ ] Connect each study rubric to a trustworthy matching raster/anatomy/identity eye before awarding measured mastery.
+- [ ] Build a rights-cleared reference library from original/user-authorized model sheets and annotated drawing processes.
+- [ ] Add visual examples and progressive exercises using only project-owned or appropriately licensed materials.
+- [ ] Execute a complete original character exercise and inspect the actual drawing visually on Android.
+- [ ] Expand the artist's measurable eyes to contour topology, face/eye geometry, hair-flow grouping, cel-shadow consistency, and material highlights.
+
 ## Phase 4 — Production departments
 - [x] Approve 2D-first cinematic anime art direction with selective 3D layout support (D-017).
 - [x] Approve static editable background assets plus 24 unique independently drawn moving-art frames per second (D-018).
