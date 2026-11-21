@@ -52,7 +52,7 @@ export function buildArtistCorrectionPlan(report = {}) {
   const suggestions = [];
   const seen = new Set();
   const add = item => {
-    const key = [item.code, item.targetStrokeId, item.skillId].join("|");
+    const key = [item.code, item.targetStrokeId, item.targetMeasurement, item.skillId].join("|");
     if (seen.has(key) || suggestions.length >= 32) return;
     seen.add(key);
     suggestions.push({ ...item, status: "suggested", requiresArtistApproval: true, autoApplied: false });
@@ -87,7 +87,7 @@ export function buildArtistCorrectionPlan(report = {}) {
   if (anatomy && anatomy.skipped !== true && anatomy.passed === false) {
     for (const measurement of Array.isArray(anatomy.measurements) ? anatomy.measurements.filter(item => item?.passed === false) : []) {
       add({
-        code: "anatomy-proportion-drift", targetStrokeId: null,
+        code: "anatomy-proportion-drift", targetStrokeId: null, targetMeasurement: safeId(measurement.name),
         skillId: "body-anatomy", severity: Number(measurement.relativeDeviation) > 0.3 ? "high" : "medium",
         title: "انحراف في نسبة " + safeId(measurement.name),
         diagnosis: "طول هذا الجزء يبتعد عن قياس Character DNA المعتمد.",
