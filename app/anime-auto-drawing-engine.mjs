@@ -222,7 +222,7 @@ export function removeAnimeChromaKeyFromRgba(source, {
     output[index + 1] = clamp((green - key[1] * (1 - amount)) / amount, 0, 255);
     output[index + 2] = clamp((blue - key[2] * (1 - amount)) / amount, 0, 255);
   }
-  if (!transparentPixels || !opaquePixels) {
+  if (!transparentPixels || opaquePixels + partialPixels === 0) {
     fail("The generated frame did not contain both a removable blue backdrop and visible character pixels.");
   }
   return { data: output, transparentPixels, opaquePixels, partialPixels };
