@@ -131,3 +131,21 @@ test("foreground anime fringe is painted after skin and before facial features",
  const fringeIds=plan.layers[fringe].strokes.map(stroke=>stroke.id);
  assert.deepEqual(fringeIds,["hair-fringe-left","hair-fringe-mid","hair-fringe-right"]);
 });
+
+
+test("overlapping fringe locks cover the forehead without exposed triangular gaps",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layer=plan.layers.find(item=>item.id==="front-hair");
+ assert.ok(layer,"missing foreground fringe layer");
+ const polygons=layer.strokes.map(stroke=>stroke.points.map(point=>[point.x,point.y]));
+ const inside=(point,polygon)=>{
+  let hit=false;
+  for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
+   const [xi,yi]=polygon[i],[xj,yj]=polygon[j];
+   if(((yi>point[1])!==(yj>point[1]))&&(point[0]<(xj-xi)*(point[1]-yi)/(yj-yi)+xi))hit=!hit;
+  }
+  return hit;
+ };
+ for(const point of [[900,300],[960,300],[1020,300],[1080,300],[1120,330]])
+  assert.ok(polygons.some(polygon=>inside(point,polygon)),"forehead gap at "+point.join(","));
+});
