@@ -239,3 +239,28 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 
 **Raster acceptance implementation:** The editor stores each complete drawing as a per-frame transparent PNG generated from that frame's actual drawing layers. SHA-256 hashes identify the PNG bytes and the canonical SVG source. Editing a frame after capture invalidates the stored raster for approval; tampered bytes and repeated hashes are rejected. The ZIP sequence is available only after 24 unique PNGs pass identity, anatomy, line-quality, and timing review. The shared static background is exported separately once. CI verified 290 tests with zero failures on branch HEAD `4221ec7664ebd3bc6e360b528cd5594c1067b76b`; this is software verification only, not proof of a visually accepted animation.
 
+
+
+## D-029 — AI Digital Artist: explicit drawing, never image generation (2026-11-21)
+
+**Decision:** Build ZERO STUDIO's character department as an AI digital artist that creates artwork through explicit, ordered, editable drawing operations. The artist may reason about a character and produce individual vector strokes, curves, closed fills, layer changes, and corrections. It must not call an image-generation or text-to-video model to make final artwork, embed a generated image, trace a generated image, or disguise a flattened picture as a drawing.
+
+**Artist architecture:** a reasoning/art-direction brain; stable Character DNA and model-sheet memory; anatomy and optional 3D pose guides; a drawing hand that executes path/stroke commands into semantic editable layers; and a visual critique/correction loop that revises the original drawing operations.
+
+**Production stages:** identity/reference registration → gesture and silhouette → anatomical construction → rough drawing → clean line art → flat colors → cel shadows/highlights → details → critique and editable corrections.
+
+**Technology roles:**
+- Paints-Undo and inverse-painting research are candidate sources of reconstructed drawing-stage supervision. They predict plausible drawing processes; they do not recover the original artist's exact historical pen coordinates and are not the drawing hand.
+- DiffVG is an optional differentiable vector rasterizer/optimizer for continuous path/width/color refinement; it is not an autonomous drawing planner and its original method does not solve arbitrary topology changes.
+- 3D rigs and the existing Character DNA system provide spatial/anatomical guidance only. 3D renders are not final anime drawings.
+- ZERO STUDIO's native SVG/path engine is the initial drawing hand. Every mark remains an editable operation with a stable ID, purpose, tool, layer and sequence position.
+
+**Relationship to previous decisions:** This decision supersedes the AI-authorship prohibition in D-021 and the human-only mark-authoring boundary in D-023 only for artwork authored by this explicit, editable Digital Artist command pipeline. It does not authorize generative image/video output. Human-painted raster imports and existing SVG/raster editing remain supported, and no source asset may be silently flattened or replaced.
+
+**First acceptance gate:** one approved character reference must become one complete full-body drawing from a blank canvas, made of individual editable strokes and semantic layers. The user must be able to replay the strokes in order, edit a defective path, save/reopen the project, and verify that identity, face, hair, costume and proportions match the reference. Unit tests alone do not pass the visual gate.
+
+**Animation target:** unchanged — 24 independently authored moving-art drawings per second. Do not count guide interpolation, reused frames, image warps, puppet deformation, or generated video as independent drawings.
+
+**Constraints:** Android-first; $0 hard budget; no paid API/GPU/service or automatic paid fallback; develop on an isolated branch; no merge or production deployment until implementation and visual acceptance are reviewed.
+
+**Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md.
