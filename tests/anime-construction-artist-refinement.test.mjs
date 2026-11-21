@@ -30,5 +30,5 @@ test("refined brush plan paints a background and rear hair before the face",()=>
  const shadowYs=shadow.points.map(point=>point.y/1080);
  const model=buildAnimeConstructionModel();
  assert.ok(Math.max(...shadowXs)-Math.min(...shadowXs)<.12,"cheek shadow must stay local, not span the face");
- assert.ok(Math.min(...shadowYs)>model.head.axes.eyeY&&Math.max(...shadowYs)<model.head.landmarks.chin.y,"cheek shadow must stay below the eye line and above the chin");
+ assert.ok(Math.min(...shadowYs)>model.head.axes.eyeY&&Math.max(...shadowYs)<model.head.axes.mouthY,"cheek shadow must stay below the eye line and above the mouth");
 });
