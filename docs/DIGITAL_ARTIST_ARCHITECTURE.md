@@ -249,3 +249,10 @@ The Digital Artist panel now exposes this bridge: a user can paste a validated v
 The panel links to the official Hugging Face `SmolVLM-256M-Instruct-WebGPU` static Space and provides a constrained JSON prompt for anime-reference observations. The user runs the model in a WebGPU-capable browser, copies its structured observations into ZERO STUDIO, and uploads the same reference image. ZERO STUDIO computes SHA-256 locally using Web Crypto and rejects a supplied digest mismatch before generating a plan. The image bytes are not sent by the ZERO STUDIO report-to-plan adapter.
 
 This is a practical $0 inference route candidate, but remains a manual handoff. It is not an embedded model runtime or a connected Space API. Model weights must be downloaded to the browser and the user's Android GPU/browser compatibility and speed still require a real device test. The small VLM's coordinate estimates are approximate; all observations remain subject to confidence filtering and explicit human approval.
+
+
+### Contour-aware vision region geometry
+
+Vision region observations may now include an optional normalized polygon contour. The contract bounds each contour to 3–512 points, checks finite normalized coordinates, rejects adjacent duplicate points and near-zero area, keeps points within the declared region box, and rejects proper self-intersections. The brush planner maps a supplied contour directly to the 1920×1080 raster canvas and uses it as the region-fill boundary. Legacy reports without contours remain accepted, but are explicitly marked as rectangular approximations in the review warnings.
+
+The browser handoff prompt now asks for approximate organic outlines of visible character parts instead of boxes alone. This does not make the small vision model a segmentation model: contour estimates can still be inaccurate, and confidence review plus user approval remain mandatory. The focused regression suite has been added but awaits a fresh CI run on the current head.
