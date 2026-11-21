@@ -8,10 +8,10 @@ import {
 const CANVAS = Object.freeze({ width: 1920, height: 1080 });
 const ROLE_ORDER = ["construction", "rough-sketch", "flat-color", "clean-line", "shadow", "highlight", "detail", "correction"];
 const ROLE_RULES = [
-  { role: "flat-color", words: ["hair", "face", "skin", "ear", "neck", "eye", "clothing", "shirt", "coat", "iris", "pupil", "background", "region", "color"] },
-  { role: "detail", words: ["eyebrow", "eyelash", "mouth", "nose", "freckle", "scar", "jewel", "detail"] },
   { role: "shadow", words: ["shadow", "shade", "dark"] },
-  { role: "highlight", words: ["highlight", "shine", "gloss", "light"] }
+  { role: "highlight", words: ["highlight", "shine", "gloss", "light"] },
+  { role: "detail", words: ["eyebrow", "eyelash", "mouth", "nose", "freckle", "scar", "jewel", "detail"] },
+  { role: "flat-color", words: ["hair", "face", "skin", "ear", "neck", "eye", "clothing", "shirt", "coat", "iris", "pupil", "background", "region", "color"] }
 ];
 const clean = value => String(value ?? "").toLowerCase();
 const matches = (label, word) => clean(label).includes(word);
