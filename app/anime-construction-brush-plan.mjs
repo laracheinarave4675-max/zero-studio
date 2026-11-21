@@ -2,7 +2,7 @@ import { buildAnimeConstructionModel } from "./anime-construction-artist.mjs";
 import { validateDigitalArtistBrushPlan, compileDigitalArtistBrushPlan } from "./digital-artist-brush-engine.mjs";
 
 const W=1920,H=1080;
-const px=point=>({x:Math.round(point.x*W),y:Math.round(point.y*H),pressure:.72});
+const px=point=>({x:Math.round(point.x*W),y:Math.round(point.y*H),pressure:Math.max(.06,Math.min(1,Number(point.pressure??.72)))});
 const fill=(id,intent,color,points,extra={})=>({id,intent,kind:"region-fill",color,points:points.map(px),...extra});
 const stroke=(id,intent,brush,color,size,points,extra={})=>({id,intent,brush,color,size,points:points.map(px),...extra});
 const ellipsePoints=(cx,cy,rx,ry,count=36)=>Array.from({length:count},(_,i)=>({x:cx+Math.cos(i/count*Math.PI*2)*rx,y:cy+Math.sin(i/count*Math.PI*2)*ry}));
@@ -42,7 +42,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     })
   ];
   const ink=[
-    stroke("head-contour","Ink the constructed head silhouette with a stronger outer contour.","ink","#332b38",9,headShape),
+    stroke("head-contour","Ink the constructed head silhouette with tapered anime line weight: lighter crown, stronger jaw, softer chin.","ink","#332b38",8,headShape.map((point,index)=>({...point,pressure:.38+.42*Math.pow(Math.abs(Math.sin(index/(headShape.length-1)*Math.PI*2)),1.4)}))),
     ...model.brows.map(brow=>stroke(brow.id,"Ink an expressive brow aligned to the derived brow axis.","ink","#443443",4,brow.points)),
     stroke("nose-bridge","Indicate the nose bridge with a restrained anime line.","ink","#b47f7c",2.5,model.nose.points),
     stroke("mouth-line","Ink the mouth curve aligned to the derived mouth landmark.","ink","#9e5e69",3,model.mouth.points),
@@ -59,31 +59,27 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     }),
     stroke("garment-collar-seam","Define the neckline as a controlled V-shaped garment seam.","ink","#8f819d",3,[model.torso.neck.polygon[3],{x:model.torso.shoulders.center.x,y:model.torso.shoulders.center.y+model.head.bounds.height*.12},model.torso.neck.polygon[2]]),
     ...model.folds.map(fold=>stroke("cloth-fold-"+fold.id,"Draw a soft cloth fold from its tension or compression anchor.","ink","#9a8ba7",2.2,[fold.anchor,{x:fold.anchor.x+(fold.target.x-fold.anchor.x)*.45,y:fold.anchor.y+(fold.target.y-fold.anchor.y)*.45},fold.target])),
-    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.8,clump.flow))
+    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump with a tapered root-to-tip pressure curve.","ink","#574b66",3.4,clump.flow.map((point,index)=>({...point,pressure:.82-.68*index/Math.max(1,clump.flow.length-1)}))))
   ];
   const highlights=[
     ...model.hair.flatMap(clump=>clump.strands.map((strand,index)=>stroke("hair-sheen-"+clump.id+(index?"-"+index:""),"Place a narrow reflected-light ribbon that follows the local hair-clump curvature.","ink",index?"#887b9a":"#c0b3c9",index?2.8:4.2,strand,{opacity:index?.5:.78}))),
     ...model.eyes.map(eye=>stroke(eye.id+"-iris-upper-rim","Define the upper iris rim beneath the eyelid.","ink","#694a57",1.8,eye.iris.slice(5,15),{opacity:.8}))
   ];
   const lightFromLeft=model.shadows.light.x<0;
-  const shadowSide=lightFromLeft?"right":"left";
-  const cross=model.head.faceCrossSections;
-  const row=id=>cross.find(item=>item.id===id);
-  const eyeRow=row("eye"),cheekRow=row("cheek"),jawRow=row("jaw");
-  const noseX=model.head.landmarks.noseBase.x,mouthX=model.head.landmarks.mouthCenter.x;
-  const shadowWidth=model.head.bounds.width*.11;
-  const shadowTop={x:noseX+(shadowSide==="right"?1:-1)*shadowWidth*.34,y:model.head.axes.noseY+model.head.bounds.height*.035};
-  const shadowCheek={x:shadowSide==="right"?cheekRow.right-shadowWidth*.08:cheekRow.left+shadowWidth*.08,y:cheekRow.y+model.head.bounds.height*.045};
-  const shadowJaw={x:shadowSide==="right"?jawRow.right-shadowWidth*.04:jawRow.left+shadowWidth*.04,y:jawRow.y};
-  const shadowChin={x:model.head.landmarks.chin.x+(shadowSide==="right"?1:-1)*shadowWidth*.06,y:model.head.landmarks.chin.y-model.head.bounds.height*.055};
-  const shadowOuter=[
-    ...quadraticPoints(shadowTop,{x:shadowCheek.x,y:shadowCheek.y-model.head.bounds.height*.055},shadowCheek,8),
-    ...quadraticPoints(shadowCheek,{x:shadowJaw.x+(shadowSide==="right"?1:-1)*shadowWidth*.08,y:shadowJaw.y-model.head.bounds.height*.02},shadowJaw,8).slice(1),
-    ...quadraticPoints(shadowJaw,{x:shadowChin.x+(shadowSide==="right"?-1:1)*shadowWidth*.1,y:shadowChin.y-model.head.bounds.height*.025},shadowChin,8).slice(1)
+  const shadowDirection=lightFromLeft?1:-1;
+  const headWidth=model.head.bounds.width,headHeight=model.head.bounds.height;
+  const faceCenter=model.head.bounds.projectedCenter;
+  const nose=model.head.landmarks.noseBase,mouth=model.head.landmarks.mouthCenter,chin=model.head.landmarks.chin;
+  const shadowPoints=[
+    {x:nose.x+shadowDirection*headWidth*.018,y:model.head.axes.noseY-headHeight*.015},
+    {x:nose.x+shadowDirection*headWidth*.065,y:model.head.axes.noseY+headHeight*.055},
+    {x:faceCenter+shadowDirection*headWidth*.22,y:model.head.axes.noseY+headHeight*.19},
+    {x:faceCenter+shadowDirection*headWidth*.17,y:model.head.axes.mouthY+headHeight*.10},
+    {x:chin.x+shadowDirection*headWidth*.025,y:chin.y-headHeight*.035},
+    {x:mouth.x+shadowDirection*headWidth*.045,y:model.head.axes.mouthY+headHeight*.025},
+    {x:nose.x+shadowDirection*headWidth*.012,y:model.head.axes.noseY+headHeight*.025}
   ];
-  const shadowInnerCurve=quadraticPoints(shadowChin,{x:mouthX+(shadowSide==="right"?1:-1)*shadowWidth*.28,y:model.head.axes.mouthY+model.head.bounds.height*.085},shadowTop,12);
-  const shadowPoints=[...shadowOuter,...shadowInnerCurve.slice(1)];
-  const shadows=[fill("face-cast-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
+  const shadows=[fill("face-cast-shadow","Place a compact cheek-plane cel shadow on the side opposite the key light, following the cheek-to-jaw turn.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px),opacity:.68})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
     title:"Construction-driven anime character study",
