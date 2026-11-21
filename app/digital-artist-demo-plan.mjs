@@ -16,10 +16,12 @@ export function createDigitalArtistDemoPlan(){
     stroke("rough-body","Block in the neck and shoulders.","graphite","#77747e",7,[[875,690],[875,790],[800,820],[690,900],[640,1010],[960,1040],[1280,1010],[1230,900],[1120,820],[1045,790],[1045,690]])
    ]},
    {id:"flats",name:"04 · Flat colors",role:"flat-color",strokes:[
-    region("hair-cap-fill","Fill the crown inside the outer hair silhouette.","#34384c",[[760,465],[738,350],[785,250],[875,175],[975,150],[1080,190],[1150,275],[1180,390],[1150,485],[1115,410],[1095,330],[1040,280],[970,255],[900,275],[840,335],[790,425]]),
+    region("hair-cap-fill","Fill the entire crown mass behind the fringe, bounded by the outer silhouette.","#34384c",[[755,470],[735,350],[785,245],[875,175],[975,150],[1080,190],[1150,275],[1180,390],[1150,485],[1080,450],[1020,425],[960,415],[900,425],[840,450],[790,480]]),
     region("hair-left-lock-fill","Fill the long left hair lock within its contour.","#34384c",[[770,405],[748,525],[755,680],[790,800],[855,885],[900,850],[865,760],[840,650],[820,535],[810,440]]),
     region("hair-right-lock-fill","Fill the long right hair lock within its contour.","#34384c",[[1150,405],[1172,525],[1165,680],[1130,800],[1065,885],[1020,850],[1055,760],[1080,650],[1100,535],[1110,440]]),
     region("skin-face-fill","Fill the enclosed face silhouette with the warm skin base.","#efc4b1",[[800,390],[835,370],[885,360],[960,365],[1035,360],[1085,370],[1120,390],[1115,500],[1085,610],[1020,685],[960,710],[900,685],[835,610],[805,500]]),
+    region("left-sclera-fill","Fill the enclosed left eye white before inking the eyelids.","#fff9f2",[[826,475],[845,458],[878,455],[908,470],[894,486],[860,488]]),
+    region("right-sclera-fill","Fill the enclosed right eye white before inking the eyelids.","#fff9f2",[[1012,470],[1042,455],[1075,458],[1094,475],[1060,488],[1026,486]]),
     region("skin-ear-left-fill","Fill the left ear inside its outline.","#efc4b1",[[790,485],[765,475],[752,505],[775,550],[802,552]]),
     region("skin-ear-right-fill","Fill the right ear inside its outline.","#efc4b1",[[1130,485],[1155,475],[1168,505],[1145,550],[1118,552]]),
     region("neck-skin-fill","Fill the neck shape between the jaw and clothing.","#efc4b1",[[895,685],[1025,685],[1022,785],[1060,820],[1015,850],[960,865],[905,850],[860,820],[898,785]]),
