@@ -6,20 +6,20 @@ const app = readFileSync(new URL("../app/app.js", import.meta.url), "utf8");
 const html = readFileSync(new URL("../app/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../app/styles.css", import.meta.url), "utf8");
 
-test("kimono walk preset is wired to the live 24-frame timeline", () => {
+test("kimono walk preset opens the automatic 24-frame generator without demanding manual drawings", () => {
   assert.match(app, /import\{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE\}from"\.\/kimono-side-walk-chart\.mjs"/);
   assert.match(app, /\$\("applyKimonoWalkPresetBtn"\)\.onclick=applyKimonoWalkPreset/);
   assert.match(app, /function applyKimonoWalkPreset\(\)/);
-  assert.match(app, /prepareAnime24FrameShot\(\)/);
-  assert.match(app, /function selectKimonoWalkFrame\(frameIndex\)/);
-  assert.match(app, /\$\("animeWalkFramePrevBtn"\)\.onclick/);
-  assert.match(app, /\$\("animeWalkFrameNextBtn"\)\.onclick/);
+  assert.match(app, /function generateAnimeAutoWalkSequence\(\)/);
+  assert.match(app, /createAnimeAutoDrawingPlan\(/);
+  assert.match(app, /createAnimeAutoDrawingRequest\(/);
+  assert.doesNotMatch(app.slice(app.indexOf("function applyKimonoWalkPreset"), app.indexOf("function updateAnimeRasterControls")), /prepareAnime24FrameShot\(\)|ارسم الشخصية كاملة/);
 });
 
 test("each frame task reports artist instructions and live drawing/review state", () => {
   assert.match(app, /function renderKimonoWalkTaskNavigator\(\)/);
   assert.match(app, /getKimonoSideWalkFrameBrief\(Math\.max\(0,Math\.min\(23,current\)\)\)/);
-  assert.match(app, /ارسم الشخصية كاملة مستقلة ولا تستخدم صورة الهيكل كرسم نهائي/);
+  assert.match(app, /سيعيد محرك التحريك رسم الشخصية كاملة بدلاً من نسخ الإطار السابق/);
   assert.match(app, /PNG مستقل محفوظ ومعتمد لهذا الإطار/);
   assert.match(app, /animeWalkTaskList/);
   assert.match(app, /renderKimonoWalkTaskNavigator\(\);renderFrames\(\)/);
