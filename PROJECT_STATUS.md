@@ -910,3 +910,13 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Verified commit `38e128c5d2515c3606cf9f237798711a535a2afe`: Drawing engine tests run #2748 passed; Hybrid raster/SVG run #787 passed; both brush proof and Digital Artist portrait artifacts uploaded successfully.
 - This verifies code paths and deterministic raster rendering only. It does not establish professional anime quality, successful SmolVLM inference, Android WebGPU compatibility, or physical Android touch/stylus performance.
 - No PR merge or production deployment has occurred in this pass.
+
+## CI and Cloudflare preview publication — 2026-11-21
+
+- Re-verified the current tested head `38e128c5d2515c3606cf9f237798711a535a2afe`: Drawing engine run #2749 and Hybrid raster/SVG run #788 both completed successfully.
+- Each Node test job reported **434/434 passing, 0 failing**. The hybrid workflow also completed the five-brush proof and deterministic Digital Artist portrait render, and uploaded both proof artifacts.
+- The alpha-connected raster contour inspector is included in the tested head. It extracts bounded pixel-boundary contours from transparent raster layers; it does not semantically label facial parts.
+- Published the tested branch through the existing isolated Cloudflare Pages preview project. Deployment `33e0af55-25e9-4e91-89ab-b11d71a86fcc` completed successfully for commit `38e128c5d2515c3606cf9f237798711a535a2afe`.
+- Preview URL: https://feat-digital-artist-engine.zero-studio-artist-preview.pages.dev
+- The Vercel integration remains blocked by its free daily deployment limit; Cloudflare Pages was used instead. The existing image Worker and production branch were not changed.
+- PR #14 remains Draft and unmerged. This is a published preview, not a production release. Android touch/stylus testing and artistic acceptance remain the next user-facing gate.
