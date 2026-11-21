@@ -814,3 +814,15 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - On that corrected head, Drawing engine workflow run `44942052300` passed all **402/402 tests**; Hybrid raster/SVG workflow run `44942052319` passed, including syntax checks, full native tests and the raster-brush/portrait proof job.
 - The contour-specific tests now cover polygon preservation, zero-area and duplicate-point rejection, self-crossing and out-of-box rejection, contour-to-canvas coordinate mapping, and legacy rectangle fallback.
 - The Vercel preview listing still points to commit `37668ff3bff28d790c3a913d9fd0175fcb66d6a0`, not the contour implementation. The latest code is in the open Draft PR; no deployment, merge or production change has been made.
+
+## D-032 evidence-led artist progression ledger — 2026-11-21
+
+- Added `app/digital-artist-learning.mjs` and `tests/digital-artist-learning.test.mjs`.
+- Assessment entries require a stable unique ID, a SHA-256 inspection-report digest, and 3–32 distinct measured pass/fail checks. Scores are computed from the checks rather than accepted as caller-supplied percentages.
+- A skill requires three consecutive assessments at or above 85%, plus mastery of every prerequisite, before it is labelled mastered. The evaluator follows the curriculum prerequisite order.
+- The next-practice recommender selects the weakest currently available skill and returns its lessons, exercises and metrics.
+- The ledger is bounded to 500 assessments and rejects duplicate IDs, unknown skills, malformed digests and invalid checks.
+- Important boundary: this is evidence-led progress tracking, not neural-network training or autonomous self-learning. It does not edit artwork, verify the contents of the referenced report digest, or approve strokes. App UI/persistence integration is still pending.
+- New tests were added, but no GitHub Actions run was returned for the latest branch commit at the time of this update; do not treat this milestone as CI-verified yet.
+- PR #14 remains draft, unmerged, and unpublished to production.
+
