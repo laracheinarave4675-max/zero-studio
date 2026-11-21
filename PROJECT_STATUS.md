@@ -757,3 +757,16 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - SmolVLM-256M-Instruct remains a candidate for a genuinely free local/browser or public Space route, but no successful inference is claimed.
 - Next: identify a zero-cost, no-card vision route; run it on an approved character reference; validate its structured observations; then implement a separate geometry planner that produces only native Canvas2D brush commands. Human review remains mandatory.
 - No production Worker changes, no paid fallback, no PR merge, and no production deployment.
+
+
+## Vision-to-native-brush planner milestone — 2026-11-21
+
+- Added `app/digital-artist-vision-brush-planner.mjs`: converts validated, confidence-filtered vision observations into the existing Digital Artist brush-plan schema.
+- High-confidence landmarks become small editable graphite crosshair strokes on the construction layer.
+- High-confidence semantic regions become native raster region-fill operations, assigned to semantic layers (flat color, shadow, highlight, detail) and colored from matching palette labels when available.
+- The resulting plan is passed through the existing `validateDigitalArtistBrushPlan` gate and can be compiled by `compileDigitalArtistBrushPlan` into the native Canvas2D command stream. It carries the reference digest and optional character asset ID.
+- Added regression coverage for native command compilation, confidence gating, human-review defaults, and semantic layer ordering. The Drawing engine workflow syntax-checks the planner.
+- Important limitation: current region geometry uses rectangular bounding-box approximations; landmarks are crosshair guides. This is not segmentation, organic contour tracing, an AI vision inference, or a finished anime portrait. A human must approve the plan before execution.
+- No successful external vision inference is available. Hugging Face's Qwen provider and sandbox attempts returned HTTP 402, so no paid route is used. Model integration remains pending a verified free inference path.
+- The GitHub Contents API commits made during this pass have not triggered a fresh Actions run. Do not claim the new planner tests passed in CI until a run on the latest branch head is observed.
+- No production Worker changes, no paid compute, no PR merge, and no production deployment.
