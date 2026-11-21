@@ -185,7 +185,7 @@ function applyRasterClip(context, polygon) {
  if (polygon == null) return;
  if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) throw Error("قناع القص يحتاج إلى مضلع صالح");
  const points = polygon.map(point => {
-  const x=Number(point?.x), y=Number(point?.y);
+  const x=Number(Array.isArray(point)?point[0]:point?.x), y=Number(Array.isArray(point)?point[1]:point?.y);
   if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y<0||x>1920||y>1080) throw Error("نقطة قناع القص خارج مساحة الرسم");
   return {x,y};
  });
