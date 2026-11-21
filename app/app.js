@@ -499,7 +499,7 @@ async function generateAnimeAutoWalkSequence(){
  if(statusNode)statusNode.textContent="تم إيقاف توليد الصور للحركة نهائياً في هذا المسار. افتح مختبر الرسم النقطي المحلي بدلاً منه.";
  return;
  if(animeAutoDrawingBusy)return;
- const button=$("startAnimeAutoDrawingBtn"),stopButton=$("stopAnimeAutoDrawingBtn"),statusNode=$("animeAutoDrawingStatus");
+ const button=$("startAnimeAutoDrawingBtn"),stopButton=$("stopAnimeAutoDrawingBtn");
  animeAutoDrawingBusy=true;animeAutoDrawingStopRequested=false;
  if(button)button.disabled=true;if(stopButton)stopButton.disabled=false;
  const setStatus=message=>{if(statusNode)statusNode.textContent=message};
