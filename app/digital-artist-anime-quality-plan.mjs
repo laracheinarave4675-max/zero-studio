@@ -31,6 +31,8 @@ export function createDigitalArtistAnimeQualityPlan() {
   const fringeLeft = join(bezier([700,410],[680,230],[820,120],[960,125],16),bezier([960,125],[925,250],[890,350],[835,440],12),bezier([835,440],[790,410],[750,400],[700,410],8));
   const fringeMid = join(bezier([860,150],[970,80],[1110,150],[1160,300],16),bezier([1160,300],[1100,340],[1050,390],[1010,470],12),bezier([1010,470],[970,380],[920,300],[860,150],12));
   const fringeRight = join(bezier([1080,175],[1220,230],[1280,390],[1200,500],16),bezier([1200,500],[1150,430],[1120,365],[1090,310],10));
+  const leftHairClip = join(bezier([650,350],[620,500],[650,760],[800,1010],18),bezier([800,1010],[700,950],[625,800],[625,620],14),bezier([625,620],[615,480],[625,390],[650,350],10));
+  const rightHairClip = join(bezier([1180,330],[1280,470],[1310,720],[1180,1010],18),bezier([1180,1010],[1290,930],[1330,760],[1320,590],14),bezier([1320,590],[1310,450],[1250,360],[1180,330],10));
   const shoulder = join(
     bezier([890,700],[820,745],[700,750],[600,900],18),
     bezier([600,900],[530,1000],[610,1060],[760,1070],16),
@@ -96,17 +98,17 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("collar-ink","Clarify the overlapping collar edge.","ink","#55435c",5,[[865,735],[930,830],[970,875],[1010,830],[1080,735]])
     ]},
     {id:"cel-shadows",name:"07 Cel shadows",role:"shadow",strokes:[
-      fill("face-shadow","Place a deliberate shadow plane under the fringe.","#d99f9d",[[795,365],[900,395],[970,390],[1050,390],[1130,365],[1110,445],[1060,470],[970,455],[870,475],[810,440]],{opacity:.62}),
+      fill("face-shadow","Place a deliberate shadow plane under the fringe, clipped to skin.","#d99f9d",[[795,365],[900,395],[970,390],[1050,390],[1130,365],[1110,445],[1060,470],[970,455],[870,475],[810,440]],{opacity:.62,clipPolygon:face}),
       fill("jaw-shadow","Add a compact jaw shadow following the chin.","#d99a99",[[835,620],[900,690],[970,720],[1040,690],[1100,620],[1070,680],[970,750],[870,680]],{opacity:.48}),
       fill("neck-shadow","Give the neck a readable cast shadow.","#c98791",[[875,700],[970,750],[1050,700],[1040,795],[970,835],[890,790]],{opacity:.58}),
       fill("hair-shadow-left","Add a cool shadow ribbon to the left hair.","#171d31",[[690,430],[750,490],[760,720],[825,940],[780,900],[710,740]],{opacity:.68}),
       fill("garment-shadow","Create a broad under-collar shadow plane.","#493c5d",[[850,840],[970,900],[1090,840],[1160,1000],[970,1040],[780,1000]],{opacity:.72})
     ]},
     {id:"hair-light",name:"08 Hair flow and highlights",role:"highlight",strokes:[
-      line("hair-ribbon-left","Paint a long curved reflected ribbon contained within the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2}),
+      line("hair-ribbon-left","Paint a long curved reflected ribbon clipped to the left hair mass.","gouache","#8d829d",12,join(bezier([680,330],[655,500],[665,700],[700,850],16)),{opacity:.62,texture:.2,clipPolygon:leftHairClip}),
       line("hair-ribbon-mid","Paint a fine highlight following the crown without crossing the face.","gouache","#9c8da9",8,join(bezier([900,125],[850,155],[820,195],[800,235],14)),{opacity:.62,texture:.18}),
-      line("hair-ribbon-right","Paint a tapered highlight contained within the right hair mass.","gouache","#81768f",11,join(bezier([1240,320],[1270,500],[1260,720],[1210,870],16)),{opacity:.62,texture:.2}),
-      line("hair-strands","Add fine directional strands that follow the scalp and locks.","ink","#554b65",2,join(bezier([760,245],[820,170],[900,150],[955,160],12),bezier([1000,145],[1100,160],[1160,245],[1180,330],12)),{opacity:.65})
+      line("hair-ribbon-right","Paint a tapered highlight clipped to the right hair mass.","gouache","#81768f",11,join(bezier([1240,320],[1270,500],[1260,720],[1210,870],16)),{opacity:.62,texture:.2,clipPolygon:rightHairClip}),
+      line("hair-strands-left","Add fine directional strands inside the left hair mass.","ink","#554b65",2,join(bezier([675,430],[655,570],[685,730],[750,865],14)),{opacity:.65,clipPolygon:leftHairClip}),\n      line("hair-strands-right","Add fine directional strands inside the right hair mass.","ink","#554b65",2,join(bezier([1240,430],[1280,580],[1260,740],[1200,865],14)),{opacity:.65,clipPolygon:rightHairClip})
     ]},
     {id:"fabric-folds",name:"09 Fabric folds and finish",role:"detail",strokes:[
       line("fold-left-1","Describe the left sleeve fold with a tapered line.","ink","#887a9d",3,[[680,900],[735,940],[770,990]]),
