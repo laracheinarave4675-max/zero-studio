@@ -38,6 +38,13 @@ export function buildAnimeConstructionModel({
   if (![tilt,lean,shoulderScale].every(Number.isFinite)||Math.abs(tilt)>.3||Math.abs(lean)>.25||shoulderScale<.65||shoulderScale>1.5) fail("Pose parameters exceed supported construction bounds.");
 
   const {x,y,width,height}=headBounds;
+  const headCenterX=x+width/2;
+  const viewPoint=point=>{
+    if(Math.abs(yaw)<.001)return {...point};
+    const farSide=(point.x-headCenterX)*Math.sign(yaw)<0;
+    const compression=1-Math.abs(yaw)*(farSide?.3:.06);
+    return {x:clamp(headCenterX+(point.x-headCenterX)*compression-yaw*width*.1,0,1),y:point.y};
+  };
   const cubicPoints=(a,b,c,d,count=14)=>Array.from({length:count+1},(_,i)=>{
     const t=i/count,u=1-t;
     return {x:u*u*u*a.x+3*u*u*t*b.x+3*u*t*t*c.x+t*t*t*d.x,y:u*u*u*a.y+3*u*u*t*b.y+3*u*t*t*c.y+t*t*t*d.y};
@@ -92,7 +99,7 @@ export function buildAnimeConstructionModel({
     return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:eye.scale<.999};
   });
 
-  const guides=hairGuides??[
+  const defaultGuides=[
     {id:"fringe-left",root:{x:x+width*.16,y:y+height*.1},control1:{x:x+width*.015,y:y+height*.035},control2:{x:x+width*.08,y:y+height*.24},tip:{x:x+width*.22,y:y+height*.34},rootWidth:width*.18,tipWidth:width*.002,side:1},
     {id:"fringe-left-center",root:{x:x+width*.32,y:y+height*.035},control1:{x:x+width*.24,y:y+height*.005},control2:{x:x+width*.3,y:y+height*.22},tip:{x:x+width*.39,y:y+height*.32},rootWidth:width*.17,tipWidth:width*.002,side:1},
     {id:"fringe-center",root:{x:x+width*.49,y:y+height*.005},control1:{x:x+width*.64,y:y+height*.025},control2:{x:x+width*.46,y:y+height*.24},tip:{x:x+width*.51,y:y+height*.35},rootWidth:width*.2,tipWidth:width*.002,side:1},
@@ -101,14 +108,20 @@ export function buildAnimeConstructionModel({
     {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.14,tipWidth:width*.002,side:1},
     {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.14,tipWidth:width*.002,side:-1}
   ];
+  const guides=hairGuides??defaultGuides.map(guide=>({
+    ...guide,root:viewPoint(guide.root),control1:viewPoint(guide.control1),
+    control2:viewPoint(guide.control2),tip:viewPoint(guide.tip),
+    rootWidth:guide.rootWidth*(1-Math.abs(yaw)*.08)
+  }));
   const hairBackSilhouette=joinPoints(
     cubicPoints({x:x+width*.5,y:y-height*.09},{x:x+width*1.35,y:y-height*.08},{x:x+width*1.32,y:y+height*.75},{x:x+width*1.18,y:y+height*1.58},22),
     cubicPoints({x:x+width*1.18,y:y+height*1.58},{x:x+width*.95,y:y+height*1.78},{x:x+width*.15,y:y+height*1.78},{x:x-width*.18,y:y+height*1.55},18),
     cubicPoints({x:x-width*.18,y:y+height*1.55},{x:x-width*.32,y:y+height*.75},{x:x-width*.35,y:y-height*.08},{x:x+width*.5,y:y-height*.09},22)
-  );
+  ).map(viewPoint);
+  const leftEarFar=yaw>0,rightEarFar=yaw<0;
   const ears=[
-    {id:"ear-left",outline:ellipse(x+width*.005,y+height*.59,width*.055,height*.105,24)},
-    {id:"ear-right",outline:ellipse(x+width*.995,y+height*.59,width*.055,height*.105,24)}
+    {id:"ear-left",outline:ellipse(viewPoint({x:x+width*.005,y:y+height*.59}).x,y+height*.59,width*.055*(leftEarFar?1-Math.abs(yaw)*.3:1-Math.abs(yaw)*.06),height*.105,24)},
+    {id:"ear-right",outline:ellipse(viewPoint({x:x+width*.995,y:y+height*.59}).x,y+height*.59,width*.055*(rightEarFar?1-Math.abs(yaw)*.3:1-Math.abs(yaw)*.06),height*.105,24)}
   ];
   const brows=head.eyes.map((eye,index)=>{
     const b=eye.bounds,cx=eye.center.x,side=index===0?-1:1;
