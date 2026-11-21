@@ -239,6 +239,6 @@ test("artist learning ledger persists through project normalization and export r
  assert.deepEqual(reopened.artistLearning,p.artistLearning);
  const legacy=normalizeProject({format:"zero-studio",version:2,name:"legacy",frames:[createFrame()]});
  assert.equal(legacy.artistLearning,null);
- assert.throws(()=>normalizeProject({...p,artistLearning:{format:"bad",version:1,attempts:[]}}),/سجل تعلم الفنان/);
+ assert.throws(()=>normalizeProject({...p,artistLearning:{format:"bad",version:1,attempts:[]}}),/valid ZERO STUDIO artist learning record/);
  const tampered=JSON.parse(JSON.stringify(p));tampered.artistLearning.attempts=[{id:"fake",skillId:"gesture-silhouette",reportDigest:"a".repeat(64),checks:[{id:"a",passed:true},{id:"b",passed:true},{id:"c",passed:true}],score:0,passed:false}];assert.throws(()=>normalizeProject(tampered),/does not match/);
 });
