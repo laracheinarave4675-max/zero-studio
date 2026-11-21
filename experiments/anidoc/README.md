@@ -51,3 +51,9 @@ A free Google Colab notebook is a fallback only: Google states that free GPU ava
 Storage is another gating item. The linked Hugging Face repositories currently list approximately 32.6 GB for Stable Video Diffusion XT, 8.83 GB for AniDoc, and 204 MB for CoTracker. These repository totals can include alternate precision variants; the exact minimal files required by the upstream loader must be confirmed before downloading. Kaggle documents a 20 GB auto-saved working disk plus separate session scratch space, so a full unfiltered snapshot should not be downloaded blindly.
 
 No Kaggle or Colab inference has been run from this repository. The next accepted milestone is a user-authorized Kaggle/Colab session that confirms GPU model, free VRAM, disk capacity, Python compatibility, and required checkpoint files before any model download or inference.
+
+## First user-side check: Kaggle GPU only (safe, no downloads)
+
+A no-download notebook is included at [`kaggle_gpu_preflight.ipynb`](./kaggle_gpu_preflight.ipynb). Download/import it into Kaggle, select Settings → Accelerator → GPU (T4x2) if that option is available, and run the single code cell. It reports the visible GPU(s), per-device VRAM, Python/PyTorch/CUDA versions, and free disk space. It does not install anything or access model checkpoints. Return the printed JSON before proceeding to model setup.
+
+Do not assume that two 16 GB GPUs combine into one 32 GB memory pool. The existing AniDoc launcher selects GPU 0. We should proceed to a weight download only if one GPU is visible with adequate free memory and the available disk can accommodate the verified minimal FP16 checkpoint set.
