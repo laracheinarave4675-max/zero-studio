@@ -57,3 +57,11 @@ No Kaggle or Colab inference has been run from this repository. The next accepte
 A no-download notebook is included at [`kaggle_gpu_preflight.ipynb`](./kaggle_gpu_preflight.ipynb). Download/import it into Kaggle, select Settings → Accelerator → GPU (T4x2) if that option is available, and run the single code cell. It reports the visible GPU(s), per-device VRAM, Python/PyTorch/CUDA versions, and free disk space. It does not install anything or access model checkpoints. Return the printed JSON before proceeding to model setup.
 
 Do not assume that two 16 GB GPUs combine into one 32 GB memory pool. The existing AniDoc launcher selects GPU 0. We should proceed to a weight download only if one GPU is visible with adequate free memory and the available disk can accommodate the verified minimal FP16 checkpoint set.
+
+## Fastest live test: public AniDoc ZeroGPU demo
+
+Before spending time on Kaggle setup, use the maintained public demo at https://huggingface.co/spaces/fffiloni/AniDoc. It is currently marked **Running on Zero** and accepts exactly two inputs: a control-sequence MP4 (the source of motion) and a reference character image (the source of appearance/identity). It has built-in example pairs, so a smoke test can be run without preparing a video. For the ZERO STUDIO character test, choose one of the built-in motion examples and upload the existing character reference image. The Space's author states it is compatible with ZeroGPU.
+
+This route is preferable for the first visual experiment because it avoids installing AniDoc and downloading its checkpoints into Kaggle. Hugging Face documents free access to existing ZeroGPU Spaces, with a daily free-account quota (currently 5 GPU minutes; unauthenticated access is lower). Queueing and runtime limits still apply. This is a quick visual feasibility test, not a production integration or proof of 24 independent drawings per second.
+
+If the public demo is busy or its free quota is exhausted, use the no-download Kaggle preflight notebook above as the fallback route.
