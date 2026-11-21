@@ -24,6 +24,6 @@ test("refined brush plan paints a background and rear hair before the face",()=>
  assert.ok(fills.indexOf("neck-base")<fills.indexOf("face-base"));
  const ink=plan.layers.find(layer=>layer.id==="ink").strokes.map(stroke=>stroke.id);
  for(const id of ["brow-left","brow-right","nose-bridge","mouth-line"])assert.ok(ink.includes(id));
- const shadow=plan.layers.find(layer=>layer.id==="shadows").strokes.find(stroke=>stroke.id==="face-cast-shadow");
+ const shadow=plan.layers.find(layer=>layer.role==="shadow")?.strokes.find(stroke=>stroke.id==="face-cast-shadow");
  assert.ok(shadow.clipPolygon?.length>=3);
 });
