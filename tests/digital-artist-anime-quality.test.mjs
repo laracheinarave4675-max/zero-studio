@@ -13,7 +13,7 @@ test("general anime quality benchmark covers the core drawing craft",()=>{
  assert.ok(layers.length>=8,"benchmark needs a complete layered workflow");
  assert.ok(strokes.length>=55,"benchmark must exercise enough independent drawing operations");
  assert.equal(new Set(ids).size,ids.length,"all benchmark stroke IDs must be unique");
- for(const role of ["background","base-color","flat-color","clean-line","shadow","highlight","detail"])
+ for(const role of ["construction","rough-sketch","flat-color","clean-line","shadow","highlight","detail"])
   assert.ok(layers.some(layer=>layer.role===role),"missing craft layer: "+role);
  for(const feature of ["face-base","hair-back-mass","eye-left-white","eye-right-white","collar-inner","garment-shadow","hair-ribbon-left","fold-left-1"])
   assert.ok(strokes.some(stroke=>stroke.id===feature),"missing craft feature: "+feature);
