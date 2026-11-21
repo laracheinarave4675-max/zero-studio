@@ -172,3 +172,57 @@ export function validateAnimeAutoDrawingPlan(plan) {
   validatePlan(plan);
   return JSON.parse(JSON.stringify(plan));
 }
+
+/**
+ * Removes the deliberately flat chroma-blue background from a generated
+ * raster drawing. It changes only alpha/edge spill; it never warps or redraws
+ * the character. Returns a fresh clamped pixel buffer plus QA counts.
+ */
+export function removeAnimeChromaKeyFromRgba(source, {
+  key = [0, 174, 239],
+  transparentDistance = 28,
+  opaqueDistance = 164
+} = {}) {
+  if (!source || typeof source.length !== "number" || source.length < 4 || source.length % 4 !== 0) {
+    fail("A valid RGBA pixel buffer is required for background removal.");
+  }
+  if (!Array.isArray(key) || key.length !== 3 || key.some(value => !Number.isFinite(value) || value < 0 || value > 255) ||
+      !Number.isFinite(transparentDistance) || !Number.isFinite(opaqueDistance) ||
+      transparentDistance < 0 || opaqueDistance <= transparentDistance) {
+    fail("Chroma-key parameters are invalid.");
+  }
+  const output = new Uint8ClampedArray(source.length);
+  let transparentPixels = 0, opaquePixels = 0, partialPixels = 0;
+  const smooth = value => {
+    const t = clamp(value, 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  for (let index = 0; index < source.length; index += 4) {
+    const red = Number(source[index]), green = Number(source[index + 1]);
+    const blue = Number(source[index + 2]), originalAlpha = Number(source[index + 3]);
+    if (![red, green, blue, originalAlpha].every(Number.isFinite)) fail("Pixel buffer contains a non-finite value.");
+    const distance = Math.hypot(red - key[0], green - key[1], blue - key[2]);
+    const coverage = smooth((distance - transparentDistance) / (opaqueDistance - transparentDistance));
+    const alpha = Math.round(originalAlpha * coverage);
+    output[index + 3] = alpha;
+    if (alpha <= 2) {
+      output[index] = output[index + 1] = output[index + 2] = 0;
+      transparentPixels++;
+      continue;
+    }
+    if (alpha >= 253) {
+      output[index] = red; output[index + 1] = green; output[index + 2] = blue;
+      opaquePixels++;
+      continue;
+    }
+    partialPixels++;
+    const amount = alpha / 255;
+    output[index] = clamp((red - key[0] * (1 - amount)) / amount, 0, 255);
+    output[index + 1] = clamp((green - key[1] * (1 - amount)) / amount, 0, 255);
+    output[index + 2] = clamp((blue - key[2] * (1 - amount)) / amount, 0, 255);
+  }
+  if (!transparentPixels || !opaquePixels) {
+    fail("The generated frame did not contain both a removable blue backdrop and visible character pixels.");
+  }
+  return { data: output, transparentPixels, opaquePixels, partialPixels };
+}
