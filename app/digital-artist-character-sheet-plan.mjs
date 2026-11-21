@@ -97,7 +97,7 @@ export function createDigitalArtistCharacterSheetPlan(){
    line("ink","front-collar-left","Ink the left overlapping collar.","ink",ink,5,map(cx,[[-42,340],[-16,408],[0,430]]));
    line("ink","front-collar-right","Ink the right overlapping collar.","ink",ink,5,map(cx,[[42,340],[16,408],[0,430]]));
    line("ink","front-hem-line","Define the lower pink hem.","ink",ink,4,map(cx,[[-110,855],[-76,882],[0,894],[76,882],[110,855]]));
-   line("ink","front-sandals","Ink both sandals and toes.","ink",ink,4,map(cx,[[-48,970],[-56,1015],[-9,1015],[12,970],[56,1015],[9,1015]]));
+   line("ink","front-sandals-outline","Ink both sandals and toes.","ink",ink,4,map(cx,[[-48,970],[-56,1015],[-9,1015],[12,970],[56,1015],[9,1015]]));
   }else if(id==="side"){
    line("ink","side-hair-outline","Ink the rear hair silhouette in profile.","ink",ink,8,map(cx,[[-30,92],[18,45],[72,66],[100,130],[93,250],[88,440],[65,630],[20,690],[-18,650],[-38,470]]));
    line("ink","side-face-outline","Ink the nose, lips, chin and profile jaw.","ink",ink,5,map(cx,[[-34,132],[8,115],[40,135],[48,166],[68,190],[52,208],[51,250],[24,292],[-15,300],[-40,260],[-48,190]]));
