@@ -231,3 +231,13 @@ test("raster layer rejects malformed or excessive editable stroke history",()=>{
  layer.strokes=[{points:[{x:"not-a-number",y:0,pressure:.5}],options:{brush:"ink"}}];p.frames[0].layers=[layer];
  assert.throws(()=>normalizeProject(JSON.parse(JSON.stringify(p))),/نقطة ضربة Raster/);
 });
+
+test("artist learning ledger persists through project normalization and export round trips",()=>{
+ const p=createProject("artist-learning");
+ p.artistLearning={format:"zero-studio-artist-learning-record",version:1,characterId:"hero",referenceDigest:"",attempts:[],createdBy:"test",learningClaim:"evidence-led-progress-tracking-not-model-training"};
+ const reopened=normalizeProject(JSON.parse(JSON.stringify(p)));
+ assert.deepEqual(reopened.artistLearning,p.artistLearning);
+ const legacy=normalizeProject({format:"zero-studio",version:2,name:"legacy",frames:[createFrame()]});
+ assert.equal(legacy.artistLearning,null);
+ assert.throws(()=>normalizeProject({...p,artistLearning:{format:"bad",version:1,attempts:[]}}),/سجل تعلم الفنان/);
+});
