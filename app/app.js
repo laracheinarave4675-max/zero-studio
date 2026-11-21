@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry}from"./digital-artist-eyes.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1092,6 +1092,33 @@ function setDigitalArtistStrokeReview(review){
  if(!record)return;
  snapshot();record.stroke.review=review;buttons();renderDigitalArtistStrokeReview();
 }
+function mountAnimeArtistCurriculum(){
+ const select=$("animeArtistSkillSelect"),details=$("animeArtistSkillDetails");
+ if(!select||!details||select.dataset.bound==="true")return;
+ const skills=getAnimeArtistCurriculum();
+ select.replaceChildren();
+ skills.forEach(skill=>{
+  const option=document.createElement("option");
+  option.value=skill.id;
+  option.textContent="م"+skill.level+" · "+skill.domain+" — "+skill.id;
+  select.append(option);
+ });
+ const update=()=>{
+  const skill=skills.find(item=>item.id===select.value);
+  if(!skill)return;
+  details.textContent=[
+   skill.id+" · المستوى "+skill.level,
+   "المتطلبات السابقة: "+(skill.prerequisites.join("، ")||"لا يوجد"),
+   "الموضوعات: "+skill.lessons.join(" · "),
+   "التمارين: "+skill.exercises.join(" | "),
+   "معايير القياس: "+skill.metrics.join(" · "),
+   "قاعدة التعلم: نستخدم مراجع يملكها المشروع أو لديه إذن موثق باستعمالها؛ المنهج لا يعني أن النموذج قد تدرب عليها بالفعل."
+  ].join("\\n");
+ };
+ select.addEventListener("change",update);
+ select.dataset.bound="true";
+ update();
+}
 async function inspectDigitalArtistEyes(){
  const status=$("digitalArtistEyesReport"),button=$("digitalArtistEyesBtn");
  if(!status||!button||button.disabled)return;
@@ -1742,4 +1769,4 @@ $("applyCommandsBtn").onclick=()=>{try{const d=JSON.parse($("commandInput").valu
 function stop(){playing=false;clearInterval(timer);$("playBtn").textContent="▶ معاينة"}$("playBtn").onclick=()=>{if(playing){stop();render();return}if(project.frames.length<2)return;playing=true;$("playBtn").textContent="■ إيقاف";let i=current;timer=setInterval(()=>{i=(i+1)%project.frames.length;current=i;renderFrame(art,frame());$("frameInfo").textContent="الإطار "+(i+1)+" من "+project.frames.length},1000/+$("fpsSelect").value)};
 $("focusDrawingBtn").onclick=()=>{$("drawingWorkspace").scrollIntoView({behavior:"smooth",block:"start"});resetCanvasView();};
 $("newProjectBtn").onclick=()=>{if(!confirm("بدء مشروع جديد؟ احفظ عملك الحالي أولاً"))return;stop();snapshot(false,true);project=createProject("مشروع جديد");current=0;activeLayerId=frame().layers[0].id;activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;$("animeAnatomyGuideToggleLabel").hidden=true;$("animeAnatomyConstructionLayer").replaceChildren();renderCharacterLibrary();renderAnimeAnatomyDNASelect();resetRigModel();$("projectName").value="مشروع جديد";$("saveState").textContent="مشروع جديد";render()};
-if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));try{mountDigitalArtistBrushPanel();render();resetRigModel();renderCharacterLibrary();wireAnimeAnatomyCalibration();renderAnimeAnatomyDNASelect();$("appRuntimeStatus").hidden=true}catch(error){const panel=$("appRuntimeStatus");panel.hidden=false;panel.textContent="تعذر تهيئة واجهة الرسم: "+(error?.message||String(error));console.error("ZERO STUDIO startup failed",error)}})();
+if("serviceWorker"in navigator&&location.protocol!=="file:")addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));try{mountDigitalArtistBrushPanel();mountAnimeArtistCurriculum();render();resetRigModel();renderCharacterLibrary();wireAnimeAnatomyCalibration();renderAnimeAnatomyDNASelect();$("appRuntimeStatus").hidden=true}catch(error){const panel=$("appRuntimeStatus");panel.hidden=false;panel.textContent="تعذر تهيئة واجهة الرسم: "+(error?.message||String(error));console.error("ZERO STUDIO startup failed",error)}})();
