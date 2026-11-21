@@ -15,8 +15,8 @@ The digital artist is a software system with five cooperating parts:
 1. **Art director / reasoning brain:** interprets the shot brief and character reference, decides pose, composition, drawing order, layers, line hierarchy, and required detail.
 2. **Character memory:** stores the approved model-sheet identity, measured proportions, face/hair/costume details, palette, canonical view, and source digest. It provides constraints, not a flattened picture to trace.
 3. **Spatial anatomy guide:** uses the existing Character DNA, key drawings, and optional 3D pose reference to constrain joints, proportions, perspective, balance, and contact. It is guide-only; it does not deform or render final character art.
-4. **Drawing hand:** converts the plan into ordered editable strokes and closed shapes. The first implementation uses the existing SVG path/operation model because it is mobile-friendly, inspectable, editable, and already supported by the project. Each mark is a real path command with tool, purpose, layer, order, stroke/fill, and width.
-5. **Art critic / correction loop:** inspects a temporary render, compares it to the approved reference and task, returns prioritized defects, and revises the original vector operations. It must not replace a flawed drawing with a newly generated image.
+4. **Drawing hand:** converts the plan into ordered, pressure-sensitive native raster brush commands on separate transparent layers. Each mark records its purpose, layer, brush profile, point samples, pressure, size, color, opacity, texture, blend mode, and sequence. SVG paths are optional geometry helpers only.
+5. **Art critic / correction loop:** inspects a temporary render, compares it to the approved reference and task, returns prioritized defects, and revises the original brush commands/layer strokes (or optional guide paths). It must not replace a flawed drawing with a newly generated image.
 
 ## Production sequence
 
@@ -52,13 +52,17 @@ Official source: https://github.com/BachiLi/diffvg
 
 Use the existing anatomy engine and, later, an anime-proportion 3D rig for pose, camera, depth, and contact constraints. A 3D render may be used as a faint construction reference only. Never pass a 3D render directly as final 2D anime artwork.
 
-### SVG path renderer
+### Native raster brush renderer (primary)
 
-This is the first drawing hand. It executes M/L/C/Q etc. curves, closed fills, outlines, pressure-shaped path outlines, and semantic layers. The output remains editable. Native raster painting remains available for human-authored/imported assets, but it is not the AI artist's final-authoring shortcut.
+The primary drawing hand is the existing Canvas2D brush engine in `app/raster-brushes.mjs`, backed by persistent raster surfaces. It executes pressure-aware graphite, ink, gouache, watercolor and foliage strokes with tapered ribbons, texture, opacity, blend modes and erasing. AI-authored marks are stored as ordered commands and painted into separate transparent raster layers. The stroke log remains the editable source; a flattened PNG is only a preview/export.
+
+## SVG paths (optional)
+
+SVG is not required for the AI artist's final artwork. It may be used for construction geometry, pose skeletons, simple masks, or selected contours where path editing is useful. Do not force organic hair, facial lines, fabric, painted flats, shadows or highlights into a vector-only representation.
 
 ## Current implementation
 
-The new provider-neutral command contract in app/digital-artist-engine.mjs provides:
+The original optional geometry command contract in `app/digital-artist-engine.mjs` provides:
 
 - zero-studio-digital-artist-plan v1.
 - 1920×1080 canvas contract matching the existing studio.
@@ -69,7 +73,7 @@ The new provider-neutral command contract in app/digital-artist-engine.mjs provi
 - Compilation into native vector layers and a replayable one-stroke-at-a-time command stream.
 - Structural audit that distinguishes editable vector operations from generated image payloads.
 
-This contract is an infrastructure milestone. It does not yet mean an AI model autonomously drew a complete production-quality anime character. The next milestone is to connect a vision-capable planner to this contract and then connect the reviewed command stream to the existing editor preview/approval/layer commit UI.
+This optional geometry contract is an infrastructure milestone, not the final-art path. The raster-first contract in `app/digital-artist-brush-engine.mjs` is the approved route for final character art. Neither contract yet means an AI model autonomously drew a complete production-quality anime character. The next milestone is to connect a vision-capable planner to the raster contract and then connect its reviewed brush stream to the existing editor preview/approval/layer commit UI.
 
 ## Training and improvement strategy
 
@@ -78,7 +82,7 @@ Do not begin with millions of RL trials. Build a measurable supervised/tool-use 
 - collect legally usable examples containing final art plus authentic process recordings when available;
 - use Paints-Undo / inverse-painting research to create candidate stage-order supervision, clearly marked as reconstructed rather than ground-truth hand movements;
 - store each accepted artist plan, edits, critique, and user-approved correction as structured training/evaluation data, subject to rights and privacy checks;
-- evaluate stroke geometry, silhouette, anatomy, identity, palette, line-weight hierarchy, layer semantics, editability, and correction cost;
+- evaluate stroke geometry, silhouette, anatomy, identity, palette, pressure/line-weight hierarchy, brush texture, layer semantics, replayability, and correction cost;
 - consider reinforcement learning only after a deterministic drawing environment, reliable evaluator, and sufficient permitted process data exist.
 
 ## First acceptance test
@@ -88,12 +92,12 @@ Use one approved ZERO STUDIO character reference and produce one complete full-b
 It passes only when:
 
 - there is no image-generation or video-generation call in the authoring path;
-- the app contains individually editable vector strokes/closed shapes, not one embedded picture;
+- the app contains individually recorded/replayable native brush strokes on separate transparent raster layers, not one embedded picture;
 - the timeline can replay the drawing in its real action order;
-- named layers separate construction, line art, flats, shadows and details;
+- named raster layers separate construction, line art, flats, shadows and details;
 - the same face, hair, costume, palette, and proportions match the approved model sheet;
-- defects can be corrected by editing existing paths/operations;
-- the user can save and reopen the project without losing the layers or drawing steps.
+- defects can be corrected by editing/replaying existing brush commands and layer strokes;
+- the user can save and reopen the project without losing the raster layers or ordered brush-stroke log.
 
 Only after one still passes the visual gate should we ask the artist to draw a second pose, then a 24-frame action. The long-term animation target remains 24 independently authored moving-art drawings per second. Guide interpolation, held copies, image warping, generated video and duplicated frames are not substitutes.
 
