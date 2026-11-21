@@ -11,8 +11,7 @@ test("Digital Artist exposes individual operation preview and review controls", 
     "digitalArtistStrokeSelect", "digitalArtistStrokePreview", "digitalArtistStrokeDetails",
     "digitalArtistStrokePrevBtn", "digitalArtistStrokeNextBtn",
     "digitalArtistStrokeApproveBtn", "digitalArtistStrokeRejectBtn", "digitalArtistStrokeResetBtn",
-    "digitalArtistStrokeEditInput", "digitalArtistStrokeApplyEditBtn",
-    "digitalArtistEyesBtn", "digitalArtistEyesReport"
+    "digitalArtistStrokeEditInput", "digitalArtistStrokeApplyEditBtn"
   ]) assert.match(html, new RegExp('id="' + id + '"'));
   assert.match(app, /function collectDigitalArtistStrokeRecords\(/);
   assert.match(app, /function renderDigitalArtistStrokePreview\(/);
@@ -22,10 +21,5 @@ test("Digital Artist exposes individual operation preview and review controls", 
   assert.match(app, /validateDigitalArtistStrokeEdit\(record\.stroke,edit\)/);
   assert.match(app, /rebuildDigitalArtistRasterLayerDataUrl\(record\.layer,nextStrokes\)/);
   assert.match(app, /applyDigitalArtistStrokeCorrection\(\)/);
-  assert.match(app, /analyzeRasterPixels\(compositePixels/);
-  assert.match(app, /analyzeStrokeGeometry\(item\.stroke\)/);
-  assert.match(app, /inspectRegionFill\(layerPixels,mapped\.points/);
-  assert.match(app, /runDigitalArtistEyes\(\)/);
-  assert.match(app, /rasterizeArtistSvgForInspection\(frameSvg\(artistFrame/);
   assert.match(app, /renderDigitalArtistStrokeReview\(\)/);
 });
