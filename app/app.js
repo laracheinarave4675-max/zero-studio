@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1166,10 +1166,26 @@ function mountDigitalArtistStrokeReview(){
 }
 function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
+ const visionInput=$("digitalArtistVisionReportInput"),visionButton=$("buildDigitalArtistVisionPlanBtn"),visionStatus=$("digitalArtistVisionStatus"),approvalRow=$("digitalArtistVisionApprovalRow"),approvalCheck=$("digitalArtistVisionApproval");
  if(!input||!loadButton||!runButton||!statusNode)return;
  mountDigitalArtistStrokeReview();
+ if(visionButton&&visionInput&&visionStatus&&approvalRow&&approvalCheck){
+  visionButton.onclick=()=>{
+   try{
+    const report=JSON.parse(visionInput.value);
+    const result=buildAnimeVisionBrushPlan(report,{approveObservations:false});
+    input.value=JSON.stringify(result.plan,null,2);
+    approvalRow.hidden=false;approvalCheck.checked=false;runButton.disabled=true;
+    const warnings=result.review.warnings.slice(0,4).join(" ");
+    visionStatus.textContent="تم تحويل الملاحظات إلى مسودة من "+result.review.estimatedStrokeCount+" عملية رسم على "+result.plan.layers.length+" طبقات. راجع خطة الرسم أدناه. "+warnings+" لم يتم تحليل صورة هنا؛ هذه الخطوة تحول تقرير رؤية موجوداً إلى أوامر فرشاة.";
+    statusNode.textContent="أُنشئت مسودة رؤية. لا يمكن تنفيذها قبل اعتمادك الصريح أدناه.";
+   }catch(error){visionStatus.textContent="تعذر تحويل تقرير الرؤية: "+(error?.message||String(error));}
+  };
+  approvalCheck.onchange=()=>{runButton.disabled=!approvalCheck.checked;};
+ }
  loadButton.onclick=()=>{
   input.value=JSON.stringify(createDigitalArtistDemoPlan(),null,2);
+  if(approvalRow&&approvalCheck){approvalRow.hidden=true;approvalCheck.checked=false;runButton.disabled=false;}
   statusNode.textContent="تم تحميل مثال بورتريه من 7 طبقات. هذه خطة اختبار ثابتة للتحقق من الفرشاة والتنفيذ، وليست ناتج نموذج ذكاء اصطناعي.";
  };
  runButton.onclick=async()=>{
@@ -1238,7 +1254,7 @@ function mountDigitalArtistBrushPanel(){
    if(targetFrame===frame())render();
    statusNode.textContent="توقف تنفيذ خطة الفنان دون اعتماد جزئي: "+(error?.message||String(error));
   }finally{
-   runButton.disabled=false;loadButton.disabled=false;
+   runButton.disabled=Boolean(approvalRow&&!approvalRow.hidden&&approvalCheck&&!approvalCheck.checked);loadButton.disabled=false;
   }
  };
 }
