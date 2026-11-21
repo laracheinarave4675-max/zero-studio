@@ -8,7 +8,7 @@ test("the deterministic Digital Artist demo plan compiles into a complete seven-
   const stream = compileDigitalArtistBrushPlan(plan);
   assert.equal(plan.layers.length, 7);
   assert.equal(stream.audit.layerCount, 7);
-  assert.equal(stream.audit.strokeCount, 56);
+  assert.equal(stream.audit.strokeCount, 62);
   assert.equal(stream.audit.orderedSteps, true);
   assert.equal(stream.audit.vectorRequired, false);
   assert.equal(stream.imageGenerationUsed, false);
@@ -18,6 +18,6 @@ test("the deterministic Digital Artist demo plan compiles into a complete seven-
   assert.equal(stream.layers[2].role, "flat-color");
   assert.equal(stream.layers[3].role, "clean-line");
   assert.equal(stream.layers[6].role, "detail");
-  assert.equal(stream.commands.filter(command => command.kind === "raster-region-fill").length, 14);
+  assert.equal(stream.commands.filter(command => command.kind === "raster-region-fill").length, 20);
   assert.ok(stream.commands.filter(command => command.kind === "raster-brush-stroke").every(command => command.options.brush));
 });
