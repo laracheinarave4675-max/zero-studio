@@ -65,6 +65,7 @@ def main() -> int:
     checkpoint_status = {name: path.exists() for name, path in required.items()}
     vram_gib = round(gpu_memory_mib / 1024, 2) if gpu_memory_mib else None
     source_ready = root.is_dir()
+    python_compatible = (3, 8) <= sys.version_info[:2] < (3, 11)
     cuda_ready = torch_cuda is True
     gpu_ready = bool(gpu_name and gpu_memory_mib and gpu_memory_mib >= 14 * 1024)
     checkpoints_ready = all(checkpoint_status.values())
@@ -72,6 +73,7 @@ def main() -> int:
     report = {
         "python": sys.version.split()[0],
         "ani_doc_source_present": source_ready,
+        "python_compatible_range_3_8_to_3_10": python_compatible,
         "nvidia_smi_present": bool(nvidia_smi),
         "torch_cuda_available": torch_cuda,
         "torch_diagnostic_error": torch_error,
@@ -79,7 +81,7 @@ def main() -> int:
         "gpu_vram_gib": vram_gib,
         "upstream_reported_vram_requirement_gib": 14,
         "checkpoints": checkpoint_status,
-        "inference_ready": bool(source_ready and cuda_ready and gpu_ready and checkpoints_ready),
+        "inference_ready": bool(source_ready and python_compatible and cuda_ready and gpu_ready and checkpoints_ready),
     }
     print(json.dumps(report, indent=2))
 
@@ -94,6 +96,8 @@ def main() -> int:
         reasons = []
         if not source_ready:
             reasons.append("AniDoc source checkout is missing")
+        if not python_compatible:
+            reasons.append("Python is outside the supported preflight range (3.8–3.10; upstream recommends 3.8)")
         if not cuda_ready:
             reasons.append("PyTorch CUDA is not available")
         if not gpu_ready:
