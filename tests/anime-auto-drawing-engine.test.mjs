@@ -95,9 +95,10 @@ test("chroma-key extraction makes the flat blue background transparent while ret
 
 test("chroma-key extraction retains antialiased edge coverage and rejects images without a key background", async () => {
   const { removeAnimeChromaKeyFromRgba } = await import("../app/anime-auto-drawing-engine.mjs");
-  const mixed = new Uint8ClampedArray([128, 214, 247, 255, 15, 20, 25, 255]);
+  const mixed = new Uint8ClampedArray([0, 174, 239, 255, 128, 214, 247, 255, 15, 20, 25, 255]);
   const result = removeAnimeChromaKeyFromRgba(mixed);
-  assert.ok(result.data[3] > 0 && result.data[3] < 255);
-  assert.equal(result.data[7], 255);
+  assert.equal(result.data[3], 0);
+  assert.ok(result.data[7] > 0 && result.data[7] < 255);
+  assert.equal(result.data[11], 255);
   assert.throws(() => removeAnimeChromaKeyFromRgba(new Uint8ClampedArray([40, 40, 40, 255])), /both a removable blue backdrop/i);
 });
