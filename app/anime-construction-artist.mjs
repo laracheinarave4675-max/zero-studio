@@ -106,9 +106,10 @@ export function buildAnimeConstructionModel({
     const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.245*irisScale,b.height*.43*irisScale,32);
     const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.025,b.width*.115*irisScale,b.height*.265*irisScale,28);
     const upperCrease=upperLid.map((point,i)=>({x:point.x,y:point.y-b.height*(.13+.025*Math.sin(Math.PI*i/24))}));
+    const outer=side<0?left:right;
     const lashFan=[0,1,2].map(i=>({
-      from:{x:left.x+b.width*.035*i,y:left.y-b.height*.025*i},
-      to:{x:left.x-b.width*(.08+.025*i),y:left.y-b.height*(.17+.035*i)}
+      from:{x:outer.x+side*b.width*.035*i,y:outer.y-b.height*.025*i},
+      to:{x:outer.x+side*b.width*(.08+.025*i),y:outer.y-b.height*(.17+.035*i)}
     }));
     return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperCrease,lashFan,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:!eye.nearSide,nearSide:eye.nearSide,outerCorner:side<0?left:right,innerCorner:side<0?right:left};
   });
