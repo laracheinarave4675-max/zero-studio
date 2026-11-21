@@ -145,7 +145,7 @@ export function buildAnimeVisionDrawingBrief(report, { minimumConfidence = 0.65 
     composition: vision.composition,
     identityLocks: [...vision.identityLocks],
     constructionGuides: trustedLandmarks.map(({ id, label, x, y }) => ({ id, label, x, y })),
-    paintRegions: trustedRegions.map(({ id, label, x, y, width, height }) => ({ id, label, x, y, width, height })),
+    paintRegions: trustedRegions.map(({ id, label, x, y, width, height, contour }) => ({ id, label, x, y, width, height, ...(contour ? { contour: contour.map(point => ({ x: point.x, y: point.y })) } : {}) })),
     palette: trustedPalette.map(({ id, label, color }) => ({ id, label, color })),
     reviewQueue: [
       ...vision.landmarks.filter(item => item.confidence < minimumConfidence).map(item => ({ id: item.id, kind: "landmark", confidence: item.confidence })),
