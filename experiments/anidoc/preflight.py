@@ -97,7 +97,7 @@ def main() -> int:
         if not source_ready:
             reasons.append("AniDoc source checkout is missing")
         if not python_compatible:
-            reasons.append("Python is outside the supported preflight range (3.8–3.10; upstream recommends 3.8)")
+            reasons.append("Python is not 3.8 (the upstream-recommended version; other versions are unverified)")
         if not cuda_ready:
             reasons.append("PyTorch CUDA is not available")
         if not gpu_ready:
