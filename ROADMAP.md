@@ -1,5 +1,20 @@
 # ZERO STUDIO — Roadmap
 
+
+## Phase 3A — Hybrid motion-transfer feasibility (2026-11-21)
+
+- [x] Confirm AniDoc's role and limitation: reference-conditioned line-art/video colorization, not arbitrary motion generation from a still.
+- [x] Identify One-to-All Animation as the first motion-transfer candidate for a single reference character plus a driving video.
+- [x] Identify the official free Kaggle T4 16 GB + ComfyUI route for the 1.3B model.
+- [x] Record the isolated experiment and initial Hugging Face quota result.\n- [x] Add native-rate MP4 frame packaging, SHA-256 provenance manifest, contact sheet, ZIP export, and synthetic-video regression tests.
+- [ ] Run the 1.3B ComfyUI workflow on an available free Kaggle T4; stop if no free accelerator is available.
+- [ ] Test one existing ZERO STUDIO character reference with one clean full-body driving clip.
+- [ ] Review identity, face, hair, costume, anatomy, foot contact, timing, and temporal consistency.
+- [ ] Package the native-rate MP4, actual PNG frames, contact sheet, and provenance manifest.
+- [ ] Decide whether the result is useful as motion/key-pose guidance before implementing an in-app adapter.
+- [ ] Preserve the 24 independently drawn images-per-second final-animation requirement; do not relabel repeated/interpolated frames as unique drawings.
+
+
 A staged plan designed around Android-first use and a free-first budget. Milestones are not complete until their acceptance checks pass.
 
 ## Phase 0 — Project foundation
