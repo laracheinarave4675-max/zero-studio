@@ -78,3 +78,22 @@ test("opposite yaw projections preserve mirrored identity geometry",()=>{
  assert.ok(Math.abs(mirrorX(left.landmarks.mouthCenter.x)-right.landmarks.mouthCenter.x)<1e-9);
  assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-9);
 });
+
+test("head silhouette has a rounded skull, cheek width and a tapered anime jaw",()=>{
+ const head=deriveAnimeHeadConstruction({bounds:{x:.35,y:.12,width:.3,height:.48}});
+ const widthAt=id=>{const item=head.faceCrossSections.find(row=>row.id===id);return item.right-item.left;};
+ assert.ok(widthAt("cheek")>widthAt("jaw"));
+ assert.ok(widthAt("jaw")>widthAt("chin"));
+ assert.equal(head.silhouette.length,97);
+ assert.ok(head.silhouette.every(point=>Number.isFinite(point.x)&&Number.isFinite(point.y)));
+});
+test("yaw projects facial depth and compresses the far side while preserving mirrored views",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.72});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.72});
+ assert.ok(left.projection.cosYaw<1);
+ assert.ok(left.projection.sinYaw>0);
+ assert.ok(left.planes.farCheek.scale<left.planes.nearCheek.scale);
+ assert.ok(Math.abs((left.landmarks.noseBase.x+right.landmarks.noseBase.x)-(bounds.x+bounds.width))<1e-8);
+ assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-8);
+});
