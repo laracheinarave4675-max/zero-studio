@@ -357,3 +357,11 @@ These eyes are measurement and critique tools, not image generators. They may co
 **Evidence boundary:** Local alpha-connected raster contour extraction measures pixel boundaries and connected components only. It does not identify semantic parts such as eyes, hair, skin, or clothing. Model-reported landmarks remain externally supplied observations until a real vision inference run is demonstrated.
 
 **Acceptance:** Unit tests and deterministic renderer artifacts verify software behavior, not artistic quality. The first actual drawing must still be visually reviewed on the user's Android device.
+
+## D-036 — Raster contour evidence is geometric, not semantic (2026-11-21)
+
+**Decision:** The local raster eye may extract connected alpha components and their pixel-boundary contours from native Canvas2D layer pixels, with explicit pixel/component/point caps.
+
+**Evidence boundary:** These contours describe geometry only. They do not identify eyes, hair, face, skin, clothing, or anatomy; they do not infer eye landmarks, iris/pupil segmentation, or hair flow. Semantic naming still requires a reviewed model-sheet observation or a successfully validated vision result.
+
+**Review:** Contour points remain inspection evidence and must not silently modify artwork or award skill mastery. All final drawing continues through editable native raster brush operations.
