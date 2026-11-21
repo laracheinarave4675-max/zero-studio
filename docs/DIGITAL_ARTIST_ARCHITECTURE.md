@@ -33,6 +33,19 @@ Each pass receives a rendered preview, selected layer images, stroke history, Ch
 
 The critic combines the results into a prioritized report: defect type, pixel/region location, affected layer and stroke IDs, severity, confidence, and a correction proposal. The correction loop edits those original operations and replays the affected layer. It must never "fix" an error by generating or inserting a replacement image. External specialist models may later provide optional second opinions, but the artist must remain useful when they are unavailable.
 
+## First implemented eyes and curriculum milestone — 2026-11-21
+
+The first local implementation is in:
+- `app/digital-artist-eyes.mjs`: raster bounds/coverage/centroid/perimeter/palette measurement; per-stroke sample count, length, pressure range, bounds and sharp-turn analysis; normalized landmark comparison; named palette comparison; and region-fill pixel sampling for inside coverage and outside leakage.
+- `app/app.js` / `app/index.html`: an eye panel that inspects the current frame's Digital Artist raster layers locally, downsampling each layer to no more than 960×540 for this first pass. It reports visible pixels, bounds, coverage, dominant colors, stroke/operation counts, approval state and region-fill leakage checks.
+- `tests/digital-artist-eyes.test.mjs`: regression tests for raster measurements, stroke geometry, landmark drift, palette mismatch, fill coverage/leakage and invalid input.
+- `app/anime-artist-curriculum.mjs`: 15 skill stages with prerequisites, lessons, practical exercises and evaluation metrics; reference-card rights/provenance validation for study, training and commercial-production uses; and practice tasks requiring native raster brush operations with final-image generation prohibited.
+- The editor has a skill browser for this curriculum. It displays exercises and measurement criteria, but does not mean the artist has already been trained or has completed those exercises.
+
+**Known gaps:** the first UI does not yet compare a real approved Character DNA/model sheet against a drawn character. The landmark and palette comparison functions exist, but need integration with the actual reference record. Detailed anatomy/line-quality/cel-light critics, defect localization with corrective recommendations, a populated authorized reference library and learning from saved corrections remain incomplete.
+
+**CI verification:** HEAD `536ee9b49b989fbd5770fea66cadbb0252d80fe6` passed 376/376 tests in both Drawing engine run #2449 and Hybrid raster/SVG run #639. Hybrid CI also passed the raster proof/export jobs. This proves the inspection/curriculum code paths and regressions, not artistic skill or visual acceptance.
+
 ## Anime craft library and learning curriculum
 
 "Teaching anime" means teaching the craft and the conventions of anime drawing, not merely adding an anime keyword to a generic model. Build a structured library of authorized model sheets, construction examples, annotated drawings, layer breakdowns, palette studies, process recordings and correction examples.
