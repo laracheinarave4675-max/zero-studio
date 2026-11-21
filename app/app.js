@@ -1137,7 +1137,6 @@ function mountAnimeArtistCurriculum(){
    }catch(error){if(sessionNode)sessionNode.textContent="تعذر إنشاء الجلسة: "+error.message;}
   };
  }
- const assess=$("saveAnimeArtistAssessmentBtn");if(assess&&assess.dataset.bound!=="true"){assess.dataset.bound="true";assess.onclick=saveArtistAssessmentFromLatestReport;}
  select.dataset.bound="true";
  update();artistLearningStatus();
 }
