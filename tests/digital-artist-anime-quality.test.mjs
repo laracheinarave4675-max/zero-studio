@@ -85,3 +85,12 @@ test("brush plan rejects semantic clipping masks outside the fixed canvas",()=>{
  stroke.clipPolygon=original;
  assert.doesNotThrow(()=>compileDigitalArtistBrushPlan(plan));
 });
+
+
+test("anime line art keeps fringe separators out of the face and adds layered iris shading",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const id of ["fringe-left-ink","fringe-mid-ink","fringe-right-ink"])
+  assert.ok(!strokes.some(stroke=>stroke.id===id),"closed fringe outline must not cross the face: "+id);
+ for(const id of ["hair-crown-seam-left","hair-crown-seam-right","hair-side-seam-left","hair-side-seam-right","iris-shade-left","iris-shade-right"])
+  assert.ok(strokes.some(stroke=>stroke.id===id),"missing refined anime detail "+id);
+});
