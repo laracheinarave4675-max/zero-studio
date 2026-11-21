@@ -17,6 +17,7 @@ test("anime training UI builds sessions from the selected skill and difficulty",
   assert.ok(app.includes('import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs"'));
   assert.ok(app.includes('createAnimeDrawingSession({skillId:select.value,difficulty:difficulty?.value||"foundation"'));
   assert.ok(app.includes('startAnimeArtistPracticeBtn'));
+  assert.ok(app.includes("const study=getAnimeDrawingStudy(skill.id)"));
   assert.ok(app.includes('animeArtistPracticeSession'));
 });
 
