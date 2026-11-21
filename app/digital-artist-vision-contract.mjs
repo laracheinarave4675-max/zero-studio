@@ -61,7 +61,25 @@ export function validateAnimeVisionReport(input) {
     const x = unit(item.x, "Region x"), y = unit(item.y, "Region y");
     const width = unit(item.width, "Region width"), height = unit(item.height, "Region height");
     if (width <= 0 || height <= 0 || x + width > 1 || y + height > 1) fail("Vision region must have a positive box fully inside the reference.");
-    return { id, label: text(item.label, 100), x, y, width, height, confidence: unit(item.confidence, "Region confidence") };
+    let contour;
+    if (item.contour !== undefined) {
+      if (!Array.isArray(item.contour) || item.contour.length < 3 || item.contour.length > 512) fail("A region contour must contain 3–512 normalized points.");
+      contour = item.contour.map((point, index) => ({
+        x: unit(point?.x, "Region contour x"),
+        y: unit(point?.y, "Region contour y")
+      }));
+      for (let index = 0; index < contour.length; index++) {
+        const current = contour[index], next = contour[(index + 1) % contour.length];
+        if (Math.hypot(current.x - next.x, current.y - next.y) < 0.00001) fail("A region contour contains duplicate consecutive points.");
+      }
+      let twiceArea = 0;
+      for (let index = 0; index < contour.length; index++) {
+        const current = contour[index], next = contour[(index + 1) % contour.length];
+        twiceArea += current.x * next.y - next.x * current.y;
+      }
+      if (Math.abs(twiceArea) < 0.000001) fail("A region contour must enclose a measurable area.");
+    }
+    return { id, label: text(item.label, 100), x, y, width, height, ...(contour ? { contour } : {}), confidence: unit(item.confidence, "Region confidence") };
   });
   const palette = swatchesInput.map(item => {
     const id = safeId(item?.id, "Palette id");
