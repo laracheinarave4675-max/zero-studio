@@ -67,7 +67,7 @@ test("fill eye detects incomplete color coverage and color leakage outside a clo
   assert.equal(clean.insideCoverage, 1);
   assert.equal(clean.outsideLeakage, 0);
   paint(4, 8);
-  const leaked = inspectRegionFill(imageData, polygon, "#efc4b1", { stride: 1, margin: 2 });
+  const leaked = inspectRegionFill(imageData, polygon, "#efc4b1", { stride: 1, margin: 2, maximumLeakage: 0 });
   assert.equal(leaked.passed, false);
   assert.ok(leaked.outsideLeakage > 0);
 });
