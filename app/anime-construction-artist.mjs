@@ -151,6 +151,17 @@ export function buildAnimeConstructionModel({
     return {id:guide.id,...clump,rootToTipLength:Math.hypot(guide.tip.x-guide.root.x,guide.tip.y-guide.root.y)};
   });
   if(new Set(hair.map(item=>item.id)).size!==hair.length)fail("Hair clump ids must be unique.");
+  const withStrands=hair.map(clump=>{
+    const source=clump.flow;
+    const strands=[-1,1].map(side=>source.slice(3,-3).map((point,index)=>{
+      const sourceIndex=index+3,before=source[Math.max(0,sourceIndex-1)],after=source[Math.min(source.length-1,sourceIndex+1)];
+      const dx=after.x-before.x,dy=after.y-before.y,length=Math.hypot(dx,dy)||1;
+      const t=sourceIndex/(source.length-1),offset=clump.widthProfile.rootWidth*(1-t)*.2*side;
+      return {x:clamp(point.x-dy/length*offset,0,1),y:clamp(point.y+dx/length*offset,0,1)};
+    }));
+    return {...clump,strands};
+  });
+
 
   const folds=[
     {id:"left-shoulder-tension",anchor:shoulders.left,target:torso.ribcage.center,kind:"tension"},
@@ -173,7 +184,7 @@ export function buildAnimeConstructionModel({
   return {
     format:"zero-studio-anime-construction-model",version:1,profileId:style.id,
     canvasSpace:"normalized-0-to-1",view:{yaw,pose:{shoulderTilt:tilt,torsoLean:lean,shoulderWidth:shoulderScale}},
-    head,eyes,torso,hair,ears,brows,nose,mouth,hairBackSilhouette,folds,shadows,
+    head,eyes,torso,hair:withStrands,ears,brows,nose,mouth,hairBackSilhouette,folds,shadows,
     constructionOrder:["gesture-and-axis","head-volume","facial-feature-zones","torso-volume","hair-root-to-tip-clumps","cloth-tension-anchors","light-and-occlusion"]
   };
 }
