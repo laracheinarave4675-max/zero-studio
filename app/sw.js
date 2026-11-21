@@ -1,9 +1,10 @@
-const CACHE="zero-studio-shell-v48";
+const CACHE="zero-studio-shell-v49";
 const FILES=[
   "./","./index.html","./styles.css","./app.js","./manifest.webmanifest",
   "./engine.mjs","./zip.mjs","./scene-production.mjs","./animation-production.mjs",
   "./frame-history.mjs","./character-model.mjs","./character-library.mjs",
   "./backgrounds.mjs","./raster-brushes.mjs","./raster-surface.mjs",
+  "./environment-art.mjs","./mesh-scene-renderer.mjs","./anime-background-painter.mjs","./raster-environment-media.mjs",
   "./digital-artist-brush-engine.mjs","./digital-artist-vision-brush-planner.mjs",
   "./digital-artist-demo-plan.mjs","./digital-artist-brush-executor.mjs",
   "./digital-artist-stroke-edit.mjs","./digital-artist-eyes.mjs",
