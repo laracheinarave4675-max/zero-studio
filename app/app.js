@@ -1167,12 +1167,20 @@ function mountDigitalArtistStrokeReview(){
 function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
  const visionInput=$("digitalArtistVisionReportInput"),visionButton=$("buildDigitalArtistVisionPlanBtn"),visionStatus=$("digitalArtistVisionStatus"),approvalRow=$("digitalArtistVisionApprovalRow"),approvalCheck=$("digitalArtistVisionApproval");
+ const referenceFile=$("digitalArtistVisionReferenceFile"),visionPrompt=$("digitalArtistVisionPrompt"),copyPromptButton=$("copyDigitalArtistVisionPromptBtn");
  if(!input||!loadButton||!runButton||!statusNode)return;
  mountDigitalArtistStrokeReview();
- if(visionButton&&visionInput&&visionStatus&&approvalRow&&approvalCheck){
-  visionButton.onclick=()=>{
+ if(copyPromptButton&&visionPrompt){copyPromptButton.onclick=async()=>{try{await navigator.clipboard.writeText(visionPrompt.value);if(visionStatus)visionStatus.textContent="تم نسخ أمر تحليل الصورة. افتح نموذج SmolVLM وألصق الأمر بعد رفع المرجع.";}catch(error){if(visionStatus)visionStatus.textContent="تعذر النسخ التلقائي؛ حدد نص الأمر وانسخه يدوياً.";}};}
+ if(visionButton&&visionInput&&visionStatus&&approvalRow&&approvalCheck&&referenceFile){
+  visionButton.onclick=async()=>{
    try{
+    const file=referenceFile.files?.[0];if(!file)throw Error("ارفع صورة المرجع نفسها التي حللها نموذج الرؤية أولاً.");
+    if(!globalThis.crypto?.subtle)throw Error("حساب SHA-256 غير متاح في هذا المتصفح الآمن.");
     const report=JSON.parse(visionInput.value);
+    const digestBytes=await globalThis.crypto.subtle.digest("SHA-256",await file.arrayBuffer());
+    const referenceDigest=Array.from(new Uint8Array(digestBytes),byte=>byte.toString(16).padStart(2,"0")).join("");
+    if(report.referenceDigest&&/^(?:sha256:)?[a-f0-9]{64}$/i.test(String(report.referenceDigest))&&String(report.referenceDigest).replace(/^sha256:/i,"").toLowerCase()!==referenceDigest)throw Error("تقرير الرؤية لا يطابق صورة المرجع المرفوعة. أعد تحليل الصورة الصحيحة.");
+    report.referenceDigest=referenceDigest;
     const result=buildAnimeVisionBrushPlan(report,{approveObservations:false});
     input.value=JSON.stringify(result.plan,null,2);
     approvalRow.hidden=false;approvalCheck.checked=false;runButton.disabled=true;
