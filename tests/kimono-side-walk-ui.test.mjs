@@ -19,7 +19,7 @@ test("kimono walk preset is wired to the live 24-frame timeline", () => {
 test("each frame task reports artist instructions and live drawing/review state", () => {
   assert.match(app, /function renderKimonoWalkTaskNavigator\(\)/);
   assert.match(app, /getKimonoSideWalkFrameBrief\(Math\.max\(0,Math\.min\(23,current\)\)\)/);
-  assert.match(app, /complete-independent-character-redraw/);
+  assert.match(app, /ارسم الشخصية كاملة مستقلة ولا تستخدم صورة الهيكل كرسم نهائي/);
   assert.match(app, /PNG مستقل محفوظ ومعتمد لهذا الإطار/);
   assert.match(app, /animeWalkTaskList/);
   assert.match(app, /renderKimonoWalkTaskNavigator\(\);renderFrames\(\)/);
