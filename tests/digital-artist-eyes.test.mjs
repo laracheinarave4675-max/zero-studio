@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   analyzeRasterPixels, analyzeStrokeGeometry, compareLandmarks,
-  comparePalette, inspectRegionFill
+  comparePalette, inspectRegionFill, inspectRegionFillGroup
 } from "../app/digital-artist-eyes.mjs";
 
 test("raster eye measures silhouette bounds, coverage, centroid and dominant palette", () => {
@@ -79,6 +79,25 @@ test("fill eye detects incomplete color coverage and color leakage outside a clo
   const leaked = inspectRegionFill(imageData, polygon, "#efc4b1", { stride: 1, margin: 2, maximumLeakage: 0 });
   assert.equal(leaked.passed, false);
   assert.ok(leaked.outsideLeakage > 0);
+});
+
+test("fill eye treats neighboring same-color polygons as one intended color group", () => {
+  const width = 30, height = 20, data = new Uint8ClampedArray(width * height * 4);
+  const paint = (x, y) => data.set([52, 56, 76, 255], (y * width + x) * 4);
+  for (let y = 5; y < 13; y++) {
+    for (let x = 3; x < 10; x++) paint(x, y);
+    for (let x = 12; x < 19; x++) paint(x, y);
+  }
+  const imageData = { width, height, data };
+  const left = [{x:3,y:5},{x:10,y:5},{x:10,y:13},{x:3,y:13}];
+  const right = [{x:12,y:5},{x:19,y:5},{x:19,y:13},{x:12,y:13}];
+  const single = inspectRegionFill(imageData, left, "#34384c", { stride: 1, margin: 6 });
+  const grouped = inspectRegionFillGroup(imageData, [left, right], "#34384c", { stride: 1, margin: 6 });
+  assert.ok(single.outsideLeakage > 0);
+  assert.equal(grouped.outsideLeakage, 0);
+  assert.equal(grouped.insideCoverage, 1);
+  assert.equal(grouped.regionCount, 2);
+  assert.equal(grouped.passed, true);
 });
 
 test("fill eye rejects invalid or out-of-raster polygon geometry", () => {
