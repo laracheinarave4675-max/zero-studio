@@ -29,7 +29,7 @@ function normalizeClumps(items) {
       tip: point(item.tip, "طرف الخصلة " + (index + 1)),
       followThrough: finite(item.followThrough ?? 0.5, "استجابة الخصلة", 0, 1)
     };
-  });
+  }).sort((a, b) => a.id.localeCompare(b.id));
 }
 function normalizePose(pose, index) {
   const id = clean(pose?.id, 80);
