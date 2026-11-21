@@ -50,3 +50,31 @@ test("hair clump geometry rejects malformed or out-of-canvas control points",()=
  assert.throws(()=>buildAnimeHairClump({root:{x:-.1,y:.2},control1:{x:.3,y:.3},control2:{x:.4,y:.4},tip:{x:.5,y:.6}}),/normalized/);
  assert.throws(()=>buildAnimeHairClump({root:{x:.2,y:.2},control1:{x:.3,y:.3},control2:{x:.4,y:.4},tip:{x:.5,y:.6},samples:3}),/sample count/);
 });
+
+test("yaw projection reshapes the skull, jaw, nose and face planes, not only eye width",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const front=deriveAnimeHeadConstruction({bounds,viewYaw:0});
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.72});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.72});
+ assert.ok(left.bounds.projectedWidth<front.bounds.width);
+ assert.ok(right.bounds.projectedWidth<front.bounds.width);
+ assert.notDeepEqual(front.silhouette,left.silhouette);
+ assert.notDeepEqual(left.silhouette,right.silhouette);
+ assert.notEqual(left.landmarks.noseBase.x,front.landmarks.noseBase.x);
+ assert.notEqual(right.landmarks.mouthCenter.x,front.landmarks.mouthCenter.x);
+ assert.notDeepEqual(left.landmarks.jawLeft,right.landmarks.jawLeft);
+ assert.ok(left.planes.jawVisibility.farSideScale<1);
+ assert.ok(left.eyes.find(eye=>!eye.nearSide).scale<left.eyes.find(eye=>eye.nearSide).scale);
+ assert.ok(right.eyes.find(eye=>!eye.nearSide).scale<right.eyes.find(eye=>eye.nearSide).scale);
+ assert.equal(left.profileId,right.profileId);
+});
+test("opposite yaw projections preserve mirrored identity geometry",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.65});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.65});
+ const cx=bounds.x+bounds.width/2;
+ const mirrorX=value=>2*cx-value;
+ assert.ok(Math.abs(mirrorX(left.landmarks.noseBase.x)-right.landmarks.noseBase.x)<1e-9);
+ assert.ok(Math.abs(mirrorX(left.landmarks.mouthCenter.x)-right.landmarks.mouthCenter.x)<1e-9);
+ assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-9);
+});
