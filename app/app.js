@@ -1168,6 +1168,7 @@ async function compareAnimeDesignLandmarks(){
    ...eyeComparison.checks.filter(item=>!item.passed).map(item=>"• "+item.id+" — الانحراف "+(Number.isFinite(item.deviation)?item.deviation.toFixed(3):"خارج حدود العين")),
    ...(hairComparison?["الشعر: "+(hairComparison.passed?"اتجاه الكتل مطابق":"تحتاج "+hairFailed+" كتل إلى التصحيح"),...hairComparison.checks.filter(item=>!item.passed).map(item=>"• كتلة "+item.id)]:[]),
    "تم إنشاء "+report.correctionPlan.summary.total+" اقتراح تصحيح مرتبط بمهارات الأنمي.",
+   ...report.correctionPlan.suggestions.slice(0,8).map((item,index)=>(index+1)+". ["+item.skillId+"] "+item.title+" — "+item.action+" تمرين: "+item.exercise+" معيار النجاح: "+item.success),
    "حدود الفحص: هذه مقارنة هندسية لمعالم مقدمة يدوياً أو من تقرير رؤية؛ لا تستخرج المعالم من البكسلات ولا تثبت جودة الرسم وحدها."
   ].join("\\n");
   const eyesStatus=$("digitalArtistEyesReport");
