@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFill}from"./digital-artist-eyes.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -901,6 +901,79 @@ function collectDigitalArtistStrokeRecords(){
  });
  return records;
 }
+function rasterizeArtistSvgForInspection(svgMarkup){
+ return new Promise((resolve,reject)=>{
+  const blob=new Blob([svgMarkup],{type:"image/svg+xml;charset=utf-8"});
+  const url=URL.createObjectURL(blob),image=new Image();
+  const cleanup=()=>URL.revokeObjectURL(url);
+  image.onload=()=>{
+   try{
+    const surface=document.createElement("canvas");surface.width=WIDTH;surface.height=HEIGHT;
+    const context=surface.getContext("2d",{willReadFrequently:true});
+    if(!context)throw Error("تعذر إنشاء سطح فحص الرسم");
+    context.clearRect(0,0,WIDTH,HEIGHT);context.drawImage(image,0,0,WIDTH,HEIGHT);
+    const pixels=context.getImageData(0,0,WIDTH,HEIGHT);
+    cleanup();resolve(pixels);
+   }catch(error){cleanup();reject(error)}
+  };
+  image.onerror=()=>{cleanup();reject(Error("تعذر تحويل طبقات الفنان إلى صورة للفحص"))};
+  image.src=url;
+ });
+}
+async function runDigitalArtistEyes(){
+ const output=$("digitalArtistEyesReport"),button=$("digitalArtistEyesBtn");
+ if(!output||!button||button.disabled)return;
+ const artistLayers=frame().layers.filter(item=>item.type==="raster"&&Array.isArray(item.strokes)&&item.strokes.some(stroke=>stroke.source==="digital-artist"));
+ if(!artistLayers.length){output.textContent="لا توجد رسومات للفنان في الإطار الحالي. نفّذ خطة رسم أولاً.";return}
+ button.disabled=true;output.textContent="تعمل عيون الفنان الآن: تفحص الشكل والحدود والضربات والألوان…";
+ try{
+  const artistFrame={...frame(),layers:artistLayers};
+  const compositePixels=await rasterizeArtistSvgForInspection(frameSvg(artistFrame,"artist-eye"));
+  const rasterEye=analyzeRasterPixels(compositePixels,{quantization:16});
+  const strokes=artistLayers.flatMap(item=>item.strokes.filter(stroke=>stroke.source==="digital-artist").map(stroke=>({layer:item,stroke})));
+  const geometry=strokes.map(item=>({layer:item.layer.name,...analyzeStrokeGeometry(item.stroke)}));
+  const fillReports=[];
+  for(const item of artistLayers){
+   const fills=item.strokes.filter(stroke=>stroke.source==="digital-artist"&&stroke.kind==="raster-region-fill");
+   if(!fills.length)continue;
+   const surface=await rasterSurfaces.get(item);
+   const layerPixels=surface.context.getImageData(0,0,surface.width,surface.height);
+   const stride=Math.max(1,Math.floor(Math.max(surface.width,surface.height)/360));
+   for(const stroke of fills){
+    const mapped=mapPointsToRaster(stroke.points,WIDTH,HEIGHT,surface.width,surface.height,1);
+    const inspection=inspectRegionFill(layerPixels,mapped.points,stroke.options.color,{
+     stride,margin:Math.max(4,Math.round(10*surface.width/WIDTH)),
+     colorTolerance:28,minimumCoverage:.88,maximumLeakage:.02
+    });
+    fillReports.push({id:stroke.id,layer:item.name,intent:stroke.intent,...inspection});
+   }
+  }
+  const fillPassed=fillReports.filter(item=>item.passed).length,fillFailed=fillReports.length-fillPassed;
+  const sharpTurns=geometry.reduce((sum,item)=>sum+item.sharpTurns,0);
+  const dominant=rasterEye.dominantPalette.slice(0,6).map(item=>item.color+" ("+Math.round(item.share*100)+"%)").join(" · ")||"لا توجد ألوان ظاهرة";
+  const lines=[
+   "فحص الإطار "+(current+1)+" — "+artistLayers.length+" طبقة فنان / "+strokes.length+" عملية.",
+   "عين الشكل: "+rasterEye.visiblePixels.toLocaleString()+" بكسل ظاهر، تغطية "+(rasterEye.alphaCoverage*100).toFixed(1)+"%، حدود "+(rasterEye.bounds?(rasterEye.bounds.width+"×"+rasterEye.bounds.height):"فارغة")+".",
+   "عين الخطوط: "+geometry.length+" ضربة محللة، مجموع أطوال "+Math.round(geometry.reduce((sum,item)=>sum+item.length,0))+" وحدة، "+sharpTurns+" انعطافاً حاداً يحتاج مراجعة بصرية.",
+   "عين التلوين: "+(fillReports.length?fillPassed+"/"+fillReports.length+" مناطق اجتازت فحص التغطية والتسرب"+(fillFailed?"؛ "+fillFailed+" مناطق تحتاج مراجعة":""):"لا توجد مناطق تعبئة مسجلة")+".",
+   "لوحة الألوان السائدة: "+dominant+"."
+  ];
+  if(fillFailed)lines.push("المناطق التي تحتاج مراجعة: "+fillReports.filter(item=>!item.passed).map(item=>item.id+" (تغطية "+Math.round(item.insideCoverage*100)+"%، تسرب "+Math.round(item.outsideLeakage*100)+"%)").join("؛ ")+".");
+  lines.push("هذه قياسات تشخيصية أولية وليست حكماً فنياً نهائياً على جودة الأنمي. عين الهوية تحتاج إلى ربط Model Sheet معتمد قبل إصدار مقارنة شخصية.");
+  output.textContent=lines.join("\n");
+  output.dataset.report=JSON.stringify({frame:current+1,raster:rasterEye,geometry,fillReports});
+ }catch(error){
+  output.textContent="تعذر إكمال فحص عيون الفنان: "+(error?.message||String(error));
+ }finally{
+  button.disabled=false;
+ }
+}
+function mountDigitalArtistEyes(){
+ const button=$("digitalArtistEyesBtn");
+ if(!button||button.dataset.bound==="true")return;
+ button.dataset.bound="true";
+ button.addEventListener("click",()=>runDigitalArtistEyes());
+}
 function rebuildDigitalArtistRasterLayerDataUrl(layer,strokes){
  if(!layer||layer.type!=="raster")throw Error("طبقة Raster صالحة مطلوبة لإعادة الرسم");
  const width=Number(layer.width),height=Number(layer.height);
@@ -1035,6 +1108,7 @@ function mountDigitalArtistBrushPanel(){
  const input=$("digitalArtistBrushPlanInput"),loadButton=$("loadDigitalArtistDemoBtn"),runButton=$("runDigitalArtistPlanBtn"),statusNode=$("digitalArtistBrushStatus");
  if(!input||!loadButton||!runButton||!statusNode)return;
  mountDigitalArtistStrokeReview();
+ mountDigitalArtistEyes();
  loadButton.onclick=()=>{
   input.value=JSON.stringify(createDigitalArtistDemoPlan(),null,2);
   statusNode.textContent="تم تحميل مثال بورتريه من 7 طبقات. هذه خطة اختبار ثابتة للتحقق من الفرشاة والتنفيذ، وليست ناتج نموذج ذكاء اصطناعي.";
