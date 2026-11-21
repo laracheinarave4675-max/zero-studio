@@ -448,3 +448,37 @@ test("anime foreground segmentation rejects failed or non-PNG model output", asy
     globalThis.fetch = originalFetch;
   }
 });
+
+test("FLUX.2 separates identity, pose and continuity references in its conditioning prompt", async () => {
+  let captured;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "redraw a complete intermediate walk frame",
+    model: "flux-2-klein-4b",
+    aspectRatio: "16:9",
+    references: Array(4).fill(CHARACTER_REFERENCE_PNG),
+    referenceRoles: ["identity", "pose", "pose", "continuity"]
+  }), env(async (_model, input) => {
+    const form = await new Response(input.multipart.body, {
+      headers: { "content-type": input.multipart.contentType }
+    }).formData();
+    captured = form.get("prompt");
+    return { image: "iVBORw0KGgo=" };
+  }));
+  assert.equal(response.status, 200);
+  assert.match(captured, /Identity authority images: 0/);
+  assert.match(captured, /Pose-only images: 1, 2/);
+  assert.match(captured, /Motion-continuity images: 3/);
+});
+
+test("FLUX.2 rejects invalid semantic reference roles without inference", async () => {
+  let calls = 0;
+  const response = await worker.fetch(request("/v1/images", {
+    prompt: "redraw",
+    model: "flux-2-klein-4b",
+    references: [CHARACTER_REFERENCE_PNG],
+    referenceRoles: ["pose"]
+  }), env(async () => { calls++; return { image: "x" }; }));
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "invalid_reference_roles");
+  assert.equal(calls, 0);
+});
