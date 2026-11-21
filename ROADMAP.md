@@ -170,7 +170,7 @@ The new primary character-art direction is an AI digital artist that draws throu
 - [x] Compile plans into editable semantic vector layers and replayable one-stroke steps.
 - [x] Pass the Digital Artist module and regression tests in GitHub Actions (Drawing engine run #2318; Hybrid raster/SVG run #577).
 - [ ] Connect a vision-capable model planner to produce validated stroke plans from a brief plus approved character reference, without image-generation output.
-- [ ] Integrate stroke-by-stroke replay, layer preview, approval/rejection and commit into the Android workspace.
+- [ ] Integrate individual-stroke replay/scrubbing, correction, layer preview, approval/rejection and commit into the Android workspace.
 - [ ] Produce one complete full-body character from a blank canvas; inspect the editable paths and visual quality against the approved model sheet.
 - [ ] Add visual critique that edits existing vector paths instead of regenerating an image.
 - [ ] Collect permitted drawing-process examples and reviewed corrections for supervised/tool-use improvement; do not begin large-scale RL without process data and a reliable evaluator.
@@ -193,6 +193,9 @@ This supersedes the vector-first character-art choice in D-029. The character Di
 - [x] Integrate a minimal Digital Artist panel into the editor to load a brush plan, execute it with progress, and create separate raster layers.
 - [x] Add a deterministic 54-stroke / 7-layer portrait fixture to exercise the editor execution path; this is a test fixture, not an AI-authored drawing.
 - [x] Add tests for command ordering, layer finalization, rollback, malformed stream rejection, and native project stroke-history compatibility.
+- [x] Export a reproducible 54-stroke / 7-layer Canvas2D proof image and separate transparent layer PNGs in GitHub Actions.
+- [x] Visually inspect the deterministic proof; record the banded flat-color result as a known quality defect rather than claiming artistic acceptance.
+- [ ] Improve region filling/flat-color coverage so paint follows the character silhouette without broad horizontal bands.
 - [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
 - [ ] Add individual-stroke replay/scrubbing, correction, layer preview, review and approval controls.
 - [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
