@@ -69,33 +69,68 @@ export function deriveAnimeHeadConstruction({bounds, viewYaw=0, profile=DEFAULT_
   const style = validateAnimeStyleProfile(profile);
   const x=Number(bounds?.x),y=Number(bounds?.y),width=Number(bounds?.width),height=Number(bounds?.height),yaw=Number(viewYaw);
   if (![x,y,width,height,yaw].every(Number.isFinite)||width<=0||height<=0||x<0||y<0||x+width>1||y+height>1||yaw < -1||yaw > 1) fail("Head bounds and view yaw must be normalized and within the canvas.");
-  const cx=x+width/2, at=ratio=>y+height*ratio;
-  const eyeY=at(style.head.eyeLine), browY=at(style.head.browLine);
-  const noseY=at(style.head.noseBase), mouthY=at(style.head.mouthLine);
-  const nearScale=1-Math.abs(yaw)*0.12, farScale=1-Math.abs(yaw)*(1-style.eyes.farEyeScaleAtFullYaw);
-  const yawShift=yaw*width*0.1;
-  const eyeOffset=width*style.eyes.centerOffsetToFace;
-  const eyeWidth=width*style.eyes.widthToFace;
+  const absYaw=Math.abs(yaw),direction=Math.sign(yaw),cx=x+width/2;
+  // Yaw is treated as a projection parameter: the far cheek/skull plane
+  // compresses, the facial centerline moves toward the near side, and the
+  // jaw/chin are projected from the same head volume (not shifted separately).
+  const projectedWidth=width*(1-absYaw*.28);
+  const centerShift=direction*width*absYaw*.105;
+  const projectedCenter=cx-centerShift;
+  const at=ratio=>y+height*ratio;
+  const eyeY=at(style.head.eyeLine),browY=at(style.head.browLine);
+  const noseY=at(style.head.noseBase),mouthY=at(style.head.mouthLine);
+  const nearScale=1-absYaw*.045;
+  const farScale=1-absYaw*(1-style.eyes.farEyeScaleAtFullYaw);
+  const eyeOffset=projectedWidth*style.eyes.centerOffsetToFace;
+  const eyeWidth=projectedWidth*style.eyes.widthToFace;
   const eyeHeight=eyeWidth*style.eyes.heightToWidth;
-  const nearSide=yaw>=0?1:-1;
-  const eye=(side)=> {
+  const nearSide=direction||1;
+  const eye=side=>{
     const near=side===nearSide,scale=near?nearScale:farScale;
-    const centerX=cx + side*eyeOffset - yawShift;
-    return {center:{x:centerX,y:eyeY},bounds:{x:centerX-eyeWidth*scale/2,y:eyeY-eyeHeight*scale/2,width:eyeWidth*scale,height:eyeHeight*scale},scale,side:side<0?"left":"right",upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight};
+    const centerX=projectedCenter+side*eyeOffset;
+    return {center:{x:centerX,y:eyeY},bounds:{x:centerX-eyeWidth*scale/2,y:eyeY-eyeHeight*scale/2,width:eyeWidth*scale,height:eyeHeight*scale},scale,side:side<0?"left":"right",upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,nearSide:near};
   };
+  const cheekHalf=projectedWidth*style.head.cheekWidth/2;
+  const jawHalf=projectedWidth*style.head.jawWidth/2;
+  const cheekLeft={x:projectedCenter-cheekHalf,y:at(.59)};
+  const cheekRight={x:projectedCenter+cheekHalf,y:at(.59)};
+  const jawLeft={x:projectedCenter-jawHalf*(yaw>0?.82:1),y:at(.78)};
+  const jawRight={x:projectedCenter+jawHalf*(yaw<0?.82:1),y:at(.78)};
+  const chin={x:projectedCenter+direction*width*absYaw*.035,y:at(1)};
+  const noseBase={x:projectedCenter+direction*projectedWidth*absYaw*.16,y:noseY};
+  const mouthCenter={x:projectedCenter+direction*projectedWidth*absYaw*.075,y:mouthY};
+  const silhouette=Array.from({length:65},(_,i)=>{
+    const angle=-Math.PI/2+i/64*Math.PI*2;
+    const side=Math.cos(angle),vertical=Math.sin(angle);
+    const far=direction!==0&&side*direction<0;
+    const planeScale=far?1-absYaw*.42:1-absYaw*.08;
+    const lower=1-.29*Math.max(0,vertical);
+    const cheek=1+.035*Math.max(0,vertical);
+    return {x:projectedCenter+side*projectedWidth*.5*planeScale*lower*cheek,y:y+height*.5+vertical*height*.5};
+  });
+  const farEarVisible=absYaw<.12 || absYaw<.9;
   return {
     profileId:style.id,viewYaw:yaw,
-    bounds:{x,y,width,height},
-    axes:{centerline:{from:{x:cx-yawShift,y},to:{x:cx+yawShift,y:y+height}},browY,eyeY,noseY,mouthY},
-    landmarks:{
-      crown:{x:cx,y},chin:{x:cx-yawShift*0.35,y:y+height},
-      cheekLeft:{x:cx-width*style.head.cheekWidth/2,y:at(.59)},
-      cheekRight:{x:cx+width*style.head.cheekWidth/2,y:at(.59)},
-      jawLeft:{x:cx-width*style.head.jawWidth/2,y:at(.78)},
-      jawRight:{x:cx+width*style.head.jawWidth/2,y:at(.78)},
-      noseBase:{x:cx-yawShift*.25,y:noseY},
-      mouthCenter:{x:cx-yawShift*.32,y:mouthY}
+    bounds:{x,y,width,height,projectedWidth,projectedCenter},
+    axes:{
+      centerline:{from:{x:projectedCenter+direction*projectedWidth*.08,y},to:{x:projectedCenter-direction*projectedWidth*.035,y:y+height}},
+      browY,eyeY,noseY,mouthY,
+      nearCheekX:direction>=0?cheekRight.x:cheekLeft.x,
+      farCheekX:direction>=0?cheekLeft.x:cheekRight.x
     },
+    landmarks:{
+      crown:{x:projectedCenter,y},chin,cheekLeft,cheekRight,jawLeft,jawRight,
+      noseBase,mouthCenter,
+      nearCheek:direction>=0?cheekRight:cheekLeft,
+      farCheek:direction>=0?cheekLeft:cheekRight
+    },
+    planes:{
+      nearCheek:{center:direction>=0?cheekRight:cheekLeft,scale:1-absYaw*.08},
+      farCheek:{center:direction>=0?cheekLeft:cheekRight,scale:1-absYaw*.42},
+      noseProjection:{bridge:{x:projectedCenter+direction*projectedWidth*absYaw*.11,y:at(.52)},tip:{x:noseBase.x+direction*projectedWidth*absYaw*.035,y:noseY},base:noseBase},
+      jawVisibility:{nearSide:direction>=0?"right":"left",farSideScale:1-absYaw*.38}
+    },
+    silhouette,
     eyes:[eye(-1),eye(1)],
     derivedFromHeadBounds:true
   };
