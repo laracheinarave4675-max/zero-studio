@@ -28,10 +28,34 @@ export function createArtistLearningRecord({ characterId = "", referenceDigest =
 
 function validateRecord(record) {
   if (!record || record.format !== ARTIST_LEARNING_FORMAT || record.version !== ARTIST_LEARNING_VERSION ||
-      !Array.isArray(record.attempts) || record.attempts.length > 500) {
+      typeof record.characterId !== "string" || !Array.isArray(record.attempts) || record.attempts.length > 500) {
     fail("A valid ZERO STUDIO artist learning record is required.");
   }
+  if (record.referenceDigest && !digestPattern.test(record.referenceDigest)) fail("Invalid reference digest in learning record.");
+  const ids = new Set();
+  for (const attempt of record.attempts) {
+    if (!attempt || typeof attempt !== "object" || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,119}$/.test(String(attempt.id ?? "")) ||
+        ids.has(attempt.id) || !SKILLS.has(attempt.skillId) || !digestPattern.test(String(attempt.reportDigest ?? "")) ||
+        !Array.isArray(attempt.checks) || attempt.checks.length < 3 || attempt.checks.length > 32) {
+      fail("An artist learning attempt is malformed.");
+    }
+    ids.add(attempt.id);
+    const checkIds = new Set();
+    for (const check of attempt.checks) {
+      if (!check || typeof check.id !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}$/.test(check.id) ||
+          checkIds.has(check.id) || typeof check.passed !== "boolean") fail("A learning assessment check is malformed.");
+      checkIds.add(check.id);
+    }
+    const score = attempt.checks.filter(check => check.passed).length / attempt.checks.length;
+    if (!Number.isFinite(attempt.score) || Math.abs(attempt.score - score) > 1e-9 || attempt.passed !== (score >= 0.85)) {
+      fail("A learning assessment score does not match its measured checks.");
+    }
+  }
   return record;
+}
+export function validateArtistLearningRecord(record) {
+  validateRecord(record);
+  return clone(record);
 }
 
 /**
