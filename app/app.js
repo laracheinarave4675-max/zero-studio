@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createAnimeDrawingSession,getAnimeDrawingStudy}from"./anime-drawing-training.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1089,28 +1089,54 @@ function mountDigitalArtistLearning(){
 }
 function mountAnimeArtistCurriculum(){
  const select=$("animeArtistSkillSelect"),details=$("animeArtistSkillDetails");
+ const difficulty=$("animeArtistDifficulty"),startButton=$("startAnimeArtistPracticeBtn"),sessionNode=$("animeArtistPracticeSession");
  if(!select||!details||select.dataset.bound==="true")return;
  const skills=getAnimeArtistCurriculum();
  select.replaceChildren();
  skills.forEach(skill=>{
-  const option=document.createElement("option");
+  const study=getAnimeDrawingStudy(skill.id),option=document.createElement("option");
   option.value=skill.id;
-  option.textContent="م"+skill.level+" · "+skill.domain+" — "+skill.id;
+  option.textContent="م"+skill.level+" · "+study.title;
   select.append(option);
  });
  const update=()=>{
   const skill=skills.find(item=>item.id===select.value);
   if(!skill)return;
+  const study=getAnimeDrawingStudy(skill.id);
   details.textContent=[
-   skill.id+" · المستوى "+skill.level,
+   study.title+" · المستوى "+skill.level,
+   "المبدأ الفني: "+study.principle,
    "المتطلبات السابقة: "+(skill.prerequisites.join("، ")||"لا يوجد"),
-   "الموضوعات: "+skill.lessons.join(" · "),
-   "التمارين: "+skill.exercises.join(" | "),
-   "معايير القياس: "+skill.metrics.join(" · "),
-   "قاعدة التعلم: نستخدم مراجع يملكها المشروع أو لديه إذن موثق باستعمالها؛ المنهج لا يعني أن النموذج قد تدرب عليها بالفعل."
-  ].join("\n");
+   "محاور الدراسة: "+study.focus.join(" · "),
+   "تسلسل التدريب: "+study.sequence.join(" ← "),
+   "أخطاء يجب تجنبها: "+study.mistakes.join(" | "),
+   "معايير المراجعة: "+study.rubric.map(item=>item[1]).join(" · "),
+   "المخرج المطلوب: "+study.deliverable,
+   "قاعدة التعلم: هذه تعليمات تدريب مفصلة وليست ادعاءً بأن النموذج تدرب تلقائياً أو أتقن المهارة."
+  ].join("\\n");
+  if(sessionNode)sessionNode.textContent="اختر «ابدأ تمرين الرسم» لإنشاء جلسة عملية لهذه المهارة.";
  };
  select.addEventListener("change",update);
+ if(difficulty)difficulty.addEventListener("change",update);
+ if(startButton&&startButton.dataset.bound!=="true"){
+  startButton.dataset.bound="true";
+  startButton.onclick=()=>{
+   try{
+    const session=createAnimeDrawingSession({skillId:select.value,difficulty:difficulty?.value||"foundation",characterId:project.activeCharacterId||""});
+    if(sessionNode)sessionNode.textContent=[
+     "جلسة تدريب جاهزة: "+session.title,
+     "المبدأ: "+session.principle,
+     "المستوى: "+session.difficulty+" · "+session.recommendedScale,
+     "ترتيب العمل: "+session.sequence.join(" ← "),
+     "طبقات الرسم: "+session.drawingLayers.join(" → "),
+     "تجنب: "+session.mistakesToAvoid.join(" | "),
+     "التقييم: "+session.rubric.map(item=>item.description+" ["+item.evaluation+"]").join(" · "),
+     "المخرج: "+session.deliverable,
+     "طريقة التنفيذ: ارسم على طبقات Raster مستقلة باستخدام الفرش الأصلية، ثم افحص العمل بعين الفنان. لا توجد صورة مولدة ولا درجة إتقان تلقائية."
+    ].join("\\n");
+   }catch(error){if(sessionNode)sessionNode.textContent="تعذر إنشاء الجلسة: "+error.message;}
+  };
+ }
  const assess=$("saveAnimeArtistAssessmentBtn");if(assess&&assess.dataset.bound!=="true"){assess.dataset.bound="true";assess.onclick=saveArtistAssessmentFromLatestReport;}
  select.dataset.bound="true";
  update();artistLearningStatus();
