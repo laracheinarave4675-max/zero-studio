@@ -154,6 +154,16 @@ module.exports = async function handler(req, res) {
   }
 
   const input = req.body && typeof req.body === "object" ? req.body : {};
+  if (input.workload !== undefined && input.workload !== "anime-auto-drawing") {
+    return send(res, 400, { error: "invalid_workload", message: "نوع مهمة التوليد غير مدعوم." });
+  }
+  if (input.workload === "anime-auto-drawing" &&
+      String(process.env.ZERO_STUDIO_AI_FREE_TIER_CONFIRMED || "") !== "true") {
+    return send(res, 503, {
+      error: "anime_free_tier_not_confirmed",
+      message: "توليد الإطارات متوقف لحماية الميزانية. لم يُستدعَ محرك الذكاء الاصطناعي لأن وضع الخطة المجانية غير مؤكد."
+    });
+  }
   const prompt = typeof input.prompt === "string" ? input.prompt.trim() : "";
   if (!prompt || prompt.length > MAX_PROMPT_LENGTH) {
     return send(res, 400, { error: "invalid_prompt", message: "اكتب وصفاً من 1 إلى 1800 حرف." });
@@ -196,6 +206,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         prompt: "Professional Japanese 2D anime illustration, polished anime art direction, clear composition, expressive hand-painted visual design. " + prompt,
         model,
+        ...(input.workload ? { workload: input.workload } : {}),
         ...(model === "flux-1-schnell" ? { steps: 4 } : { aspectRatio }),
         ...(references.length ? {
           references,
