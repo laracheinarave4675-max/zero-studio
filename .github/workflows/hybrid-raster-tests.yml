@@ -45,6 +45,8 @@ jobs:
         run: node scripts/render-raster-brush-proof.mjs
       - name: Render the deterministic Digital Artist portrait
         run: node scripts/render-digital-artist-demo.mjs
+      - name: Render the selected three-view anime character with native raster brushes
+        run: node scripts/render-digital-artist-character-sheet.mjs
       - name: Upload brush proof sheet
         uses: actions/upload-artifact@v4
         with:
@@ -57,5 +59,12 @@ jobs:
         with:
           name: zero-studio-digital-artist-portrait-proof
           path: artifacts/digital-artist-portrait-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload selected character three-view brush proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-character-sheet-brush-proof
+          path: artifacts/digital-artist-character-sheet-proof/
           if-no-files-found: error
           retention-days: 14
