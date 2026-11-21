@@ -1113,7 +1113,7 @@ function mountAnimeArtistCurriculum(){
    "التمارين: "+skill.exercises.join(" | "),
    "معايير القياس: "+skill.metrics.join(" · "),
    "قاعدة التعلم: نستخدم مراجع يملكها المشروع أو لديه إذن موثق باستعمالها؛ المنهج لا يعني أن النموذج قد تدرب عليها بالفعل."
-  ].join("\\n");
+  ].join("\n");
  };
  select.addEventListener("change",update);
  select.dataset.bound="true";
@@ -1169,7 +1169,7 @@ async function inspectDigitalArtistEyes(){
    "العين اللونية: "+(topColors.join(" · ")||"لا توجد ألوان قابلة للقياس"),
    "مراجعة العمليات: "+Object.entries(approvals).map(([key,value])=>key+" "+value).join("، "),
    ...report.layerEyes.map(layer=>layer.name+": "+(layer.bounds?"حدود "+layer.bounds.width+"×"+layer.bounds.height:"طبقة فارغة")+"، تغطية "+(layer.alphaCoverage*100).toFixed(1)+"%")
-  ].join("\\n");
+  ].join("\n");
   status.dataset.report=JSON.stringify(report);
  }catch(error){
   status.textContent="لم يكتمل الفحص: "+(error?.message||String(error));
