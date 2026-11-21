@@ -826,3 +826,14 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - New tests were added, but no GitHub Actions run was returned for the latest branch commit at the time of this update; do not treat this milestone as CI-verified yet.
 - PR #14 remains draft, unmerged, and unpublished to production.
 
+
+## D-033 project-persisted learning assessment loop — 2026-11-21
+
+- Integrated the D-032 evidence ledger into the artist editor. The user can select a skill, run the local eyes on the current frame, then explicitly save a measured attempt.
+- The editor currently records only three metric-backed skill routes: body anatomy (requires an approved Character DNA guide and at least three measured anatomy checks), flat-color groups (requires at least three inspected region fills), and anime inking (five measured stroke-warning categories).
+- Assessment report JSON is SHA-256 hashed locally with Web Crypto. The attempt and its checks are saved in `project.artistLearning`; the project engine now preserves this field through normalization/import/export and rejects malformed ledger envelopes.
+- The UI displays recorded attempts, mastered-skill count and the next recommended curriculum exercise. The record is project-scoped, not a cloud account-wide profile.
+- Unsupported skills are deliberately refused rather than scored using unrelated measurements. This is an explicit user-triggered evidence ledger, not automatic neural training; the digest links to report content but is not a signature proving the report's truth.
+- Added engine round-trip and editor-wiring regression tests. Latest code SHA: `21b186ec3ee139d51bc66b4749c3d6430fcb8cf3`. Connected Actions lookup returned no PR-triggered workflow runs for this SHA; CI is not yet verified.
+- PR #14 remains draft, unmerged and not deployed to production. Android runtime and local model inference remain untested.
+
