@@ -41,11 +41,12 @@ export function buildAnimeConstructionModel({
   const chin=head.landmarks.chin;
   const neckTop=y+height*.82,neckBottom=Math.min(.88,chin.y+height*.34);
   const neckWidth=width*.24;
-  const neck={
-    left:{x:chin.x-neckWidth/2,y:neckTop},
-    right:{x:chin.x+neckWidth/2,y:neckTop},
-    base:{x:chin.x+lean,y:neckBottom}
-  };
+  const neckLeft={x:chin.x-neckWidth/2,y:neckTop};
+  const neckRight={x:chin.x+neckWidth/2,y:neckTop};
+  const neckBase={x:chin.x+lean,y:neckBottom};
+  const neckBaseLeft={x:neckBase.x-neckWidth*.62,y:neckBottom};
+  const neckBaseRight={x:neckBase.x+neckWidth*.62,y:neckBottom};
+  const neck={left:neckLeft,right:neckRight,base:neckBase,polygon:[neckLeft,neckRight,neckBaseRight,neckBaseLeft]};
   const shoulderY=clamp(neckBottom+height*.17,.68,.94);
   const shoulderHalf=width*.92*shoulderScale;
   const shoulders={
@@ -53,36 +54,62 @@ export function buildAnimeConstructionModel({
     center:{x:clamp(chin.x+lean,0,1),y:shoulderY},
     right:{x:clamp(chin.x+shoulderHalf+tilt,0,1),y:shoulderY-tilt*.35}
   };
-  const torso={
-    neck,shoulders,
-    ribcage:{center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.2},width:shoulderHalf*1.45,height:height*.34},
-    waist:{center:{x:shoulders.center.x+lean,y:Math.min(.99,shoulderY+height*.66)},width:shoulderHalf*1.05}
-  };
+  const waistCenter={x:shoulders.center.x+lean,y:Math.min(.99,shoulderY+height*.66)};
+  const waistWidth=shoulderHalf*1.05;
+  const waist={center:waistCenter,width:waistWidth};
+  const ribcage={center:{x:shoulders.center.x+lean*.45,y:shoulderY+height*.2},width:shoulderHalf*1.45,height:height*.34};
+  const torsoOutline=[
+    shoulders.left,
+    {x:shoulders.left.x+shoulderHalf*.08,y:shoulderY+height*.22},
+    {x:waistCenter.x-waistWidth/2,y:waistCenter.y},
+    {x:waistCenter.x+waistWidth/2,y:waistCenter.y},
+    {x:shoulders.right.x-shoulderHalf*.08,y:shoulderY+height*.22},
+    shoulders.right,
+    neckBaseRight,
+    neckBaseLeft
+  ];
+  const torso={neck,shoulders,ribcage,waist,outline:torsoOutline};
 
   const eyes=head.eyes.map((eye,index)=>{
     const b=eye.bounds,cx=eye.center.x,cy=eye.center.y;
-    const lidTop=ellipse(cx,cy,b.width*.5,b.height*.48,24);
-    const irisCenter={x:cx+(index===0?1:-1)*b.width*.025,y:cy+b.height*.06};
+    const irisCenter={x:cx+(index===0?1:-1)*b.width*.025,y:cy+b.height*.045};
     const iris=ellipse(irisCenter.x,irisCenter.y,b.width*.205,b.height*.39,28);
     const pupil=ellipse(irisCenter.x,irisCenter.y+b.height*.035,b.width*.105,b.height*.25,24);
-    const upperLid=Array.from({length:13},(_,i)=>{
-      const t=i/12,px=cx-b.width*.5+b.width*t;
-      return {x:px,y:cy-b.height*.08-Math.sin(Math.PI*t)*b.height*.43};
+    const upperLid=Array.from({length:17},(_,i)=>{
+      const t=i/16,px=cx-b.width*.5+b.width*t;
+      return {x:px,y:cy-b.height*.075-Math.sin(Math.PI*t)*b.height*.47};
     });
-    const lowerLid=Array.from({length:13},(_,i)=>{
-      const t=i/12,px=cx-b.width*.5+b.width*t;
-      return {x:px,y:cy+b.height*.08+Math.sin(Math.PI*t)*b.height*.34};
+    const lowerLid=Array.from({length:17},(_,i)=>{
+      const t=i/16,px=cx-b.width*.5+b.width*t;
+      return {x:px,y:cy+b.height*.075+Math.sin(Math.PI*t)*b.height*.37};
     });
-    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera:lidTop,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:eye.scale<.999};
+    const sclera=[...upperLid,...lowerLid.slice().reverse()];
+    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:eye.scale<.999};
   });
 
   const guides=hairGuides??[
-    {id:"fringe-left",root:{x:x+width*.2,y:y+height*.18},control1:{x:x+width*.05,y:y-height*.02},control2:{x:x+width*.28,y:y+height*.34},tip:{x:x+width*.36,y:y+height*.68},rootWidth:width*.2,tipWidth:width*.006,side:1},
-    {id:"fringe-center",root:{x:x+width*.43,y:y+height*.08},control1:{x:x+width*.58,y:y-height*.02},control2:{x:x+width*.46,y:y+height*.36},tip:{x:x+width*.53,y:y+height*.7},rootWidth:width*.24,tipWidth:width*.004,side:1},
-    {id:"fringe-right",root:{x:x+width*.76,y:y+height*.16},control1:{x:x+width*.98,y:y+.01*height},control2:{x:x+width*.7,y:y+height*.34},tip:{x:x+width*.62,y:y+height*.58},rootWidth:width*.18,tipWidth:width*.005,side:-1},
-    {id:"side-left",root:{x:x+width*.08,y:y+height*.32},control1:{x:x-width*.2,y:y+height*.56},control2:{x:x-width*.05,y:y+height*1.1},tip:{x:x+width*.08,y:y+height*1.34},rootWidth:width*.22,tipWidth:width*.003,side:1},
-    {id:"side-right",root:{x:x+width*.92,y:y+height*.32},control1:{x:x+width*1.2,y:y+height*.56},control2:{x:x+width*1.05,y:y+height*1.1},tip:{x:x+width*.92,y:y+height*1.34},rootWidth:width*.22,tipWidth:width*.003,side:-1}
+    {id:"fringe-left",root:{x:x+width*.22,y:y+height*.1},control1:{x:x+width*.04,y:y+height*.03},control2:{x:x+width*.12,y:y+height*.28},tip:{x:x+width*.29,y:y+height*.34},rootWidth:width*.2,tipWidth:width*.004,side:1},
+    {id:"fringe-center",root:{x:x+width*.46,y:y+height*.025},control1:{x:x+width*.6,y:y+height*.04},control2:{x:x+width*.48,y:y+height*.25},tip:{x:x+width*.52,y:y+height*.34},rootWidth:width*.22,tipWidth:width*.003,side:1},
+    {id:"fringe-right",root:{x:x+width*.78,y:y+height*.1},control1:{x:x+width*.98,y:y+height*.03},control2:{x:x+width*.88,y:y+height*.28},tip:{x:x+width*.7,y:y+height*.34},rootWidth:width*.2,tipWidth:width*.004,side:-1},
+    {id:"side-left",root:{x:x+width*.04,y:y+height*.3},control1:{x:x-width*.12,y:y+height*.55},control2:{x:x-width*.06,y:y+height*1.18},tip:{x:x+width*.1,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:1},
+    {id:"side-right",root:{x:x+width*.96,y:y+height*.3},control1:{x:x+width*1.12,y:y+height*.55},control2:{x:x+width*1.06,y:y+height*1.18},tip:{x:x+width*.9,y:y+height*1.55},rootWidth:width*.17,tipWidth:width*.003,side:-1}
   ];
+  const cubicPoints=(a,b,c,d,count=18)=>Array.from({length:count+1},(_,i)=>{
+    const t=i/count,u=1-t;
+    return {x:u*u*u*a.x+3*u*u*t*b.x+3*u*t*t*c.x+t*t*t*d.x,y:u*u*u*a.y+3*u*u*t*b.y+3*u*t*t*c.y+t*t*t*d.y};
+  });
+  const joinPoints=(...parts)=>parts.flatMap((part,index)=>index?part.slice(1):part);
+  const hairBackSilhouette=joinPoints(
+    cubicPoints({x:x+width*.5,y:y-height*.09},{x:x+width*1.35,y:y-height*.08},{x:x+width*1.32,y:y+height*.75},{x:x+width*1.18,y:y+height*1.58},22),
+    cubicPoints({x:x+width*1.18,y:y+height*1.58},{x:x+width*.95,y:y+height*1.78},{x:x+width*.15,y:y+height*1.78},{x:x-width*.18,y:y+height*1.55},18),
+    cubicPoints({x:x-width*.18,y:y+height*1.55},{x:x-width*.32,y:y+height*.75},{x:x-width*.35,y:y-height*.08},{x:x+width*.5,y:y-height*.09},22)
+  );
+  const brows=head.eyes.map((eye,index)=>{
+    const b=eye.bounds,cx=eye.center.x,side=index===0?-1:1;
+    return {id:index===0?"brow-left":"brow-right",points:Array.from({length:11},(_,i)=>{const t=i/10;return{x:cx-b.width*.52+b.width*1.04*t,y:head.axes.browY-Math.sin(Math.PI*t)*height*.018};})};
+  });
+  const nose={points:[{x:head.landmarks.noseBase.x+width*.012,y:head.axes.noseY-height*.015},{x:head.landmarks.noseBase.x+width*.004,y:head.axes.noseY+height*.045},{x:head.landmarks.noseBase.x+width*.035,y:head.axes.noseY+height*.055}]};
+  const mouth={points:Array.from({length:13},(_,i)=>{const t=i/12;return{x:head.landmarks.mouthCenter.x-width*.055+width*.11*t,y:head.axes.mouthY+Math.sin(Math.PI*t)*height*.012};})};
   if(!Array.isArray(guides)||guides.length<3||guides.length>32)fail("Anime hair needs 3–32 explicit root-to-tip clump guides.");
   const hair=guides.map(guide=>{
     if(!guide||typeof guide.id!=="string"||!guide.id.trim())fail("Every hair clump needs a stable id.");
@@ -112,7 +139,7 @@ export function buildAnimeConstructionModel({
   return {
     format:"zero-studio-anime-construction-model",version:1,profileId:style.id,
     canvasSpace:"normalized-0-to-1",view:{yaw,pose:{shoulderTilt:tilt,torsoLean:lean,shoulderWidth:shoulderScale}},
-    head,eyes,torso,hair,folds,shadows,
+    head,eyes,torso,hair,brows,nose,mouth,hairBackSilhouette,folds,shadows,
     constructionOrder:["gesture-and-axis","head-volume","facial-feature-zones","torso-volume","hair-root-to-tip-clumps","cloth-tension-anchors","light-and-occlusion"]
   };
 }
