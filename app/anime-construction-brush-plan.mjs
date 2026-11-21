@@ -70,20 +70,19 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
   const row=id=>cross.find(item=>item.id===id);
   const eyeRow=row("eye"),cheekRow=row("cheek"),jawRow=row("jaw");
   const noseX=model.head.landmarks.noseBase.x,mouthX=model.head.landmarks.mouthCenter.x;
+  const shadowInner=model.head.bounds.width*.075;
   const shadowPoints=shadowSide==="right"?[
-    {x:noseX,y:eyeRow.y+model.head.bounds.height*.04},
-    {x:cheekRow.right,y:cheekRow.y},
-    {x:jawRow.right,y:jawRow.y},
-    {x:model.head.landmarks.chin.x,y:model.head.landmarks.chin.y-model.head.bounds.height*.04},
-    {x:mouthX+model.head.bounds.width*.015,y:model.head.axes.mouthY+model.head.bounds.height*.02},
-    {x:noseX+model.head.bounds.width*.025,y:model.head.axes.noseY+model.head.bounds.height*.025}
+    {x:cheekRow.right-shadowInner*.12,y:cheekRow.y+model.head.bounds.height*.055},
+    {x:jawRow.right-shadowInner*.08,y:jawRow.y},
+    {x:model.head.landmarks.chin.x+shadowInner*.12,y:model.head.landmarks.chin.y-model.head.bounds.height*.035},
+    {x:mouthX+shadowInner*.42,y:model.head.axes.mouthY+model.head.bounds.height*.015},
+    {x:noseX+shadowInner*.62,y:model.head.axes.noseY+model.head.bounds.height*.065}
   ]:[
-    {x:noseX,y:eyeRow.y+model.head.bounds.height*.04},
-    {x:cheekRow.left,y:cheekRow.y},
-    {x:jawRow.left,y:jawRow.y},
-    {x:model.head.landmarks.chin.x,y:model.head.landmarks.chin.y-model.head.bounds.height*.04},
-    {x:mouthX-model.head.bounds.width*.015,y:model.head.axes.mouthY+model.head.bounds.height*.02},
-    {x:noseX-model.head.bounds.width*.025,y:model.head.axes.noseY+model.head.bounds.height*.025}
+    {x:cheekRow.left+shadowInner*.12,y:cheekRow.y+model.head.bounds.height*.055},
+    {x:jawRow.left+shadowInner*.08,y:jawRow.y},
+    {x:model.head.landmarks.chin.x-shadowInner*.12,y:model.head.landmarks.chin.y-model.head.bounds.height*.035},
+    {x:mouthX-shadowInner*.42,y:model.head.axes.mouthY+model.head.bounds.height*.015},
+    {x:noseX-shadowInner*.62,y:model.head.axes.noseY+model.head.bounds.height*.065}
   ];
   const shadows=[fill("face-cast-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
   const plan={
