@@ -374,7 +374,7 @@ function prepareAnime24FrameShot(){
  snapshot(true);
  while(project.frames.length<24)project.frames.push(createFrame());
  current=0;activeLayerId=frame().layers[0].id;render();
- $("animeMotionPlanStatus").textContent="تم إنشاء إطارات فارغة حتى الإطار 24. ارسم رسمة كاملة مستقلة في كل إطار؛ لم تُنسخ أي رسمة.";
+ $("animeMotionPlanStatus").textContent="تم إنشاء 24 خانة فارغة لمسار الرسم اليدوي القديم فقط؛ لا يستخدمها محرك التحريك الآلي. شغّل مولّد الرسومات المستقلة لإنتاج التسلسل الفعلي دون رسم يدوي.";
 }
 
 function selectKimonoWalkFrame(frameIndex){
@@ -400,9 +400,9 @@ function renderKimonoWalkTaskNavigator(){
  $("animeWalkTaskHeading").textContent="الإطار "+brief.frameNumber+" من 24 — "+brief.title;
  $("animeWalkTaskTime").textContent=brief.timeSeconds.toFixed(3)+" ثانية · "+brief.phase;
  $("animeWalkTaskDescription").textContent=brief.description;
- let statusText=saved?.review?.status==="approved"?"PNG مستقل محفوظ ومعتمد لهذا الإطار.":saved?"PNG محفوظ، لكنه يحتاج مراجعة فنية.":currentFrameHasDrawing()?"يوجد رسم في طبقات هذا الإطار؛ بعد اكتماله احفظه كـ PNG وراجعه.":"هذا الإطار لم يُرسم بعد؛ ارسم الشخصية كاملة من جديد.";
+ let statusText=saved?.review?.status==="approved"?"PNG مستقل محفوظ ومعتمد لهذا الإطار.":saved?"PNG محفوظ، لكنه يحتاج مراجعة فنية.":currentFrameHasDrawing()?"يوجد رسم في طبقات هذا الإطار؛ بعد اكتماله احفظه كـ PNG وراجعه.":"هذا الإطار لا يحتوي على رسمة بعد؛ سيُنشئها محرك التحريك الآلي.";
  if(brief.kind==="key-drawing")statusText+=" هذه وضعية مفتاحية مقترحة. بعد إكمال الرسم، اضغط «تسجيل الإطار الحالي كوضعية مفتاحية كاملة» وحدد المفاصل الـ19.";
- else statusText+=" هذا إطار وسيط؛ ارسم الشخصية كاملة مستقلة ولا تستخدم صورة الهيكل كرسم نهائي.";
+ else statusText+=" هذا إطار وسيط؛ سيعيد محرك التحريك رسم الشخصية كاملة بدلاً من نسخ الإطار السابق.";
  if(!dna)statusText+=" احفظ هوية الشخصية التشريحية أولاً من رسم الإطار 1.";
  else if(keyDrawing)statusText+=" تم تسجيل هذه الوضعية المفتاحية وربطها بالرسم الأصلي.";
  $("animeWalkTaskState").textContent=statusText;
@@ -426,18 +426,16 @@ function renderKimonoWalkTaskNavigator(){
  $("animeWalkFrameNextBtn").disabled=current>=23;
 }
 function applyKimonoWalkPreset(){
- activeKimonoWalkChart=createKimonoSideWalkChart();
+ activeKimonoWalkChart=null;
  activeAnimeMotionPlan=null;activeAnimeAnatomySequence=null;
  $("animeMotionAction").value="A restrained, natural one-second side-view walk for the approved kimono character, with readable weight transfer, planted-foot contact, gentle arm counter-swing, and controlled skirt and hair follow-through.";
  $("animeAnatomyView").value="side";
  $("animeAnatomyGuideToggleLabel").hidden=true;
  $("animeAnatomyConstructionLayer").replaceChildren();
+ $("animeWalkTaskPanel").hidden=true;
  $("animeMotionPlanStatus").style.color="var(--accent)";
- if(project.frames.length<24)prepareAnime24FrameShot();
- else{current=0;activeLayerId=frame().layers[0].id;render();}
- selectKimonoWalkFrame(0);
- $("animeMotionPlanStatus").textContent="تم تجهيز اختبار المشي الجانبي: 24 مهمة رسم، وخمس وضعيات مفتاحية مقترحة عند الإطارات 1 و7 و13 و19 و24. ارسم الشخصية كاملة في الإطار الأول، ثم احفظ هويتها التشريحية.";
- animeAnatomyStatus("قالب المشي جاهز. الصورة المرفقة مرجع للهوية والملابس فقط؛ لا تُحوّلها إلى إطارات متحركة.");
+ $("animeMotionPlanStatus").textContent="تم إعداد وصف حركة المشي الجانبي. لا حاجة لرسم الإطارات أو تسجيل الوضعيات يدوياً؛ استخدم زر «توليد 24 رسمة أنمي تلقائياً» أدناه.";
+ animeAnatomyStatus("تم اختيار حركة المشي الجانبي. ورقة التصميم هي مرجع الهوية فقط؛ سيعيد محرك التحريك رسم الشخصية كاملة في كل إطار.");
 }
 function updateAnimeRasterControls(){
  const ready=!!activeAnimeMotionPlan;
