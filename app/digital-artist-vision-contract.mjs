@@ -13,7 +13,7 @@ export const ANIME_VISION_MAX_REGIONS = 64;
 export const ANIME_VISION_MAX_SWATCHES = 32;
 
 const fail = message => { throw new Error(message); };
-const text = (value, limit) => String(value ?? "").replace(/[\\u0000-\\u001f]/g, " ").trim().slice(0, limit);
+const text = (value, limit) => String(value ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, limit);
 const finite = value => typeof value === "number" && Number.isFinite(value);
 const unit = (value, label) => {
   if (!finite(value) || value < 0 || value > 1) fail(label + " must be normalized between 0 and 1.");
