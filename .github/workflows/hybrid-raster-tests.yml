@@ -45,6 +45,8 @@ jobs:
         run: node scripts/render-raster-brush-proof.mjs
       - name: Render the deterministic Digital Artist portrait
         run: node scripts/render-digital-artist-demo.mjs
+      - name: Render the general anime drawing quality benchmark
+        run: node scripts/render-digital-artist-anime-quality.mjs
       - name: Render the selected three-view anime character with native raster brushes
         run: node scripts/render-digital-artist-character-sheet.mjs
       - name: Upload brush proof sheet
@@ -59,6 +61,13 @@ jobs:
         with:
           name: zero-studio-digital-artist-portrait-proof
           path: artifacts/digital-artist-portrait-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload general anime drawing quality proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-quality-benchmark
+          path: artifacts/digital-artist-anime-quality-proof/
           if-no-files-found: error
           retention-days: 14
       - name: Upload selected character three-view brush proof
