@@ -264,6 +264,8 @@ async function handle(request, env) {
       aiBindingConfigured: Boolean(env.AI),
       imageEndpointConfigured: Boolean(env.AI && env.STUDIO_ORIGIN),
       authVerifierConfigured: Boolean(env.STUDIO_ACCESS_TOKEN || env.STUDIO_ORIGIN),
+      animeAutoFreeTierGuard: true,
+      animeAutoFreeTierConfirmed: String(env.ANIME_AI_FREE_TIER_CONFIRMED || "") === "true",
     });
   }
 
