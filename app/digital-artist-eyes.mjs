@@ -292,7 +292,12 @@ const animePoint = (point, label) => {
   return { x, y };
 };
 const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-const boundedOption = (options, key, fallback, min, max) => {\n  const value = options[key] == null ? fallback : Number(options[key]);\n  if (!Number.isFinite(value)) fail("Invalid anime eye comparison tolerance: " + key);\n  return clamp(value, min, max);\n};\nconst wrapAngle = angle => {
+const boundedOption = (options, key, fallback, min, max) => {
+  const value = options[key] == null ? fallback : Number(options[key]);
+  if (!Number.isFinite(value)) fail("Invalid anime eye comparison tolerance: " + key);
+  return clamp(value, min, max);
+};
+const wrapAngle = angle => {
   while (angle > Math.PI) angle -= Math.PI * 2;
   while (angle < -Math.PI) angle += Math.PI * 2;
   return angle;
