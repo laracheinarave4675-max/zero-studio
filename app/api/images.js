@@ -123,9 +123,12 @@ module.exports = async function handler(req, res) {
           model: "@cf/black-forest-labs/flux-2-klein-4b",
           inferenceStarted: false,
           animeAutoFreeTierConfirmed: freeTierConfirmed,
+          appFreeTierConfirmed,
+          workerFreeTierGuard: workerHealth.animeAutoFreeTierGuard === true,
+          workerFreeTierConfirmed: workerHealth.animeAutoFreeTierConfirmed === true,
           message: freeTierConfirmed
             ? "الاتصال ورموز الوصول وحاجز الخطة المجانية فقط مؤكدة في Vercel وCloudflare. لم يبدأ أي توليد."
-            : "الاتصال يعمل، لكن لا يمكن إثبات وجود حاجز الخطة المجانية فقط على خادمي Vercel وCloudflare معاً. لم يبدأ أي توليد.",
+            : "فحص مجاني دون توليد: Vercel=" + (appFreeTierConfirmed ? "OK" : "OFF") + "، Cloudflare guard=" + (workerHealth.animeAutoFreeTierGuard === true ? "OK" : "OFF") + "، Cloudflare confirmation=" + (workerHealth.animeAutoFreeTierConfirmed === true ? "OK" : "OFF") + ". لم يبدأ أي توليد.",
         });
       }
 
