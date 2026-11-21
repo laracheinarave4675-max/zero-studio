@@ -13,6 +13,9 @@ test("the deterministic Digital Artist demo plan compiles into a complete seven-
   assert.equal(stream.audit.vectorRequired, false);
   assert.equal(stream.imageGenerationUsed, false);
   assert.equal(stream.layers[0].role, "construction");
+  assert.equal(stream.layers[2].role, "flat-color");
+  assert.equal(stream.layers[3].role, "clean-line");
   assert.equal(stream.layers[6].role, "detail");
-  assert.ok(stream.commands.every(command => command.options.brush));
+  assert.equal(stream.commands.filter(command => command.kind === "raster-region-fill").length, 12);
+  assert.ok(stream.commands.filter(command => command.kind === "raster-brush-stroke").every(command => command.options.brush));
 });
