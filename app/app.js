@@ -1072,7 +1072,7 @@ async function recordLatestDigitalArtistAssessment(){
  }else{
   throw Error("لم نربط هذه المهارة بعد بمقاييس عين موثوقة. حالياً يمكن تسجيل تقييم الرأس والتشريح والخطوط والتلوين المسطح فقط؛ لن نخترع درجات لبقية المهارات.");
  }
- const canonical=JSON.stringify({frame:report.frame,operations:report.operations,visiblePixels:report.visiblePixels,fillEyes:report.fillEyes,strokeWarnings:report.strokeWarnings,characterIdentity:report.characterIdentity,layerEyes:report.layerEyes});
+ const canonical=JSON.stringify({frame:report.frame,operations:report.operations,visiblePixels:report.visiblePixels,fillEyes:report.fillEyes,strokeWarnings:report.strokeWarnings,characterIdentity:report.characterIdentity,layerEyes:report.layerEyes,animeEyeComparison:report.animeEyeComparison||null,animeHairFlowComparison:report.animeHairFlowComparison||null});
  const digestBytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(canonical));
  const reportDigest=Array.from(new Uint8Array(digestBytes),byte=>byte.toString(16).padStart(2,"0")).join("");
  const record=ensureArtistLearningRecord();
