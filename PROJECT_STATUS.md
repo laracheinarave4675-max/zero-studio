@@ -770,3 +770,11 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - No successful external vision inference is available. Hugging Face's Qwen provider and sandbox attempts returned HTTP 402, so no paid route is used. Model integration remains pending a verified free inference path.
 - The GitHub Contents API commits made during this pass have not triggered a fresh Actions run. Do not claim the new planner tests passed in CI until a run on the latest branch head is observed.
 - No production Worker changes, no paid compute, no PR merge, and no production deployment.
+
+
+### Vision bridge UI — 2026-11-21
+
+- Added a Vision Report input to the Digital Artist panel. Users can paste a validated ZERO STUDIO vision JSON report and convert it into the existing brush-plan editor.
+- The generated plan remains a draft. The Execute button is disabled until the user explicitly checks the approval control; loading the fixed brush demo returns to the normal manual execution flow.
+- The UI explains that this does not yet analyze an image and that region boxes are approximate. No image is uploaded or sent to a model by this bridge.
+- This connects the report validator → geometry planner → existing brush-plan editor → native Canvas2D executor as a usable manual pipeline, while actual model inference and organic contour extraction remain unfinished.
