@@ -36,9 +36,9 @@ test("raster region fill closes the artist polygon and restores Canvas2D state",
 
 test("raster region fill rejects open or out-of-canvas geometry before painting", () => {
   const context = contextSpy();
-  assert.throws(() => fillRasterRegion(context, [{ x: 1, y: 1 }, { x: 2, y: 2 }]), /three points/);
+  assert.throws(() => fillRasterRegion(context, [{ x: 1, y: 1 }, { x: 2, y: 2 }]), /تحتاج إلى ثلاث نقاط/);
   assert.throws(() => fillRasterRegion(context, [
     { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3000, y: 3 }
-  ]), /outside/);
+  ]), /خارج مساحة الرسم/);
   assert.equal(context.events.length, 0);
 });
