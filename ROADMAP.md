@@ -323,3 +323,18 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 - [ ] Improve likeness from the visual review: refine face/profile proportions, hair-clump flow, kimono/sleeve contours, and flower detail.
 - [ ] Connect successful free on-device vision inference; the current plan is manually authored and must not be described as model-generated observations.
 - [ ] Run and accept the result in the user's Android app; this CI render is not the device acceptance test.
+
+
+
+## Construction-first anime artist and view continuity — 2026-11-21
+
+- [x] Replace the single fixed-coordinate portrait with a parameterized head/eye/hair/neck/torso construction model.
+- [x] Add seven separate tapered root-to-tip hair clumps and yaw-aware far-side compression for hair, ears and face silhouette.
+- [x] Increase expressive iris/pupil geometry and add catchlights, lashes, collar seam, hair sheen and iris rim accents.
+- [x] Execute the construction plan through the native Canvas2D brush executor and export transparent semantic layers.
+- [x] Add left three-quarter/front/right three-quarter model-sheet rendering and continuity tests using one style profile and stable hair-clump IDs.
+- [x] Verify commit `8fd924660a8cbd5a3055ae838eea492e5f0e7f09`: Drawing engine and Hybrid raster/SVG CI passed; **469/469 tests** in each Node test job; construction and three-view artifacts uploaded.
+- [ ] Improve skull depth, cheek planes, ear attachment, hair overlap/negative spaces and shoulder/torso anatomy until visual review meets the anime acceptance gate.
+- [ ] Add pose variation and verify identity across expressions and body poses, not only three head views.
+- [ ] Connect successful free vision inference and evidence-backed semantic segmentation; current construction inputs are parameterized, not autonomously recognized.
+- [ ] Re-run visual acceptance on Android and obtain user approval before including the gallery character or publishing a production release.
