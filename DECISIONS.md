@@ -264,3 +264,18 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 **Constraints:** Android-first; $0 hard budget; no paid API/GPU/service or automatic paid fallback; develop on an isolated branch; no merge or production deployment until implementation and visual acceptance are reviewed.
 
 **Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md.
+
+
+## D-030 — Raster-first drawing hand; SVG is optional (2026-11-21)
+
+**Decision:** Refine D-029. The AI Digital Artist does not require SVG. SVG-only authoring risks a mechanically geometric result and cannot by itself reproduce the varied organic pigment, pressure, brush texture, and painted edges of professional anime drawing. ZERO STUDIO must use its existing native Canvas2D raster brush engine as the primary final-art drawing hand.
+
+**Primary output:** separate transparent raster layers containing ordered, individually recorded and replayable brush-stroke commands. Each command includes its purpose, semantic layer, point samples, pressure, brush profile, size, color, opacity, texture, blend mode, deterministic seed and erase behavior. A flattened image may be produced only as a preview/export; it is never the editable source of truth.
+
+**SVG role:** optional only — construction guides, skeletons, simple masks, geometry, and selected editable contours. It is not mandatory for clean line art, flats, shadows, or final character rendering. Never force organic hair, facial contours, fabric or painted shading into a collection of mathematically smooth curves merely to call it editable.
+
+**Existing assets to reuse:** app/raster-brushes.mjs and app/raster-surface.mjs. Extend their brush profiles for anime line taper, nib behavior, stabilizer, speed/pressure response, dry-brush edges, and controlled cel-shading as needed. The AI emits a plan; the native brush engine executes it.
+
+**Implementation:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and app/digital-artist-brush-engine.mjs define the raster-first path. This refinement supersedes the vector-first drawing-hand choice in D-029, while keeping D-029's no-image-generation rule, AI art-director, character memory, anatomy guidance, critique loop, editable steps, $0/Android-first constraints, and unchanged 24 independently authored drawings/second target.
+
+**Acceptance gate:** one complete full-body anime character from a blank canvas, rendered by native pressure-sensitive brush commands into separate raster layers, replayable stroke-by-stroke, with stable reference identity and user-approved visual quality. SVG may be used for invisible guides only. No image/video generation, no hidden flattened generated artwork, no paid compute, no production merge/deployment without approval.
