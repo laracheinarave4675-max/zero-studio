@@ -142,6 +142,9 @@
 <select id="digitalArtistStrokeSelect" class="text-input"><option value="">لا توجد ضربات فنان بعد</option></select>
 <canvas id="digitalArtistStrokePreview" width="720" height="405" aria-label="معاينة الضربة المحددة" style="display:block;width:100%;height:auto;max-height:260px;margin:10px 0;background:#f5f1e9;border-radius:10px"></canvas>
 <div id="digitalArtistStrokeDetails" class="status" role="status" aria-live="polite">نفّذ خطة الفنان لعرض عملياتها هنا.</div>
+<label class="field-label" for="digitalArtistStrokeEditInput">تعديل نية الرسم والنقاط وخيارات الفرشاة</label>
+<textarea id="digitalArtistStrokeEditInput" class="text-input" dir="ltr" spellcheck="false" rows="10" style="min-height:170px;text-align:left;font-family:monospace" placeholder="{&quot;intent&quot;:&quot;...&quot;,&quot;points&quot;:[],&quot;options&quot;:{}}"></textarea>
+<button id="digitalArtistStrokeApplyEditBtn" class="primary full" type="button" disabled>حفظ التصحيح وإعادة رسم الطبقة</button>
 <div class="button-grid">
 <button id="digitalArtistStrokePrevBtn" class="secondary" type="button" disabled>الضربة السابقة</button>
 <button id="digitalArtistStrokeNextBtn" class="secondary" type="button" disabled>الضربة التالية</button>
