@@ -85,7 +85,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     {x:mouthX-model.head.bounds.width*.015,y:model.head.axes.mouthY+model.head.bounds.height*.02},
     {x:noseX-model.head.bounds.width*.025,y:model.head.axes.noseY+model.head.bounds.height*.025}
   ];
-  const shadows=[fill("face-form-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
+  const shadows=[fill("face-cast-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
     title:"Construction-driven anime character study",
