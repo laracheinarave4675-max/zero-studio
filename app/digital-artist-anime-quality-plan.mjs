@@ -72,12 +72,12 @@ export function createDigitalArtistAnimeQualityPlan() {
     {id:"features",name:"05 Anime facial features",role:"flat-color",strokes:[
       fill("eye-left-white","Place the left sclera inside its eyelid.","#fff8f0",leftEye),
       fill("eye-right-white","Place the right sclera inside its eyelid.","#fff8f0",rightEye),
-      fill("iris-left","Build a large amber iris with a round lower contour.","#a65f52",join(bezier([850,430],[880,410],[925,430],[925,475],10),bezier([925,475],[920,520],[875,525],[850,490],10),bezier([850,490],[840,465],[842,445],[850,430],8))),
-      fill("iris-right","Build the matching amber iris.","#a65f52",join(bezier([1020,430],[1050,410],[1095,430],[1095,475],10),bezier([1095,475],[1090,520],[1045,525],[1020,490],10),bezier([1020,490],[1010,465],[1012,445],[1020,430],8))),
-      fill("pupil-left","Set a dark pupil into the left iris.","#34273c",[[875,435],[895,435],[900,490],[890,505],[875,490]]),
-      fill("pupil-right","Set a dark pupil into the right iris.","#34273c",[[1045,435],[1065,435],[1065,490],[1055,505],[1045,490]]),
-      fill("glint-left","Add two controlled reflected lights to the left eye.","#fffdf8",[[858,440],[875,432],[884,445],[878,458]]),
-      fill("glint-right","Add two controlled reflected lights to the right eye.","#fffdf8",[[1028,440],[1045,432],[1054,445],[1048,458]])
+      fill("iris-left","Build a large amber iris clipped to the left sclera.","#a65f52",join(bezier([850,430],[880,410],[925,430],[925,475],10),bezier([925,475],[920,520],[875,525],[850,490],10),bezier([850,490],[840,465],[842,445],[850,430],8)),{clipPolygon:leftEye}),
+      fill("iris-right","Build the matching amber iris clipped to the right sclera.","#a65f52",join(bezier([1020,430],[1050,410],[1095,430],[1095,475],10),bezier([1095,475],[1090,520],[1045,525],[1020,490],10),bezier([1020,490],[1010,465],[1012,445],[1020,430],8)),{clipPolygon:rightEye}),
+      fill("pupil-left","Set a dark pupil into the left iris, clipped to the sclera.","#34273c",[[875,435],[895,435],[900,490],[890,505],[875,490]],{clipPolygon:leftEye}),
+      fill("pupil-right","Set a dark pupil into the right iris, clipped to the sclera.","#34273c",[[1045,435],[1065,435],[1065,490],[1055,505],[1045,490]],{clipPolygon:rightEye}),
+      fill("glint-left","Add reflected lights clipped to the left sclera.","#fffdf8",[[858,440],[875,432],[884,445],[878,458]],{clipPolygon:leftEye}),
+      fill("glint-right","Add reflected lights clipped to the right sclera.","#fffdf8",[[1028,440],[1045,432],[1054,445],[1048,458]],{clipPolygon:rightEye})
     ]},
     {id:"ink",name:"06 Clean anime line art",role:"clean-line",strokes:[
       outline("face-ink","Ink the open cheek and chin contour without drawing a line across the forehead.",faceJaw,6),
