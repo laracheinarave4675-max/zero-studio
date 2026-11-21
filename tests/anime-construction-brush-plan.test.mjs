@@ -46,3 +46,14 @@ test("face shadow remains a narrow cheek-side region",()=>{
  const xs=shadow.points.map(point=>point.x);
  assert.ok(Math.max(...xs)-Math.min(...xs)<1920*.12);
 });
+
+test("face cast shadow follows a curved cheek-to-jaw region below the eye line",()=>{
+ const model=buildAnimeConstructionModel();
+ const plan=buildAnimeConstructionBrushPlan(model);
+ const shadow=plan.layers.find(layer=>layer.role==="shadow").strokes.find(stroke=>stroke.id==="face-cast-shadow");
+ assert.ok(shadow);
+ assert.ok(shadow.points.length>=30);
+ assert.ok(shadow.clipPolygon?.length>=16);
+ assert.ok(Math.min(...shadow.points.map(point=>point.y))>model.head.axes.eyeY*1080);
+ assert.ok(Math.max(...shadow.points.map(point=>point.x))-Math.min(...shadow.points.map(point=>point.x))<1920*.12);
+});
