@@ -34,6 +34,33 @@ test("preserves Digital Artist stroke IDs, intent, and source through project no
   assert.equal(stroke.options.seed, 91);
 });
 
+test("persists region-fill operation kind and its review decision", () => {
+  const project = createProject("Region review history");
+  project.frames[0].layers.push({
+    id: "artist-flats",
+    name: "Flat colors",
+    type: "raster",
+    dataUrl: transparentPng,
+    mimeType: "image/png",
+    width: 1920,
+    height: 1080,
+    strokes: [{
+      id: "face-base-fill",
+      intent: "Fill the enclosed face shape.",
+      source: "digital-artist",
+      kind: "raster-region-fill",
+      review: "approved",
+      points: [{ x: 420, y: 180, pressure: 1 }, { x: 560, y: 190, pressure: 1 }, { x: 500, y: 360, pressure: 1 }],
+      options: { color: "#efc4b1", opacity: 1, blendMode: "normal" }
+    }]
+  });
+  const normalized = normalizeProject(project);
+  const stroke = normalized.frames[0].layers.find(layer => layer.id === "artist-flats").strokes[0];
+  assert.equal(stroke.kind, "raster-region-fill");
+  assert.equal(stroke.review, "approved");
+  assert.equal(stroke.options.color, "#efc4b1");
+});
+
 test("keeps legacy manual raster strokes compatible while assigning stable IDs", () => {
   const project = createProject("Legacy raster history");
   project.frames[0].layers.push({
