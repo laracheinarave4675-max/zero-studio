@@ -6,6 +6,7 @@ const px=point=>({x:Math.round(point.x*W),y:Math.round(point.y*H),pressure:.72})
 const fill=(id,intent,color,points,extra={})=>({id,intent,kind:"region-fill",color,points:points.map(px),...extra});
 const stroke=(id,intent,brush,color,size,points,extra={})=>({id,intent,brush,color,size,points:points.map(px),...extra});
 const ellipsePoints=(cx,cy,rx,ry,count=36)=>Array.from({length:count},(_,i)=>({x:cx+Math.cos(i/count*Math.PI*2)*rx,y:cy+Math.sin(i/count*Math.PI*2)*ry}));
+const quadraticPoints=(a,control,b,count=10)=>Array.from({length:count+1},(_,i)=>{const t=i/count,u=1-t;return{x:u*u*a.x+2*u*t*control.x+t*t*b.x,y:u*u*a.y+2*u*t*control.y+t*t*b.y};});
 const facePolygon=head=>{
   if(!Array.isArray(head?.silhouette)||head.silhouette.length<16)throw new Error("Yaw-projected head silhouette is required.");
   return head.silhouette;
@@ -70,20 +71,18 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
   const row=id=>cross.find(item=>item.id===id);
   const eyeRow=row("eye"),cheekRow=row("cheek"),jawRow=row("jaw");
   const noseX=model.head.landmarks.noseBase.x,mouthX=model.head.landmarks.mouthCenter.x;
-  const shadowInner=model.head.bounds.width*.075;
-  const shadowPoints=shadowSide==="right"?[
-    {x:cheekRow.right-shadowInner*.12,y:cheekRow.y+model.head.bounds.height*.055},
-    {x:jawRow.right-shadowInner*.08,y:jawRow.y},
-    {x:model.head.landmarks.chin.x+shadowInner*.12,y:model.head.landmarks.chin.y-model.head.bounds.height*.035},
-    {x:mouthX+shadowInner*.42,y:model.head.axes.mouthY+model.head.bounds.height*.015},
-    {x:noseX+shadowInner*.62,y:model.head.axes.noseY+model.head.bounds.height*.065}
-  ]:[
-    {x:cheekRow.left+shadowInner*.12,y:cheekRow.y+model.head.bounds.height*.055},
-    {x:jawRow.left+shadowInner*.08,y:jawRow.y},
-    {x:model.head.landmarks.chin.x-shadowInner*.12,y:model.head.landmarks.chin.y-model.head.bounds.height*.035},
-    {x:mouthX-shadowInner*.42,y:model.head.axes.mouthY+model.head.bounds.height*.015},
-    {x:noseX-shadowInner*.62,y:model.head.axes.noseY+model.head.bounds.height*.065}
+  const shadowWidth=model.head.bounds.width*.11;
+  const shadowTop={x:noseX+(shadowSide==="right"?1:-1)*shadowWidth*.34,y:model.head.axes.noseY+model.head.bounds.height*.035};
+  const shadowCheek={x:shadowSide==="right"?cheekRow.right-shadowWidth*.08:cheekRow.left+shadowWidth*.08,y:cheekRow.y+model.head.bounds.height*.045};
+  const shadowJaw={x:shadowSide==="right"?jawRow.right-shadowWidth*.04:jawRow.left+shadowWidth*.04,y:jawRow.y};
+  const shadowChin={x:model.head.landmarks.chin.x+(shadowSide==="right"?1:-1)*shadowWidth*.06,y:model.head.landmarks.chin.y-model.head.bounds.height*.055};
+  const shadowOuter=[
+    ...quadraticPoints(shadowTop,{x:shadowCheek.x,y:shadowCheek.y-model.head.bounds.height*.055},shadowCheek,8),
+    ...quadraticPoints(shadowCheek,{x:shadowJaw.x+(shadowSide==="right"?1:-1)*shadowWidth*.08,y:shadowJaw.y-model.head.bounds.height*.02},shadowJaw,8).slice(1),
+    ...quadraticPoints(shadowJaw,{x:shadowChin.x+(shadowSide==="right"?-1:1)*shadowWidth*.1,y:shadowChin.y-model.head.bounds.height*.025},shadowChin,8).slice(1)
   ];
+  const shadowInnerCurve=quadraticPoints(shadowChin,{x:mouthX+(shadowSide==="right"?1:-1)*shadowWidth*.28,y:model.head.axes.mouthY+model.head.bounds.height*.085},shadowTop,12);
+  const shadowPoints=[...shadowOuter,...shadowInnerCurve.slice(1)];
   const shadows=[fill("face-cast-shadow","Shade the cheek-to-jaw plane opposite the declared key light; keep the eye region clear.","#c98f91",shadowPoints,{clipPolygon:headShape.map(px)})];
   const plan={
     format:"zero-studio-digital-artist-brush-plan",version:1,
