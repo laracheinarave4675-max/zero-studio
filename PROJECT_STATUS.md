@@ -1,32 +1,33 @@
-
-## D-030 Raster-first Digital Artist refinement — 2026-11-21
-
-- User explicitly challenged whether SVG is required and warned it may make anime drawing rigid. The architecture is refined: SVG is optional, never mandatory for final art.
-- Confirmed existing app assets already include a Canvas2D raster brush engine (`app/raster-brushes.mjs`) with graphite, ink, gouache, watercolor and foliage presets, pressure-aware point samples, tapered ribbon marks, grain/bristle texture, opacity, blend modes and erasing; `app/raster-surface.mjs` provides persistent native raster surfaces.
-- Added `app/digital-artist-brush-engine.mjs`: a versioned AI brush-plan contract compiling ordered, pressure-sensitive brush strokes into native raster layer commands. The plan carries identity reference digest, intent, semantic stage, coordinates, pressure, brush, size, color, opacity, texture, blend mode and seed. It does not require SVG paths or image payloads.
-- Added `tests/digital-artist-brush-engine.test.mjs` covering valid plan compilation, replay order, native raster rendering target, vector-not-required contract, pressure/bounds/brush/color/stage-order/duplicate-ID validation.
-- This remains a command contract, not yet wired to the app or a vision-capable model. No complete AI-authored character drawing has been produced.
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-21 (UTC)
 
-## D-029 Digital Artist foundation — 2026-11-21
+## D-030 Raster-first Digital Artist — executor and editor integration
 
-- The user approved a new strategic direction: build an AI digital artist that actually draws via explicit, editable, ordered strokes and vector operations, never by image/video generation.
-- Added docs/DIGITAL_ARTIST_ARCHITECTURE.md as the governing design for the artist brain, Character DNA, anatomy guide, vector drawing hand, critique/correction loop, research roles, training strategy, and first visual acceptance test.
-- Recorded D-029 in DECISIONS.md. It supersedes the AI-authorship restriction in D-021/D-023 only for explicit editable Digital Artist commands; existing human-paint imports and source-preservation rules remain supported.
-- Added app/digital-artist-engine.mjs: provider-neutral plan validation, semantic layer ordering, stroke/tool/intent metadata, SVG path validation and canvas bounds, raster-payload rejection, command-stream compilation, replayable one-stroke steps, and structural audit.
-- Added tests/digital-artist-engine.test.mjs covering valid plan compilation, one-step replay access, image payload rejection, duplicate IDs, supported tools, stage order, geometry bounds, malformed paths, and identity digest validation.
-- Current isolated branch: feat/digital-artist-engine, based on feat/anime-raster-keyframe-motion-engine. The branch has not been merged or deployed.
-- **Not yet completed:** run the new tests in GitHub Actions; connect a vision-capable drawing planner to the command contract; wire replay/preview/approval/commit into the editor UI; produce and visually inspect one complete approved-reference character drawing. The current module is a validated command foundation, not yet an autonomous or production-quality artist.
-- No image-generation inference was used for the new Digital Artist code. No paid compute, merge, or production deployment was used.
+- The approved drawing hand is the existing native Canvas2D raster brush engine. SVG remains optional for guides and selected geometry; it is not the final-art requirement.
+- Added `app/digital-artist-brush-executor.mjs`: validates the compiled raster command stream, executes strokes in exact layer/order sequence through host adapters, finalizes one layer at a time, reports progress, and rolls back every created layer after a failed execution.
+- Connected the executor to `app/app.js` and added the Digital Artist panel in `app/index.html`. It accepts a brush-plan JSON, creates transparent native raster layers, invokes the existing `drawRasterBrushStroke` Canvas2D engine, and saves each stroke with its stable ID, drawing intent, source, pressure samples, and brush options in the native project.
+- Added a deterministic seven-layer anime portrait test plan containing 54 brush strokes. It is deliberately a hand-authored engine fixture, not an AI-generated drawing or proof of autonomous artistry. Loading and running it lets the editor exercise the complete raster command path.
+- Updated native project normalization in `app/engine.mjs` to preserve Digital Artist stroke metadata and assign IDs to legacy manual strokes. The brush plan now respects the existing 500,000-sample project safety limit.
+- Added `tests/digital-artist-brush-executor.test.mjs` and `tests/digital-artist-raster-history.test.mjs` for ordered execution, layer finalization, rollback, invalid streams, and persistent stroke-history compatibility.
+- **Verified:** GitHub Actions Drawing engine tests run #2318 and Hybrid raster/SVG regression run #577 both completed successfully on branch HEAD `7e6149a3af8dbdfb1eaa4aa094709478d54f598e`. Drawing CI passed syntax checks and `node --test tests/*.test.mjs`.
+- **Not yet implemented:** a vision-capable model planner that interprets the approved character reference and creates the brush plan; in-editor individual-stroke scrub/replay, correction, and approval UI; a full AI-authored character; visual-quality acceptance; and physical Android testing.
+- **Deployment:** Vercel reports a free build-rate-limit failure for this branch preview. No paid upgrade or fallback was used. The branch remains isolated and PR #14 remains open as a draft; no merge or production deployment occurred.
+- Budget remains $0. The long-term target remains 24 independently authored drawings per second. No image/video-generation output is accepted as final Digital Artist artwork.
+
+## D-029 / D-030 architecture record
+
+- D-029 approved an AI digital artist that authors explicit, editable drawing operations rather than final image/video generation. The initial vector-first command contract remains optional infrastructure for guides and selected geometry.
+- D-030 refined the final-art route to raster-first: semantic Canvas2D brush layers and an ordered, editable stroke log are the authored source. A flattened PNG is only a preview/export artifact.
+- The architecture, Character DNA requirements, anatomy guidance, critique/correction loop, and visual acceptance gates are documented in `docs/DIGITAL_ARTIST_ARCHITECTURE.md`.
+- No vision model inference or image-generation inference was used for this implementation.
 
 ## Immediate next steps
 
-1. Verify the Digital Artist engine and regression tests in GitHub Actions.
-2. Connect the model-side drawing planner to emit this provider-neutral command format (text/vector commands only).
-3. Add step-by-step stroke replay and layer-level review to the Android editor.
-4. Run the first still-character test from a blank canvas and review visual identity, anatomy, line quality, flats and shadows before attempting animation.
+1. Connect a vision-capable planner that takes an approved character reference and emits only validated native-brush commands.
+2. Add per-stroke replay/scrubbing, correction, layer review, approval and safe re-execution to the editor.
+3. Run the deterministic portrait fixture through the actual browser renderer and inspect the resulting seven-layer raster drawing, then replace the fixture with a model-authored plan.
+4. Produce and visually review one complete character before starting the independently drawn 24-FPS animation path.
 
 ---
 
