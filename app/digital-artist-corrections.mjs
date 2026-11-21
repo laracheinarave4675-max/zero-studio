@@ -1,3 +1,4 @@
+// Correction deduplication keys include anatomy measurement targets.
 const fail = message => { throw new Error(message); };
 
 const CORRECTIONS = Object.freeze({
