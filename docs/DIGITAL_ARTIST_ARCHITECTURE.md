@@ -130,6 +130,14 @@ ZERO STUDIO already contains a native Canvas2D raster brush engine in `app/raste
 
 `app/digital-artist-brush-engine.mjs` defines `zero-studio-digital-artist-brush-plan` v1 and compiles it to a native Canvas2D raster command stream. It validates semantic layer order, identity digest, per-sample pressure and bounds, brush presets, color, size, texture, blend mode, and stroke IDs. It explicitly declares `vectorRequired: false`.
 
+### First renderer integration proof — 2026-11-21
+
+The editor now executes compiled raster plans through the native brush engine and stores individual stroke history on separate persistent raster layers. A deterministic 54-stroke / 7-layer fixture is rendered in CI to a composite PNG and seven transparent layer PNGs. It is an execution fixture, not a vision-model drawing.
+
+Visual inspection of that fixture found that the flat-color pass currently creates broad horizontal bands over the face and clothing. This is a known quality defect, not an accepted anime result. Improve region filling and silhouette-constrained paint before evaluating the artist's visual quality.
+
+GitHub Actions on branch HEAD `f8f6e2019c0e76edd26530cc63e6ce8fae6b15b8` passed 353/353 tests in both Drawing engine run #2330 and Hybrid raster/SVG run #581. This confirms code and renderer integration, not artistic quality or Android performance.
+
 ### Updated acceptance gate
 
 The first complete character must be drawn from a blank canvas using separate editable raster layers and individually replayable native brush strokes. No embedded/generated image payload is allowed. It is acceptable to use SVG only for hidden construction guides or optional geometric helpers, not as a substitute for organic line art or painted color.
