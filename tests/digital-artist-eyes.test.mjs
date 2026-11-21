@@ -191,3 +191,61 @@ test("Digital Artist eyes and anime curriculum are exposed in the editor without
   assert.match(app, /characterIdentity:\{characterAssetId/);
   assert.match(app, /inspectionScale=Math\.min\(1,960\/width,540\/height\)/);
 });
+
+
+import { compareAnimeEyeDesign, compareAnimeHairFlow } from "../app/digital-artist-eyes.mjs";
+
+const animeEyeLandmarks = () => ({
+  faceLeft:{x:.2,y:.5}, faceRight:{x:.8,y:.5},
+  eyeLOuter:{x:.30,y:.43}, eyeLInner:{x:.40,y:.43},
+  eyeLUpper:{x:.35,y:.415}, eyeLLower:{x:.35,y:.455},
+  eyeLIris:{x:.35,y:.435}, eyeLPupil:{x:.35,y:.435},
+  eyeROuter:{x:.60,y:.43}, eyeRInner:{x:.70,y:.43},
+  eyeRUpper:{x:.65,y:.415}, eyeRLower:{x:.65,y:.455},
+  eyeRIris:{x:.65,y:.435}, eyeRPupil:{x:.65,y:.435}
+});
+
+test("anime eye design eye compares approved eye proportions, pair spacing and iris containment", () => {
+  const reference = animeEyeLandmarks();
+  const current = animeEyeLandmarks();
+  const result = compareAnimeEyeDesign(reference, current);
+  assert.equal(result.passed, true);
+  assert.equal(result.compared, 13);
+  assert.equal(result.measurementScope, "normalized-approved-landmarks-not-pixel-inference");
+  current.eyeLIris = {x:.48,y:.49};
+  const drift = compareAnimeEyeDesign(reference, current);
+  assert.equal(drift.passed, false);
+  assert.ok(drift.failures.includes("left-iris-contained"));
+  assert.ok(drift.failures.includes("left-iris-x"));
+});
+
+test("anime eye design preserves distinctive reference proportions instead of enforcing a universal style", () => {
+  const reference = animeEyeLandmarks();
+  reference.eyeLUpper = {x:.35,y:.40};
+  reference.eyeLLower = {x:.35,y:.46};
+  const matching = structuredClone(reference);
+  assert.equal(compareAnimeEyeDesign(reference, matching).passed, true);
+  matching.eyeLUpper = {x:.35,y:.415};
+  assert.equal(compareAnimeEyeDesign(reference, matching).passed, false);
+});
+
+test("anime hair-flow eye checks named clump direction and length against the model sheet", () => {
+  const reference = [
+    {id:"bang-1",root:{x:.4,y:.2},tip:{x:.3,y:.42}},
+    {id:"bang-2",root:{x:.5,y:.18},tip:{x:.52,y:.44}},
+    {id:"side-1",root:{x:.62,y:.24},tip:{x:.76,y:.55}}
+  ];
+  const current = structuredClone(reference);
+  assert.equal(compareAnimeHairFlow(reference,current).passed,true);
+  current[1].tip = {x:.7,y:.25};
+  const drift = compareAnimeHairFlow(reference,current);
+  assert.equal(drift.passed,false);
+  assert.ok(drift.failures.includes("bang-2"));
+});
+
+test("anime eye and hair comparison reject missing or malformed landmarks", () => {
+  const reference = animeEyeLandmarks();
+  const missing = {...reference}; delete missing.eyeRPupil;
+  assert.throws(() => compareAnimeEyeDesign(reference,missing), /eyeRPupil/);
+  assert.throws(() => compareAnimeHairFlow([{id:"a",root:{x:.1,y:.1},tip:{x:.2,y:.2}}],[]), /3–64/);
+});
