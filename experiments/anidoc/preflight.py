@@ -64,12 +64,14 @@ def main() -> int:
     }
     checkpoint_status = {name: path.exists() for name, path in required.items()}
     vram_gib = round(gpu_memory_mib / 1024, 2) if gpu_memory_mib else None
+    source_ready = root.is_dir()
+    cuda_ready = torch_cuda is True
     gpu_ready = bool(gpu_name and gpu_memory_mib and gpu_memory_mib >= 14 * 1024)
     checkpoints_ready = all(checkpoint_status.values())
 
     report = {
         "python": sys.version.split()[0],
-        "ani_doc_source_present": root.exists(),
+        "ani_doc_source_present": source_ready,
         "nvidia_smi_present": bool(nvidia_smi),
         "torch_cuda_available": torch_cuda,
         "torch_diagnostic_error": torch_error,
@@ -77,7 +79,7 @@ def main() -> int:
         "gpu_vram_gib": vram_gib,
         "upstream_reported_vram_requirement_gib": 14,
         "checkpoints": checkpoint_status,
-        "inference_ready": bool(gpu_ready and checkpoints_ready),
+        "inference_ready": bool(source_ready and cuda_ready and gpu_ready and checkpoints_ready),
     }
     print(json.dumps(report, indent=2))
 
@@ -90,6 +92,10 @@ def main() -> int:
         print("- Result: READY FOR A CONTROLLED INFERENCE ATTEMPT (not yet tested)")
     else:
         reasons = []
+        if not source_ready:
+            reasons.append("AniDoc source checkout is missing")
+        if not cuda_ready:
+            reasons.append("PyTorch CUDA is not available")
         if not gpu_ready:
             reasons.append("no NVIDIA GPU with at least ~14 GiB VRAM")
         if not checkpoints_ready:
