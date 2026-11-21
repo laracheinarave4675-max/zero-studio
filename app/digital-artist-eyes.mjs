@@ -479,3 +479,125 @@ export function compareAnimeHairFlow(reference, current, options = {}) {
     measurementScope: "approved-root-tip-landmarks-not-automatic-strand-segmentation"
   };
 }
+
+
+/**
+ * Extract connected opaque raster regions and their actual pixel-boundary contours.
+ * This is local pixel analysis: it does not identify semantic parts such as eyes or hair.
+ */
+export function extractRasterContours(imageData, options = {}) {
+  const { width, height, data } = validatePixels(imageData);
+  const pixelCount = width * height;
+  if (pixelCount > 2 * 1024 * 1024) fail("Raster contour extraction is limited to 2 megapixels per inspection.");
+  const alphaThreshold = Number.isFinite(Number(options.alphaThreshold))
+    ? clamp(Number(options.alphaThreshold), 0, 255) : 16;
+  const minimumArea = Number.isInteger(options.minimumArea) ? clamp(options.minimumArea, 1, pixelCount) : 4;
+  const maximumComponents = Number.isInteger(options.maximumComponents) ? clamp(options.maximumComponents, 1, 128) : 48;
+  const maximumPoints = Number.isInteger(options.maximumPoints) ? clamp(options.maximumPoints, 8, 512) : 160;
+  const simplifyTolerance = Number.isFinite(Number(options.simplifyTolerance))
+    ? clamp(Number(options.simplifyTolerance), 0, 12) : 1.25;
+  const mask = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i++) mask[i] = data[i * 4 + 3] > alphaThreshold ? 1 : 0;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  const components = [];
+  const keyOf = (x, y) => y * (width + 1) + x;
+  const simplify = points => {
+    if (points.length <= 3 || simplifyTolerance <= 0) return points;
+    const keep = new Uint8Array(points.length);
+    keep[0] = 1; keep[points.length - 1] = 1;
+    const stack = [[0, points.length - 1]];
+    const toleranceSquared = simplifyTolerance * simplifyTolerance;
+    while (stack.length) {
+      const [first, last] = stack.pop();
+      const a = points[first], b = points[last];
+      const dx = b.x - a.x, dy = b.y - a.y, lengthSquared = dx * dx + dy * dy;
+      let maximum = toleranceSquared, selected = -1;
+      for (let i = first + 1; i < last; i++) {
+        const p = points[i];
+        const t = lengthSquared ? clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/lengthSquared,0,1) : 0;
+        const px = a.x + t * dx, py = a.y + t * dy;
+        const distanceSquared = (p.x-px)**2 + (p.y-py)**2;
+        if (distanceSquared > maximum) { maximum = distanceSquared; selected = i; }
+      }
+      if (selected >= 0) { keep[selected] = 1; stack.push([first,selected],[selected,last]); }
+    }
+    return points.filter((_, index) => keep[index]);
+  };
+  const traceEdges = edges => {
+    const outgoing = new Map();
+    edges.forEach((edge, index) => {
+      const key = keyOf(edge.x1, edge.y1);
+      if (!outgoing.has(key)) outgoing.set(key, []);
+      outgoing.get(key).push(index);
+    });
+    const loops = [];
+    for (let start = 0; start < edges.length; start++) {
+      if (edges[start].used) continue;
+      const points = [];
+      let index = start, guard = 0;
+      const origin = keyOf(edges[start].x1, edges[start].y1);
+      while (index != null && !edges[index].used && guard++ <= edges.length + 1) {
+        const edge = edges[index];
+        edge.used = true;
+        points.push({ x: edge.x1, y: edge.y1 });
+        const endKey = keyOf(edge.x2, edge.y2);
+        if (endKey === origin) { points.push({ x: edge.x2, y: edge.y2 }); break; }
+        const candidates = (outgoing.get(endKey) || []).filter(next => !edges[next].used);
+        if (!candidates.length) break;
+        index = candidates[0];
+      }
+      if (points.length >= 4 && keyOf(points[0].x, points[0].y) === keyOf(points[points.length-1].x, points[points.length-1].y)) {
+        loops.push(points.slice(0,-1));
+      }
+    }
+    return loops;
+  };
+  for (let seed = 0; seed < pixelCount; seed++) {
+    if (!mask[seed] || visited[seed]) continue;
+    let read = 0, write = 0, area = 0, minX = width, minY = height, maxX = -1, maxY = -1, sumX = 0, sumY = 0;
+    queue[write++] = seed; visited[seed] = 1;
+    while (read < write) {
+      const index = queue[read++], x = index % width, y = Math.floor(index / width);
+      area++; sumX += x + 0.5; sumY += y + 0.5;
+      minX = Math.min(minX,x); minY = Math.min(minY,y); maxX = Math.max(maxX,x); maxY = Math.max(maxY,y);
+      const neighbors = [y > 0 ? index-width : -1, x+1 < width ? index+1 : -1, y+1 < height ? index+width : -1, x > 0 ? index-1 : -1];
+      for (const next of neighbors) if (next >= 0 && mask[next] && !visited[next]) { visited[next] = 1; queue[write++] = next; }
+    }
+    if (area < minimumArea) continue;
+    const edges = [];
+    for (let i = 0; i < write; i++) {
+      const index = queue[i], x = index % width, y = Math.floor(index / width);
+      if (y === 0 || !mask[index-width]) edges.push({x1:x,y1:y,x2:x+1,y2:y});
+      if (x+1 === width || !mask[index+1]) edges.push({x1:x+1,y1:y,x2:x+1,y2:y+1});
+      if (y+1 === height || !mask[index+width]) edges.push({x1:x+1,y1:y+1,x2:x,y2:y+1});
+      if (x === 0 || !mask[index-1]) edges.push({x1:x,y1:y+1,x2:x,y2:y});
+    }
+    const loops = traceEdges(edges).sort((a,b) => b.length-a.length);
+    const raw = loops[0] || [];
+    if (raw.length < 3) continue;
+    let points = simplify(raw);
+    if (points.length > maximumPoints) {
+      const step = points.length / maximumPoints;
+      points = Array.from({length:maximumPoints},(_,i)=>points[Math.floor(i*step)]);
+    }
+    components.push({
+      id: "raster-component-" + components.length + 1,
+      area,
+      bounds: { x:minX, y:minY, width:maxX-minX+1, height:maxY-minY+1 },
+      centroid: { x:sumX/area, y:sumY/area },
+      contour: points.map(point=>({x:Number((point.x/width).toFixed(6)),y:Number((point.y/height).toFixed(6))})),
+      contourPointCount: points.length,
+      contourLoopCount: loops.length
+    });
+  }
+  components.sort((a,b)=>b.area-a.area);
+  const selected = components.slice(0,maximumComponents).map((item,index)=>({...item,id:"raster-component-"+(index+1)}));
+  return {
+    width,height,alphaThreshold,connectedComponentCount:components.length,
+    returnedComponentCount:selected.length,
+    omittedComponents:Math.max(0,components.length-selected.length),
+    components:selected,
+    measurementScope:"alpha-connected-components-and-pixel-boundary-contours-not-semantic-part-recognition"
+  };
+}
