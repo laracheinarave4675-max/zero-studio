@@ -266,3 +266,15 @@ test("anime model-sheet landmark comparison is available in the artist workspace
   assert.match(app, /report\.animeEyeComparison=eyeComparison/);
   assert.match(app, /buildArtistCorrectionPlan\(report\)/);
 });
+
+
+test("anime eye and hair comparison reject non-finite tolerance settings", () => {
+  const landmarks = animeEyeLandmarks();
+  assert.throws(() => compareAnimeEyeDesign(landmarks,landmarks,{aspectRatioTolerance:"not-a-number"}), /tolerance/);
+  const clumps = [
+    {id:"a",root:{x:.1,y:.1},tip:{x:.2,y:.2}},
+    {id:"b",root:{x:.2,y:.1},tip:{x:.3,y:.2}},
+    {id:"c",root:{x:.3,y:.1},tip:{x:.4,y:.2}}
+  ];
+  assert.throws(() => compareAnimeHairFlow(clumps,clumps,{angleTolerance:"invalid"}), /tolerance/);
+});
