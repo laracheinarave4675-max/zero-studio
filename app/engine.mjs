@@ -198,6 +198,7 @@ function normalizeLayer(l,i){
   const blendMode=String(l.blendMode||"normal");
   if(!["normal","multiply","screen","overlay","darken","lighten"].includes(blendMode))throw Error("نمط مزج الطبقة النقطية غير مدعوم");
   const strokes=Array.isArray(l.strokes)?l.strokes:[];
+  const strokeIds=new Set();
   if(strokes.length>10000)throw Error("عدد ضربات الطبقة النقطية يتجاوز الحد الآمن");
   let totalSamples=0;
   const editableStrokes=strokes.map(stroke=>{
