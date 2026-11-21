@@ -1,4 +1,5 @@
 import{validateAnimeCharacterDNA,validateAnimeFrameRasterAsset}from"./anime-anatomy-engine.mjs";
+import{validateArtistLearningRecord}from"./digital-artist-learning.mjs";
 export const WIDTH=1920,HEIGHT=1080,MAX_FRAMES=30000,MAX_LAYERS=100,MAX_OPERATIONS=10000;
 const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
@@ -380,8 +381,7 @@ export function normalizeProject(p){
  let animationBackground=null;
  if(p.animationBackground!==undefined&&p.animationBackground!==null){if(!Array.isArray(p.animationBackground)||p.animationBackground.length<1||p.animationBackground.length>MAX_LAYERS)throw Error("طبقات الخلفية الثابتة غير صالحة");const names=new Set();let count=0;animationBackground=p.animationBackground.map((source,index)=>{const layer=normalizeLayer(source,index);if(names.has(layer.name))throw Error("أسماء طبقات الخلفية الثابتة مكررة");names.add(layer.name);count+=layer.operations.length;if(count>2800)throw Error("تجاوزت الخلفية الثابتة حد 2800 عملية متجهية");layer.locked=true;return layer})}
  if(animationProduction&&frames.length!==Math.max(1,animationProduction.baseFrameCount+animationProduction.completedFrames))throw Error("عدد إطارات المشروع لا يطابق سجل إنتاج الحركة.");
- const artistLearning=p.artistLearning&&typeof p.artistLearning==="object"&&!Array.isArray(p.artistLearning)?JSON.parse(JSON.stringify(p.artistLearning)):null;
- if(artistLearning&&(artistLearning.format!=="zero-studio-artist-learning-record"||artistLearning.version!==1||!Array.isArray(artistLearning.attempts)||artistLearning.attempts.length>500))throw Error("سجل تعلم الفنان غير صالح");
+ const artistLearning=p.artistLearning&&typeof p.artistLearning==="object"&&!Array.isArray(p.artistLearning)?validateArtistLearningRecord(p.artistLearning):null;
  return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animeCharacterDNA,animationProduction,animeAutoSequence,animationBackground,artistLearning};
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
