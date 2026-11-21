@@ -96,7 +96,7 @@ export function buildAnimeConstructionModel({
       return {x:px,y:cy+b.height*.075+Math.sin(Math.PI*t)*b.height*.37};
     });
     const sclera=[...upperLid,...lowerLid.slice().reverse()];
-    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:eye.scale<.999};
+    return {id:index===0?"eye-left":"eye-right",bounds:b,sclera,iris,pupil,upperLid,lowerLid,upperLidWeight:style.eyes.upperLidWeight,lowerLidWeight:style.eyes.lowerLidWeight,farSide:(index===0?-1:1)!==(yaw>=0?1:-1)};
   });
 
   const defaultGuides=[
