@@ -207,7 +207,13 @@ function normalizeLayer(l,i){
    const options=stroke.options&&typeof stroke.options==="object"?stroke.options:{};
    const brush=String(options.brush||"gouache"),mode=String(options.blendMode||"normal");
    if(!["graphite","ink","gouache","watercolor","foliage"].includes(brush)||!["normal","multiply","screen","overlay","darken","lighten"].includes(mode))throw Error("إعدادات ضربة Raster غير مدعومة");
-   return{points,options:{brush,size:Number(options.size)||12,color:String(options.color||"#243348"),opacity:Number(options.opacity??1),texture:Number(options.texture??.55),blendMode:mode,pressureSensitive:options.pressureSensitive!==false,erase:options.erase===true,seed:Number.isFinite(+options.seed)?+options.seed:1}};
+   const strokeId=typeof stroke.id==="string"&&/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,99}$/.test(stroke.id)?stroke.id:uid("stroke");
+   if(strokeIds.has(strokeId))throw Error("معرّفات ضربات Raster مكررة داخل الطبقة");
+   strokeIds.add(strokeId);
+   const intent=String(stroke.intent||"").trim().slice(0,180);
+   const source=stroke.source==="digital-artist"?"digital-artist":"manual";
+   if(source==="digital-artist"&&!intent)throw Error("ضربة الفنان الرقمي تحتاج إلى وصف نية الرسم");
+   return{id:strokeId,intent,source,points,options:{brush,size:Number(options.size)||12,color:String(options.color||"#243348"),opacity:Number(options.opacity??1),texture:Number(options.texture??.55),blendMode:mode,pressureSensitive:options.pressureSensitive!==false,erase:options.erase===true,seed:Number.isFinite(+options.seed)?+options.seed:1}};
   });
   return{id,name,type:"raster",visible:l.visible!==false,locked:l.locked===true,operations:[],strokes:editableStrokes,mimeType:mime,dataUrl:data,width,height,opacity,blendMode};
  }
