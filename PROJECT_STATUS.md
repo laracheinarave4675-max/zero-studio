@@ -930,3 +930,15 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - The preview is isolated from production. Vercel's daily free build limit remains a separate constraint; the Cloudflare Pages preview is the available test deployment.
 - PR #14 remains Draft and unmerged. No production Worker or existing image service was modified.
 - Remaining acceptance gate: user-side Android drawing test and visual review. No successful embedded vision inference or autonomous neural training is claimed.
+
+
+## First selected-character native brush test — 2026-11-21
+
+- Retrieved the user's selected gallery reference from the existing preview image service: asset ID `be172712-e073-4d06-9587-eec7e6c62a84`, source image 1280×720 with front, side and back views.
+- Added `app/digital-artist-character-sheet-plan.mjs` and `scripts/render-digital-artist-character-sheet.mjs` to execute a first three-view study through the existing native Canvas2D raster brush engine.
+- Output: 1920×1080 PNG, seven semantic layers, 168 total raster operations (97 brush strokes and 71 region fills), plus seven separately exported transparent layer PNGs and an inspection report.
+- No source-image pixels were embedded in the drawing, no image-generation service was used, and no vision-model inference was performed. The initial geometry is a manually authored approximation based on the selected reference, not autonomous model understanding.
+- The first draft establishes the three-view silhouette, dark hair, ivory/pink kimono, obi, facial features, folds and floral marks. It is not yet a visually accepted likeness: head/profile proportions, hair clumps, sleeve/kimono contours and detailed floral patterns need another quality pass.
+- The stroke-geometry report has zero warnings after replacing intentional one-point flower dots with short editable strokes. Transparent character alpha coverage is 25.95% of the 1920×1080 canvas.
+- Verified commit `22f8c31a4941ba4ae9f93070f615e29663a10c2e`: Drawing engine run #2787 and Hybrid raster/SVG run #826 both passed. The character-sheet proof artifact was uploaded by the Hybrid workflow.
+- This is a CI/engine execution proof, not yet an Android in-app drawing acceptance test. The preview URL and production Worker were not changed by this pass; PR #14 remains Draft and unmerged.
