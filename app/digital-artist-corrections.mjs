@@ -84,6 +84,36 @@ export function buildArtistCorrectionPlan(report = {}) {
     });
   }
 
+  const animeEyes = report.animeEyeComparison;
+  if (animeEyes && animeEyes.measurementScope === "normalized-approved-landmarks-not-pixel-inference") {
+    for (const check of Array.isArray(animeEyes.checks) ? animeEyes.checks.filter(item => item?.passed === false) : []) {
+      add({
+        code: "anime-eye-design-drift", targetStrokeId: null, targetMeasurement: safeId(check.id),
+        skillId: "anime-eyes-expressions", severity: check.id.includes("iris") ? "high" : "medium",
+        title: "اختلاف في تصميم العين: " + safeId(check.id),
+        diagnosis: "موضع أو نسبة أحد عناصر العين تختلف عن ورقة النموذج المعتمدة؛ هذا القياس يعتمد معالم مرجعية وليس استنتاجاً من البكسلات.",
+        action: "راجع المعلم المحدد في العين، ثم صحح الجفن أو مركز القزحية مع الحفاظ على شكل العين الأصلي واتجاه النظر.",
+        exercise: "ارسم العينين فوق خطوط بناء خفيفة، ثم قارن عرض كل عين وارتفاعها والمسافة بينهما ومركز القزحية بالمرجع.",
+        success: "تعود القياسات إلى هامش السماح المعتمد وتبقى القزحية داخل حدود العين."
+      });
+    }
+  }
+
+  const animeHair = report.animeHairFlowComparison;
+  if (animeHair && animeHair.measurementScope === "approved-root-tip-landmarks-not-automatic-strand-segmentation") {
+    for (const check of Array.isArray(animeHair.checks) ? animeHair.checks.filter(item => item?.passed === false) : []) {
+      add({
+        code: "anime-hair-flow-drift", targetStrokeId: null, targetMeasurement: safeId(check.id),
+        skillId: "hair-masses", severity: check.missing || check.unexpected ? "high" : "medium",
+        title: "اختلاف في اتجاه كتلة الشعر: " + safeId(check.id),
+        diagnosis: "اتجاه الجذر إلى الطرف أو طول كتلة الشعر لا يطابق ورقة النموذج المعتمدة.",
+        action: "أعد رسم كتلة الشعر من الجذر إلى الطرف باتجاه واضح، مع الحفاظ على شكل الظل الخارجي وترتيب التداخل.",
+        exercise: "تدرّب على ثلاث إلى سبع كتل شعر كبيرة، وارسم لكل كتلة خط جريان واحداً قبل إضافة الخصل الصغيرة.",
+        success: "تطابق اتجاهات الكتل وأطوالها مع المرجع دون تحويل الشعر إلى شعيرات عشوائية."
+      });
+    }
+  }
+
   const anatomy = report.characterIdentity?.anatomy;
   if (anatomy && anatomy.skipped !== true && anatomy.passed === false) {
     for (const measurement of Array.isArray(anatomy.measurements) ? anatomy.measurements.filter(item => item?.passed === false) : []) {
