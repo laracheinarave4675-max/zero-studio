@@ -266,3 +266,10 @@ A separate learning ledger now records measured outcomes against the 15-skill An
 
 This provides a measurable progress history without pretending that deterministic rules train a neural model. It does not yet verify report contents from the digest, persist the ledger in the editor UI, or alter drawings automatically. Those are separate integration and validation tasks.
 
+
+## Project-persisted assessment loop — D-033
+
+The artist editor now connects the local inspection report to the evidence ledger. After running the eyes, the user explicitly saves an attempt for the selected curriculum skill. Only three routes currently have relevant enough measurements to be accepted: body anatomy (approved Character DNA comparison), flat-color groups (region-fill inspection), and anime inking (stroke-geometry warning categories). Other skill routes are rejected until their own measurements exist.
+
+The report is SHA-256 hashed locally; the attempt is stored in `project.artistLearning` and survives project normalization and file round trips. The UI shows attempts, mastery count and the next recommended exercise. This is per-project progress tracking with user-triggered assessments, not autonomous model training. A digest is an integrity reference, not proof that a report is truthful. No unmeasured skill is awarded a score.
+
