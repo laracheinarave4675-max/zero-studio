@@ -302,3 +302,13 @@ Data acquisition must be rights-aware: record provenance and permitted use for e
 
 - [x] Extract bounded alpha-connected raster components and pixel-boundary contours locally, and include them in the editor inspection report without semantic overclaim.
 - [x] Publish the tested artist branch to the isolated Cloudflare Pages preview for the first device-level drawing test.
+
+
+## Verification and preview refresh — 2026-11-21
+
+- Tightened the raster contour regression so the 2-megapixel safety cap is tested with a correctly sized RGBA buffer, rather than accidentally passing due to a malformed buffer.
+- Verified head `d47fc135ad46ffed686ae1d25e5e11358ce8394e`: Drawing engine run #2762 passed; Hybrid raster/SVG run #801 passed. Both native brush proof and deterministic Digital Artist portrait artifacts were generated and uploaded.
+- Cloudflare Pages preview deployment `ce5d0058-dfff-4fb6-a825-24f59771e2c1` completed successfully from the same branch and exact commit. Branch preview alias: https://feat-digital-artist-engine.zero-studio-artist-preview.pages.dev
+- The preview is isolated from production. Vercel's daily free build limit remains a separate constraint; the Cloudflare Pages preview is the available test deployment.
+- PR #14 remains Draft and unmerged. No production Worker or existing image service was modified.
+- Remaining acceptance gate: user-side Android drawing test and visual review. No successful embedded vision inference or autonomous neural training is claimed.
