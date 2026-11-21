@@ -42,7 +42,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     })
   ];
   const ink=[
-    stroke("head-contour","Ink the constructed head silhouette.","ink","#332b38",7,headShape),
+    stroke("head-contour","Ink the constructed head silhouette with a stronger outer contour.","ink","#332b38",9,headShape),
     ...model.brows.map(brow=>stroke(brow.id,"Ink an expressive brow aligned to the derived brow axis.","ink","#443443",4,brow.points)),
     stroke("nose-bridge","Indicate the nose bridge with a restrained anime line.","ink","#b47f7c",2.5,model.nose.points),
     stroke("mouth-line","Ink the mouth curve aligned to the derived mouth landmark.","ink","#9e5e69",3,model.mouth.points),
@@ -50,7 +50,7 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     ...model.eyes.flatMap(eye=>{
       const left=eye.upperLid[0],right=eye.upperLid[eye.upperLid.length-1];
       return [
-        stroke(eye.id+"-upper-lid","Ink the expressive upper eyelid with stronger line weight.","ink","#2b2635",7,eye.upperLid),
+        stroke(eye.id+"-upper-lid","Ink the expressive upper eyelid with stronger line weight.","ink","#2b2635",9,eye.upperLid),
         stroke(eye.id+"-upper-crease","Add the upper eyelid crease to establish the eye socket.","ink","#806d79",2.1,eye.upperCrease,{opacity:.68}),
         stroke(eye.id+"-lower-lid","Ink the lighter lower eyelid.","ink","#66566a",3,eye.lowerLid),
         ...eye.lashFan.map((lash,index)=>stroke(eye.id+(index===0?"-outer-lashes":"-outer-lash-"+index),"Fan a tapered lash from the outer eye corner.","ink","#2b2635",2.6,[lash.from,lash.to])),
@@ -59,10 +59,10 @@ export function buildAnimeConstructionBrushPlan(model=buildAnimeConstructionMode
     }),
     stroke("garment-collar-seam","Define the neckline as a controlled V-shaped garment seam.","ink","#8f819d",3,[model.torso.neck.polygon[3],{x:model.torso.shoulders.center.x,y:model.torso.shoulders.center.y+model.head.bounds.height*.12},model.torso.neck.polygon[2]]),
     ...model.folds.map(fold=>stroke("cloth-fold-"+fold.id,"Draw a soft cloth fold from its tension or compression anchor.","ink","#9a8ba7",2.2,[fold.anchor,{x:fold.anchor.x+(fold.target.x-fold.anchor.x)*.45,y:fold.anchor.y+(fold.target.y-fold.anchor.y)*.45},fold.target])),
-    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.5,clump.flow))
+    ...model.hair.map(clump=>stroke("hair-flow-"+clump.id,"Ink the root-to-tip direction of this hair clump.","ink","#574b66",2.8,clump.flow))
   ];
   const highlights=[
-    ...model.hair.map(clump=>stroke("hair-sheen-"+clump.id,"Add a restrained reflected-light strand along the hair flow.","ink","#a99bb5",4.2,clump.flow.slice(3,Math.max(5,clump.flow.length-4)),{opacity:.72})),
+    ...model.hair.flatMap(clump=>clump.strands.map((strand,index)=>stroke("hair-sheen-"+clump.id+"-"+index,"Place a narrow reflected-light ribbon that follows the local hair-clump curvature.","ink",index?"#887b9a":"#c0b3c9",index?2.8:4.2,strand,{opacity:index?.5:.78}))),
     ...model.eyes.map(eye=>stroke(eye.id+"-iris-upper-rim","Define the upper iris rim beneath the eyelid.","ink","#694a57",1.8,eye.iris.slice(5,15),{opacity:.8}))
   ];
   const lightFromLeft=model.shadows.light.x<0;
