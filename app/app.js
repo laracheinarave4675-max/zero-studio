@@ -7,7 +7,7 @@ import{createNoriModel,validateCharacterModel,addCharacterModelToFrame,applyNori
 import{saveCharacterToLibrary,loadCharacterFromLibrary,removeCharacterFromLibrary}from"./character-library.mjs";
 import{addBackgroundToFrame,BACKGROUND_PRESETS}from"./backgrounds.mjs";
 import{drawRasterBrushStroke,fillRasterRegion,mapPointsToRaster,resolveBrushPressure}from"./raster-brushes.mjs";import{createPersistentRasterSurfaceManager,encodeRasterSurfaceStroke}from"./raster-surface.mjs";
-import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";
+import{compileDigitalArtistBrushPlan}from"./digital-artist-brush-engine.mjs";import{buildAnimeVisionBrushPlan}from"./digital-artist-vision-brush-planner.mjs";import{createDigitalArtistDemoPlan}from"./digital-artist-demo-plan.mjs";import{executeDigitalArtistBrushStream}from"./digital-artist-brush-executor.mjs";import{validateDigitalArtistStrokeEdit}from"./digital-artist-stroke-edit.mjs";import{analyzeRasterPixels,analyzeStrokeGeometry,inspectRegionFillGroup,compareAnatomyGuideToDNA}from"./digital-artist-eyes.mjs";import{getAnimeArtistCurriculum}from"./anime-artist-curriculum.mjs";import{createArtistLearningRecord,recordArtistAssessment,evaluateArtistSkillProgress,recommendNextArtistPractice}from"./digital-artist-learning.mjs";import{buildArtistCorrectionPlan}from"./digital-artist-corrections.mjs";
 import{ANIME_ANATOMY_JOINTS,createAnimeCharacterDNA,validateAnimeCharacterDNA,createAnimeAnatomyPlan,createAnimeFrameDrawingTasks,createAnimeAnatomySequence,attachAnimeFrameDrawing,reviewAnimeFrame,auditAnimeAnatomySequence,validateAnimeFrameRasterAsset,getAnimeAnatomyFrameRole,buildAnimeAnatomyConstruction}from"./anime-anatomy-engine.mjs";
 import{createKimonoSideWalkChart,getKimonoSideWalkFrameBrief,KIMONO_WALK_REFERENCE}from"./kimono-side-walk-chart.mjs";
 import{createAnimeAutoDrawingPlan,createAnimeAutoDrawingOrder,createAnimeAutoDrawingRequest,removeAnimeChromaKeyFromRgba}from"./anime-auto-drawing-engine.mjs";
@@ -1018,37 +1018,6 @@ function setDigitalArtistStrokeReview(review){
  const record=collectDigitalArtistStrokeRecords().find(item=>item.key===selectedDigitalArtistStrokeKey);
  if(!record)return;
  snapshot();record.stroke.review=review;buttons();renderDigitalArtistStrokeReview();
-}
-function artistLearningStatus(){
- const node=$("animeArtistLearningStatus");if(!node)return;
- const record=project.artistLearning||createArtistLearningRecord();
- const progress=evaluateArtistSkillProgress(record),next=recommendNextArtistPractice(record);
- node.textContent="سجل المحاولات: "+record.attempts.length+" · المهارات المتقنة: "+progress.summary.mastered+"/"+progress.summary.totalSkills+"\\n"+(next?"التدريب المقترح: "+next.skillId+"\\nالتمرين: "+next.exercises.join(" | "):"اكتمل المنهج وفق شروط التقييم.");
-}
-async function saveArtistAssessmentFromLatestReport(){
- const status=$("animeArtistLearningStatus"),reportNode=$("digitalArtistEyesReport");
- try{
-  const report=JSON.parse(reportNode?.dataset.report||"null");if(!report)throw Error("افحص الرسم أولاً للحصول على تقرير قياس.");
-  const skillId=$("animeArtistSkillSelect")?.value||"",skill=getAnimeArtistCurriculum().find(item=>item.id===skillId);if(!skill)throw Error("اختر مهارة صحيحة.");
-  let checks=[];
-  if(skillId==="body-anatomy"){
-   const anatomy=report.characterIdentity?.anatomy;if(!anatomy||anatomy.skipped||!Array.isArray(anatomy.measurements))throw Error("هذه المهارة تحتاج مرجع Character DNA ووضعية معتمدة.");
-   checks=anatomy.measurements.slice(0,32).map(item=>({id:"anatomy-"+item.name,passed:item.passed===true}));
-  }else if(skillId==="flat-color-groups"){
-   const fills=report.fillEyes||[];if(fills.length<3)throw Error("نحتاج ثلاث مناطق تعبئة مقاسة على الأقل.");
-   checks=fills.slice(0,32).map(item=>({id:"fill-"+item.id,passed:item.passed===true}));
-  }else if(skillId==="anime-inking"){
-   const warnings=report.strokeWarnings||[];
-   checks=["zero-length-stroke","duplicate-consecutive-points","over-sampled-micro-segments","excessive-direction-changes","unstable-pressure"].map(code=>({id:"line-"+code,passed:!warnings.some(item=>item.code===code)}));
-  }else throw Error("لم نربط مقاييس هذه المهارة بفحص آلي كافٍ؛ لن نسجل نتيجة تخمينية.");
-  if(checks.length<3)throw Error("التقرير لا يحتوي على ثلاثة قياسات مستقلة على الأقل.");
-  if(!globalThis.crypto?.subtle)throw Error("يتطلب حفظ التقييم متصفحاً يدعم SHA-256.");
-  const hash=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(report)));
-  const digest=[...new Uint8Array(hash)].map(value=>value.toString(16).padStart(2,"0")).join("");
-  snapshot();project.artistLearning||=createArtistLearningRecord({characterId:report.characterIdentity?.characterAssetId||""});
-  const attempt=recordArtistAssessment(project.artistLearning,{id:"assessment-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),skillId,reportDigest:digest,checks});
-  artistLearningStatus();status.textContent+="\\nتم حفظ محاولة "+skillId+" بنتيجة "+Math.round(attempt.score*100)+"% من "+checks.length+" قياسات. هذا سجل تقدم وليس تدريباً لنموذج عصبي.";
- }catch(error){if(status)status.textContent="لم يُحفظ التقييم: "+(error?.message||String(error));}
 }
 function ensureArtistLearningRecord(){
  if(!project.artistLearning)project.artistLearning=createArtistLearningRecord();
