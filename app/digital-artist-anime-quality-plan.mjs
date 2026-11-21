@@ -12,10 +12,16 @@ const outline = (id,intent,points,size=7,color="#302538") => line(id,intent,"ink
 export function createDigitalArtistAnimeQualityPlan() {
   const hairBack = join(
     bezier([720,430],[620,170],[820,75],[970,92],18),
-    bezier([970,92],[1220,65],[1320,280],[1220,520],18),
-    bezier([1220,520],[1290,710],[1210,910],[1080,990],18),
-    bezier([1080,990],[1110,780],[1090,630],[1125,520],12),
-    bezier([1125,520],[980,610],[820,560],[720,430],12)
+    bezier([970,92],[1160,55],[1300,205],[1305,420],18),
+    bezier([1305,420],[1335,650],[1290,875],[1190,1000],18),
+    bezier([1190,1000],[1040,1040],[820,1040],[700,1000],16),
+    bezier([700,1000],[620,850],[620,650],[650,520],14),
+    bezier([650,520],[665,465],[690,440],[720,430],8)
+  );
+  const faceJaw = join(
+    bezier([790,390],[785,510],[835,650],[920,710],16),
+    bezier([920,710],[950,735],[985,735],[1015,710],10),
+    bezier([1015,710],[1090,650],[1140,510],[1135,390],16)
   );
   const face = join(
     bezier([790,340],[850,260],[1070,250],[1135,350],16),
@@ -72,7 +78,7 @@ export function createDigitalArtistAnimeQualityPlan() {
       fill("glint-right","Add two controlled reflected lights to the right eye.","#fffdf8",[[1028,440],[1045,432],[1054,445],[1048,458]])
     ]},
     {id:"ink",name:"06 Clean anime line art",role:"clean-line",strokes:[
-      outline("face-ink","Ink a soft cheek and chin contour.",face,6),
+      outline("face-ink","Ink the open cheek and chin contour without drawing a line across the forehead.",faceJaw,6),
       outline("hair-back-ink","Ink the large rear hair silhouette.",hairBack,9),
       outline("fringe-left-ink","Ink the left fringe lock.",fringeLeft,8),
       outline("fringe-mid-ink","Ink the central fringe lock.",fringeMid,8),
