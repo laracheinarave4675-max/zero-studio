@@ -273,3 +273,16 @@ The artist editor now connects the local inspection report to the evidence ledge
 
 The report is SHA-256 hashed locally; the attempt is stored in `project.artistLearning` and survives project normalization and file round trips. The UI shows attempts, mastery count and the next recommended exercise. This is per-project progress tracking with user-triggered assessments, not autonomous model training. A digest is an integrity reference, not proof that a report is truthful. No unmeasured skill is awarded a score.
 
+
+
+## Construction-driven anime geometry and three-view continuity — 2026-11-21
+
+The first construction-first anime artist now lives in `app/anime-construction-artist.mjs`. It derives face axes and feature zones from a normalized head box and a versioned style profile, then builds two eye systems, seven separate root-to-tip hair clumps, view-dependent far-side hair/ear compression, a neck and torso silhouette, garment tension anchors, and declared light/shadow anchors. This remains a parameterized geometry generator: it does not infer those structures from pixels.
+
+`app/anime-construction-brush-plan.mjs` converts that geometry into editable native raster operations. The current plan contains semantic construction, flat-color, clean-line, shadow and highlight layers. The actual preview is executed by the Canvas2D brush executor; the PNG is a flattened proof only, while each operation remains separately addressable in the plan.
+
+A three-view render script creates left three-quarter, front and right three-quarter studies from the same style profile and stable hair-clump identifiers. Far-side face width, eye scale, hair placement and ear size respond to yaw. CI tests ensure the three views differ structurally and all brush geometry stays within the 1920×1080 canvas.
+
+**Known limitation:** this is not yet a full 3D head model or a semantic image-understanding system. Skull depth, cheek/jaw planes, ear attachment, occlusion masks and torso rotation remain approximate. The current three-view sheet demonstrates view-dependent geometry, not professional identity continuity or final artistic quality. The general benchmark remains under visual review; the user's library character is intentionally excluded until the baseline is accepted.
+
+**Verification:** commit `8fd924660a8cbd5a3055ae838eea492e5f0e7f09` passed Drawing engine and Hybrid raster/SVG CI, with 469/469 tests passing in each Node test job. The construction study and three-view sheet were rendered and uploaded as CI artifacts. Vercel preview builds are currently rate-limited; no production deployment or PR merge was made.
