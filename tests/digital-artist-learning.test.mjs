@@ -13,7 +13,7 @@ const add = (record, id, skillId, passed = 9) => recordArtistAssessment(record, 
 
 test("learning ledger requires report-backed measured checks", () => {
   const record = createArtistLearningRecord({characterId:"hero-01", referenceDigest:digest});
-  assert.throws(() => add(record, "bad", "anime-eyes-expressions", 8), /report digest/);
+  assert.throws(() => recordArtistAssessment(record, {id:"bad", skillId:"anime-eyes-expressions", checks:checks()}), /SHA-256/);
   assert.throws(() => recordArtistAssessment(record, {id:"x", skillId:"anime-eyes-expressions", reportDigest:digest, checks:[{id:"a",passed:true}]}), /3–32/);
   assert.equal(record.attempts.length, 0);
 });
