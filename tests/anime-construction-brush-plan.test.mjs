@@ -8,7 +8,7 @@ test("construction geometry compiles into editable native raster brush layers",(
  const plan=buildAnimeConstructionBrushPlan(model);
  const stream=compileAnimeConstructionBrushPlan(model);
  assert.equal(plan.format,"zero-studio-digital-artist-brush-plan");
- assert.deepEqual(plan.layers.map(layer=>layer.role),["construction","flat-color","clean-line","shadow"]);
+ assert.deepEqual(plan.layers.map(layer=>layer.role),["construction","flat-color","clean-line","shadow","highlight"]);
  assert.ok(plan.layers.some(layer=>layer.strokes.some(stroke=>stroke.id==="face-base")));
  assert.ok(plan.layers.some(layer=>layer.strokes.some(stroke=>stroke.id==="hair-flow-fringe-center")));
  assert.ok(plan.layers.some(layer=>layer.strokes.some(stroke=>stroke.id==="eye-left-upper-lid")));
@@ -35,7 +35,7 @@ test("expressive eye construction includes catchlights and outer lash strokes",(
  assert.ok(model.eyes.every(eye=>eye.bounds.height/eye.bounds.width>=.8));
  const plan=buildAnimeConstructionBrushPlan(model);
  const strokes=plan.layers.flatMap(layer=>layer.strokes);
- for(const id of ["eye-left-catchlight","eye-right-catchlight","eye-left-outer-lashes","eye-right-outer-lashes","ear-left","ear-right","cloth-fold-left-shoulder-tension"]){
+ for(const id of ["eye-left-catchlight","eye-right-catchlight","eye-left-outer-lashes","eye-right-outer-lashes","ear-left","ear-right","cloth-fold-left-shoulder-tension","garment-collar-seam","hair-sheen-fringe-center","eye-left-iris-upper-rim"]){
   assert.ok(strokes.some(stroke=>stroke.id===id),id+" should be present in the artist plan");
  }
 });
