@@ -198,11 +198,23 @@ This supersedes the vector-first character-art choice in D-029. The character Di
 - [x] Add closed polygon region-fill operations in the validated brush plan and native Canvas2D executor.
 - [x] Replace the demo flat-color bands with 14 closed semantic fills and add in-bounds/out-of-bounds pixel probes to the CI render.
 - [x] Visually inspect the latest render and confirm the broad horizontal flat-color bands are gone; record remaining silhouette/line-art defects.
-- [ ] Connect a vision-capable art planner to the approved Character DNA/reference and make it emit only validated brush commands.
+- [ ] Build the artist’s internal multi-eye perception passes (silhouette/contours, anatomy/construction, line-art quality, color/light, character identity); reports must identify pixel regions, affected layers/stroke IDs and correction targets. External VLMs are optional second opinions, not runtime prerequisites.
 - [x] Add per-operation selection, isolated preview, previous/next navigation, approve/reject/reset review controls, and persistent review state.
 - [x] Add validated per-operation point/pressure/brush-style correction, replay the full ordered raster layer from a scratch surface, commit atomically, refuse locked layers, and reset edited marks to pending review.
+- [ ] Improve the native anime drawing hand: stable tapered inking, speed/pressure response, organic hair/cloth brushes, cleaner boundary fills, cel-shadow masks and controlled highlights.
+- [ ] Build the authorized Anime Craft Library: model sheets, construction examples, line-art examples, color/shadow studies, stage annotations and stroke-process examples with provenance and usage rights.
+- [ ] Add measurable anime drawing exercises for eyes/heads/expressions, hair masses, anatomy/poses, hands/costume folds, perspective, inking/taper, flat colors and cel shading.
+- [ ] Connect perception reports to the existing correction/replay loop and measure before/after quality improvements on the same reference task.
 - [ ] Add visual critique that revises existing brush commands and layer content, not a regenerated image.
 - [ ] Run the fixture in a real browser, inspect its rendered output, then produce one full-body character from a blank canvas using only native brush commands; visually review identity, anatomy, ink quality, flats, shadows and details.
 - [ ] After the still passes visual review, extend the artist to independently authored animation drawings at the unchanged 24 drawings/second target.
 
 **Important:** The older D-029 vector command contract remains optional infrastructure for geometric guides and selected contours. It is not the acceptance route for final anime character art. No generated image/video, no paid compute, no merge/deploy without user approval.
+
+## D-031 — Artist-owned perception and anime craft learning (2026-11-21)
+
+The two governing goals remain: build a real anime production studio, and build its own digital artist that draws editable native marks and ultimately authors 24 independent drawings per second. The artist must have its own internal eyes and learn anime drawing craft; an external vision-language model is optional and never a required dependency.
+
+**Implementation order:** internal silhouette/anatomy/line/color/identity analysis → strengthen brushes, fills, inking, cel shading and highlights → create a rights-cleared anime model-sheet and craft library → connect visual critique to stroke correction/replay → produce and review one complete original character → evaluate the 24-independent-drawings/second animation path.
+
+Data acquisition must be rights-aware: record provenance and permitted use for every reference. Manga109 general data is academic non-commercial; Manga109-s has a separate limited commercial-use permission with restrictions. Do not use a non-commercial dataset for commercial learning/output.
