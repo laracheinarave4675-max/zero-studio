@@ -42,10 +42,19 @@ jobs:
         run: npm install --no-save --no-package-lock @napi-rs/canvas
       - name: Render the five native raster brushes
         run: node scripts/render-raster-brush-proof.mjs
+      - name: Render the deterministic Digital Artist portrait
+        run: node scripts/render-digital-artist-demo.mjs
       - name: Upload brush proof sheet
         uses: actions/upload-artifact@v4
         with:
           name: zero-studio-raster-brush-proof
           path: artifacts/raster-brush-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload Digital Artist portrait proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-digital-artist-portrait-proof
+          path: artifacts/digital-artist-portrait-proof/
           if-no-files-found: error
           retention-days: 14
