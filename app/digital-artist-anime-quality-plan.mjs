@@ -117,9 +117,18 @@ export function createDigitalArtistAnimeQualityPlan() {
       line("fold-right-1","Describe the right sleeve fold.","ink","#887a9d",3,[[1260,900],[1205,940],[1170,990]]),
       line("fold-right-2","Add a secondary garment crease.","ink","#a194ae",2,[[1290,945],[1240,975],[1210,1015]]),
       line("bodice-seams","Add the garment seam and waist construction.","ink","#b8a7c1",2,[[820,870],[900,925],[970,950],[1040,925],[1120,870]]),
-      line("cheek-blush","Blend a restrained blush across the left cheek inside the face.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2,clipPolygon:face}),\n      line("cheek-blush-right","Blend a restrained blush across the right cheek inside the face.","watercolor","#e98e9b",22,[[1065,565],[1090,575],[1115,565]],{opacity:.38,texture:.2,clipPolygon:face}),
+      line("cheek-blush","Blend a restrained blush across the left cheek inside the face.","watercolor","#e98e9b",22,[[825,565],[850,575],[875,565]],{opacity:.38,texture:.2,clipPolygon:face}),
+      line("cheek-blush-right","Blend a restrained blush across the right cheek inside the face.","watercolor","#e98e9b",22,[[1065,565],[1090,575],[1115,565]],{opacity:.38,texture:.2,clipPolygon:face}),
       line("eye-lower-left","Add the soft lower lash line.","ink","#806477",3,[[820,475],[865,510],[925,480]]),
-      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]]),\n      line("eye-upper-left-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[820,455],[805,442],[790,435]]),\n      line("eye-upper-right-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[1125,455],[1145,442],[1160,435]]),\n      line("iris-light-left","Add a curved warm reflection within the left iris.","gouache","#e8a77d",3,[[862,470],[878,480],[894,478]],{opacity:.8,clipPolygon:leftEye}),\n      line("iris-light-right","Add a curved warm reflection within the right iris.","gouache","#e8a77d",3,[[1032,470],[1048,480],[1064,478]],{opacity:.8,clipPolygon:rightEye}),\n      line("nose-bridge","Suggest a delicate nose bridge and tip.","ink","#d69b91",2,[[970,500],[968,530],[980,545]],{opacity:.65,clipPolygon:face}),\n      line("lower-lip","Separate the lower lip with a soft tapered accent.","gouache","#c77e82",3,[[945,640],[970,646],[990,640]],{opacity:.7,clipPolygon:face}),\n      line("hair-strand-crown-left","Add a short crown strand following hair growth.","ink","#665a72",2,[[790,245],[835,205],[890,180]],{opacity:.7,clipPolygon:hairBack}),\n      line("hair-strand-crown-right","Add a second crown strand following hair growth.","ink","#665a72",2,[[1040,175],[1100,190],[1140,235]],{opacity:.7,clipPolygon:hairBack})
+      line("eye-lower-right","Add the soft lower lash line.","ink","#806477",3,[[995,480],[1055,510],[1125,475]]),
+      line("eye-upper-left-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[820,455],[805,442],[790,435]]),
+      line("eye-upper-right-accent","Build a tapered outer upper lash accent.","ink","#282236",5,[[1125,455],[1145,442],[1160,435]]),
+      line("iris-light-left","Add a curved warm reflection within the left iris.","gouache","#e8a77d",3,[[862,470],[878,480],[894,478]],{opacity:.8,clipPolygon:leftEye}),
+      line("iris-light-right","Add a curved warm reflection within the right iris.","gouache","#e8a77d",3,[[1032,470],[1048,480],[1064,478]],{opacity:.8,clipPolygon:rightEye}),
+      line("nose-bridge","Suggest a delicate nose bridge and tip.","ink","#d69b91",2,[[970,500],[968,530],[980,545]],{opacity:.65,clipPolygon:face}),
+      line("lower-lip","Separate the lower lip with a soft tapered accent.","gouache","#c77e82",3,[[945,640],[970,646],[990,640]],{opacity:.7,clipPolygon:face}),
+      line("hair-strand-crown-left","Add a short crown strand following hair growth.","ink","#665a72",2,[[790,245],[835,205],[890,180]],{opacity:.7,clipPolygon:hairBack}),
+      line("hair-strand-crown-right","Add a second crown strand following hair growth.","ink","#665a72",2,[[1040,175],[1100,190],[1140,235]],{opacity:.7,clipPolygon:hairBack})
     ]}
   ];
   return {
