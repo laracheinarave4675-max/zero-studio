@@ -42,10 +42,10 @@ Last updated: 2026-11-21 (UTC)
 
 ## Immediate next steps
 
-1. Connect a vision-capable planner that takes an approved character reference and emits only validated native-brush commands.
-2. Add per-stroke replay/scrubbing, correction, layer review, approval and safe re-execution to the editor.
-3. Run the deterministic portrait fixture through the actual browser renderer and inspect the resulting seven-layer raster drawing, then replace the fixture with a model-authored plan.
-4. Produce and visually review one complete character before starting the independently drawn 24-FPS animation path.
+1. Connect a free vision-capable planner that takes an approved character reference and emits only validated native-brush commands; fail closed when free inference quota is exhausted.
+2. Add automated critique that edits existing stroke records and uses the validated layer-replay path.
+3. Run the editor interaction flow in a real browser/Android browser and inspect the seven-layer project, not only the CI renderer artifact.
+4. Produce and visually review one complete model-authored character before starting the independently drawn 24-FPS animation path.
 
 ---
 
