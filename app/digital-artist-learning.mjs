@@ -72,22 +72,17 @@ export function recordArtistAssessment(record, assessment) {
 
 export function evaluateArtistSkillProgress(record) {
   validateRecord(record);
+  const masteredBySkill = new Map();
   const result = ANIME_ARTIST_SKILL_CATALOG.map(skill => {
     const attempts = record.attempts.filter(item => item.skillId === skill.id).slice(-5);
     const lastThree = attempts.slice(-3);
     const average = attempts.length ? attempts.reduce((sum, item) => sum + item.score, 0) / attempts.length : 0;
     const prerequisites = skill.prerequisites.map(id => ({
-      id,
-      mastered: false
+      id, mastered: masteredBySkill.get(id) === true
     }));
-    const prior = new Map();
-    for (const candidate of ANIME_ARTIST_SKILL_CATALOG) {
-      const history = record.attempts.filter(item => item.skillId === candidate.id).slice(-3);
-      prior.set(candidate.id, history.length >= 3 && history.every(item => item.score >= 0.85));
-    }
-    for (const prerequisite of prerequisites) prerequisite.mastered = prior.get(prerequisite.id) === true;
     const prerequisitesMet = prerequisites.every(item => item.mastered);
     const mastered = prerequisitesMet && lastThree.length === 3 && lastThree.every(item => item.score >= 0.85);
+    masteredBySkill.set(skill.id, mastered);
     return {
       skillId: skill.id, domain: skill.domain, level: skill.level,
       attempts: attempts.length, averageScore: Number(average.toFixed(3)),
