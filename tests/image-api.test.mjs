@@ -235,3 +235,66 @@ test("GET diagnostic identifies a mismatched bearer token without inference", as
     else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
   }
 });
+
+test("image API forwards semantic identity, pose and continuity roles", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  let forwarded;
+  globalThis.fetch = async (_url, options) => {
+    forwarded = JSON.parse(options.body);
+    return new Response(JSON.stringify({
+      ok: true, imageDataUrl: "data:image/jpeg;base64,aGVsbG8=",
+      mimeType: "image/jpeg", referenceCount: 4
+    }), { status: 200 });
+  };
+  try {
+    const roles = ["identity", "pose", "pose", "continuity"];
+    const res = responseRecorder();
+    await handler(request({ body: {
+      prompt: "redraw the walk frame",
+      model: "flux-2-klein-4b",
+      references: Array(4).fill(CHARACTER_REFERENCE_PNG),
+      referenceRoles: roles,
+      aspectRatio: "16:9"
+    } }), res);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(forwarded.referenceRoles, roles);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
+
+test("image API rejects invalid semantic reference roles before inference", async () => {
+  const oldOrigin = process.env.ZERO_STUDIO_APP_ORIGIN;
+  const oldToken = process.env.ZERO_STUDIO_ACCESS_TOKEN;
+  const oldFetch = globalThis.fetch;
+  process.env.ZERO_STUDIO_APP_ORIGIN = ORIGIN;
+  process.env.ZERO_STUDIO_ACCESS_TOKEN = "unit-test-secret";
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response("{}"); };
+  try {
+    const res = responseRecorder();
+    await handler(request({ body: {
+      prompt: "redraw",
+      model: "flux-2-klein-4b",
+      references: [CHARACTER_REFERENCE_PNG],
+      referenceRoles: ["pose"]
+    } }), res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, "invalid_reference_roles");
+    assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (oldOrigin === undefined) delete process.env.ZERO_STUDIO_APP_ORIGIN;
+    else process.env.ZERO_STUDIO_APP_ORIGIN = oldOrigin;
+    if (oldToken === undefined) delete process.env.ZERO_STUDIO_ACCESS_TOKEN;
+    else process.env.ZERO_STUDIO_ACCESS_TOKEN = oldToken;
+  }
+});
