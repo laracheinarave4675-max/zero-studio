@@ -1,14 +1,18 @@
-const CACHE="zero-studio-shell-v47";
+const CACHE="zero-studio-shell-v48";
 const FILES=[
-  "./","./index.html","./styles.css","./app.js","./engine.mjs",
-  "./raster-brushes.mjs","./raster-environment-media.mjs","./raster-surface.mjs",
-  "./character-model.mjs","./character-library.mjs","./backgrounds.mjs","./zip.mjs",
-  "./gemini-drawing.mjs","./scene-production.mjs","./environment-art.mjs",
-  "./mesh-scene-renderer.mjs","./anime-background-painter.mjs",
-  "./animation-production.mjs","./frame-history.mjs","./animation-worker.mjs",
-  "./manifest.webmanifest"
+  "./","./index.html","./styles.css","./app.js","./manifest.webmanifest",
+  "./engine.mjs","./zip.mjs","./scene-production.mjs","./animation-production.mjs",
+  "./frame-history.mjs","./character-model.mjs","./character-library.mjs",
+  "./backgrounds.mjs","./raster-brushes.mjs","./raster-surface.mjs",
+  "./digital-artist-brush-engine.mjs","./digital-artist-vision-brush-planner.mjs",
+  "./digital-artist-demo-plan.mjs","./digital-artist-brush-executor.mjs",
+  "./digital-artist-stroke-edit.mjs","./digital-artist-eyes.mjs",
+  "./anime-artist-curriculum.mjs","./anime-drawing-training.mjs",
+  "./digital-artist-learning.mjs","./digital-artist-corrections.mjs",
+  "./anime-anatomy-engine.mjs","./kimono-side-walk-chart.mjs",
+  "./anime-auto-drawing-engine.mjs"
 ];
-const SHELL_NETWORK_FIRST=new Set(["/","/index.html","/app.js"]);
+const isAppCode=url=>/\\.(?:html|css|m?js)$/i.test(url.pathname);
 self.addEventListener("install",event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
 });
@@ -23,14 +27,20 @@ self.addEventListener("fetch",event=>{
   if(event.request.method!=="GET")return;
   const url=new URL(event.request.url);
   if(url.origin!==self.location.origin||url.pathname.startsWith("/api/"))return;
-  if(SHELL_NETWORK_FIRST.has(url.pathname)){
+  if(event.request.mode==="navigate"||isAppCode(url)){
     event.respondWith(
       fetch(event.request)
         .then(response=>{
           if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}
           return response;
         })
-        .catch(()=>caches.match(event.request))
+        .catch(async()=>{
+          const cached=await caches.match(event.request);
+          if(cached)return cached;
+          return new Response("ZERO STUDIO: تعذر تحميل ملف التطبيق. تحقق من الاتصال ثم أعد المحاولة.",{
+            status:503,headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store"}
+          });
+        })
     );
     return;
   }
@@ -38,6 +48,6 @@ self.addEventListener("fetch",event=>{
     caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{
       if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}
       return response;
-    }).catch(()=>caches.match("./index.html")))
+    }).catch(()=>new Response("",{status:503})))
   );
 });
