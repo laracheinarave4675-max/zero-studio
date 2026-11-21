@@ -319,6 +319,17 @@ async function handle(request, env) {
     return json({ error: "invalid_json" }, 400, cors);
   }
 
+  if (input?.workload !== undefined && input.workload !== "anime-auto-drawing") {
+    return json({ error: "invalid_workload" }, 400, cors);
+  }
+  if (input?.workload === "anime-auto-drawing" &&
+      String(env.ANIME_AI_FREE_TIER_CONFIRMED || "") !== "true") {
+    return json({
+      error: "anime_free_tier_not_confirmed",
+      message: "Automated anime drawing is disabled until the Workers AI free-only account setting is verified. No inference was started."
+    }, 503, cors);
+  }
+
   const prompt = typeof input?.prompt === "string" ? input.prompt.trim() : "";
   if (!prompt || prompt.length > MAX_PROMPT_LENGTH) {
     return json({ error: "invalid_prompt", message: "Prompt must contain 1–2048 characters." }, 400, cors);
