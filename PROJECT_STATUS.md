@@ -2,18 +2,26 @@
 
 Last updated: 2026-11-21 (UTC)
 
-## D-030 Raster-first Digital Artist — executor and editor integration
+## D-030 Raster-first Digital Artist — native execution and rendered proof
 
 - The approved drawing hand is the existing native Canvas2D raster brush engine. SVG remains optional for guides and selected geometry; it is not the final-art requirement.
-- Added `app/digital-artist-brush-executor.mjs`: validates the compiled raster command stream, executes strokes in exact layer/order sequence through host adapters, finalizes one layer at a time, reports progress, and rolls back every created layer after a failed execution.
-- Connected the executor to `app/app.js` and added the Digital Artist panel in `app/index.html`. It accepts a brush-plan JSON, creates transparent native raster layers, invokes the existing `drawRasterBrushStroke` Canvas2D engine, and saves each stroke with its stable ID, drawing intent, source, pressure samples, and brush options in the native project.
-- Added a deterministic seven-layer anime portrait test plan containing 54 brush strokes. It is deliberately a hand-authored engine fixture, not an AI-generated drawing or proof of autonomous artistry. Loading and running it lets the editor exercise the complete raster command path.
-- Updated native project normalization in `app/engine.mjs` to preserve Digital Artist stroke metadata and assign IDs to legacy manual strokes. The brush plan now respects the existing 500,000-sample project safety limit.
-- Added `tests/digital-artist-brush-executor.test.mjs` and `tests/digital-artist-raster-history.test.mjs` for ordered execution, layer finalization, rollback, invalid streams, and persistent stroke-history compatibility.
-- **Verified:** GitHub Actions Drawing engine tests run #2318 and Hybrid raster/SVG regression run #577 both completed successfully on branch HEAD `7e6149a3af8dbdfb1eaa4aa094709478d54f598e`. Drawing CI passed syntax checks and `node --test tests/*.test.mjs`.
-- **Not yet implemented:** a vision-capable model planner that interprets the approved character reference and creates the brush plan; in-editor individual-stroke scrub/replay, correction, and approval UI; a full AI-authored character; visual-quality acceptance; and physical Android testing.
+- Added `app/digital-artist-brush-executor.mjs`: strict validation, ordered layer/stroke execution, per-layer finalization, progress callbacks and rollback of all created layers after failure.
+- Connected the executor to `app/app.js` and added a Digital Artist panel in `app/index.html`. A brush-plan JSON can now create transparent native raster layers and call the existing `drawRasterBrushStroke` Canvas2D renderer.
+- Extracted the shared seven-layer / 54-stroke deterministic sample into `app/digital-artist-demo-plan.mjs`. It is a reproducible test fixture, not AI inference or a user-approved character.
+- Native project normalization retains each stroke's ID, intent, source, pressure points and brush settings. Older manual raster strokes remain compatible.
+- Added `scripts/render-digital-artist-demo.mjs`, which executes the same 54 commands through the actual Canvas2D brush renderer and exports the composite plus seven separate transparent layer PNGs. Added a regression test for the shared fixture.
+- **Verified on HEAD `f8f6e2019c0e76edd26530cc63e6ce8fae6b15b8`:** GitHub Actions Drawing engine run #2330 passed syntax checks and all 353 tests (0 failures); Hybrid raster/SVG run #581 also passed all 353 tests and completed the brush and Digital Artist PNG proof exports. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44932294627 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44932294625.
+- **Visual inspection finding:** the 54-stroke demo is a mechanical renderer proof, not an accepted anime drawing. Its skin/clothing flats appear as broad horizontal bands; the fill method needs improvement before any visual-quality claim.
+- **Not yet implemented:** a vision-capable planner that interprets the approved character reference and creates the brush plan; individual-stroke scrub/replay, correction and approval UI; a full AI-authored character; visual-quality acceptance; and physical Android testing.
 - **Deployment:** Vercel reports a free build-rate-limit failure for this branch preview. No paid upgrade or fallback was used. The branch remains isolated and PR #14 remains open as a draft; no merge or production deployment occurred.
 - Budget remains $0. The long-term target remains 24 independently authored drawings per second. No image/video-generation output is accepted as final Digital Artist artwork.
+
+## Immediate next steps
+
+1. Improve flat-color region painting so it follows the character silhouette rather than producing broad bands; retain the native brush/stroke source.
+2. Connect a vision-capable planner to an approved character reference and make it emit only validated native-brush commands, with no image-generation output.
+3. Add individual-stroke replay/scrubbing, correction, layer review, approval and safe re-execution.
+4. Produce and visually review one complete character before starting the independently drawn 24-FPS animation path.
 
 ## D-029 / D-030 architecture record
 
