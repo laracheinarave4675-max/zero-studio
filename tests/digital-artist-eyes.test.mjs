@@ -332,5 +332,5 @@ test("raster contour eye filters tiny components, caps output and rejects oversi
   assert.equal(filtered.connectedComponentCount,1);
   assert.equal(filtered.returnedComponentCount,1);
   assert.equal(filtered.components[0].area,4);
-  assert.throws(()=>extractRasterContours({width:2049,height:1024,data:new Uint8ClampedArray(0)}),/dimensions|RGBA/);
+  assert.throws(()=>extractRasterContours({width:2049,height:1024,data:new Uint8ClampedArray(2049*1024*4)}),/2 megapixels/);
 });
