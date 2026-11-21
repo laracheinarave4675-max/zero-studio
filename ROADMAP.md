@@ -159,3 +159,22 @@ The former SVG-generated motion branch is archived as a visually rejected experi
 - [ ] Complete visual playback, Android performance, persistence, recovery, alpha, and export tests on the user's Android device.
 
 The previous per-frame image-generation request route is legacy-only and not an accepted animation method. See docs/ANIME_ANATOMICAL_DRAWING_ENGINE.md. Passing unit tests does not equal visual acceptance.
+
+## Digital Artist track — D-029 (approved 2026-11-21)
+
+The new primary character-art direction is an AI digital artist that draws through ordered editable strokes and paths, not image generation. See docs/DIGITAL_ARTIST_ARCHITECTURE.md.
+
+- [x] Approve the Digital Artist architecture and record D-029.
+- [x] Define a versioned, provider-neutral plan schema with semantic art stages and individual stroke/tool/intent metadata.
+- [x] Validate SVG operations, bounds, IDs, layer sequence and reject embedded raster/image payloads.
+- [x] Compile plans into editable semantic vector layers and replayable one-stroke steps.
+- [ ] Pass the Digital Artist module tests in GitHub Actions.
+- [ ] Connect a vision-capable model planner to produce validated stroke plans from a brief plus approved character reference, without image-generation output.
+- [ ] Integrate stroke-by-stroke replay, layer preview, approval/rejection and commit into the Android workspace.
+- [ ] Produce one complete full-body character from a blank canvas; inspect the editable paths and visual quality against the approved model sheet.
+- [ ] Add visual critique that edits existing vector paths instead of regenerating an image.
+- [ ] Collect permitted drawing-process examples and reviewed corrections for supervised/tool-use improvement; do not begin large-scale RL without process data and a reliable evaluator.
+- [ ] Only after the still passes visual review, extend the same artist to independently authored animation drawings at the unchanged 24 drawings/second target.
+
+**Non-claims:** the schema and unit tests do not prove autonomous drawing, professional anime quality, or visual identity retention. No image/video generation is permitted in the final-art authoring path.
+
