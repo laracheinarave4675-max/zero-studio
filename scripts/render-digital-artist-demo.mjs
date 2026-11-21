@@ -11,6 +11,8 @@ const plan = createDigitalArtistDemoPlan();
 const stream = compileDigitalArtistBrushPlan(plan);
 const composite = createCanvas(width, height);
 const compositeContext = composite.getContext("2d");
+const artistComposite = createCanvas(width, height);
+const artistCompositeContext = artistComposite.getContext("2d");
 compositeContext.fillStyle = "#f5f1e9";
 compositeContext.fillRect(0, 0, width, height);
 
@@ -49,6 +51,9 @@ const result = await executeDigitalArtistBrushStream(stream, {
       compositeContext.globalAlpha = 1;
       compositeContext.globalCompositeOperation = "source-over";
       compositeContext.drawImage(target.canvas, 0, 0);
+      artistCompositeContext.globalAlpha = 1;
+      artistCompositeContext.globalCompositeOperation = "source-over";
+      artistCompositeContext.drawImage(target.canvas, 0, 0);
     }
 
     layerIndex++;
@@ -99,7 +104,7 @@ const report = {
   strokeCount: result.strokeCount,
   regionFillCount: layerReports.reduce((sum, layer) => sum + layer.regionFillCount, 0),
   artistEyes: {
-    raster: analyzeRasterPixels({ width, height, data: compositeContext.getImageData(0, 0, width, height).data }),
+    raster: analyzeRasterPixels({ width, height, data: artistCompositeContext.getImageData(0, 0, width, height).data }),
     lines: stream.commands.map(analyzeStrokeGeometry),
     layerSummaries: layerReports.map(layer => ({
       id: layer.id, role: layer.role, visible: layer.visible,
