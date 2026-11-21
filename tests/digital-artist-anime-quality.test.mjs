@@ -119,3 +119,15 @@ test("anime cel-shadow planes use smooth sampled contours and semantic clipping"
   assert.ok(stroke.clipPolygon?.length>=3,"shadow plane must be clipped to its semantic silhouette: "+id);
  }
 });
+
+
+test("foreground anime fringe is painted after skin and before facial features",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layerIds=plan.layers.map(layer=>layer.id);
+ const skin=layerIds.indexOf("skin-flats");
+ const fringe=layerIds.indexOf("front-hair");
+ const features=layerIds.indexOf("features");
+ assert.ok(skin>=0&&fringe>skin&&features>fringe,"fringe must overlay the face but remain behind the facial-feature pass");
+ const fringeIds=plan.layers[fringe].strokes.map(stroke=>stroke.id);
+ assert.deepEqual(fringeIds,["hair-fringe-left","hair-fringe-mid","hair-fringe-right"]);
+});
