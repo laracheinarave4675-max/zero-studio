@@ -72,9 +72,13 @@ export function deriveAnimeHeadConstruction({bounds, viewYaw=0, profile=DEFAULT_
   const absYaw=Math.abs(yaw),direction=Math.sign(yaw),cx=x+width/2;
   const cosYaw=Math.cos(absYaw*Math.PI*.46),sinYaw=Math.sin(absYaw*Math.PI*.46);
   const at=ratio=>y+height*ratio;
+  const nearSideScale=1+absYaw*.09;
+  const farSideScale=1-absYaw*.42;
   const project=(localX,depth=0)=>{
     const normalizedX=localX-.5;
-    return cx+width*(normalizedX*cosYaw+direction*depth*sinYaw*.34);
+    const sideIsNear=normalizedX===0||Math.sign(normalizedX)===direction;
+    const sideScale=direction===0?1:(sideIsNear?nearSideScale:farSideScale);
+    return cx+width*(normalizedX*cosYaw*sideScale+direction*depth*sinYaw*.34);
   };
   const eyeY=at(style.head.eyeLine),browY=at(style.head.browLine);
   const noseY=at(style.head.noseBase),mouthY=at(style.head.mouthLine);
@@ -137,7 +141,7 @@ export function deriveAnimeHeadConstruction({bounds, viewYaw=0, profile=DEFAULT_
       {id:"chin",y:chin.y,left:chin.x-width*.025,right:chin.x+width*.025}
     ],
     eyes:[eye(-1),eye(1)],
-    projection:{yaw,cosYaw,sinYaw,faceDepth:.34},
+    projection:{yaw,cosYaw,sinYaw,faceDepth:.34,nearSideScale,farSideScale},
     derivedFromHeadBounds:true
   };
 }
