@@ -75,7 +75,7 @@ export function createAnimeHeadTurnPlan({
   durationSeconds = 1, fps = ANIME_HEAD_TURN_FPS, keyPoses,
   action = "The character turns their head from front to three-quarter view; hair follows with a soft delay."
 } = {}) {
-  const shot = clean(shotId, 100), character = clean(characterAssetId), dna = clean(characterDNAId || characterAssetId);
+  const shot = clean(shotId, 100), character = clean(characterAssetId), dna = clean(characterDNAId);
   if (!shot || !character || !dna) fail("يجب ربط دراسة الالتفات بأصل الشخصية وهوية Character DNA.");
   if (durationSeconds !== 1 || fps !== ANIME_HEAD_TURN_FPS) fail("اختبار الالتفات الأول ثابت على ثانية واحدة و24 رسمة مستقلة.");
   if (!Array.isArray(keyPoses) || keyPoses.length < 2 || keyPoses.length > 12) fail("تحتاج دراسة الالتفات إلى 2–12 وضعية مفتاحية.");
