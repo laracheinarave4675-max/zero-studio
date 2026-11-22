@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ZERO STUDIO — Character Decomposition Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#10151f;--panel:#1a2330;--line:#354256;--text:#edf2f8;--muted:#aab7c8;--accent:#7fc8b5;--danger:#ef9a9a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,sans-serif;padding:14px;max-width:1100px;margin:auto}
+h1{font-size:1.35rem;margin:4px 0}h2{font-size:1rem;margin:0 0 8px}.note{color:var(--muted);font-size:.88rem;margin:4px 0 10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+label{display:block;font-size:.9rem;color:var(--muted);margin:6px 0}
+input,select,button{font:inherit}input[type=text],input[type=file],select{width:100%;background:#101722;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px}
+button{background:#2c3b4d;color:var(--text);border:1px solid #52657c;border-radius:10px;padding:10px 12px;min-height:42px}
+button.primary{background:#245e56;border-color:#398e7d}button:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}
+canvas{display:block;width:100%;height:auto;max-height:72vh;background:#0c1119;border:1px solid var(--line);border-radius:10px;touch-action:none}
+#sourceCanvas{cursor:crosshair}
+.status{background:#111a25;border:1px solid var(--line);border-radius:9px;padding:9px;margin-top:8px;white-space:pre-wrap;font-size:.88rem}
+.part{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:7px 0}
+.part small{color:var(--muted)}.part input{width:auto}
+a{color:var(--accent)}
+</style></head>
+<body>
+<header><h1>مختبر تفكيك الشخصية وتجهيزها للتحريك</h1><p class="note">يحافظ هذا المختبر على بكسلات المرجع الأصلية. أنت تحدد أقنعة الأجزاء بالفرشاة؛ لا يوجد ادعاء بالتعرف الآلي على الشعر أو الوجه.</p></header>
+<section class="panel">
+<h2>1 — افتح مشروع الشخصية وصورة المرجع</h2>
+<div class="grid">
+<div><label>ملف مشروع ZERO (.zero) — اختياري</label><input id="projectFile" type="file" accept=".zero,application/json"></div>
+<div><label>صورة الشخصية المعتمدة (PNG / JPEG / WebP)</label><input id="sourceFile" type="file" accept="image/png,image/jpeg,image/webp"></div>
+</div>
+<div class="row" style="margin-top:8px"><button id="splitViewsBtn" class="primary" disabled>اكتشاف وفصل المناظر الثلاثة تلقائياً</button><div id="viewChoices" class="row"></div></div>
+<p class="note">الفصل يعتمد على اتصال الخلفية البيضاء بحواف الصورة. يبقى كل بكسل داخل حدود الشخصية كما هو؛ تُزال الخلفية الخارجية فقط. إذا لم تُكتشف ثلاثة مكونات واضحة، لن يخمّن النظام مواقعها.</p>
+<p class="note">ورقة الكيمونو الأصلية موجودة في معرض المشروع. نزّلها من <a href="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" target="_blank" rel="noopener">مرجع الشخصية بثلاث زوايا</a> ثم اختر الصورة هنا. لا نحمّل صورة من خادم خارجي إلى Canvas تلقائياً كي لا نخاطر بتلوث اللوحة أو فقدان البكسلات.</p>
+<div id="sourceStatus" class="status">لم تُحمّل صورة بعد.</div>
+</section>
+<section class="panel">
+<h2>2 — قسّم الصورة إلى أجزاء</h2>
+<p class="note">ابدأ بالطبقة الأساسية التي تحتوي كل بكسلات الصورة. زر تهيئة المنظر الأمامي ينشئ أسماء طبقات تشريحية فارغة فقط؛ بعد ذلك افصل كل جزء بالفرشاة أو العصا السحرية التي تختار مساحة اللون المتصلة داخل حدود الخطوط. الطلاء والاختيار ينقلان ملكية البكسلات إلى الجزء المحدد، ولا يغيران ألوان المرجع.</p>
+<div class="grid">
+<div><label>اسم الجزء</label><input id="partName" type="text" value="الشعر الخلفي"></div>
+<div><label>الدور الدلالي (مثلاً hair-back / face / sleeve)</label><input id="partRole" type="text" value="hair-back"></div>
+</div>
+<div class="row" style="margin-top:8px">
+<button id="frontPartsPresetBtn" class="primary" disabled>تهيئة طبقات المنظر الأمامي</button><button id="addPartBtn">إضافة جزء جديد</button><label>الجزء النشط<select id="partSelect"></select></label>
+<label>حجم الفرشاة <input id="brushSize" type="range" min="2" max="100" value="24"></label>
+</div>
+<div id="partsList" class="status">الطبقة الأساسية فقط.</div>
+<canvas id="sourceCanvas" width="1" height="1" aria-label="لوحة تحديد أجزاء الشخصية"></canvas>
+<div class="row"><button id="partitionModeBtn" class="primary">وضع تقسيم الأجزاء</button><button id="selectModeBtn">العصا السحرية: اختيار منطقة متصلة</button><button id="repairModeBtn">وضع استعادة المنطقة المخفية</button></div>
+<div class="row"><button id="undoMaskBtn" disabled>تراجع عن آخر تعديل</button><button id="redoMaskBtn" disabled>إعادة التعديل</button></div>
+<label>حساسية اختيار اللون <input id="selectTolerance" type="range" min="5" max="120" step="5" value="40"></label>
+<div id="decomposeStatus" class="status">ارفع صورة أولاً، ثم ارسم فوق مناطق الأجزاء.</div>
+</section>
+<section class="panel">
+<h2>3 — استعادة ما كان مخفياً خلف الشعر أو الملابس</h2>
+<p class="note">عند فصل خصلة شعر عن الرأس، لا توجد بكسلات للرأس تحتها في الصورة الأصلية. يجب رسم تلك المنطقة يدوياً أو نسخها من مرجع معتمد. لا يملأ النظام هذه المناطق بالتخمين.</p>
+<div class="grid">
+<div><label>اسم منطقة الإصلاح</label><input id="repairName" type="text" value="الرأس خلف الشعر"></div>
+<div><label>الجزء الأمامي الذي يحجبها</label><select id="occluderSelect"></select></div>
+<div><label>لون الإصلاح اليدوي</label><input id="repairColor" type="color" value="#f3d9ca"></div>
+<div><label>طريقة استعادة البكسلات</label><select id="repairMethod"><option value="manual-paint">طلاء يدوي بلون محدد</option><option value="clone-source">نسخ بكسلات من المرجع الحالي</option></select></div>
+</div>
+<div class="row"><button id="startRepairBtn">بدء منطقة إصلاح جديدة</button><button id="pickCloneSourceBtn" disabled>تحديد نقطة مصدر النسخ</button><button id="approveRepairBtn" disabled>اعتماد منطقة الإصلاح الحالية</button></div>
+<div id="repairStatus" class="status">الإصلاحات اليدوية تظل غير معتمدة حتى تراجعها.</div>
+</section>
+<section class="panel">
+<h2>4 — فحص حفظ الجودة وتجهيز Rig</h2>
+<div class="row"><button id="buildDecompositionBtn" class="primary" disabled>بناء الطبقات وفحص تطابق الصورة</button><button id="buildRigBtn" disabled>إنشاء هيكل تحريك آمن</button></div>
+<label>تقدم الحركة الثانوية <input id="motionScrub" type="range" min="0" max="100" value="0" disabled></label>
+<canvas id="previewCanvas" width="1" height="1" aria-label="معاينة تركيب طبقات الشخصية"></canvas>
+<div id="qualityStatus" class="status">لم يتم بناء التفكيك بعد.</div>
+<div class="row"><button id="saveProjectBtn" class="primary" disabled>حفظ ملف ZERO مع الطبقات والهيكل</button><button id="exportLayersBtn" disabled>تصدير طبقات PNG + بيانات التفكيك (ZIP)</button></div>
+</section>
+<script type="module" src="./character-decomposition-lab.js"></script></body></html>

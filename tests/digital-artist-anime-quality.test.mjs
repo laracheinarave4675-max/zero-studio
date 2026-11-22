@@ -1,0 +1,151 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createCanvas } from "@napi-rs/canvas";
+import { drawRasterBrushStroke, fillRasterRegion } from "../app/raster-brushes.mjs";
+import { createDigitalArtistAnimeQualityPlan } from "../app/digital-artist-anime-quality-plan.mjs";
+import { compileDigitalArtistBrushPlan } from "../app/digital-artist-brush-engine.mjs";
+
+test("general anime quality benchmark covers the core drawing craft",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const stream=compileDigitalArtistBrushPlan(plan);
+ const layers=plan.layers;
+ const strokes=layers.flatMap(layer=>layer.strokes);
+ const ids=strokes.map(stroke=>stroke.id);
+ assert.equal(plan.identity.characterAssetId,"general-anime-quality-benchmark");
+ assert.ok(layers.length>=8,"benchmark needs a complete layered workflow");
+ assert.ok(strokes.length>=55,"benchmark must exercise enough independent drawing operations");
+ assert.equal(new Set(ids).size,ids.length,"all benchmark stroke IDs must be unique");
+ for(const role of ["construction","rough-sketch","flat-color","clean-line","shadow","highlight","detail"])
+  assert.ok(layers.some(layer=>layer.role===role),"missing craft layer: "+role);
+ for(const feature of ["face-base","hair-back-mass","eye-left-white","eye-right-white","collar-inner","garment-shadow","hair-ribbon-left","fold-left-1"])
+  assert.ok(strokes.some(stroke=>stroke.id===feature),"missing craft feature: "+feature);
+ assert.ok(strokes.filter(stroke=>stroke.kind==="region-fill").length>=20,"benchmark needs bounded color regions");
+ assert.ok(strokes.filter(stroke=>stroke.brush==="ink").length>=12,"benchmark needs deliberate anime inking");
+ assert.ok(stream.audit.strokeCount>=55);
+});
+
+test("general benchmark uses organic multi-sample contours and real editable brush operations",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const strokes=plan.layers.flatMap(layer=>layer.strokes);
+ const organic=strokes.filter(stroke=>stroke.points.length>=12);
+ assert.ok(organic.length>=20,"organic curves must be represented by sampled geometry");
+ assert.ok(strokes.every(stroke=>Array.isArray(stroke.points)&&stroke.points.length>=2));
+ assert.ok(strokes.every(stroke=>stroke.points.every(point=>Number.isFinite(point.x)&&Number.isFinite(point.y))));
+ assert.ok(!JSON.stringify(plan).includes("data:image/"));
+});
+
+
+test("anime benchmark clips hair highlights and skin shadows to semantic masks",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const strokes=plan.layers.flatMap(layer=>layer.strokes);
+ for(const id of ["hair-ribbon-left","hair-ribbon-mid","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow","jaw-shadow","neck-shadow","hair-shadow-left","garment-shadow","eye-lower-left","eye-lower-right"]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke?.clipPolygon?.length>=3,"missing semantic clip mask for "+id);
+ }
+ const stream=compileDigitalArtistBrushPlan(plan);
+ for(const id of ["hair-ribbon-left","hair-ribbon-mid","hair-ribbon-right","hair-strands-left","hair-strands-right","face-shadow","jaw-shadow","neck-shadow","hair-shadow-left","garment-shadow","eye-lower-left","eye-lower-right"]){
+  const command=stream.commands.find(item=>item.strokeId===id);
+  assert.ok(command?.options?.clipPolygon?.length>=3,"clip mask was not preserved in compiled command "+id);
+ }
+});
+
+
+test("native Canvas2D renderer clips brush strokes and fills at semantic mask boundaries",()=>{
+ const canvas=createCanvas(100,100),ctx=canvas.getContext("2d");
+ const clipPolygon=[{x:5,y:5},{x:45,y:5},{x:45,y:95},{x:5,y:95}];
+ drawRasterBrushStroke(ctx,[{x:10,y:50,pressure:1},{x:90,y:50,pressure:1}],{brush:"ink",size:12,color:"#222222",clipPolygon});
+ const pixels=ctx.getImageData(0,0,100,100).data;
+ assert.ok(pixels[(50*100+20)*4+3]>0,"stroke should remain inside the clip");
+ assert.equal(pixels[(50*100+80)*4+3],0,"stroke must not leak outside the clip");
+ const fillCanvas=createCanvas(100,100),fillCtx=fillCanvas.getContext("2d");
+ fillRasterRegion(fillCtx,[{x:0,y:0},{x:90,y:0},{x:90,y:90},{x:0,y:90}],{color:"#ff0000",clipPolygon});
+ const fillPixels=fillCtx.getImageData(0,0,100,100).data;
+ assert.ok(fillPixels[(30*100+30)*4+3]>0,"fill should remain inside the clip");
+ assert.equal(fillPixels[(30*100+70)*4+3],0,"fill must not leak outside the clip");
+});
+
+
+test("anime iris, pupil and eye highlights are clipped to their own sclera",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const [id,expected] of [["iris-left",true],["pupil-left",true],["glint-left",true],["iris-right",true],["pupil-right",true],["glint-right",true]]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke,"missing eye operation "+id);
+  assert.equal(Array.isArray(stroke.clipPolygon)&&stroke.clipPolygon.length>=3,expected,"eye operation must be clipped: "+id);
+ }
+});
+
+
+test("brush plan rejects semantic clipping masks outside the fixed canvas",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layer=plan.layers.find(item=>item.strokes.some(stroke=>stroke.id==="hair-ribbon-left"));
+ const stroke=layer.strokes.find(item=>item.id==="hair-ribbon-left");
+ const original=stroke.clipPolygon;
+ stroke.clipPolygon=[{x:-1,y:0},{x:10,y:0},{x:10,y:10}];
+ assert.throws(()=>compileDigitalArtistBrushPlan(plan),/outside the canvas/i);
+ stroke.clipPolygon=original;
+ assert.doesNotThrow(()=>compileDigitalArtistBrushPlan(plan));
+});
+
+
+test("anime line art keeps fringe separators out of the face and adds layered iris shading",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const id of ["fringe-left-ink","fringe-mid-ink","fringe-right-ink"])
+  assert.ok(!strokes.some(stroke=>stroke.id===id),"closed fringe outline must not cross the face: "+id);
+ for(const id of ["hair-top-contour","hair-left-contour","hair-right-contour","hair-crown-seam-left","hair-crown-seam-right","hair-strand-top-left","hair-strand-top-right","hair-strand-left-inner","hair-strand-right-inner","hair-lock-left-highlight","hair-lock-right-highlight","hair-fine-left","hair-fine-right","iris-shade-left","iris-shade-right"])
+  assert.ok(strokes.some(stroke=>stroke.id===id),"missing refined anime detail "+id);
+});
+
+
+test("long side-hair ink seams do not descend across the clothing silhouette",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ assert.ok(!strokes.some(stroke=>stroke.id==="hair-side-seam-left"||stroke.id==="hair-side-seam-right"));
+});
+
+
+test("rear hair outline is segmented so its hidden lower edge cannot ink across the shoulders",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ assert.ok(!strokes.some(stroke=>stroke.id==="hair-back-ink"));
+ for(const id of ["hair-top-contour","hair-left-contour","hair-right-contour"])
+  assert.ok(strokes.some(stroke=>stroke.id===id),"missing visible-only hair contour "+id);
+});
+
+
+test("anime cel-shadow planes use smooth sampled contours and semantic clipping",()=>{
+ const strokes=createDigitalArtistAnimeQualityPlan().layers.flatMap(layer=>layer.strokes);
+ for(const id of ["face-shadow","jaw-shadow","neck-shadow","garment-shadow"]){
+  const stroke=strokes.find(item=>item.id===id);
+  assert.ok(stroke,"missing cel-shadow plane "+id);
+  assert.ok(stroke.points.length>=30,"shadow contour should be smoothly sampled: "+id);
+  assert.ok(stroke.clipPolygon?.length>=3,"shadow plane must be clipped to its semantic silhouette: "+id);
+ }
+});
+
+
+test("foreground anime fringe is painted after skin and before facial features",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layerIds=plan.layers.map(layer=>layer.id);
+ const skin=layerIds.indexOf("skin-flats");
+ const fringe=layerIds.indexOf("front-hair");
+ const features=layerIds.indexOf("features");
+ assert.ok(skin>=0&&fringe>skin&&features>fringe,"fringe must overlay the face but remain behind the facial-feature pass");
+ const fringeIds=plan.layers[fringe].strokes.map(stroke=>stroke.id);
+ assert.deepEqual(fringeIds,["hair-fringe-left","hair-fringe-mid","hair-fringe-right"]);
+});
+
+
+test("overlapping fringe locks cover the forehead without exposed triangular gaps",()=>{
+ const plan=createDigitalArtistAnimeQualityPlan();
+ const layer=plan.layers.find(item=>item.id==="front-hair");
+ assert.ok(layer,"missing foreground fringe layer");
+ const polygons=layer.strokes.map(stroke=>stroke.points.map(point=>[point.x,point.y]));
+ const inside=(point,polygon)=>{
+  let hit=false;
+  for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
+   const [xi,yi]=polygon[i],[xj,yj]=polygon[j];
+   if(((yi>point[1])!==(yj>point[1]))&&(point[0]<(xj-xi)*(point[1]-yi)/(yj-yi)+xi))hit=!hit;
+  }
+  return hit;
+ };
+ for(const point of [[900,300],[960,300],[1020,300],[1080,300],[1120,330]])
+  assert.ok(polygons.some(polygon=>inside(point,polygon)),"forehead gap at "+point.join(","));
+});

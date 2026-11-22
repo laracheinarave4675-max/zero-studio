@@ -239,3 +239,129 @@ See [New Hybrid Production Direction](docs/NEW_HYBRID_PRODUCTION_DIRECTION.md).
 
 **Raster acceptance implementation:** The editor stores each complete drawing as a per-frame transparent PNG generated from that frame's actual drawing layers. SHA-256 hashes identify the PNG bytes and the canonical SVG source. Editing a frame after capture invalidates the stored raster for approval; tampered bytes and repeated hashes are rejected. The ZIP sequence is available only after 24 unique PNGs pass identity, anatomy, line-quality, and timing review. The shared static background is exported separately once. CI verified 290 tests with zero failures on branch HEAD `4221ec7664ebd3bc6e360b528cd5594c1067b76b`; this is software verification only, not proof of a visually accepted animation.
 
+
+
+## D-029 — AI Digital Artist: explicit drawing, never image generation (2026-11-21)
+
+**Decision:** Build ZERO STUDIO's character department as an AI digital artist that creates artwork through explicit, ordered, editable drawing operations. The artist may reason about a character and produce individual vector strokes, curves, closed fills, layer changes, and corrections. It must not call an image-generation or text-to-video model to make final artwork, embed a generated image, trace a generated image, or disguise a flattened picture as a drawing.
+
+**Artist architecture:** a reasoning/art-direction brain; stable Character DNA and model-sheet memory; anatomy and optional 3D pose guides; a drawing hand that executes path/stroke commands into semantic editable layers; and a visual critique/correction loop that revises the original drawing operations.
+
+**Production stages:** identity/reference registration → gesture and silhouette → anatomical construction → rough drawing → clean line art → flat colors → cel shadows/highlights → details → critique and editable corrections.
+
+**Technology roles:**
+- Paints-Undo and inverse-painting research are candidate sources of reconstructed drawing-stage supervision. They predict plausible drawing processes; they do not recover the original artist's exact historical pen coordinates and are not the drawing hand.
+- DiffVG is an optional differentiable vector rasterizer/optimizer for continuous path/width/color refinement; it is not an autonomous drawing planner and its original method does not solve arbitrary topology changes.
+- 3D rigs and the existing Character DNA system provide spatial/anatomical guidance only. 3D renders are not final anime drawings.
+- ZERO STUDIO's native SVG/path engine is the initial drawing hand. Every mark remains an editable operation with a stable ID, purpose, tool, layer and sequence position.
+
+**Relationship to previous decisions:** This decision supersedes the AI-authorship prohibition in D-021 and the human-only mark-authoring boundary in D-023 only for artwork authored by this explicit, editable Digital Artist command pipeline. It does not authorize generative image/video output. Human-painted raster imports and existing SVG/raster editing remain supported, and no source asset may be silently flattened or replaced.
+
+**First acceptance gate:** one approved character reference must become one complete full-body drawing from a blank canvas, made of individual editable strokes and semantic layers. The user must be able to replay the strokes in order, edit a defective path, save/reopen the project, and verify that identity, face, hair, costume and proportions match the reference. Unit tests alone do not pass the visual gate.
+
+**Animation target:** unchanged — 24 independently authored moving-art drawings per second. Do not count guide interpolation, reused frames, image warps, puppet deformation, or generated video as independent drawings.
+
+**Constraints:** Android-first; $0 hard budget; no paid API/GPU/service or automatic paid fallback; develop on an isolated branch; no merge or production deployment until implementation and visual acceptance are reviewed.
+
+**Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md.
+
+
+## D-030 — Raster-first drawing hand; SVG is optional (2026-11-21)
+
+**Decision:** Refine D-029. The AI Digital Artist does not require SVG. SVG-only authoring risks a mechanically geometric result and cannot by itself reproduce the varied organic pigment, pressure, brush texture, and painted edges of professional anime drawing. ZERO STUDIO must use its existing native Canvas2D raster brush engine as the primary final-art drawing hand.
+
+**Primary output:** separate transparent raster layers containing ordered, individually recorded and replayable brush-stroke commands. Each command includes its purpose, semantic layer, point samples, pressure, brush profile, size, color, opacity, texture, blend mode, deterministic seed and erase behavior. A flattened image may be produced only as a preview/export; it is never the editable source of truth.
+
+**SVG role:** optional only — construction guides, skeletons, simple masks, geometry, and selected editable contours. It is not mandatory for clean line art, flats, shadows, or final character rendering. Never force organic hair, facial contours, fabric or painted shading into a collection of mathematically smooth curves merely to call it editable.
+
+**Existing assets to reuse:** app/raster-brushes.mjs and app/raster-surface.mjs. Extend their brush profiles for anime line taper, nib behavior, stabilizer, speed/pressure response, dry-brush edges, and controlled cel-shading as needed. The AI emits a plan; the native brush engine executes it.
+
+**Implementation:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and app/digital-artist-brush-engine.mjs define the raster-first path. This refinement supersedes the vector-first drawing-hand choice in D-029, while keeping D-029's no-image-generation rule, AI art-director, character memory, anatomy guidance, critique loop, editable steps, $0/Android-first constraints, and unchanged 24 independently authored drawings/second target.
+
+**Acceptance gate:** one complete full-body anime character from a blank canvas, rendered by native pressure-sensitive brush commands into separate raster layers, replayable stroke-by-stroke, with stable reference identity and user-approved visual quality. SVG may be used for invisible guides only. No image/video generation, no hidden flattened generated artwork, no paid compute, no production merge/deployment without approval.
+
+## D-031 — Build the artist's own eyes and anime craft knowledge before external vision dependencies (2026-11-21)
+
+**Decision:** The Digital Artist must become a stronger artist in its own right. A general-purpose external vision-language model is not a prerequisite for seeing, understanding, planning, or drawing. Do not make the artist wait for another AI to tell it what is visible or what to draw.
+
+**The two governing goals remain unchanged:**
+1. Build ZERO STUDIO into a real anime production studio capable of producing a professional animated series.
+2. Build a genuine digital anime artist that authors artwork through editable raster drawing operations, then supports the unchanged goal of 24 independently authored drawings per second.
+
+**The artist's own eyes:** Build a multi-pass internal perception and critique system that can inspect its current canvas, layers, marks and character references at multiple scales. Its specialist "eyes" must cover:
+- silhouette and contour: shape closure, proportions, overlaps, holes, gaps, and region-fill leakage;
+- anatomy and construction: facial landmarks, head/body proportions, pose balance, joint relationships and perspective guides;
+- line art: continuity, taper, pressure hierarchy, wobble, intersections and line cleanliness;
+- color and light: region coverage, palette consistency, flat-color boundaries, cel-shadow shapes, highlights and light direction;
+- character identity: compare approved model-sheet measurements, face/hair/costume landmarks and palette swatches;
+- temporal continuity: later, compare independently drawn frames for identity drift, anatomy jumps and changing design details.
+
+These eyes are measurement and critique tools, not image generators. They may combine deterministic computer vision, geometry, pixel/region analysis, project metadata, and small specialist models that can run within the $0 budget. No single external VLM is required.
+
+**Anime craft knowledge:** Build a structured, searchable anime drawing curriculum and reference library, not a vague prompt or an unlicensed scrape. Teach and evaluate shape language, gesture, anatomy, facial construction, eyes, hair masses and strand grouping, hands, costumes and folds, perspective, inking, brush/line-weight hierarchy, flat-color grouping, cel shading, lighting, material rendering, expressions, model sheets and shot continuity. Each reference should record provenance, permitted use, style/technique labels, drawing stage, and any associated annotated strokes or regions.
+
+**Learning route:** start with user-approved model sheets and examples the project owns or is authorized to use; record authentic process examples as editable operations; create annotations and drawing exercises; train or tune small specialist perception/planning components only when a lawful, suitable dataset and free compute are available. Prefer explicit measurable exercises and feedback over attempting to train a large general model from scratch.
+
+**Data rights:** dataset availability does not equal permission for commercial anime production. Manga109's general collection is restricted to academic non-commercial use; Manga109-s has a separate limited commercial-use grant with conditions and a no-redistribution rule. Every dataset and artwork source must be checked individually before ingestion. Do not use non-commercial datasets for commercial training or outputs.
+
+**Drawing hand:** improve the native raster engine itself—anime-appropriate tapered ink, stable curves, organic hair/cloth brushes, closed region and mask fills, clean flat-color coverage, controlled cel-shadow shapes, highlights, and layer replay/correction. The artist, not an image-generation model, must author every final mark.
+
+**Implementation priority:** 1) develop the native eyes and measurable critique; 2) improve brush, fill, coloring and inking; 3) create the licensed anime reference/learning library and exercises; 4) connect the eyes to the artist's correction loop; 5) evaluate small free specialist models as optional accelerators; 6) only then scale to a complete model-authored character and 24 unique drawings/second.
+
+**Guardrails:** no generated image/video output as final art; no paid inference, GPU, subscriptions, or fallbacks; Android-first; preserve separate editable layers and ordered stroke history; no merge or production deployment without user approval.
+
+**Source of truth:** docs/DIGITAL_ARTIST_ARCHITECTURE.md and ROADMAP.md.
+
+
+## D-032 — Identity and palette eyes must fail closed on missing reference features (2026-11-21)
+
+- `compareLandmarks()` and `comparePalette()` now evaluate every feature in the approved reference, not only the intersection with the current drawing.
+- Missing facial/anatomical landmarks or named palette swatches are explicit failures with a `missing` list; they can no longer disappear from the denominator and produce a false pass.
+- Present features retain normalized-coordinate and RGB-distance checks. Reports distinguish measured features from missing ones; an incomplete comparison cannot pass.
+- Regression tests cover missing eye landmarks and missing costume/hair palette swatches.
+- Verified on `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d`: Drawing engine run #2490 passed all 381 tests. Drawing engine run #2491 also passed; Hybrid raster/SVG run #659 passed its Node tests and Canvas2D renderer/artifact jobs.
+- This is a stronger deterministic identity-checking foundation, not yet a learned visual model or a full facial-recognition system. Facial landmark extraction from a rendered character and palette extraction against an approved model sheet remain to be connected.
+
+
+## D-033 — Anime-specific practice must teach drawing craft, not generic tool usage (2026-11-21)
+
+**Decision:** The Digital Artist's primary learning subject is Japanese anime drawing craft. General brush-operation tests are necessary but do not constitute artistic training.
+
+**Implementation:** Maintain detailed practice studies for every curriculum skill. Each study must include (1) a style-aware artistic principle, (2) a concrete drawing sequence, (3) common visual failure modes, (4) a visible deliverable, and (5) a skill-specific review rubric. Sessions may be scaled from foundation to advanced difficulty and should use the approved character reference where available.
+
+**Curriculum scope:** gesture and silhouette; anime head construction and facial planes; eyes, gaze and expressions; hair masses and strand flow; stylized anatomy and balance; hands and feet; costume construction and folds; perspective and foreshortening; anime inking and taper; flat-color region control; cel shadows and lighting; material highlights; model-sheet identity; composition; and independent drawing continuity.
+
+**Evaluation boundary:** A practice brief is not evidence of completed practice. Human visual review remains required for criteria not yet connected to a reliable raster/anatomy/identity measurement. Do not award skill mastery from generic stroke counts or an unrelated metric. Neural training is not claimed until a lawful dataset, training method, free compute path, and measured before/after improvement are actually demonstrated.
+
+**Drawing output:** All final marks remain editable native Canvas2D raster brush operations on semantic layers. The training module creates no image and cannot substitute generated pictures for the drawing exercise.
+
+**Constraints:** Android-first, $0 budget, rights-cleared references only, no paid fallback, no PR merge or production deployment without explicit user approval.
+
+
+## D-034 — Specialist anime eyes must compare against the character's own model sheet (2026-11-21)
+
+**Decision:** Eye and hair design are style-specific. The artist must preserve the approved character's own eye proportions, slant, iris/pupil placement, spacing, and hair clump flow; do not impose one universal anime template.
+
+**Implementation:** Add geometry comparison functions for normalized approved/current eye landmarks and stable named hair root-tip clumps. Produce specific correction exercises linked to the failed measurement or clump. Surface the comparison in the Arabic artist panel.
+
+**Evidence boundary:** These checks compare supplied/model-reported landmarks; they do not detect landmarks directly from pixels. Hair clump root-tip comparison is not strand segmentation. The results may guide human correction but cannot be used to claim visual understanding or skill mastery until tied to verified reference and current raster evidence.
+
+**Output:** Continue using native editable raster brush strokes for final drawing. Comparison helpers do not generate or edit artwork automatically.
+
+## D-035 — Character-specific face measurements and reviewed contour inking (2026-11-21)
+
+**Decision:** Face geometry is evaluated against each character's approved model sheet. The comparison measures face aspect, cheek/jaw width, lower-face ratio, nose and mouth levels, mouth-to-chin spacing, brow-to-eye gap, and eye spacing. It must not impose one universal anime face template.
+
+**Contour policy:** When a validated vision report includes a reviewed polygon contour, the planner creates a native raster region fill and a separate closed ink-brush outline. A bounding-box-only region may still be used as a clearly warned approximation; it must never be described as contour segmentation.
+
+**Evidence boundary:** Local alpha-connected raster contour extraction measures pixel boundaries and connected components only. It does not identify semantic parts such as eyes, hair, skin, or clothing. Model-reported landmarks remain externally supplied observations until a real vision inference run is demonstrated.
+
+**Acceptance:** Unit tests and deterministic renderer artifacts verify software behavior, not artistic quality. The first actual drawing must still be visually reviewed on the user's Android device.
+
+## D-036 — Raster contour evidence is geometric, not semantic (2026-11-21)
+
+**Decision:** The local raster eye may extract connected alpha components and their pixel-boundary contours from native Canvas2D layer pixels, with explicit pixel/component/point caps.
+
+**Evidence boundary:** These contours describe geometry only. They do not identify eyes, hair, face, skin, clothing, or anatomy; they do not infer eye landmarks, iris/pupil segmentation, or hair flow. Semantic naming still requires a reviewed model-sheet observation or a successfully validated vision result.
+
+**Review:** Contour points remain inspection evidence and must not silently modify artwork or award skill mastery. All final drawing continues through editable native raster brush operations.

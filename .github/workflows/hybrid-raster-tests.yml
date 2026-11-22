@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/hybrid-human-art-pipeline
+      - feat/digital-artist-engine
   pull_request:
 
 permissions:
@@ -20,6 +21,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install native Canvas2D test renderer
+        run: npm install --no-save --no-package-lock @napi-rs/canvas
       - name: Syntax-check application modules
         run: |
           set -e
@@ -42,10 +45,46 @@ jobs:
         run: npm install --no-save --no-package-lock @napi-rs/canvas
       - name: Render the five native raster brushes
         run: node scripts/render-raster-brush-proof.mjs
+      - name: Render the deterministic Digital Artist portrait
+        run: node scripts/render-digital-artist-demo.mjs
+      - name: Render the general anime drawing quality benchmark
+        run: node scripts/render-digital-artist-anime-quality.mjs
+      - name: Render the construction-driven anime artist study
+        run: node scripts/render-anime-construction-study.mjs
+      - name: Render the three-view anime identity continuity sheet
+        run: node scripts/render-anime-three-view-sheet.mjs
       - name: Upload brush proof sheet
         uses: actions/upload-artifact@v4
         with:
           name: zero-studio-raster-brush-proof
           path: artifacts/raster-brush-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload Digital Artist portrait proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-digital-artist-portrait-proof
+          path: artifacts/digital-artist-portrait-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload general anime drawing quality proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-quality-benchmark
+          path: artifacts/digital-artist-anime-quality-proof/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload construction-driven anime artist study
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-construction-study
+          path: artifacts/anime-construction-study/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload three-view anime identity continuity sheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-studio-anime-three-view-sheet
+          path: artifacts/anime-three-view-sheet/
           if-no-files-found: error
           retention-days: 14

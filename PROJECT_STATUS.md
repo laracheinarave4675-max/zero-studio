@@ -1,3 +1,80 @@
+## D-031 anime craft practice expansion — 2026-11-21
+
+- Added `app/anime-drawing-training.mjs`, a detailed anime-specific practice library covering all 15 curriculum skills: gesture/silhouette, head construction, anime eyes/expressions, hair masses, body anatomy, hands/feet, costume/folds, perspective, inking, flat colors, cel shadows, material highlights, model sheets, composition, and independent animation drawings.
+- Each study now teaches a concrete Japanese animation drawing principle, a sequenced drill, common visual mistakes, a target deliverable, and skill-specific review criteria. It explicitly avoids treating one set of proportions as universal for every anime style.
+- Added session generation with foundation/intermediate/advanced difficulty, recommended layer order, native Canvas2D raster medium, and a distinction between machine-measurable checks and criteria that still require human visual review.
+- Connected the editor's Anime Craft panel: skill names are readable, the artist can inspect detailed focus/sequence/mistakes/rubric, choose difficulty, and generate a practical drawing session.
+- Added `tests/anime-drawing-training.test.mjs` to verify coverage of every curriculum skill, anime-specific drill content, independent raster drawing requirements, defensive copies, and invalid input rejection.
+- This is a real structured practice system and editor integration, not neural-network training. The generated session is a drawing brief; it does not autonomously complete the exercise or claim artistic mastery.
+- GitHub Actions were triggered for the current PR head; results are pending verification. No Android device test or visual acceptance has occurred in this pass.
+- PR #14 remains Draft and unmerged. No production deployment, paid compute, generated final artwork, or Worker changes.
+
+# ZERO STUDIO — Project Status
+
+Last updated: 2026-11-21 (UTC)
+
+## D-030 Raster-first Digital Artist — contour fill and stroke review milestone
+
+- Native Canvas2D raster brush strokes remain the only required final-art drawing hand. SVG stays optional for guides and selected geometric helpers.
+- Added explicit region-fill plan operations. The validator checks polygon points, canvas bounds, color, opacity, blend mode and operation limits; the executor validates them before painting.
+- Added fillRasterRegion() to render closed artist-authored polygon boundaries into transparent native raster layers with antialiased Canvas2D edges. The plan contains vector boundary points, not embedded image or bitmap payloads.
+- Replaced the 12 horizontal flat-color test bands with 14 closed semantic region fills for hair, face, ears, neck, eye whites, fringe and clothing. The deterministic fixture now contains 56 total operations on seven layers (14 fills plus 42 brush marks).
+- Connected polygon fills to the editor, native project stroke history, and the CI Canvas2D renderer. Region type and individual review state survive project normalization.
+- Added a stroke-review panel: select an individual artist operation, preview it in isolation, move to previous/next, and mark it approved/rejected/reset to pending. Review decisions use project history/undo and persist in the project.
+- Added a JSON correction editor for the selected stroke's intent, points/pressure and brush settings or region-fill color/opacity/blend. The validator preserves stable IDs, bounds, and supported brush profiles, resets edited operations to pending review, and rejects invalid geometry.
+- A correction rebuilds the entire target raster layer from its ordered stroke log on a scratch Canvas2D surface, then commits the new PNG only after successful rendering and size validation. Locked layers are refused. Existing manual and Digital Artist strokes in that layer are replayed in sequence; the pre-edit project state remains undoable.
+- CI now verifies representative pixels inside face, hair, eye-white and clothing polygons and a control pixel outside the silhouette. This guards against accidental flat-color bands and spill at those probe points; it does not prove every region is anatomically perfect.
+- Verified on application HEAD a9f4449b848854623fde0d0172598c86b4ad112a: Drawing engine run #2396 passed syntax checks and all 361 tests (0 failures). The Hybrid raster/SVG run #614 completed the Canvas2D renderer proof successfully for the same code and uploaded the portrait plus seven transparent layer PNGs; its node-test job was still running at the time this note was written. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44934080883 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44934085875.
+- Visual inspection: the latest CI render no longer has the broad horizontal flat-color bands. The face, hair masses, eye whites and clothing regions are visibly filled. Construction and rough-sketch layers remain available but are hidden in the final composite after cleanup. The current deterministic portrait still has rough silhouette/outline alignment and incomplete costume/hair refinement; it is a renderer-and-region-fill proof, not an approved production anime character.
+- Not yet implemented/verified: the authorized Anime Craft reference library is not yet populated; the curriculum exercises have not yet been executed as training attempts; landmark/palette comparison is not yet connected to the approved Character DNA; full automatic visual critique/correction, complete full-body character, professional visual approval, and physical Android testing remain pending.
+- Deployment: PR #14 remains open as Draft on feat/digital-artist-engine. No merge or production deployment occurred. The Vercel free build-rate limit remains a constraint; no paid upgrade or fallback was used.
+- Budget remains $0. The long-term target remains 24 independently authored drawings per second. No generated image/video output is accepted as the final artwork.
+
+## D-031 initial implementation — internal eyes and Anime Craft curriculum
+
+- Added `app/digital-artist-eyes.mjs`, a local deterministic analysis module. It measures raster alpha bounds/coverage/centroid/perimeter and coarse palette; stroke geometry, pressure range, path length and sharp turns; named model-sheet landmark deviations; named palette differences; and inside-coverage/outside-leakage for raster region fills.
+- Connected the local eye panel to the editor's current frame. It reads each Digital Artist raster layer locally (downsampled to at most 960×540 for the initial inspection), reports per-layer coverage/bounds, dominant colors, operation counts, stroke geometry and review state. Fills sharing a color are inspected as one union of intended regions to avoid false leakage reports between adjacent same-color hair/clothing shapes.
+- The CI renderer now builds a separate transparent composite of visible artwork (without the opaque page background), analyzes the character silhouette against that transparent surface, preserves stable command IDs in line reports, and exports `digital-artist-eyes-report.json` with the portrait and seven layer PNGs.
+- The initial eye system is a measurable inspection aid, not a professional art critic yet. The named-landmark and reference-palette comparison helpers are implemented and tested, but they are not yet connected to an approved Character DNA/model-sheet record; detailed facial identity, anatomy scoring, visual hierarchy, line continuity and automated corrections still need work.
+- Added `app/anime-artist-curriculum.mjs`: 15 ordered anime craft skills covering gesture/silhouette, head/face, anime eyes/expressions, hair masses, body anatomy, hands/feet, costume/folds, perspective/camera, inking, flat colors, cel shadows/light, materials/highlights, model-sheet identity, shot composition and animation continuity. Each skill includes prerequisites, lessons, exercises and measurable evaluation targets.
+- Added reference-card provenance/rights validation for study, training and commercial-production purposes, and practice-task creation that explicitly requires native raster brush operations and forbids final-image generation. This is a curriculum and learning framework; it does not mean a neural artist has already been trained on these examples.
+- Added an in-editor skill browser that displays the staged curriculum and its exercises/metrics. Actual execution of exercises, a curated and populated rights-cleared reference library, and learning from approved corrections remain future work.
+- Verified on HEAD `536ee9b49b989fbd5770fea66cadbb0252d80fe6`: Drawing engine run #2449 passed all 376 tests (0 failures); Hybrid raster/SVG run #639 passed all 376 tests and its raster-brush proof/export jobs. See https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44935929615 and https://github.com/laracheinarave4675-max/zero-studio/actions/runs/44935929613.
+- PR #14 remains open as Draft and unmerged. No production deployment occurred.
+
+## Immediate next steps — D-031 artist-first direction
+
+1. Connect the landmark and palette comparison eyes to approved Character DNA/model-sheet data so identity drift can be measured from real project references.
+2. Expand the current eyes from geometric/pixel metrics to stronger silhouette, anatomy, line continuity and cel-shadow/lighting checks with actionable regions and stroke IDs.
+3. Improve native anime drawing tools: tapered clean inking, organic hair/cloth brush behavior, robust masks/fills, clean flats, cel shadows and highlights.
+4. Populate the authorized Anime Craft Library and let the artist execute exercises, store attempts, compare results and learn from approved corrections.
+5. Draw and visually review one complete original character; only after that should we return to independent 24-drawings/second animation.
+
+## Optional external visual-model research — 2026-11-21
+
+- Reviewed Qwen3-VL-2B/4B and public Hugging Face Spaces as potential optional visual-analysis helpers.
+- A Qwen3-VL smoke-test inference did not start: the Space requested 60 seconds of ZeroGPU while the connected free account had only 42 seconds remaining in its current daily quota. No inference ran and no paid fallback was used.
+- This reinforces D-031: an external VLM is not the artist's eyes and must not be a blocking dependency. Prioritize the native multi-eye perception passes and the anime drawing curriculum first.
+- Candidate references remain https://huggingface.co/spaces/baohuynhbk14/Qwen3-VL-Demo and https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct. No Space was modified, and no model was connected to ZERO STUDIO.
+
+## D-029 / D-030 architecture record
+
+- D-029 approved an AI digital artist that authors explicit, editable drawing operations rather than final image/video generation. The initial vector-first command contract remains optional infrastructure for guides and selected geometry.
+- D-030 refined the final-art route to raster-first: semantic Canvas2D brush layers and an ordered, editable stroke log are the authored source. A flattened PNG is only a preview/export artifact.
+- D-031 establishes the artist-first direction: the artist must have its own measurable visual eyes and anime craft knowledge; no external vision-language model is required to operate it. The two studio goals remain professional anime-series production and the genuine independent-drawing digital artist with the unchanged 24 drawings/second target.
+- The architecture, Character DNA requirements, anatomy guidance, critique/correction loop, and visual acceptance gates are documented in `docs/DIGITAL_ARTIST_ARCHITECTURE.md`.
+- No vision model inference or image-generation inference was used for this implementation.
+
+## Immediate next steps
+
+1. Implement the internal multi-eye perception passes and measurable critique.
+2. Improve anime-specific brush behavior, inking, filling, flat-color coverage, cel shadows and highlights.
+3. Build the rights-cleared Anime Craft Library and drawing exercises.
+4. Connect the eyes to stroke correction/replay; then validate one full original anime character.
+5. Test the artist/animation path against the unchanged 24 independently authored drawings/second target.
+
+---
+
 # ZERO STUDIO — Project Status
 
 Last updated: 2026-11-20 (UTC)
@@ -671,3 +748,210 @@ Known limitations: the eraser is a non-destructive SVG mask, not geometric path 
 - Anima is a promising anime-focused model for tests, but its model card shows a non-commercial license; do not use it for commercial production unless terms are separately cleared. Z-Image-Turbo is marked Apache-2.0 but is not yet shown to meet the anime quality target and still needs GPU compute.
 - No paid provider has been selected or connected. No account was created and no service was called to generate images. The next proof should use existing free public Spaces, if available, with a small repeatable background and character-sheet test.
 - The 24 independently drawn images/second goal remains unchanged; do not pretend limited free quotas can generate it continuously. Report constraints honestly and preserve the zero-dollar gate.
+
+
+## Digital Artist eye reliability update — 2026-11-21
+
+- Tightened identity and palette comparison: every landmark and named color in the approved reference must be present in the current drawing. Missing features are reported and force a failed comparison rather than being silently ignored.
+- Added regression tests for missing eye landmarks and missing palette swatches.
+- Branch `feat/digital-artist-engine` at `ce3651bdbdfda6678eb10d4b7fc72d7b4b21eb4d` passed 381/381 Node tests. Drawing engine runs #2490 and #2491 succeeded; Hybrid raster/SVG run #659 succeeded, including the Canvas2D portrait renderer and artifact upload.
+- The existing eye panel still measures pixels, stroke geometry, region fills and approved anatomy guides. This update does not claim neural vision, automatic facial landmark extraction, model training, or professional visual acceptance.
+- PR #14 remains Draft and unmerged. No production deployment; $0 budget maintained.
+
+
+## Vision-to-drawing integration boundary — 2026-11-21
+
+- Added `app/digital-artist-vision-contract.mjs`: strict provider-neutral validation for SHA-256-bound character references, subject/style/composition, normalized landmarks, bounded semantic regions, palette swatches, identity locks, and per-observation confidence.
+- Added a drawing brief adapter that separates trusted observations from a human review queue. It deliberately creates no strokes and accepts no image payloads.
+- Added regression cases for coordinate bounds, invalid digests/colors, duplicate IDs, low-confidence observations, control-character sanitization, and collection limits. The Drawing engine workflow now syntax-checks this module and runs the full `tests/*.test.mjs` suite.
+- A live Qwen2.5-VL-3B-Instruct provider smoke test was attempted through the connected Hugging Face account. The provider returned HTTP 402 Payment Required. No inference ran and no image was analyzed. Do not retry this paid provider path under the project's hard $0 budget.
+- SmolVLM-256M-Instruct remains a candidate for a genuinely free local/browser or public Space route, but no successful inference is claimed.
+- Next: identify a zero-cost, no-card vision route; run it on an approved character reference; validate its structured observations; then implement a separate geometry planner that produces only native Canvas2D brush commands. Human review remains mandatory.
+- No production Worker changes, no paid fallback, no PR merge, and no production deployment.
+
+
+## Vision-to-native-brush planner milestone — 2026-11-21
+
+- Added `app/digital-artist-vision-brush-planner.mjs`: converts validated, confidence-filtered vision observations into the existing Digital Artist brush-plan schema.
+- High-confidence landmarks become small editable graphite crosshair strokes on the construction layer.
+- High-confidence semantic regions become native raster region-fill operations, assigned to semantic layers (flat color, shadow, highlight, detail) and colored from matching palette labels when available.
+- The resulting plan is passed through the existing `validateDigitalArtistBrushPlan` gate and can be compiled by `compileDigitalArtistBrushPlan` into the native Canvas2D command stream. It carries the reference digest and optional character asset ID.
+- Added regression coverage for native command compilation, confidence gating, human-review defaults, and semantic layer ordering. The Drawing engine workflow syntax-checks the planner.
+- Important limitation: current region geometry uses rectangular bounding-box approximations; landmarks are crosshair guides. This is not segmentation, organic contour tracing, an AI vision inference, or a finished anime portrait. A human must approve the plan before execution.
+- No successful external vision inference is available. Hugging Face's Qwen provider and sandbox attempts returned HTTP 402, so no paid route is used. Model integration remains pending a verified free inference path.
+- The GitHub Contents API commits made during this pass have not triggered a fresh Actions run. Do not claim the new planner tests passed in CI until a run on the latest branch head is observed.
+- No production Worker changes, no paid compute, no PR merge, and no production deployment.
+
+
+### Vision bridge UI — 2026-11-21
+
+- Added a Vision Report input to the Digital Artist panel. Users can paste a validated ZERO STUDIO vision JSON report and convert it into the existing brush-plan editor.
+- The generated plan remains a draft. The Execute button is disabled until the user explicitly checks the approval control; loading the fixed brush demo returns to the normal manual execution flow.
+- The UI explains that this does not yet analyze an image and that region boxes are approximate. No image is uploaded or sent to a model by this bridge.
+- This connects the report validator → geometry planner → existing brush-plan editor → native Canvas2D executor as a usable manual pipeline, while actual model inference and organic contour extraction remain unfinished.
+
+
+### Free browser vision route — 2026-11-21
+
+- Identified the official `HuggingFaceTB/SmolVLM-256M-Instruct-WebGPU` Space, which is listed as Running and uses a static browser app for the SmolVLM-256M-Instruct model. This avoids the paid hosted inference provider path; model inference is intended to run on the user's browser WebGPU device.
+- The Digital Artist panel now links to that Space, supplies a structured anime-reference prompt, and lets the user paste its JSON observations back into ZERO STUDIO.
+- The user uploads the same reference image into ZERO STUDIO. The app computes its SHA-256 digest locally with Web Crypto and binds the report to that exact file before accepting the observations. A supplied digest mismatch is rejected.
+- The generated plan remains an unapproved draft until the user checks the approval control. The report-to-plan step still uses bounding-box approximations and requires visual review.
+- This is a manual browser handoff, not an embedded model runtime or automatic Space API connection. The Space may require initial model downloads and a WebGPU-capable browser/device; mobile performance and inference quality have not yet been validated on the user's Android device.
+
+
+### Raster proof visual inspection — 2026-11-21
+
+- Downloaded and opened the CI portrait proof artifact from run `44941260537`. It contains a 1920×1080 composite PNG, seven separate raster layer PNGs, and the machine-readable eyes/region report.
+- Visual review: the fixture reads as a centered anime head-and-shoulders portrait with dark hair, facial features, brown eyes, and teal clothing. It is a coherent basic study, not yet a production-quality character illustration; hair shapes and face/eye construction remain simplified.
+- The region audit lists eight fill groups; only one reports `passed: true`. Several other groups show incomplete interior coverage (approximately 49%–88%), while one eye-white group has about 3.1% outside leakage. This confirms the quality eye is catching real fill defects rather than merely reporting success.
+- Next visual-engine improvements should target closed contour accuracy and region coverage before adding more decorative detail.
+
+
+### Organic vision contours — 2026-11-21
+
+- Extended the provider-neutral vision report contract with optional normalized polygon contours for semantic regions (3–512 points), while retaining legacy bounding boxes for backward compatibility.
+- Contour validation now checks normalized coordinates, consecutive duplicate points, measurable polygon area, containment inside the declared region box, and proper self-crossings.
+- The vision-to-brush planner now converts supplied contours directly into native raster region-fill polygons; it only falls back to a rectangle when no contour is present and emits an explicit warning in that case.
+- Updated the SmolVLM handoff prompt to request organic region outlines (8–64 points) for face, hair, eyes and clothing. These remain approximate model observations and require human review.
+- Added regression tests for contour preservation, invalid/degenerate/self-crossing/out-of-bounds contours, polygon-to-raster coordinate conversion, and legacy rectangle fallback.
+- Important verification limit: these commits were made through the GitHub Contents API; no fresh Actions run has yet been observed for this head. The latest verified green Actions runs remain on the earlier documented commit. No latest-head test pass is claimed.
+- Vercel's most recent listed preview for this branch still points to an earlier commit, not this contour update. No production deployment or merge was performed.
+
+
+### Contour bridge CI verification — 2026-11-21
+
+- The first contour CI run on the intermediate head exposed that the drawing brief dropped the validated contour before the planner received it. The contract mapping was corrected in commit `37079202fc3db8564b06c6ffe0ce78352eda26c3`.
+- On that corrected head, Drawing engine workflow run `44942052300` passed all **402/402 tests**; Hybrid raster/SVG workflow run `44942052319` passed, including syntax checks, full native tests and the raster-brush/portrait proof job.
+- The contour-specific tests now cover polygon preservation, zero-area and duplicate-point rejection, self-crossing and out-of-box rejection, contour-to-canvas coordinate mapping, and legacy rectangle fallback.
+- The Vercel preview listing still points to commit `37668ff3bff28d790c3a913d9fd0175fcb66d6a0`, not the contour implementation. The latest code is in the open Draft PR; no deployment, merge or production change has been made.
+
+## D-032 evidence-led artist progression ledger — 2026-11-21
+
+- Added `app/digital-artist-learning.mjs` and `tests/digital-artist-learning.test.mjs`.
+- Assessment entries require a stable unique ID, a SHA-256 inspection-report digest, and 3–32 distinct measured pass/fail checks. Scores are computed from the checks rather than accepted as caller-supplied percentages.
+- A skill requires three consecutive assessments at or above 85%, plus mastery of every prerequisite, before it is labelled mastered. The evaluator follows the curriculum prerequisite order.
+- The next-practice recommender selects the weakest currently available skill and returns its lessons, exercises and metrics.
+- The ledger is bounded to 500 assessments and rejects duplicate IDs, unknown skills, malformed digests and invalid checks.
+- Important boundary: this is evidence-led progress tracking, not neural-network training or autonomous self-learning. It does not edit artwork, verify the contents of the referenced report digest, or approve strokes. App UI/persistence integration is still pending.
+- New tests were added, but no GitHub Actions run was returned for the latest branch commit at the time of this update; do not treat this milestone as CI-verified yet.
+- PR #14 remains draft, unmerged, and unpublished to production.
+
+
+## D-033 project-persisted learning assessment loop — 2026-11-21
+
+- Integrated the D-032 evidence ledger into the artist editor. The user can select a skill, run the local eyes on the current frame, then explicitly save a measured attempt.
+- The editor currently records four metric-backed skill routes: head/face and body anatomy (require an approved Character DNA guide and at least three measured anatomy checks), flat-color groups (requires inspected region fills), and anime inking (measured operation presence, geometry warnings and path lengths).
+- Assessment report JSON is SHA-256 hashed locally with Web Crypto. The attempt and its checks are saved in `project.artistLearning`; the project engine now preserves this field through normalization/import/export and rejects malformed ledger envelopes.
+- The UI displays recorded attempts, mastered-skill count and the next recommended curriculum exercise. The record is project-scoped, not a cloud account-wide profile.
+- Unsupported skills are deliberately refused rather than scored using unrelated measurements. This is an explicit user-triggered evidence ledger, not automatic neural training; the digest links to report content but is not a signature proving the report's truth.
+- Added engine round-trip and editor-wiring regression tests. Latest code SHA before documentation reconciliation: `9e91959dc9b97c74820c1a16524f383234d01aec`. Connected Actions lookup returned no PR-triggered workflow runs for this SHA; CI is not yet verified.
+- PR #14 remains draft, unmerged and not deployed to production. Android runtime and local model inference remain untested.
+
+
+## D-033 live learning ledger integration — 2026-11-21
+
+- Connected the evidence-led learning ledger to the live Digital Artist inspection panel and native project state (project.artistLearning), so attempts survive project JSON save/load and undo snapshots.
+- Added a progress summary, next-practice recommendation, and recent assessment history to the editor.
+- An assessment can only be recorded after inspecting the current frame. The report is canonically serialized and SHA-256 hashed before the ledger records it.
+- Important evidence gate: only skill families with direct current measurements can be assessed from this panel: head/body anatomy against a non-skipped Character DNA comparison with at least three measurements; inking from measured brush operations and stroke warnings; flat colors from inspected closed raster fills and explicit coverage/leakage thresholds. Other curriculum skills are rejected rather than assigned fabricated scores.
+- The assessment button requires an explicit user action. Recording a result does not edit artwork, approve strokes, or train model weights.
+- Added tests/digital-artist-learning-ui.test.mjs to verify the editor integration and truthful learning boundary.
+- Verified that the app source imports the ledger, all four UI elements exist, and the project normalizer already preserves the artistLearning field. GitHub Actions results for the newest commits were not returned by the connected workflow-run lookup; CI status remains unconfirmed.
+- Physical Android browser testing, model-backed vision inference, and actual artist-quality improvement remain unverified.
+- PR #14 remains draft; no merge or production deployment.
+
+## D-034 imported-ledger integrity and editor consolidation — 2026-11-21
+
+- Consolidated the editor around one learning panel and one assessment-save handler. The current-frame eye report enables the assessment action; the user explicitly selects a skill and saves the attempt.
+- Removed duplicate imports/handlers introduced during integration.
+- Added deep validation for imported assessment entries: unique IDs, known skill IDs, SHA-256 digest format, 3–32 unique boolean checks, and recomputation of score/pass state from the checks. The project normalizer calls this validator, so a hand-edited JSON file cannot claim a mastery score that disagrees with its stored checks.
+- This does not cryptographically prove that the report itself was honestly measured; it prevents simple score tampering and malformed records.
+- Latest code SHA: `02cd7c8633852b92b9f61e792aa29e8024baeaab`. Drawing engine and Hybrid raster/SVG CI runs were queued for this commit; no pass result has been observed yet.
+- PR #14 remains draft; no merge or production deployment.
+
+
+## D-035 CI feedback and regression fixes — 2026-11-21
+
+- The first integrated Actions run on `02cd7c8633852b92b9f61e792aa29e8024baeaab` completed with 409/413 tests passing. Syntax checks passed; the native raster portrait proof job passed.
+- Four test failures were identified: an outdated flat-color correction assertion (expected 88% after the agreed threshold was raised to 90%), a recommender tie-breaking issue that preferred an untouched skill over a weak skill already practiced, an engine test expecting the previous validation error wording, and a DOM test detecting a duplicate temporary assessment button.
+- Corrected all four causes: updated the 90% assertion, prioritize previously practiced but weak skills, aligned the engine test with deep validation, and removed the redundant temporary controls/handler/import in favor of the single canonical learning panel.
+- Added deep imported-ledger checks and a regression test that rejects a forged score inconsistent with its stored pass/fail checks.
+- Latest code/test commits after those fixes have not yet produced a retrievable Actions result. Do not describe the integrated suite as passing until a new run confirms it. The earlier run's renderer proof passed; the node test jobs failed.
+
+### CI verification — anime drawing practice head `d58d2abf784044159467d4d6027dc4d350296bc4`
+
+- Drawing engine run #2686 passed all 420 Node tests (0 failures), including the detailed anime study and UI integration tests.
+- Hybrid raster/SVG run #747 passed all 420 Node tests (0 failures); the native five-brush proof and Digital Artist portrait render/artifact upload also succeeded.
+- An earlier run caught a stale reference to a removed assessment button; the obsolete reference was removed before the passing runs.
+- This confirms software contracts and renderer execution only. It does not establish professional anime drawing quality, autonomous neural learning, or Android device acceptance.
+
+### Anime specialist eyes — D-034 (2026-11-21)
+
+- Added `compareAnimeEyeDesign`: compares approved/current normalized landmarks for left/right eye width relative to face width, eye aspect ratio, eye slant, iris offset, pupil offset, approximate iris containment inside the eye outline, and eye-pair spacing.
+- Added `compareAnimeHairFlow`: compares stable named hair clumps by root-to-tip direction and relative length against an approved model sheet; missing and unexpected clumps fail explicitly.
+- Added focused correction rules that turn failed eye checks into eye/gaze exercises and failed hair-clump checks into hair-mass/flow exercises.
+- Connected an Arabic editor panel for supplied reference/current landmark maps. The user can compare eye and optional hair geometry and see linked corrections.
+- Comparison output explicitly identifies its scope: manually/model-reported normalized landmarks, not pixel-based landmark inference or automatic strand segmentation. It does not award mastery.
+- Comparison results are included in the canonical inspection digest. The learning ledger still refuses eye/hair skill scoring until actual raster-linked evidence and trustworthy measurements are available.
+- CI on commit `a19d0b94fcc42910dcb46b60821f4af64fef5a7e` exposed a syntax error in the new tolerance helper. It was corrected in subsequent commits (`f5db0fa`, `730a46e`, `04e09ea`, `8c1da74`). A fresh CI result for the corrected head is not yet available; do not claim it passes.
+- No Android visual test, no autonomous model training, no PR merge, no production deployment, and no production Worker changes.
+
+## Digital Artist completion pass — 2026-11-21 (face, contours, CI repair)
+
+- Repaired a literal escaped-newline syntax defect in the anime-eye comparison module. The defect had blocked the full test suite and deterministic portrait renderer.
+- Tightened all anime-eye tolerance options to reject non-finite values instead of allowing NaN to silently bypass comparisons.
+- Added character-specific anime face proportion comparison for face aspect, cheek width, jaw width, lower-face ratio, nose/mouth levels, mouth-to-chin spacing, brow-to-eye gap, and eye spacing. It compares against each character's approved landmarks and does not impose a universal anime template.
+- Connected face comparison to the Arabic Digital Artist review panel and mapped failed measurements to actionable head-and-face exercises.
+- Vision contours supplied in a validated report now generate both polygon region fills and a closed native ink-brush contour stroke on a separate clean-line layer. Missing contours remain an explicitly warned rectangular fallback.
+- The editor already includes local alpha-connected raster contour extraction with bounded component/point counts; its report labels this as pixel-boundary geometry, not semantic eye/hair recognition.
+- Added regression coverage for face ratios, invalid tolerance rejection, organic contour fill+ink planning, and explicit rectangle fallback.
+- Updated the hybrid raster workflow to run on `feat/digital-artist-engine`.
+- Verified commit `38e128c5d2515c3606cf9f237798711a535a2afe`: Drawing engine tests run #2748 passed; Hybrid raster/SVG run #787 passed; both brush proof and Digital Artist portrait artifacts uploaded successfully.
+- This verifies code paths and deterministic raster rendering only. It does not establish professional anime quality, successful SmolVLM inference, Android WebGPU compatibility, or physical Android touch/stylus performance.
+- No PR merge or production deployment has occurred in this pass.
+
+## CI and Cloudflare preview publication — 2026-11-21
+
+- Re-verified the current tested head `38e128c5d2515c3606cf9f237798711a535a2afe`: Drawing engine run #2749 and Hybrid raster/SVG run #788 both completed successfully.
+- Each Node test job reported **434/434 passing, 0 failing**. The hybrid workflow also completed the five-brush proof and deterministic Digital Artist portrait render, and uploaded both proof artifacts.
+- The alpha-connected raster contour inspector is included in the tested head. It extracts bounded pixel-boundary contours from transparent raster layers; it does not semantically label facial parts.
+- Published the tested branch through the existing isolated Cloudflare Pages preview project. Deployment `33e0af55-25e9-4e91-89ab-b11d71a86fcc` completed successfully for commit `38e128c5d2515c3606cf9f237798711a535a2afe`.
+- Preview URL: https://feat-digital-artist-engine.zero-studio-artist-preview.pages.dev
+- The Vercel integration remains blocked by its free daily deployment limit; Cloudflare Pages was used instead. The existing image Worker and production branch were not changed.
+- PR #14 remains Draft and unmerged. This is a published preview, not a production release. Android touch/stylus testing and artistic acceptance remain the next user-facing gate.
+
+
+## Verification and preview refresh — 2026-11-21
+
+- Tightened the raster contour regression so the 2-megapixel safety cap is tested with a correctly sized RGBA buffer, rather than accidentally passing due to a malformed buffer.
+- Verified head `d47fc135ad46ffed686ae1d25e5e11358ce8394e`: Drawing engine run #2762 passed; Hybrid raster/SVG run #801 passed. Both native brush proof and deterministic Digital Artist portrait artifacts were generated and uploaded.
+- Cloudflare Pages preview deployment `ce5d0058-dfff-4fb6-a825-24f59771e2c1` completed successfully from the same branch and exact commit. Branch preview alias: https://feat-digital-artist-engine.zero-studio-artist-preview.pages.dev
+- The preview is isolated from production. Vercel's daily free build limit remains a separate constraint; the Cloudflare Pages preview is the available test deployment.
+- PR #14 remains Draft and unmerged. No production Worker or existing image service was modified.
+- Remaining acceptance gate: user-side Android drawing test and visual review. No successful embedded vision inference or autonomous neural training is claimed.
+
+
+## First selected-character native brush test — 2026-11-21
+
+- Retrieved the user's selected gallery reference from the existing preview image service: asset ID `be172712-e073-4d06-9587-eec7e6c62a84`, source image 1280×720 with front, side and back views.
+- Added `app/digital-artist-character-sheet-plan.mjs` and `scripts/render-digital-artist-character-sheet.mjs` to execute a first three-view study through the existing native Canvas2D raster brush engine.
+- Output: 1920×1080 PNG, seven semantic layers, 168 total raster operations (97 brush strokes and 71 region fills), plus seven separately exported transparent layer PNGs and an inspection report.
+- No source-image pixels were embedded in the drawing, no image-generation service was used, and no vision-model inference was performed. The initial geometry is a manually authored approximation based on the selected reference, not autonomous model understanding.
+- The first draft establishes the three-view silhouette, dark hair, ivory/pink kimono, obi, facial features, folds and floral marks. It is not yet a visually accepted likeness: head/profile proportions, hair clumps, sleeve/kimono contours and detailed floral patterns need another quality pass.
+- The stroke-geometry report has zero warnings after replacing intentional one-point flower dots with short editable strokes. Transparent character alpha coverage is 25.95% of the 1920×1080 canvas.
+- Verified commit `22f8c31a4941ba4ae9f93070f615e29663a10c2e`: Drawing engine run #2787 and Hybrid raster/SVG run #826 both passed. The character-sheet proof artifact was uploaded by the Hybrid workflow.
+- This is a CI/engine execution proof, not yet an Android in-app drawing acceptance test. The preview URL and production Worker were not changed by this pass; PR #14 remains Draft and unmerged.
+
+
+
+## Construction-driven anime artist and three-view geometry — 2026-11-21
+
+- Added a parameterized construction model for head axes, yaw-aware eye scale, seven editable root-to-tip hair clumps, ears, neck/torso masses, garment fold anchors and declared lighting.
+- Connected the model to the validated native Canvas2D brush pipeline. The generated plan now includes face/ear/hair fills, eye sclera/iris/pupil/catchlights, lids/lashes/brows, nose/mouth, collar seam, hair-flow ink, sheen accents and a clipped cheek/jaw shadow.
+- Fixed measured geometry defects found by CI: the default eye aspect ratio did not meet the expressive-eye target; torso control points escaped the 1920×1080 canvas; the construction artist also had a duplicate helper declaration. These were corrected at source, not by weakening the assertions.
+- Added view-dependent compression for the far cheek/jaw, hair masses and ears, plus explicit near/far eye classification. A three-view renderer now exports left three-quarter, front and right three-quarter studies from one style profile and shared hair-clump IDs.
+- Verified head `8fd924660a8cbd5a3055ae838eea492e5f0e7f09`: Drawing engine run #2959 and Hybrid raster/SVG run #997 completed successfully; both test jobs reported **469/469 passing, 0 failing**. The hybrid job rendered and uploaded both the construction study and the three-view continuity sheet.
+- Visual review confirms the three-quarter face silhouette now changes rather than only shifting facial landmarks. However, the output remains a geometry study, not professional anime acceptance: skull depth, ear placement, hair overlap/negative spaces, torso anatomy and stylistic expressiveness still need refinement.
+- Vercel preview deployment is currently blocked by its reported free build-rate limit. No production deployment, Worker change or PR merge was made. PR #14 remains Draft.
+- The user's gallery character remains excluded from this general baseline until the user accepts its visual quality.

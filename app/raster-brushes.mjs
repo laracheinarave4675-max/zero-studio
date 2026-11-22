@@ -181,6 +181,18 @@ function paintFoliageLeaves(context,dabs,{color,opacity,seed,texture}){
  }
 }
 
+function applyRasterClip(context, polygon) {
+ if (polygon == null) return;
+ if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) throw Error("قناع القص يحتاج إلى مضلع صالح");
+ const points = polygon.map(point => {
+  const x=Number(Array.isArray(point)?point[0]:point?.x), y=Number(Array.isArray(point)?point[1]:point?.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||y<0||x>1920||y>1080) throw Error("نقطة قناع القص خارج مساحة الرسم");
+  return {x,y};
+ });
+ context.beginPath(); context.moveTo(points[0].x,points[0].y);
+ for(let i=1;i<points.length;i++) context.lineTo(points[i].x,points[i].y);
+ context.closePath(); context.clip();
+}
 export function drawRasterBrushStroke(context,points,options={}){
  if(!context||typeof context.save!=="function"||typeof context.fill!=="function"||typeof context.beginPath!=="function"||typeof context.ellipse!=="function")throw Error("سياق الرسم النقطي غير صالح");
  const brush=String(options.brush||"gouache"),opacity=clamp(Number(options.opacity??1),0,1),color=String(options.color||"#243348"),texture=clamp(Number(options.texture??.55),0,1),seed=Number.isFinite(+options.seed)?+options.seed:1,dabs=buildBrushDabs(points,{...options,brush});
@@ -189,6 +201,7 @@ export function drawRasterBrushStroke(context,points,options={}){
  context.save();
  try{
   context.globalCompositeOperation=options.erase?"destination-out":RASTER_BLEND_MODES[blendMode];
+  applyRasterClip(context, options.clipPolygon);
   if(brush==="watercolor"){paintWatercolorWash(context,dabs,{color,opacity,seed,texture});}
   else if(brush==="foliage"){paintFoliageLeaves(context,dabs,{color,opacity,seed,texture});}
   else{const widthScale=brush==="graphite"?.66:1,alpha=clamp(opacity*(brush==="graphite"?.65:1),0,1);paintRibbon(context,dabs,{color,opacity:alpha,seed,widthScale,roughness:brush==="ink"?.018:brush==="graphite"?.17:.12,texture:brush==="ink"?0:texture,bristles:brush==="ink"?0:brush==="graphite"?7:Math.max(3,Math.round(9*texture))});}
@@ -198,6 +211,44 @@ export function drawRasterBrushStroke(context,points,options={}){
   context.restore();
  }
  return{dabCount:dabs.length,brush,blendMode:options.erase?"destination-out":blendMode,renderMode:brush==="watercolor"?"wash":brush==="foliage"?"leaf-marks":"continuous-ribbon"};
+}
+/**
+ * Paint a closed semantic region directly into a transparent raster layer.
+ * The polygon is supplied by the artist planner as boundary points; Canvas2D
+ * rasterizes the interior with antialiased edges. No image payload or bitmap
+ * mask is embedded in the plan.
+ */
+export function fillRasterRegion(context, points, options = {}) {
+ if (!context || typeof context.save !== "function" || typeof context.fill !== "function" || typeof context.beginPath !== "function") {
+  throw Error("سياق تعبئة المنطقة النقطية غير صالح");
+ }
+ if (!Array.isArray(points) || points.length < 3 || points.length > 20000) throw Error("حدود منطقة التعبئة تحتاج إلى ثلاث نقاط على الأقل");
+ const clean = points.map(point => {
+  const x = Number(point?.x), y = Number(point?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x > 1920 || y > 1080) throw Error("نقطة حدود المنطقة خارج مساحة الرسم");
+  return { x, y };
+ });
+ const color = String(options.color || "#243348");
+ if (!/^#[0-9a-f]{6}$/i.test(color)) throw Error("لون منطقة التعبئة غير صالح");
+ const opacity = Number(options.opacity ?? 1);
+ if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) throw Error("شفافية منطقة التعبئة غير صالحة");
+ const blendMode = String(options.blendMode || "normal");
+ if (!Object.hasOwn(RASTER_BLEND_MODES, blendMode)) throw Error("نمط مزج منطقة التعبئة غير مدعوم");
+ context.save();
+ try {
+  context.globalAlpha = opacity;
+  context.globalCompositeOperation = RASTER_BLEND_MODES[blendMode];
+  applyRasterClip(context, options.clipPolygon);
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(clean[0].x, clean[0].y);
+  for (let index = 1; index < clean.length; index++) context.lineTo(clean[index].x, clean[index].y);
+  context.closePath();
+  context.fill();
+ } finally {
+  context.restore();
+ }
+ return { pointCount: clean.length, color, opacity, blendMode, renderMode: "closed-region-fill" };
 }
 export function mapPointsToRaster(points,canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize){
  const values=[canvasWidth,canvasHeight,imageWidth,imageHeight,brushSize].map(Number);

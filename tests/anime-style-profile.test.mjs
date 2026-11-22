@@ -1,0 +1,99 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  DEFAULT_TV_ANIME_STYLE_PROFILE,
+  validateAnimeStyleProfile,
+  deriveAnimeHeadConstruction,
+  buildAnimeHairClump
+} from "../app/anime-style-profile.mjs";
+
+test("default anime style profile is a bounded and ordered craft specification",()=>{
+ const profile=validateAnimeStyleProfile(DEFAULT_TV_ANIME_STYLE_PROFILE);
+ assert.equal(profile.id,"tv-anime-balanced");
+ assert.ok(profile.head.browLine<profile.head.eyeLine);
+ assert.ok(profile.head.eyeLine<profile.head.noseBase);
+ assert.ok(profile.head.noseBase<profile.head.mouthLine);
+ assert.ok(profile.eyes.upperLidWeight>profile.eyes.lowerLidWeight);
+});
+
+test("head construction derives facial axes and eye proportions from head bounds",()=>{
+ const front=deriveAnimeHeadConstruction({bounds:{x:.35,y:.12,width:.3,height:.48}});
+ const threeQuarter=deriveAnimeHeadConstruction({bounds:{x:.35,y:.12,width:.3,height:.48},viewYaw:.7});
+ assert.equal(front.derivedFromHeadBounds,true);
+ assert.ok(front.axes.browY<front.axes.eyeY&&front.axes.eyeY<front.axes.noseY&&front.axes.noseY<front.axes.mouthY);
+ assert.ok(front.eyes[0].bounds.width>0&&front.eyes[1].bounds.width>0);
+ assert.notEqual(threeQuarter.eyes[0].scale,threeQuarter.eyes[1].scale);
+ assert.notEqual(threeQuarter.axes.centerline.from.x,threeQuarter.axes.centerline.to.x);
+});
+
+test("anime head construction rejects invalid normalized bounds and facial style order",()=>{
+ assert.throws(()=>deriveAnimeHeadConstruction({bounds:{x:.9,y:.2,width:.2,height:.4}}),/normalized/);
+ const invalid=structuredClone(DEFAULT_TV_ANIME_STYLE_PROFILE);
+ invalid.head.eyeLine=.7;
+ assert.throws(()=>validateAnimeStyleProfile(invalid),/outside supported range|Facial construction lines/);
+});
+
+test("hair clump geometry has root-to-tip flow and a tapered organic outline",()=>{
+ const clump=buildAnimeHairClump({
+  root:{x:.4,y:.2},control1:{x:.35,y:.3},control2:{x:.48,y:.52},tip:{x:.55,y:.7},
+  rootWidth:.09,tipWidth:.002,samples:24
+ });
+ assert.equal(clump.flow.length,25);
+ assert.equal(clump.outline.length,50);
+ assert.deepEqual(clump.flow[0],{x:.4,y:.2});
+ assert.deepEqual(clump.flow.at(-1),{x:.55,y:.7});
+ assert.ok(clump.widthProfile.rootWidth>clump.widthProfile.tipWidth);
+ assert.ok(clump.outline.every(point=>point.x>=0&&point.x<=1&&point.y>=0&&point.y<=1));
+});
+
+test("hair clump geometry rejects malformed or out-of-canvas control points",()=>{
+ assert.throws(()=>buildAnimeHairClump({root:{x:-.1,y:.2},control1:{x:.3,y:.3},control2:{x:.4,y:.4},tip:{x:.5,y:.6}}),/normalized/);
+ assert.throws(()=>buildAnimeHairClump({root:{x:.2,y:.2},control1:{x:.3,y:.3},control2:{x:.4,y:.4},tip:{x:.5,y:.6},samples:3}),/sample count/);
+});
+
+test("yaw projection reshapes the skull, jaw, nose and face planes, not only eye width",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const front=deriveAnimeHeadConstruction({bounds,viewYaw:0});
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.72});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.72});
+ assert.ok(left.bounds.projectedWidth<front.bounds.width);
+ assert.ok(right.bounds.projectedWidth<front.bounds.width);
+ assert.notDeepEqual(front.silhouette,left.silhouette);
+ assert.notDeepEqual(left.silhouette,right.silhouette);
+ assert.notEqual(left.landmarks.noseBase.x,front.landmarks.noseBase.x);
+ assert.notEqual(right.landmarks.mouthCenter.x,front.landmarks.mouthCenter.x);
+ assert.notDeepEqual(left.landmarks.jawLeft,right.landmarks.jawLeft);
+ assert.ok(left.planes.jawVisibility.farSideScale<1);
+ assert.ok(left.eyes.find(eye=>!eye.nearSide).scale<left.eyes.find(eye=>eye.nearSide).scale);
+ assert.ok(right.eyes.find(eye=>!eye.nearSide).scale<right.eyes.find(eye=>eye.nearSide).scale);
+ assert.equal(left.profileId,right.profileId);
+});
+test("opposite yaw projections preserve mirrored identity geometry",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.65});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.65});
+ const cx=bounds.x+bounds.width/2;
+ const mirrorX=value=>2*cx-value;
+ assert.ok(Math.abs(mirrorX(left.landmarks.noseBase.x)-right.landmarks.noseBase.x)<1e-9);
+ assert.ok(Math.abs(mirrorX(left.landmarks.mouthCenter.x)-right.landmarks.mouthCenter.x)<1e-9);
+ assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-9);
+});
+
+test("head silhouette has a rounded skull, cheek width and a tapered anime jaw",()=>{
+ const head=deriveAnimeHeadConstruction({bounds:{x:.35,y:.12,width:.3,height:.48}});
+ const widthAt=id=>{const item=head.faceCrossSections.find(row=>row.id===id);return item.right-item.left;};
+ assert.ok(widthAt("cheek")>widthAt("jaw"));
+ assert.ok(widthAt("jaw")>widthAt("chin"));
+ assert.equal(head.silhouette.length,97);
+ assert.ok(head.silhouette.every(point=>Number.isFinite(point.x)&&Number.isFinite(point.y)));
+});
+test("yaw projects facial depth and compresses the far side while preserving mirrored views",()=>{
+ const bounds={x:.35,y:.12,width:.3,height:.48};
+ const left=deriveAnimeHeadConstruction({bounds,viewYaw:-.72});
+ const right=deriveAnimeHeadConstruction({bounds,viewYaw:.72});
+ assert.ok(left.projection.cosYaw<1);
+ assert.ok(left.projection.sinYaw>0);
+ assert.ok(left.planes.farCheek.scale<left.planes.nearCheek.scale);
+ assert.ok(Math.abs((left.landmarks.noseBase.x+right.landmarks.noseBase.x)-2*(bounds.x+bounds.width/2))<1e-8);
+ assert.ok(Math.abs(left.bounds.projectedWidth-right.bounds.projectedWidth)<1e-8);
+});

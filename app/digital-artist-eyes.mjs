@@ -1,0 +1,603 @@
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const fail = message => { throw new Error(message); };
+const hexToRgb = value => {
+  const match = /^#([0-9a-f]{6})$/i.exec(String(value ?? ""));
+  if (!match) fail("A six-digit hex color is required.");
+  const hex = match[1];
+  return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+};
+const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const pointInPolygon = (x, y, polygon) => {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[i], b = polygon[j];
+    const crosses = ((a.y > y) !== (b.y > y)) && (x < (b.x - a.x) * (y - a.y) / ((b.y - a.y) || Number.EPSILON) + a.x);
+    if (crosses) inside = !inside;
+  }
+  return inside;
+};
+function validatePixels(imageData) {
+  const width = Number(imageData?.width), height = Number(imageData?.height), data = imageData?.data;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 4096 || height > 4096) {
+    fail("Raster inspection needs valid dimensions no larger than 4096×4096.");
+  }
+  if (!data || typeof data.length !== "number" || data.length !== width * height * 4) fail("Raster inspection needs width × height × 4 RGBA samples.");
+  return { width, height, data };
+}
+
+/** The artist's raster eye: silhouette bounds, coverage, centroid and coarse palette. */
+export function analyzeRasterPixels(imageData, options = {}) {
+  const { width, height, data } = validatePixels(imageData);
+  const alphaThreshold = Number.isFinite(Number(options.alphaThreshold)) ? clamp(Number(options.alphaThreshold), 0, 255) : 16;
+  const quantization = Number.isInteger(options.quantization) ? clamp(options.quantization, 2, 64) : 16;
+  let minX = width, minY = height, maxX = -1, maxY = -1, visiblePixels = 0, alphaSum = 0, weightedX = 0, weightedY = 0;
+  let perimeterPixels = 0;
+  const palette = new Map();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = (y * width + x) * 4, alpha = data[offset + 3];
+      if (alpha <= alphaThreshold) continue;
+      visiblePixels++; alphaSum += alpha; weightedX += x * alpha; weightedY += y * alpha;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+      const r = Math.round(data[offset] / quantization) * quantization;
+      const g = Math.round(data[offset + 1] / quantization) * quantization;
+      const b = Math.round(data[offset + 2] / quantization) * quantization;
+      const key = [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)].map(v => v.toString(16).padStart(2, "0")).join("");
+      palette.set(key, (palette.get(key) || 0) + 1);
+      const edge = x === 0 || y === 0 || x === width - 1 || y === height - 1 ||
+        data[((y - 1) * width + x) * 4 + 3] <= alphaThreshold ||
+        data[((y + 1) * width + x) * 4 + 3] <= alphaThreshold ||
+        data[(y * width + x - 1) * 4 + 3] <= alphaThreshold ||
+        data[(y * width + x + 1) * 4 + 3] <= alphaThreshold;
+      if (edge) perimeterPixels++;
+    }
+  }
+  const colors = [...palette.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([hex, count]) => ({
+    color: "#" + hex, pixels: count, share: visiblePixels ? count / visiblePixels : 0
+  }));
+  return {
+    width, height, visiblePixels, alphaCoverage: visiblePixels / (width * height),
+    alphaMean: visiblePixels ? alphaSum / visiblePixels : 0,
+    bounds: visiblePixels ? { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 } : null,
+    centroid: visiblePixels ? { x: weightedX / alphaSum, y: weightedY / alphaSum } : null,
+    perimeterPixels, perimeterToArea: visiblePixels ? perimeterPixels / visiblePixels : 0,
+    quantizedColorCount: palette.size, dominantPalette: colors
+  };
+}
+
+/** The line-art eye: measurable stroke length, turn severity, bounds and pressure range. */
+export function analyzeStrokeGeometry(stroke) {
+  if (!stroke || typeof stroke !== "object" || !Array.isArray(stroke.points) || stroke.points.length < 1 || stroke.points.length > 20000) {
+    fail("Stroke inspection needs 1–20,000 points.");
+  }
+  const points = stroke.points.map(point => {
+    const x = Number(point?.x), y = Number(point?.y), pressure = Number(point?.pressure ?? 1);
+    if (![x, y, pressure].every(Number.isFinite)) fail("Stroke inspection found a non-finite sample.");
+    return { x, y, pressure };
+  });
+  let length = 0, sharpTurns = 0, minPressure = 1, maxPressure = 0;
+  let duplicateSegments = 0, tinySegments = 0, abruptPressureChanges = 0;
+  const angles = [], segmentLengths = [];
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+    minPressure = Math.min(minPressure, p.pressure); maxPressure = Math.max(maxPressure, p.pressure);
+    if (i > 0) {
+      const dx = p.x - points[i - 1].x, dy = p.y - points[i - 1].y;
+      const segmentLength = Math.hypot(dx, dy);
+      length += segmentLength;
+      segmentLengths.push(segmentLength);
+      if (segmentLength <= 0.001) duplicateSegments++;
+      else {
+        if (segmentLength < 0.35) tinySegments++;
+        angles.push(Math.atan2(dy, dx));
+      }
+      if (Math.abs(p.pressure - points[i - 1].pressure) >= 0.45) abruptPressureChanges++;
+    }
+  }
+  for (let i = 1; i < angles.length; i++) {
+    let delta = Math.abs(angles[i] - angles[i - 1]);
+    if (delta > Math.PI) delta = 2 * Math.PI - delta;
+    if (delta > Math.PI * 0.72) sharpTurns++;
+  }
+  return {
+    id: String(stroke.id ?? stroke.strokeId ?? ""),
+    intent: String(stroke.intent ?? ""),
+    kind: stroke.kind === "raster-region-fill" ? "region-fill" : "brush-stroke",
+    sampleCount: points.length, length, sharpTurns,
+    segmentQuality: {
+      segmentCount: segmentLengths.length, duplicateSegments, tinySegments,
+      abruptPressureChanges,
+      minimumSegmentLength: segmentLengths.length ? Math.min(...segmentLengths) : 0,
+      meanSegmentLength: segmentLengths.length ? length / segmentLengths.length : 0
+    },
+    warnings: [
+      ...(length <= 0.001 && stroke.kind !== "raster-region-fill" ? ["zero-length-stroke"] : []),
+      ...(duplicateSegments ? ["duplicate-consecutive-points"] : []),
+      ...(tinySegments > Math.max(3, segmentLengths.length * 0.2) ? ["over-sampled-micro-segments"] : []),
+      ...(sharpTurns > Math.max(2, angles.length * 0.35) ? ["excessive-direction-changes"] : []),
+      ...(abruptPressureChanges > Math.max(2, segmentLengths.length * 0.25) ? ["unstable-pressure"] : [])
+    ],
+    bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+    pressureRange: { min: minPressure, max: maxPressure, spread: maxPressure - minPressure },
+    closed: stroke.kind === "raster-region-fill" || (points.length > 2 && distance(points[0], points[points.length - 1]) <= 2)
+  };
+}
+
+/** The identity/anatomy eye: compare named normalized landmarks to approved Character DNA. */
+export function compareLandmarks(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") fail("Two landmark maps are required.");
+  const tolerance = Number.isFinite(Number(options.tolerance)) ? clamp(Number(options.tolerance), 0, 1) : 0.025;
+  const names = Object.keys(reference);
+  if (!names.length) fail("The approved reference has no named landmarks.");
+  const measurements = names.map(name => {
+    const a = reference[name], b = current[name];
+    if (![a?.x, a?.y].every(value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)) {
+      fail("Reference landmark " + name + " must use normalized coordinates from 0 to 1.");
+    }
+    if (!b) return { name, deviation: null, withinTolerance: false, missing: true };
+    if (![b?.x, b?.y].every(value => Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1)) {
+      fail("Current landmark " + name + " must use normalized coordinates from 0 to 1.");
+    }
+    const delta = distance({ x: Number(a.x), y: Number(a.y) }, { x: Number(b.x), y: Number(b.y) });
+    return { name, deviation: delta, withinTolerance: delta <= tolerance, missing: false };
+  });
+  const measured = measurements.filter(item => Number.isFinite(item.deviation));
+  const missing = measurements.filter(item => item.missing).map(item => item.name);
+  const mean = measured.length ? measured.reduce((sum, item) => sum + item.deviation, 0) / measured.length : null;
+  return {
+    compared: measured.length, missing,
+    meanDeviation: mean,
+    maxDeviation: measured.length ? Math.max(...measured.map(item => item.deviation)) : null,
+    tolerance,
+    passed: missing.length === 0 && measured.length > 0 && measurements.every(item => item.withinTolerance),
+    measurements
+  };
+}
+
+const ANATOMY_BONE_PAIRS = Object.freeze({
+  upperArmL:["shoulderL","elbowL"], lowerArmL:["elbowL","wristL"],
+  upperArmR:["shoulderR","elbowR"], lowerArmR:["elbowR","wristR"],
+  thighL:["hipL","kneeL"], shinL:["kneeL","ankleL"],
+  thighR:["hipR","kneeR"], shinR:["kneeR","ankleR"],
+  torso:["pelvis","chest"], neck:["chest","neck"], head:["neck","head"]
+});
+
+/**
+ * Compare an approved pose guide with the character's fixed anatomical DNA.
+ * Uses the same 16:9 normalized drawing-space metric as the anatomy engine.
+ * This evaluates proportion drift, not visual contour accuracy.
+ */
+export function compareAnatomyGuideToDNA(dna, guide, options = {}) {
+  if (!dna || dna.format !== "zero-studio-character-dna" || dna.version !== 1 ||
+      !dna.anchorGuide?.joints || !dna.boneLengths) fail("An approved Character DNA record is required.");
+  if (!guide || !guide.joints || typeof guide.joints !== "object") fail("A calibrated current anatomy guide is required.");
+  if (String(guide.view || "") !== String(dna.canonicalView || "")) {
+    return {
+      compared: 0, skipped: true, passed: null, reason: "camera-view-mismatch",
+      referenceView: dna.canonicalView, currentView: guide.view || null, measurements: []
+    };
+  }
+  const tolerance = Number.isFinite(Number(options.relativeTolerance))
+    ? clamp(Number(options.relativeTolerance), 0, 1) : 0.15;
+  const point = (source, name) => {
+    const x = Number(source?.[name]?.x), y = Number(source?.[name]?.y);
+    if (![x, y].every(Number.isFinite) || x < 0 || x > 1 || y < 0 || y > 1) {
+      fail("The current anatomy guide is missing a valid " + name + " landmark.");
+    }
+    return { x, y };
+  };
+  const length = (a, b) => Math.hypot((b.x - a.x) * (16 / 9), b.y - a.y);
+  const measurements = Object.entries(ANATOMY_BONE_PAIRS).map(([name, [from, to]]) => {
+    const expected = Number(dna.boneLengths[name]);
+    if (!Number.isFinite(expected) || expected <= 0) fail("Character DNA has no valid " + name + " measurement.");
+    const actual = length(point(guide.joints, from), point(guide.joints, to));
+    const ratio = actual / expected;
+    const deviation = Math.abs(ratio - 1);
+    return { name, expected, actual, scaleRatio: ratio, relativeDeviation: deviation, passed: deviation <= tolerance };
+  });
+  return {
+    compared: measurements.length,
+    skipped: false,
+    meanRelativeDeviation: measurements.reduce((sum, item) => sum + item.relativeDeviation, 0) / measurements.length,
+    maxRelativeDeviation: Math.max(...measurements.map(item => item.relativeDeviation)),
+    relativeTolerance: tolerance,
+    passed: measurements.every(item => item.passed),
+    measurements
+  };
+}
+
+/** The color eye: compare approved named palette swatches against a rendered palette. */
+export function comparePalette(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") fail("Two named palettes are required.");
+  const tolerance = Number.isFinite(Number(options.tolerance)) ? clamp(Number(options.tolerance), 0, 441.7) : 32;
+  const names = Object.keys(reference);
+  if (!names.length) fail("The approved reference has no named palette swatches.");
+  const swatches = names.map(name => {
+    const a = hexToRgb(reference[name]);
+    if (!current[name]) return { name, distance: null, passed: false, missing: true };
+    const b = hexToRgb(current[name]);
+    const delta = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    return { name, distance: delta, passed: delta <= tolerance, missing: false };
+  });
+  const measured = swatches.filter(item => Number.isFinite(item.distance));
+  const missing = swatches.filter(item => item.missing).map(item => item.name);
+  return {
+    compared: measured.length, missing,
+    meanDistance: measured.length ? measured.reduce((sum, item) => sum + item.distance, 0) / measured.length : null,
+    maxDistance: measured.length ? Math.max(...measured.map(item => item.distance)) : null,
+    tolerance,
+    passed: missing.length === 0 && measured.length > 0 && swatches.every(item => item.passed),
+    swatches
+  };
+}
+
+/** The fill eye: inspect one or more same-color polygons as a single semantic region group. */
+export function inspectRegionFillGroup(imageData, polygons, expectedColor, options = {}) {
+  const { width, height, data } = validatePixels(imageData);
+  if (!Array.isArray(polygons) || polygons.length < 1 || polygons.length > 512) fail("Fill inspection needs 1–512 region polygons.");
+  const normalized = polygons.map((polygon, polygonIndex) => {
+    if (!Array.isArray(polygon) || polygon.length < 3 || polygon.length > 20000) fail("Fill polygon " + (polygonIndex + 1) + " needs at least three points.");
+    return polygon.map(point => {
+      const x = Number(point?.x), y = Number(point?.y);
+      if (![x, y].every(Number.isFinite) || x < 0 || y < 0 || x >= width || y >= height) fail("Fill inspection polygon is outside the raster.");
+      return { x, y };
+    });
+  });
+  const [r, g, b] = hexToRgb(expectedColor);
+  const tolerance = Number.isFinite(Number(options.colorTolerance)) ? clamp(Number(options.colorTolerance), 0, 441.7) : 28;
+  const stride = Number.isInteger(options.stride) ? clamp(options.stride, 1, 64) : 3;
+  const margin = Number.isInteger(options.margin) ? clamp(options.margin, 0, 128) : 12;
+  const allPoints = normalized.flat();
+  const minX = Math.max(0, Math.floor(Math.min(...allPoints.map(p => p.x)) - margin));
+  const maxX = Math.min(width - 1, Math.ceil(Math.max(...allPoints.map(p => p.x)) + margin));
+  const minY = Math.max(0, Math.floor(Math.min(...allPoints.map(p => p.y)) - margin));
+  const maxY = Math.min(height - 1, Math.ceil(Math.max(...allPoints.map(p => p.y)) + margin));
+  let insideSamples = 0, insideMatches = 0, outsideSamples = 0, outsideMatches = 0;
+  for (let y = minY; y <= maxY; y += stride) {
+    for (let x = minX; x <= maxX; x += stride) {
+      const inside = normalized.some(polygon => pointInPolygon(x + 0.5, y + 0.5, polygon));
+      const offset = (y * width + x) * 4, alpha = data[offset + 3];
+      const match = alpha > 16 && Math.hypot(data[offset] - r, data[offset + 1] - g, data[offset + 2] - b) <= tolerance;
+      if (inside) { insideSamples++; if (match) insideMatches++; }
+      else { outsideSamples++; if (match) outsideMatches++; }
+    }
+  }
+  const insideCoverage = insideSamples ? insideMatches / insideSamples : 0;
+  const outsideLeakage = outsideSamples ? outsideMatches / outsideSamples : 0;
+  return {
+    expectedColor, regionCount: normalized.length,
+    insideSamples, insideMatches, insideCoverage,
+    outsideSamples, outsideMatches, outsideLeakage,
+    passed: insideSamples > 0 && insideCoverage >= (options.minimumCoverage ?? 0.9) &&
+      outsideLeakage <= (options.maximumLeakage ?? 0.02)
+  };
+}
+
+/** The single-region convenience form of the fill eye. */
+export function inspectRegionFill(imageData, polygon, expectedColor, options = {}) {
+  return inspectRegionFillGroup(imageData, [polygon], expectedColor, options);
+}
+
+
+const animePoint = (point, label) => {
+  const x = Number(point?.x), y = Number(point?.y);
+  if (![x, y].every(Number.isFinite) || x < 0 || x > 1 || y < 0 || y > 1) {
+    fail(label + " must be a normalized point between 0 and 1.");
+  }
+  return { x, y };
+};
+const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const boundedOption = (options, key, fallback, min, max) => {
+  const value = options[key] == null ? fallback : Number(options[key]);
+  if (!Number.isFinite(value)) fail("Invalid anime eye comparison tolerance: " + key);
+  return clamp(value, min, max);
+};
+const wrapAngle = angle => {
+  while (angle > Math.PI) angle -= Math.PI * 2;
+  while (angle < -Math.PI) angle += Math.PI * 2;
+  return angle;
+};
+function animeEyeMetrics(landmarks, side) {
+  const prefix = side === "left" ? "eyeL" : "eyeR";
+  const outer = animePoint(landmarks[prefix + "Outer"], prefix + "Outer");
+  const inner = animePoint(landmarks[prefix + "Inner"], prefix + "Inner");
+  const upper = animePoint(landmarks[prefix + "Upper"], prefix + "Upper");
+  const lower = animePoint(landmarks[prefix + "Lower"], prefix + "Lower");
+  const iris = animePoint(landmarks[prefix + "Iris"], prefix + "Iris");
+  const pupil = animePoint(landmarks[prefix + "Pupil"], prefix + "Pupil");
+  const width = distance(outer, inner);
+  if (width < 0.002) fail(prefix + " width is too small to measure.");
+  const center = midpoint(outer, inner);
+  const eyeHeight = distance(upper, lower);
+  const eyePolygon = [outer, upper, inner, lower];
+  const irisInside = pointInPolygon(iris.x, iris.y, eyePolygon);
+  const irisOffset = { x: (iris.x - center.x) / width, y: (iris.y - center.y) / width };
+  const pupilOffset = { x: (pupil.x - iris.x) / width, y: (pupil.y - iris.y) / width };
+  return {
+    width, aspectRatio: eyeHeight / width,
+    slant: Math.atan2(inner.y - outer.y, inner.x - outer.x),
+    irisOffset, pupilOffset, irisInside,
+    upperLidHeight: distance(upper, center) / width,
+    lowerLidHeight: distance(lower, center) / width
+  };
+}
+
+/**
+ * Compare an anime eye design against the approved model sheet.
+ * This measures normalized landmark geometry only; it does not infer landmarks
+ * from pixels and deliberately does not impose one universal anime eye shape.
+ */
+export function compareAnimeEyeDesign(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") {
+    fail("Approved and current anime eye landmark maps are required.");
+  }
+  const refFaceLeft = animePoint(reference.faceLeft, "reference faceLeft");
+  const refFaceRight = animePoint(reference.faceRight, "reference faceRight");
+  const curFaceLeft = animePoint(current.faceLeft, "current faceLeft");
+  const curFaceRight = animePoint(current.faceRight, "current faceRight");
+  const refFaceWidth = distance(refFaceLeft, refFaceRight);
+  const curFaceWidth = distance(curFaceLeft, curFaceRight);
+  if (refFaceWidth < 0.01 || curFaceWidth < 0.01) fail("Face width is too small for anime eye comparison.");
+  const ref = { left: animeEyeMetrics(reference, "left"), right: animeEyeMetrics(reference, "right") };
+  const cur = { left: animeEyeMetrics(current, "left"), right: animeEyeMetrics(current, "right") };
+  const tolerances = {
+    faceWidth: boundedOption(options, "faceWidthTolerance", 0.06, 0.005, 0.3),
+    aspectRatio: boundedOption(options, "aspectRatioTolerance", 0.18, 0.01, 1),
+    slant: boundedOption(options, "slantTolerance", 0.16, 0.01, 1),
+    irisOffset: boundedOption(options, "irisOffsetTolerance", 0.12, 0.01, 0.8),
+    eyeSpacing: boundedOption(options, "eyeSpacingTolerance", 0.07, 0.005, 0.3)
+  };
+  const checks = [];
+  const add = (id, expected, actual, tolerance, unit) => {
+    const deviation = Math.abs(actual - expected);
+    checks.push({ id, expected, actual, deviation, tolerance, unit, passed: deviation <= tolerance });
+  };
+  for (const side of ["left", "right"]) {
+    add(side + "-eye-width", ref[side].width / refFaceWidth, cur[side].width / curFaceWidth, tolerances.faceWidth, "face-width-ratio");
+    add(side + "-eye-aspect", ref[side].aspectRatio, cur[side].aspectRatio, tolerances.aspectRatio, "ratio");
+    add(side + "-eye-slant", ref[side].slant, cur[side].slant, tolerances.slant, "radians");
+    add(side + "-iris-x", ref[side].irisOffset.x, cur[side].irisOffset.x, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-iris-y", ref[side].irisOffset.y, cur[side].irisOffset.y, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-pupil-x", ref[side].pupilOffset.x, cur[side].pupilOffset.x, tolerances.irisOffset, "eye-width-ratio");
+    add(side + "-pupil-y", ref[side].pupilOffset.y, cur[side].pupilOffset.y, tolerances.irisOffset, "eye-width-ratio");
+    checks.push({ id: side + "-iris-contained", expected: true, actual: cur[side].irisInside, deviation: cur[side].irisInside ? 0 : 1, tolerance: 0, unit: "boolean", passed: cur[side].irisInside });
+  }
+  const eyeGap = (map, faceWidth) => {
+    const left = midpoint(animePoint(map.eyeLOuter, "eyeLOuter"), animePoint(map.eyeLInner, "eyeLInner"));
+    const right = midpoint(animePoint(map.eyeROuter, "eyeROuter"), animePoint(map.eyeRInner, "eyeRInner"));
+    return distance(left, right) / faceWidth;
+  };
+  add("eye-pair-spacing", eyeGap(reference, refFaceWidth), eyeGap(current, curFaceWidth), tolerances.eyeSpacing, "face-width-ratio");
+  const failed = checks.filter(item => !item.passed);
+  return {
+    format: "zero-studio-anime-eye-comparison", version: 1,
+    compared: checks.length, passed: failed.length === 0,
+    referenceFaceWidth: refFaceWidth, currentFaceWidth: curFaceWidth,
+    checks, failures: failed.map(item => item.id),
+    measurementScope: "normalized-approved-landmarks-not-pixel-inference"
+  };
+}
+
+
+/**
+ * Compare anime face proportions to this character's approved model sheet.
+ * All measurements are relative to that reference; no universal face template
+ * and no pixel-based landmark inference are implied.
+ */
+export function compareAnimeFaceDesign(reference, current, options = {}) {
+  if (!reference || !current || typeof reference !== "object" || typeof current !== "object") {
+    fail("Approved and current anime face landmark maps are required.");
+  }
+  const names = ["faceTop","faceLeft","faceRight","cheekLeft","cheekRight","jawLeft","jawRight","chin","noseTip","mouthCenter","leftEyeCenter","rightEyeCenter","leftBrow","rightBrow"];
+  const ref = Object.fromEntries(names.map(name => [name, animePoint(reference[name], "reference " + name)]));
+  const cur = Object.fromEntries(names.map(name => [name, animePoint(current[name], "current " + name)]));
+  const width = map => map.faceRight.x - map.faceLeft.x;
+  const height = map => map.chin.y - map.faceTop.y;
+  const refWidth = width(ref), curWidth = width(cur), refHeight = height(ref), curHeight = height(cur);
+  if (Math.min(refWidth,curWidth,refHeight,curHeight) < 0.01) fail("Anime face bounds are too small to measure.");
+  const eyeLine = map => (map.leftEyeCenter.y + map.rightEyeCenter.y) / 2;
+  const metric = map => ({
+    faceAspect: height(map) / width(map),
+    cheekWidth: (map.cheekRight.x - map.cheekLeft.x) / width(map),
+    jawWidth: (map.jawRight.x - map.jawLeft.x) / width(map),
+    lowerFace: (map.chin.y - eyeLine(map)) / height(map),
+    noseLevel: (map.noseTip.y - eyeLine(map)) / height(map),
+    mouthLevel: (map.mouthCenter.y - eyeLine(map)) / height(map),
+    mouthToChin: (map.chin.y - map.mouthCenter.y) / height(map),
+    browEyeGap: (eyeLine(map) - (map.leftBrow.y + map.rightBrow.y) / 2) / height(map),
+    eyeSpacing: (map.rightEyeCenter.x - map.leftEyeCenter.x) / width(map)
+  });
+  const expected = metric(ref), actual = metric(cur);
+  const checks = [];
+  const defaults = { faceAspect:0.1, cheekWidth:0.07, jawWidth:0.07, lowerFace:0.07, noseLevel:0.06, mouthLevel:0.06, mouthToChin:0.06, browEyeGap:0.05, eyeSpacing:0.06 };
+  for (const key of Object.keys(defaults)) {
+    const tolerance = boundedOption(options, key + "Tolerance", defaults[key], 0.005, 0.5);
+    const deviation = Math.abs(actual[key] - expected[key]);
+    checks.push({ id:key, expected:expected[key], actual:actual[key], deviation, tolerance, unit:"face-relative-ratio", passed:deviation <= tolerance });
+  }
+  const failed = checks.filter(item => !item.passed);
+  return {
+    format:"zero-studio-anime-face-comparison", version:1,
+    compared:checks.length, passed:failed.length === 0,
+    referenceBounds:{width:refWidth,height:refHeight},
+    currentBounds:{width:curWidth,height:curHeight},
+    checks, failures:failed.map(item=>item.id),
+    measurementScope:"normalized-approved-face-landmarks-not-pixel-inference"
+  };
+}
+
+/**
+ * Compare directional hair clumps with a character's approved hair model sheet.
+ * Each clump is represented by a root and tip landmark; this is a geometry check,
+ * not automatic strand segmentation.
+ */
+export function compareAnimeHairFlow(reference, current, options = {}) {
+  if (!Array.isArray(reference) || !Array.isArray(current) || reference.length < 3 || current.length < 3 ||
+      reference.length > 64 || current.length > 64) fail("Anime hair-flow comparison needs 3–64 reference and current clumps.");
+  const headWidth = Number(options.headWidth ?? 1);
+  if (!Number.isFinite(headWidth) || headWidth <= 0 || headWidth > 2) fail("A positive normalized head width is required.");
+  const angleTolerance = boundedOption(options, "angleTolerance", 0.28, 0.01, Math.PI);
+  const lengthTolerance = boundedOption(options, "lengthTolerance", 0.2, 0.01, 1);
+  const normalize = (items, label) => {
+    const ids = new Set();
+    return new Map(items.map((item, index) => {
+      const id = String(item?.id ?? "");
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,79}$/.test(id) || ids.has(id)) fail(label + " hair clump IDs must be unique and stable.");
+      ids.add(id);
+      const root = animePoint(item.root, label + " " + id + " root");
+      const tip = animePoint(item.tip, label + " " + id + " tip");
+      const dx = tip.x - root.x, dy = tip.y - root.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 0.002) fail(label + " hair clump " + id + " is too short.");
+      return [id, { id, angle: Math.atan2(dy, dx), length: length / headWidth }];
+    }));
+  };
+  const ref = normalize(reference, "reference"), cur = normalize(current, "current");
+  const checks = [];
+  for (const [id, expected] of ref) {
+    const actual = cur.get(id);
+    if (!actual) {
+      checks.push({ id, passed: false, missing: true, angleDeviation: null, lengthDeviation: null });
+      continue;
+    }
+    const angleDeviation = Math.abs(wrapAngle(actual.angle - expected.angle));
+    const lengthDeviation = Math.abs(actual.length - expected.length) / Math.max(expected.length, 0.001);
+    checks.push({ id, passed: angleDeviation <= angleTolerance && lengthDeviation <= lengthTolerance,
+      missing: false, angleDeviation, lengthDeviation, angleTolerance, lengthTolerance });
+  }
+  for (const id of cur.keys()) if (!ref.has(id)) checks.push({ id, passed: false, unexpected: true, angleDeviation: null, lengthDeviation: null });
+  return {
+    format: "zero-studio-anime-hair-flow-comparison", version: 1,
+    compared: checks.filter(item => !item.missing && !item.unexpected).length,
+    passed: checks.length === reference.length && checks.every(item => item.passed),
+    checks, failures: checks.filter(item => !item.passed).map(item => item.id),
+    measurementScope: "approved-root-tip-landmarks-not-automatic-strand-segmentation"
+  };
+}
+
+
+/**
+ * Extract connected opaque raster regions and their actual pixel-boundary contours.
+ * This is local pixel analysis: it does not identify semantic parts such as eyes or hair.
+ */
+export function extractRasterContours(imageData, options = {}) {
+  const { width, height, data } = validatePixels(imageData);
+  const pixelCount = width * height;
+  if (pixelCount > 2 * 1024 * 1024) fail("Raster contour extraction is limited to 2 megapixels per inspection.");
+  const alphaThreshold = Number.isFinite(Number(options.alphaThreshold))
+    ? clamp(Number(options.alphaThreshold), 0, 255) : 16;
+  const minimumArea = Number.isInteger(options.minimumArea) ? clamp(options.minimumArea, 1, pixelCount) : 4;
+  const maximumComponents = Number.isInteger(options.maximumComponents) ? clamp(options.maximumComponents, 1, 128) : 48;
+  const maximumPoints = Number.isInteger(options.maximumPoints) ? clamp(options.maximumPoints, 8, 512) : 160;
+  const simplifyTolerance = Number.isFinite(Number(options.simplifyTolerance))
+    ? clamp(Number(options.simplifyTolerance), 0, 12) : 1.25;
+  const mask = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i++) mask[i] = data[i * 4 + 3] > alphaThreshold ? 1 : 0;
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Int32Array(pixelCount);
+  const components = [];
+  const keyOf = (x, y) => y * (width + 1) + x;
+  const simplify = points => {
+    if (points.length <= 3 || simplifyTolerance <= 0) return points;
+    const keep = new Uint8Array(points.length);
+    keep[0] = 1; keep[points.length - 1] = 1;
+    const stack = [[0, points.length - 1]];
+    const toleranceSquared = simplifyTolerance * simplifyTolerance;
+    while (stack.length) {
+      const [first, last] = stack.pop();
+      const a = points[first], b = points[last];
+      const dx = b.x - a.x, dy = b.y - a.y, lengthSquared = dx * dx + dy * dy;
+      let maximum = toleranceSquared, selected = -1;
+      for (let i = first + 1; i < last; i++) {
+        const p = points[i];
+        const t = lengthSquared ? clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/lengthSquared,0,1) : 0;
+        const px = a.x + t * dx, py = a.y + t * dy;
+        const distanceSquared = (p.x-px)**2 + (p.y-py)**2;
+        if (distanceSquared > maximum) { maximum = distanceSquared; selected = i; }
+      }
+      if (selected >= 0) { keep[selected] = 1; stack.push([first,selected],[selected,last]); }
+    }
+    return points.filter((_, index) => keep[index]);
+  };
+  const traceEdges = edges => {
+    const outgoing = new Map();
+    edges.forEach((edge, index) => {
+      const key = keyOf(edge.x1, edge.y1);
+      if (!outgoing.has(key)) outgoing.set(key, []);
+      outgoing.get(key).push(index);
+    });
+    const loops = [];
+    for (let start = 0; start < edges.length; start++) {
+      if (edges[start].used) continue;
+      const points = [];
+      let index = start, guard = 0;
+      const origin = keyOf(edges[start].x1, edges[start].y1);
+      while (index != null && !edges[index].used && guard++ <= edges.length + 1) {
+        const edge = edges[index];
+        edge.used = true;
+        points.push({ x: edge.x1, y: edge.y1 });
+        const endKey = keyOf(edge.x2, edge.y2);
+        if (endKey === origin) { points.push({ x: edge.x2, y: edge.y2 }); break; }
+        const candidates = (outgoing.get(endKey) || []).filter(next => !edges[next].used);
+        if (!candidates.length) break;
+        index = candidates[0];
+      }
+      if (points.length >= 4 && keyOf(points[0].x, points[0].y) === keyOf(points[points.length-1].x, points[points.length-1].y)) {
+        loops.push(points.slice(0,-1));
+      }
+    }
+    return loops;
+  };
+  for (let seed = 0; seed < pixelCount; seed++) {
+    if (!mask[seed] || visited[seed]) continue;
+    let read = 0, write = 0, area = 0, minX = width, minY = height, maxX = -1, maxY = -1, sumX = 0, sumY = 0;
+    queue[write++] = seed; visited[seed] = 1;
+    while (read < write) {
+      const index = queue[read++], x = index % width, y = Math.floor(index / width);
+      area++; sumX += x + 0.5; sumY += y + 0.5;
+      minX = Math.min(minX,x); minY = Math.min(minY,y); maxX = Math.max(maxX,x); maxY = Math.max(maxY,y);
+      const neighbors = [y > 0 ? index-width : -1, x+1 < width ? index+1 : -1, y+1 < height ? index+width : -1, x > 0 ? index-1 : -1];
+      for (const next of neighbors) if (next >= 0 && mask[next] && !visited[next]) { visited[next] = 1; queue[write++] = next; }
+    }
+    if (area < minimumArea) continue;
+    const edges = [];
+    for (let i = 0; i < write; i++) {
+      const index = queue[i], x = index % width, y = Math.floor(index / width);
+      if (y === 0 || !mask[index-width]) edges.push({x1:x,y1:y,x2:x+1,y2:y});
+      if (x+1 === width || !mask[index+1]) edges.push({x1:x+1,y1:y,x2:x+1,y2:y+1});
+      if (y+1 === height || !mask[index+width]) edges.push({x1:x+1,y1:y+1,x2:x,y2:y+1});
+      if (x === 0 || !mask[index-1]) edges.push({x1:x,y1:y+1,x2:x,y2:y});
+    }
+    const loops = traceEdges(edges).sort((a,b) => b.length-a.length);
+    const raw = loops[0] || [];
+    if (raw.length < 3) continue;
+    let points = simplify(raw);
+    if (points.length > maximumPoints) {
+      const step = points.length / maximumPoints;
+      points = Array.from({length:maximumPoints},(_,i)=>points[Math.floor(i*step)]);
+    }
+    components.push({
+      id: "raster-component-" + components.length + 1,
+      area,
+      bounds: { x:minX, y:minY, width:maxX-minX+1, height:maxY-minY+1 },
+      centroid: { x:sumX/area, y:sumY/area },
+      contour: points.map(point=>({x:Number((point.x/width).toFixed(6)),y:Number((point.y/height).toFixed(6))})),
+      contourPointCount: points.length,
+      contourLoopCount: loops.length
+    });
+  }
+  components.sort((a,b)=>b.area-a.area);
+  const selected = components.slice(0,maximumComponents).map((item,index)=>({...item,id:"raster-component-"+(index+1)}));
+  return {
+    width,height,alphaThreshold,connectedComponentCount:components.length,
+    returnedComponentCount:selected.length,
+    omittedComponents:Math.max(0,components.length-selected.length),
+    components:selected,
+    measurementScope:"alpha-connected-components-and-pixel-boundary-contours-not-semantic-part-recognition"
+  };
+}
