@@ -36,7 +36,7 @@ test("decomposition round-trips the complete original RGBA source pixel-for-pixe
 });
 test("decomposition rejects missing pixels, overlapping masks and empty masks", () => {
   assert.throws(()=>createCharacterDecomposition({characterAssetId:"c",source:source(),parts:[{...masks()[0],mask:new Uint8Array(8).fill(255)},masks()[1]]}),/overlap/);
-  assert.throws(()=>createCharacterDecomposition({characterAssetId:"c",source:source(),parts:[{...masks()[0],mask:new Uint8Array(8)},masks()[1]]}),/not assigned/);
+  assert.throws(()=>createCharacterDecomposition({characterAssetId:"c",source:source(),parts:[{...masks()[0],mask:new Uint8Array(8)},masks()[1]]}),/empty mask/);
   assert.throws(()=>createCharacterDecomposition({characterAssetId:"c",source:source(),parts:[{...masks()[0],mask:new Uint8Array(8)}, {...masks()[1],mask:new Uint8Array(8)}]}),/empty mask/);
 });
 test("decomposition rejects malformed dimensions, non-binary masks and transparent source claims", () => {
@@ -76,8 +76,8 @@ test("rig requires exactly one node per part and rejects missing parents and cyc
   assert.throws(()=>createCharacterRig({decomposition:d,nodes:[nodes[0],{...nodes[1],parentId:"missing"}]}),/parent does not exist/);
 });
 test("rig clamps secondary motion and never transforms identity-locked face parts", () => {
-  const d=decomposition(),rig=createCharacterRig({decomposition:d,nodes:[
-    {id:"hair-node",partId:"hair",identityLocked:false,pivot:{x:.5,y:.1}},
+  const d=decompositionWithRepair(),rig=createCharacterRig({decomposition:d,nodes:[
+    {id:"hair-node",partId:"hair",identityLocked:false,repairIds:["hair-underlay"],pivot:{x:.5,y:.1}},
     {id:"face-node",partId:"face",identityLocked:true}
   ]});
   const pose=sampleCharacterRig(rig,{"hair-node":{translateX:99,translateY:-99,rotation:1,scaleX:1.2,scaleY:.8},"face-node":{translateX:4,rotation:.03,scaleX:1.01}});
