@@ -33,16 +33,18 @@ export function cleanCharacterViewMatte(input,width,height,options={}){
     fail("Character view pixels or dimensions are invalid.");
   }
   const whiteMin=Number(options.whiteMin??248),whiteChroma=Number(options.whiteChroma??18);
-  const whiteMinArea=Number(options.whiteMinArea??96),footMin=Number(options.footMin??180);
+  const whiteMinArea=Number(options.whiteMinArea??96),whiteBandStart=Number(options.whiteBandStart??0.90),footMin=Number(options.footMin??180);
   const footChroma=Number(options.footChroma??18),footMinArea=Number(options.footMinArea??40);
   const footBandStart=Number(options.footBandStart??0.93);
-  if(![whiteMin,whiteChroma,whiteMinArea,footMin,footChroma,footMinArea,footBandStart].every(Number.isFinite)||
+  if(![whiteMin,whiteChroma,whiteMinArea,whiteBandStart,footMin,footChroma,footMinArea,footBandStart].every(Number.isFinite)||
      whiteMin<200||whiteMin>255||whiteChroma<0||whiteChroma>80||whiteMinArea<1||
-     footMin<120||footMin>255||footChroma<0||footChroma>80||footMinArea<1||footBandStart<0.8||footBandStart>=1){
+     footMin<120||footMin>255||footChroma<0||footChroma>80||footMinArea<1||whiteBandStart<0.8||whiteBandStart>=1||footBandStart<0.8||footBandStart>=1){
     fail("Character matte cleanup settings are invalid.");
   }
   const data=new Uint8ClampedArray(input),count=width*height;
+  const whiteStart=Math.floor(height*whiteBandStart);
   const white=removeConnectedCandidates(data,width,height,index=>{
+    if(Math.floor(index/width)<whiteStart)return false;
     const p=index*4;if(!data[p+3])return false;
     const r=data[p],g=data[p+1],b=data[p+2],min=Math.min(r,g,b),max=Math.max(r,g,b);
     return min>=whiteMin&&max-min<=whiteChroma;
