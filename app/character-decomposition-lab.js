@@ -1,6 +1,7 @@
 
 import {createProject,normalizeProject} from "./engine.mjs";
 import {extractCharacterViews} from "./character-sheet-segmentation.mjs";
+import {floodSelectConnectedRegion} from "./character-mask-tools.mjs";
 import {createCharacterDecomposition,auditCharacterDecomposition,approveOcclusionRepair,createCharacterRig,sampleCharacterRig,compositeCharacterDecomposition,validateCharacterDecomposition} from "./character-decomposition.mjs";
 const $=id=>document.getElementById(id),sourceCanvas=$("sourceCanvas"),ctx=sourceCanvas.getContext("2d",{willReadFrequently:true}),preview=$("previewCanvas"),pctx=preview.getContext("2d");
 let project=createProject("تفكيك شخصية أنمي"),imageData=null,owner=null,parts=[],activePart=0,mode="partition",repairMask=null,repairPixels=null,currentRepair=null,repairs=[],decomposition=null,rig=null,sourceImage=null,extractedViews=[],activeViewId="sheet",activeViewName="ورقة كاملة",cloneSample=null,cloneSamplePicking=false,cloneOffset=null;
@@ -87,6 +88,7 @@ $("frontPartsPresetBtn").onclick=()=>{
 $("addPartBtn").onclick=()=>{if(!imageData)return;const name=$("partName").value.trim(),role=$("partRole").value.trim();if(!name||!role)return status("decomposeStatus","أدخل اسم الجزء ودوره.");parts.push({id:"part-"+(parts.length+1),name,role,count:0,movable:false});activePart=parts.length-1;refreshParts();drawOverlay()};
 $("partSelect").onchange=()=>{activePart=Number($("partSelect").value)||0};
 $("partitionModeBtn").onclick=()=>{mode="partition";status("decomposeStatus","وضع التقسيم: ارسم فوق الجزء الذي تريد فصله.")};
+$("selectModeBtn").onclick=()=>{mode="select";status("decomposeStatus","العصا السحرية: اختر طبقة من القائمة ثم المس اللون داخل المنطقة. الاختيار يتوقف عند حدود اللون والتجاور؛ عدّل الحساسية عند الحاجة.")};
 $("repairModeBtn").onclick=()=>{mode="repair";status("decomposeStatus","وضع الإصلاح: ارسم بكسلات المنطقة المخفية بلون الإصلاح المختار.")};
 $("startRepairBtn").onclick=()=>{
  if(!imageData)return;
@@ -105,6 +107,19 @@ $("pickCloneSourceBtn").onclick=()=>{
 function canvasPoint(event){
  const rect=sourceCanvas.getBoundingClientRect();
  return{x:(event.clientX-rect.left)/rect.width*sourceCanvas.width,y:(event.clientY-rect.top)/rect.height*sourceCanvas.height};
+}
+function applySmartSelection(event){
+ if(!imageData||!owner)return;
+ if(activePart===0)return status("decomposeStatus","أضف طبقة تشريحية واخترها أولاً قبل استخدام العصا السحرية.");
+ const point=canvasPoint(event),seedX=Math.max(0,Math.min(sourceCanvas.width-1,Math.floor(point.x))),seedY=Math.max(0,Math.min(sourceCanvas.height-1,Math.floor(point.y)));
+ try{
+  const selection=floodSelectConnectedRegion({width:sourceCanvas.width,height:sourceCanvas.height,rgba:imageData.data,seedX,seedY,tolerance:Number($("selectTolerance").value)});
+  if(!selection.pixelCount)return status("decomposeStatus","لم تُحدد منطقة مرئية عند هذه النقطة. جرّب موضعاً آخر أو غيّر الحساسية.");
+  if(decomposition){decomposition=null;rig=null;setEnabled("buildRigBtn",false);setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false)}
+  let transferred=0;for(let i=0;i<owner.length;i++)if(selection.mask[i]&&owner[i]!==activePart){owner[i]=activePart;transferred++}
+  drawOverlay();
+  status("decomposeStatus","العصا السحرية: حددت "+selection.pixelCount+" بكسل متصل، ونقلت "+transferred+" بكسل إلى «"+parts[activePart].name+"». نطاق الاختيار: "+selection.bounds.width+" × "+selection.bounds.height+". إذا تسرب الاختيار خارج الخطوط، خفّض الحساسية.");
+ }catch(err){status("decomposeStatus","تعذر الاختيار: "+err.message)}
 }
 function paint(event){
  if(!imageData)return;
@@ -137,6 +152,7 @@ sourceCanvas.addEventListener("pointerdown",e=>{
   status("repairStatus","تم اختيار مصدر النسخ عند "+cloneSample.x+", "+cloneSample.y+". ارسم الآن المنطقة المخفية.");
   return;
  }
+ if(mode==="select"){applySmartSelection(e);return;}
  if(mode==="repair"&&currentRepair?.method==="clone-source"){
   if(!cloneSample){status("repairStatus","حدد نقطة مصدر النسخ أولاً.");return}
   const p=canvasPoint(e);cloneOffset={x:cloneSample.x-Math.round(p.x),y:cloneSample.y-Math.round(p.y)};
