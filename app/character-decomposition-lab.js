@@ -17,7 +17,7 @@ function activateImagePixels(data,width,height,viewId="sheet",viewName="ورقة
  currentRepair=null;repairs=[];decomposition=null;rig=null;cloneSample=null;cloneSamplePicking=false;cloneOffset=null;
  refreshParts();drawOverlay();setEnabled("buildDecompositionBtn",true);setEnabled("buildRigBtn",false);
  setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false);
- setEnabled("approveRepairBtn",false);setEnabled("pickCloneSourceBtn",false);setEnabled("splitViewsBtn",viewId==="sheet");
+ setEnabled("approveRepairBtn",false);setEnabled("pickCloneSourceBtn",false);setEnabled("splitViewsBtn",viewId==="sheet");setEnabled("frontPartsPresetBtn",viewId==="front");
  status("sourceStatus",width+" × "+height+" — "+viewName+" — بكسلات المرجع محفوظة محلياً.");
  status("decomposeStatus","أضف جزءاً جديداً ثم ارسم فوق منطقة ذلك الجزء لفصلها عن الطبقة الأساسية.");
 }
@@ -67,6 +67,22 @@ $("splitViewsBtn").onclick=()=>{
   status("sourceStatus","اكتُشفت ثلاثة مكونات مستقلة. اختر أحد الأزرار لفصل هذا المنظر إلى لوحة مستقلة.");
   $("viewChoices").firstElementChild?.click();
  }catch(err){status("sourceStatus","تعذر فصل المناظر تلقائياً: "+err.message)}
+};
+$("frontPartsPresetBtn").onclick=()=>{
+ if(!imageData||activeViewId!=="front")return status("decomposeStatus","هيكل الطبقات هذا مخصص للمنظر الأمامي؛ اختر المنظر الأمامي أولاً.");
+ const preset=[
+  ["الشعر الخلفي","hair-back"],["خصلة أمامية يسار","hair-front-left"],["خصلة أمامية يمين","hair-front-right"],
+  ["الوجه والملامح","face"],["الرقبة","neck"],["كم يسار","sleeve-left"],["كم يمين","sleeve-right"],
+  ["جذع الكيمونو","kimono-torso"],["الحزام","obi"],["عقدة الحزام","obi-knot"],
+  ["اليد اليسرى","hand-left"],["اليد اليمنى","hand-right"],["التنورة","kimono-skirt"],
+  ["القدم اليسرى","foot-left"],["القدم اليمنى","foot-right"],["الحذاء الأيسر","shoe-left"],["الحذاء الأيمن","shoe-right"]
+ ];
+ const existing=new Set(parts.map(part=>part.role));let added=0;
+ for(const [name,role] of preset)if(!existing.has(role)){
+  parts.push({id:"front-"+role,name,role,count:0,movable:false});added++;
+ }
+ activePart=Math.min(parts.length-1,1);refreshParts();drawOverlay();
+ status("decomposeStatus","تم إنشاء "+added+" طبقة تشريحية فارغة. ارسم كل جزء على حدة؛ تبقى كل البكسلات غير المحددة في الطبقة الأساسية حتى لا نفقد تفاصيل المرجع.");
 };
 $("addPartBtn").onclick=()=>{if(!imageData)return;const name=$("partName").value.trim(),role=$("partRole").value.trim();if(!name||!role)return status("decomposeStatus","أدخل اسم الجزء ودوره.");parts.push({id:"part-"+(parts.length+1),name,role,count:0,movable:false});activePart=parts.length-1;refreshParts();drawOverlay()};
 $("partSelect").onchange=()=>{activePart=Number($("partSelect").value)||0};
