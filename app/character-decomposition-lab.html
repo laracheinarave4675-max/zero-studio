@@ -36,13 +36,13 @@ a{color:var(--accent)}
 </section>
 <section class="panel">
 <h2>2 — قسّم الصورة إلى أجزاء</h2>
-<p class="note">ابدأ بالطبقة الأساسية التي تحتوي كل بكسلات الصورة. أضف أجزاء مثل الشعر الخلفي، الشعر الأمامي، الوجه، الرقبة، الكيمونو، الأكمام والحزام. الطلاء ينقل ملكية البكسلات إلى الجزء المحدد، ولا يغير لون الصورة الأصلية.</p>
+<p class="note">ابدأ بالطبقة الأساسية التي تحتوي كل بكسلات الصورة. زر تهيئة المنظر الأمامي ينشئ أسماء طبقات تشريحية فارغة فقط؛ بعد ذلك ارسم حدود كل جزء بالفرشاة. الطلاء ينقل ملكية البكسلات إلى الجزء المحدد، ولا يغير لون الصورة الأصلية.</p>
 <div class="grid">
 <div><label>اسم الجزء</label><input id="partName" type="text" value="الشعر الخلفي"></div>
 <div><label>الدور الدلالي (مثلاً hair-back / face / sleeve)</label><input id="partRole" type="text" value="hair-back"></div>
 </div>
 <div class="row" style="margin-top:8px">
-<button id="addPartBtn">إضافة جزء جديد</button><label>الجزء النشط<select id="partSelect"></select></label>
+<button id="frontPartsPresetBtn" class="primary" disabled>تهيئة طبقات المنظر الأمامي</button><button id="addPartBtn">إضافة جزء جديد</button><label>الجزء النشط<select id="partSelect"></select></label>
 <label>حجم الفرشاة <input id="brushSize" type="range" min="2" max="100" value="24"></label>
 </div>
 <div id="partsList" class="status">الطبقة الأساسية فقط.</div>
