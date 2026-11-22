@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createCharacterDecomposition, validateCharacterDecomposition, compositeCharacterDecomposition,
-  auditCharacterDecomposition, approveOcclusionRepair, compositeCharacterDecomposition, createCharacterRig, sampleCharacterRig,
+  auditCharacterDecomposition, approveOcclusionRepair, createCharacterRig, sampleCharacterRig,
   auditCharacterRig, validateCharacterRig
 } from "../app/character-decomposition.mjs";
 import { createProject, normalizeProject } from "../app/engine.mjs";
