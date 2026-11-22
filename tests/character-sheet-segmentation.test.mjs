@@ -64,17 +64,17 @@ test("removes enclosed white matte islands and pale foot shadows but preserves h
       data.set(rgba, (y * width + x) * 4);
     }
   };
-  fill(2, 4, 10, 10, [253, 253, 253, 255]); // enclosed background pocket: remove
-  fill(17, 5, 5, 5, [255, 255, 255, 255]); // small specular detail: keep
+  fill(2, 54, 20, 6, [253, 253, 253, 255]); // enclosed foot-area background pocket: remove
+  fill(17, 54, 5, 5, [255, 255, 255, 255]); // small specular detail: keep
   fill(3, 55, 10, 5, [228, 229, 232, 255]); // pale ground shadow: remove
   fill(24, 54, 10, 6, [242, 198, 184, 255]); // warm shoe/skin: keep
   const cleaned = cleanCharacterViewMatte(data, width, height);
   const pixel = (x, y) => Array.from(cleaned.data.slice((y * width + x) * 4, (y * width + x) * 4 + 4));
-  assert.equal(cleaned.whiteIslandPixelsRemoved, 100);
+  assert.equal(cleaned.whiteIslandPixelsRemoved, 120);
   assert.equal(cleaned.footShadowPixelsRemoved, 50);
-  assert.equal(pixel(4, 5)[3], 0);
+  assert.equal(pixel(3, 55)[3], 0);
   assert.equal(pixel(4, 56)[3], 0);
-  assert.equal(pixel(18, 6)[3], 255);
+  assert.equal(pixel(18, 55)[3], 255);
   assert.deepEqual(pixel(25, 55), [242, 198, 184, 255]);
 });
 
