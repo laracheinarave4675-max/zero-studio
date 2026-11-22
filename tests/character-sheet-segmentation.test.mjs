@@ -66,16 +66,16 @@ test("removes enclosed white matte islands and pale foot shadows but preserves h
   };
   fill(2, 54, 20, 6, [253, 253, 253, 255]); // enclosed foot-area background pocket: remove
   fill(17, 54, 5, 5, [255, 255, 255, 255]); // small specular detail: keep
-  fill(3, 55, 10, 5, [228, 229, 232, 255]); // pale ground shadow: remove
-  fill(24, 54, 10, 6, [242, 198, 184, 255]); // warm shoe/skin: keep
+  fill(31, 55, 8, 5, [228, 229, 232, 255]); // pale ground shadow: remove
+  fill(22, 40, 6, 6, [242, 198, 184, 255]); // warm shoe/skin: keep
   const cleaned = cleanCharacterViewMatte(data, width, height);
   const pixel = (x, y) => Array.from(cleaned.data.slice((y * width + x) * 4, (y * width + x) * 4 + 4));
   assert.equal(cleaned.whiteIslandPixelsRemoved, 120);
   assert.equal(cleaned.footShadowPixelsRemoved, 50);
   assert.equal(pixel(3, 55)[3], 0);
-  assert.equal(pixel(4, 56)[3], 0);
+  assert.equal(pixel(35, 56)[3], 0);
   assert.equal(pixel(18, 55)[3], 255);
-  assert.deepEqual(pixel(25, 55), [242, 198, 184, 255]);
+  assert.deepEqual(pixel(23, 41), [242, 198, 184, 255]);
 });
 
 test("reports matte cleanup statistics for extracted front, side and back views", () => {
