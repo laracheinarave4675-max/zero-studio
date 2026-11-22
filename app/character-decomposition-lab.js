@@ -12,7 +12,7 @@ function activateImagePixels(data,width,height,viewId="sheet",viewName="ورقة
  sourceCanvas.width=preview.width=width;sourceCanvas.height=preview.height=height;
  imageData=new ImageData(new Uint8ClampedArray(data),width,height);ctx.putImageData(imageData,0,0);
  owner=new Uint8Array(width*height);for(let i=0;i<owner.length;i++)owner[i]=imageData.data[i*4+3]?0:255;
- activeViewId=viewId;activeViewName=viewName;
+ activeViewId=viewId;activeViewName=viewName;mode="partition";
  parts=[{id:"base-artwork",name:"الأصل / الخلفية",role:"base",count:owner.reduce((a,v)=>a+(v===0),0),movable:false}];
  activePart=0;repairMask=new Uint8Array(width*height);repairPixels=new Uint8Array(width*height*4);
  currentRepair=null;repairs=[];decomposition=null;rig=null;cloneSample=null;cloneSamplePicking=false;cloneOffset=null;
