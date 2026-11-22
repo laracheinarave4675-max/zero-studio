@@ -36,7 +36,7 @@ a{color:var(--accent)}
 </section>
 <section class="panel">
 <h2>2 — قسّم الصورة إلى أجزاء</h2>
-<p class="note">ابدأ بالطبقة الأساسية التي تحتوي كل بكسلات الصورة. زر تهيئة المنظر الأمامي ينشئ أسماء طبقات تشريحية فارغة فقط؛ بعد ذلك ارسم حدود كل جزء بالفرشاة. الطلاء ينقل ملكية البكسلات إلى الجزء المحدد، ولا يغير لون الصورة الأصلية.</p>
+<p class="note">ابدأ بالطبقة الأساسية التي تحتوي كل بكسلات الصورة. زر تهيئة المنظر الأمامي ينشئ أسماء طبقات تشريحية فارغة فقط؛ بعد ذلك افصل كل جزء بالفرشاة أو العصا السحرية التي تختار مساحة اللون المتصلة داخل حدود الخطوط. الطلاء والاختيار ينقلان ملكية البكسلات إلى الجزء المحدد، ولا يغيران ألوان المرجع.</p>
 <div class="grid">
 <div><label>اسم الجزء</label><input id="partName" type="text" value="الشعر الخلفي"></div>
 <div><label>الدور الدلالي (مثلاً hair-back / face / sleeve)</label><input id="partRole" type="text" value="hair-back"></div>
@@ -47,7 +47,8 @@ a{color:var(--accent)}
 </div>
 <div id="partsList" class="status">الطبقة الأساسية فقط.</div>
 <canvas id="sourceCanvas" width="1" height="1" aria-label="لوحة تحديد أجزاء الشخصية"></canvas>
-<div class="row"><button id="partitionModeBtn" class="primary">وضع تقسيم الأجزاء</button><button id="repairModeBtn">وضع استعادة المنطقة المخفية</button></div>
+<div class="row"><button id="partitionModeBtn" class="primary">وضع تقسيم الأجزاء</button><button id="selectModeBtn">العصا السحرية: اختيار منطقة متصلة</button><button id="repairModeBtn">وضع استعادة المنطقة المخفية</button></div>
+<label>حساسية اختيار اللون <input id="selectTolerance" type="range" min="5" max="120" step="5" value="40"></label>
 <div id="decomposeStatus" class="status">ارفع صورة أولاً، ثم ارسم فوق مناطق الأجزاء.</div>
 </section>
 <section class="panel">
