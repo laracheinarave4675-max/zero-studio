@@ -31,3 +31,10 @@ test("the front-view anatomy layer preset is available and wired to the front-vi
   assert.match(script, /sleeve-right/);
   assert.match(script, /kimono-skirt/);
 });
+
+test("the lab exposes a connected-color smart selection mode", () => {
+  assert.match(html, /id="selectModeBtn"/);
+  assert.match(html, /id="selectTolerance"/);
+  assert.match(script, /applySmartSelection/);
+  assert.match(script, /floodSelectConnectedRegion/);
+});
