@@ -38,3 +38,12 @@ test("the lab exposes a connected-color smart selection mode", () => {
   assert.match(script, /applySmartSelection/);
   assert.match(script, /floodSelectConnectedRegion/);
 });
+
+test("the mask editor exposes pixel-level undo and redo history", () => {
+  assert.match(html, /id="undoMaskBtn"/);
+  assert.match(html, /id="redoMaskBtn"/);
+  assert.match(script, /beginMaskEdit/);
+  assert.match(script, /finishMaskEdit/);
+  assert.match(script, /applyHistoryEdit/);
+  assert.match(script, /undoStack\.push/);
+});
