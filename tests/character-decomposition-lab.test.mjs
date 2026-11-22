@@ -23,3 +23,11 @@ test("the mobile lab exposes the three-view extractor and clone-source repair co
   assert.match(script, /extractCharacterViews/);
   assert.match(script, /clone-source/);
 });
+
+test("the front-view anatomy layer preset is available and wired to the front-view guard", () => {
+  assert.match(html, /id="frontPartsPresetBtn"/);
+  assert.match(script, /activeViewId!=="front"/);
+  assert.match(script, /hair-front-left/);
+  assert.match(script, /sleeve-right/);
+  assert.match(script, /kimono-skirt/);
+});
