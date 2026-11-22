@@ -4,7 +4,7 @@ import {extractCharacterViews} from "./character-sheet-segmentation.mjs";
 import {floodSelectConnectedRegion} from "./character-mask-tools.mjs";
 import {createCharacterDecomposition,auditCharacterDecomposition,approveOcclusionRepair,createCharacterRig,sampleCharacterRig,compositeCharacterDecomposition,validateCharacterDecomposition} from "./character-decomposition.mjs";
 const $=id=>document.getElementById(id),sourceCanvas=$("sourceCanvas"),ctx=sourceCanvas.getContext("2d",{willReadFrequently:true}),preview=$("previewCanvas"),pctx=preview.getContext("2d");
-let project=createProject("تفكيك شخصية أنمي"),imageData=null,owner=null,parts=[],activePart=0,mode="partition",repairMask=null,repairPixels=null,currentRepair=null,repairs=[],decomposition=null,rig=null,sourceImage=null,extractedViews=[],activeViewId="sheet",activeViewName="ورقة كاملة",cloneSample=null,cloneSamplePicking=false,cloneOffset=null;
+let project=createProject("تفكيك شخصية أنمي"),imageData=null,owner=null,parts=[],activePart=0,mode="partition",repairMask=null,repairPixels=null,currentRepair=null,repairs=[],decomposition=null,rig=null,sourceImage=null,extractedViews=[],activeViewId="sheet",activeViewName="ورقة كاملة",cloneSample=null,cloneSamplePicking=false,cloneOffset=null,undoStack=[],redoStack=[],activeMaskEdit=null;
 const colors=["#47b5a6","#df9b54","#8b9fe2","#d77ea6","#a4bd69","#b38bd8","#e0c5a0","#67a9d9"];
 function status(id,message){$(id).textContent=message}
 function setEnabled(id,value){$(id).disabled=!value}
@@ -14,7 +14,7 @@ function activateImagePixels(data,width,height,viewId="sheet",viewName="ورقة
  owner=new Uint8Array(width*height);for(let i=0;i<owner.length;i++)owner[i]=imageData.data[i*4+3]?0:255;
  activeViewId=viewId;activeViewName=viewName;mode="partition";
  parts=[{id:"base-artwork",name:"الأصل / الخلفية",role:"base",count:owner.reduce((a,v)=>a+(v===0),0),movable:false}];
- activePart=0;repairMask=new Uint8Array(width*height);repairPixels=new Uint8Array(width*height*4);
+ activePart=0;repairMask=new Uint8Array(width*height);repairPixels=new Uint8Array(width*height*4);undoStack=[];redoStack=[];activeMaskEdit=null;updateHistoryButtons();
  currentRepair=null;repairs=[];decomposition=null;rig=null;cloneSample=null;cloneSamplePicking=false;cloneOffset=null;
  refreshParts();drawOverlay();setEnabled("buildDecompositionBtn",true);setEnabled("buildRigBtn",false);
  setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false);
@@ -29,6 +29,43 @@ function refreshParts(){
  $("partsList").replaceChildren();
  parts.forEach((part,i)=>{const row=document.createElement("div");row.className="part";const label=document.createElement("span");label.textContent=part.name+" · "+part.role;const count=document.createElement("small");count.textContent=part.count+" px";const lock=document.createElement("label");const check=document.createElement("input");check.type="checkbox";check.checked=part.movable;check.addEventListener("change",()=>{part.movable=check.checked});lock.append(check,document.createTextNode(" السماح بالحركة"));row.append(label,count,lock);$("partsList").append(row)});
 }
+
+function updateHistoryButtons(){
+ setEnabled("undoMaskBtn",undoStack.length>0);setEnabled("redoMaskBtn",redoStack.length>0);
+}
+function refreshPartCounts(){
+ if(!owner)return;
+ for(let p=0;p<parts.length;p++){let count=0;for(const v of owner)if(v===p)count++;parts[p].count=count}
+ refreshParts();updateHistoryButtons();
+}
+function beginMaskEdit(){
+ if(!owner||activeMaskEdit)return;
+ activeMaskEdit=new Map();
+}
+function recordMaskPixel(index){
+ if(activeMaskEdit&&!activeMaskEdit.has(index))activeMaskEdit.set(index,owner[index]);
+}
+function finishMaskEdit(){
+ if(!activeMaskEdit)return;
+ if(activeMaskEdit.size){
+  const indices=Array.from(activeMaskEdit.keys()),before=indices.map(i=>activeMaskEdit.get(i)),after=indices.map(i=>owner[i]);
+  undoStack.push({indices,before,after});if(undoStack.length>30)undoStack.shift();redoStack=[];
+  refreshPartCounts();
+ }
+ activeMaskEdit=null;updateHistoryButtons();
+}
+function applyHistoryEdit(entry,values){
+ for(let k=0;k<entry.indices.length;k++)owner[entry.indices[k]]=values[k];
+ refreshPartCounts();drawOverlay();
+}
+$("undoMaskBtn").onclick=()=>{
+ if(!undoStack.length)return;const entry=undoStack.pop();applyHistoryEdit(entry,entry.before);redoStack.push(entry);updateHistoryButtons();
+ status("decomposeStatus","تم التراجع عن تعديل "+entry.indices.length+" بكسل.");
+};
+$("redoMaskBtn").onclick=()=>{
+ if(!redoStack.length)return;const entry=redoStack.pop();applyHistoryEdit(entry,entry.after);undoStack.push(entry);updateHistoryButtons();
+ status("decomposeStatus","تمت إعادة تعديل "+entry.indices.length+" بكسل.");
+};
 function drawOverlay(){
  if(!imageData)return;ctx.putImageData(imageData,0,0);
  const overlayCanvas=document.createElement("canvas");overlayCanvas.width=sourceCanvas.width;overlayCanvas.height=sourceCanvas.height;
@@ -116,7 +153,8 @@ function applySmartSelection(event){
   const selection=floodSelectConnectedRegion({width:sourceCanvas.width,height:sourceCanvas.height,rgba:imageData.data,seedX,seedY,tolerance:Number($("selectTolerance").value)});
   if(!selection.pixelCount)return status("decomposeStatus","لم تُحدد منطقة مرئية عند هذه النقطة. جرّب موضعاً آخر أو غيّر الحساسية.");
   if(decomposition){decomposition=null;rig=null;setEnabled("buildRigBtn",false);setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false)}
-  let transferred=0;for(let i=0;i<owner.length;i++)if(selection.mask[i]&&owner[i]!==activePart){owner[i]=activePart;transferred++}
+  const indices=[],before=[],after=[];let transferred=0;for(let i=0;i<owner.length;i++)if(selection.mask[i]&&owner[i]!==activePart){indices.push(i);before.push(owner[i]);owner[i]=activePart;after.push(activePart);transferred++}
+  if(indices.length){undoStack.push({indices,before,after});if(undoStack.length>30)undoStack.shift();redoStack=[];refreshPartCounts()}
   drawOverlay();
   status("decomposeStatus","العصا السحرية: حددت "+selection.pixelCount+" بكسل متصل، ونقلت "+transferred+" بكسل إلى «"+parts[activePart].name+"». نطاق الاختيار: "+selection.bounds.width+" × "+selection.bounds.height+". إذا تسرب الاختيار خارج الخطوط، خفّض الحساسية.");
  }catch(err){status("decomposeStatus","تعذر الاختيار: "+err.message)}
@@ -127,7 +165,7 @@ function paint(event){
  const x0=Math.max(0,Math.floor(x-r)),x1=Math.min(sourceCanvas.width-1,Math.ceil(x+r)),y0=Math.max(0,Math.floor(y-r)),y1=Math.min(sourceCanvas.height-1,Math.ceil(y+r));
  if(mode==="partition"){
   if(decomposition){decomposition=null;rig=null;setEnabled("buildRigBtn",false);setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false)}
-  for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++)if((xx-x)**2+(yy-y)**2<=r*r){const i=yy*sourceCanvas.width+xx;if(imageData.data[i*4+3])owner[i]=activePart}
+  for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++)if((xx-x)**2+(yy-y)**2<=r*r){const i=yy*sourceCanvas.width+xx;if(imageData.data[i*4+3]&&owner[i]!==activePart){recordMaskPixel(i);owner[i]=activePart}}
  }else if(currentRepair){
   if(currentRepair.method==="clone-source"){
    if(!cloneSample||!cloneOffset)return;
@@ -157,11 +195,11 @@ sourceCanvas.addEventListener("pointerdown",e=>{
   if(!cloneSample){status("repairStatus","حدد نقطة مصدر النسخ أولاً.");return}
   const p=canvasPoint(e);cloneOffset={x:cloneSample.x-Math.round(p.x),y:cloneSample.y-Math.round(p.y)};
  }else cloneOffset=null;
- drawing=true;sourceCanvas.setPointerCapture(e.pointerId);paint(e);
+ drawing=true;if(mode==="partition")beginMaskEdit();sourceCanvas.setPointerCapture(e.pointerId);paint(e);
 });
 sourceCanvas.addEventListener("pointermove",e=>{if(drawing)paint(e)});
-sourceCanvas.addEventListener("pointerup",()=>{drawing=false;cloneOffset=null});
-sourceCanvas.addEventListener("pointercancel",()=>{drawing=false;cloneOffset=null});
+sourceCanvas.addEventListener("pointerup",()=>{drawing=false;cloneOffset=null;if(mode==="partition")finishMaskEdit()});
+sourceCanvas.addEventListener("pointercancel",()=>{drawing=false;cloneOffset=null;if(mode==="partition")finishMaskEdit()});
 $("approveRepairBtn").onclick=()=>{if(!currentRepair||!repairMask.some(v=>v))return;if(!decomposition)return status("repairStatus","أعد بناء التفكيك بعد رسم الإصلاح أولاً.");const repair=decomposition.occlusionRepairs.find(r=>r.id===currentRepair.id);if(!repair)return status("repairStatus","أعد بناء التفكيك لإضافة منطقة الإصلاح الحالية.");try{approveOcclusionRepair(decomposition,currentRepair.id);repairs.push({...currentRepair,mask:repairMask.slice(),pixels:repairPixels.slice(),reviewStatus:"approved"});status("repairStatus","تم اعتماد الإصلاح؛ سيظهر أسفل الجزء الحاجب "+repair.occludedByPartId+". يمكنك بدء منطقة إصلاح أخرى.");renderPreview(Number($("motionScrub").value)/100);currentRepair=null;cloneSample=null;cloneOffset=null;setEnabled("approveRepairBtn",false);setEnabled("pickCloneSourceBtn",false)}catch(err){status("repairStatus","تعذر اعتماد الإصلاح: "+err.message)}};
 $("buildDecompositionBtn").onclick=()=>{
  try{
