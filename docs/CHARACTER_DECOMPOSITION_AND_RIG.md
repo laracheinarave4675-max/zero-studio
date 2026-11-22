@@ -35,5 +35,14 @@ Good first motions: slight hair-tip follow, sleeve lag, and tiny torso breathing
 6. Identity locks remain fixed and transforms remain inside limits.
 7. The original source image remains available for rollback.
 
-## Current limitation / next implementation step
-The repository currently contains a remote three-view kimono gallery reference and a procedural approved-kimono drawing profile; it does not contain the user's original gallery PNG as a local binary asset. The new engine is ready to accept that reference image and artist-authored masks, but it does not yet provide an interactive mask-painting UI or automatically segment the gallery image. The next step is to build that editor, import the exact reference image from the user's library, author the first masks, and then test a tiny hair/sleeve motion without changing the face.
+## Current implementation and next gate — 2026-11-22
+
+- `app/character-sheet-segmentation.mjs` separates three non-touching views by border-connected near-white background removal and connected components. It fails closed when the expected number of views is not found.
+- A second view-local cleanup removes large enclosed near-white matte pockets only in the lower 10% of a character view (minimum 96 connected pixels), and low-chroma pale ground-shadow components in the lower 7% (minimum 40 connected pixels). Small highlights and warm skin/shoe pixels are retained. This is a conservative matte heuristic, not semantic segmentation; the supplied kimono sheet was visually checked after cleanup.
+- The mobile lab supports original-image upload, front/side/back view selection, a one-tap front-view anatomy-layer scaffold, brush-based mask authoring, and connected-color selection with adjustable per-channel tolerance. The smart selector uses four-neighbour flood fill and does not label a region as hair, face, or clothing.
+- The recovery UI supports manual paint and clone-source patches from the same approved view. Recovery patches still require review and explicit approval.
+- The front-view scaffold creates empty editable layer records (rear hair, front hair clumps, face, neck, sleeves, torso, obi, hands, skirt, feet and shoes). It does not create the masks automatically.
+- The latest CI head `330b52f02ca32146a267ccec97f4716cd269b784` passed 501/501 tests in both Drawing Engine and Hybrid raster/SVG workflows; the native raster proof also succeeded.
+- The user-provided source image remains a conversation asset rather than a committed repository binary. The downloadable cleaned PNG crops are deliverables, not silently written into the library.
+
+Next gate: author and review the actual front-view masks, then the hidden-area patches behind the front hair and sleeves. Only after those patches are approved should the first bounded hair/sleeve motion be tested. No current claim of completed semantic decomposition, completed hidden-region reconstruction, or accepted animation is made.
