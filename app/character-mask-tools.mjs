@@ -14,15 +14,16 @@ export function floodSelectConnectedRegion({width,height,rgba,seedX,seedY,tolera
   const seed=seedY*width+seedX,offset=seed*4;
   if(Number(rgba[offset+3])===0||(eligibleMask&&!eligibleMask[seed]))return{mask:new Uint8Array(count),pixelCount:0,bounds:null,seedColor:null};
   const target=[Number(rgba[offset]),Number(rgba[offset+1]),Number(rgba[offset+2])];
-  const selected=new Uint8Array(count),queue=new Int32Array(count);
-  let head=0,tail=0,minX=width,minY=height,maxX=-1,maxY=-1;
+  const selected=new Uint8Array(count);
+  let queue=new Int32Array(Math.min(count,4096)),head=0,tail=0,minX=width,minY=height,maxX=-1,maxY=-1;
+  const enqueue=index=>{if(tail===queue.length){const grown=new Int32Array(Math.min(count,queue.length*2));grown.set(queue);queue=grown;}queue[tail++]=index;};
   const matches=index=>{
     const p=index*4;if(Number(rgba[p+3])===0||(eligibleMask&&!eligibleMask[index]))return false;
     return Math.abs(Number(rgba[p])-target[0])<=tolerance&&
       Math.abs(Number(rgba[p+1])-target[1])<=tolerance&&
       Math.abs(Number(rgba[p+2])-target[2])<=tolerance;
   };
-  selected[seed]=255;queue[tail++]=seed;
+  selected[seed]=255;enqueue(seed);
   while(head<tail){
     const index=queue[head++],x=index%width,y=Math.floor(index/width);
     minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
@@ -31,7 +32,7 @@ export function floodSelectConnectedRegion({width,height,rgba,seedX,seedY,tolera
     if(x+1<width)neighbours.push(index+1);
     if(y>0)neighbours.push(index-width);
     if(y+1<height)neighbours.push(index+width);
-    for(const next of neighbours)if(!selected[next]&&matches(next)){selected[next]=255;queue[tail++]=next;}
+    for(const next of neighbours)if(!selected[next]&&matches(next)){selected[next]=255;enqueue(next);}
   }
   return{mask:selected,pixelCount:tail,bounds:tail?{x:minX,y:minY,width:maxX-minX+1,height:maxY-minY+1}:null,seedColor:target};
 }
