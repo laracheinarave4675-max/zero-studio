@@ -76,7 +76,8 @@ export function createCharacterDecomposition({characterAssetId,source,parts,occl
   if(!repairId||!name||repairIds.has(repairId))fail("Occlusion repair IDs and names must be unique.");repairIds.add(repairId);
   if(!["manual-paint","clone-source","approved-reference-patch"].includes(method))fail("Hidden areas require an explicit, reviewable repair method.");
   const cropped=cropRepair(raw,image.width,image.height,repairId);estimate+=cropped.mask.length+cropped.pixels.length;
-  return{id:repairId,name,method,reviewStatus:raw.reviewStatus==="approved"?"approved":"pending",...cropped,pixelHash:hashCharacterPixels(cropped.pixels)};
+  const occludedByPartId=clean(raw.occludedByPartId);if(!occludedByPartId||!ids.has(occludedByPartId))fail("A hidden-area repair must name the foreground part that occludes it.");
+  return{id:repairId,name,method,occludedByPartId,reviewStatus:raw.reviewStatus==="approved"?"approved":"pending",...cropped,pixelHash:hashCharacterPixels(cropped.pixels)};
  });
  if(estimate>MAX_BYTES)fail("Decomposition exceeds the 64 MB in-memory asset limit.");
  return{format:CHARACTER_DECOMPOSITION_FORMAT,version:1,characterAssetId:id,sourceLabel:clean(sourceLabel,160),width:image.width,height:image.height,sourceHash:image.sourceHash,sourcePixels:Array.from(image.rgba),parts:normalized,occlusionRepairs:repairs,provenance:{segmentation:"artist-supplied-binary-masks",hiddenAreaRecovery:"explicit-repair-patches-only",generativeFillUsed:false}};
@@ -107,7 +108,7 @@ export function validateCharacterDecomposition(record){
  if(!Array.isArray(record.occlusionRepairs)||record.occlusionRepairs.length>32)fail("Occlusion repair list is invalid.");
  const repairIds=new Set();
  for(const repair of record.occlusionRepairs){
-  if(!repair?.id||repairIds.has(repair.id))fail("Occlusion repair IDs are duplicated.");repairIds.add(repair.id);
+  if(!repair?.id||repairIds.has(repair.id)||!ids.has(repair.occludedByPartId))fail("Occlusion repair IDs or occluding part link are invalid.");repairIds.add(repair.id);
   if(!["manual-paint","clone-source","approved-reference-patch"].includes(repair.method))fail("Occlusion repair method is invalid.");
   const crop=validateCrop(repair,record.width,record.height,"Repair "+repair.id);let required=0,supplied=0;
   for(let i=0;i<crop.mask.length;i++)if(crop.mask[i]){required++;if(crop.pixels[i*4+3])supplied++}
@@ -117,9 +118,12 @@ export function validateCharacterDecomposition(record){
 }
 export function compositeCharacterDecomposition(record,{includeRepairs=false}={}){
  validateCharacterDecomposition(record);const out=new Uint8ClampedArray(record.width*record.height*4);
- const paint=item=>{const b=item.bounds,m=item.mask,p=item.pixels;for(let y=0;y<b.height;y++)for(let x=0;x<b.width;x++){const i=y*b.width+x;if(!m[i])continue;const target=((b.y+y)*record.width+b.x+x)*4,from=i*4;out.set(p.subarray? p.subarray(from,from+4):p.slice(from,from+4),target)}};
- for(const part of [...record.parts].sort((a,b)=>a.order-b.order))if(part.visible)paint({...part,mask:bytes(part.mask,part.bounds.width*part.bounds.height,"mask"),pixels:bytes(part.pixels,part.bounds.width*part.bounds.height*4,"pixels")});
- if(includeRepairs)for(const repair of record.occlusionRepairs)if(repair.reviewStatus==="approved")paint({...repair,mask:bytes(repair.mask,repair.bounds.width*repair.bounds.height,"mask"),pixels:bytes(repair.pixels,repair.bounds.width*repair.bounds.height*4,"pixels")});
+ const paint=item=>{const b=item.bounds,m=item.mask,p=item.pixels;for(let y=0;y<b.height;y++)for(let x=0;x<b.width;x++){const i=y*b.width+x;if(!m[i])continue;const target=((b.y+y)*record.width+b.x+x)*4,from=i*4;out.set(p.slice(from,from+4),target)}};
+ const parts=[...record.parts].sort((a,b)=>a.order-b.order);
+ for(const part of parts){
+  if(includeRepairs)for(const repair of record.occlusionRepairs)if(repair.reviewStatus==="approved"&&repair.occludedByPartId===part.id)paint({...repair,mask:bytes(repair.mask,repair.bounds.width*repair.bounds.height,"repair mask"),pixels:bytes(repair.pixels,repair.bounds.width*repair.bounds.height*4,"repair pixels")});
+  if(part.visible)paint({...part,mask:bytes(part.mask,part.bounds.width*part.bounds.height,"mask"),pixels:bytes(part.pixels,part.bounds.width*part.bounds.height*4,"pixels")});
+ }
  return out;
 }
 export function auditCharacterDecomposition(record){
@@ -140,7 +144,9 @@ export function createCharacterRig({decomposition,nodes,constraints=DEFAULT_LIMI
   const id=clean(raw?.id),partId=clean(raw?.partId);if(!id||ids.has(id)||!partIds.has(partId))fail("Rig node IDs must be unique and reference an existing decomposed part.");ids.add(id);
   const pivot={x:Number(raw.pivot?.x??.5),y:Number(raw.pivot?.y??.5)};
   if(!Number.isFinite(pivot.x)||!Number.isFinite(pivot.y)||pivot.x<0||pivot.x>1||pivot.y<0||pivot.y>1)fail("Rig pivots must be normalized between 0 and 1.");
-  normalized.push({id,partId,parentId:raw.parentId?clean(raw.parentId):null,pivot,identityLocked:raw.identityLocked!==false});
+  const identityLocked=raw.identityLocked!==false,repairIds=Array.isArray(raw.repairIds)?raw.repairIds.map(v=>clean(v)):[];
+  if(!identityLocked){if(!repairIds.length)fail("A moving part needs approved hidden-area repair links.");for(const repairId of repairIds){const repair=decomposition.occlusionRepairs.find(r=>r.id===repairId);if(!repair||repair.reviewStatus!=="approved"||repair.occludedByPartId!==partId)fail("Moving part "+partId+" requires an approved repair behind that exact part.");}}
+  normalized.push({id,partId,parentId:raw.parentId?clean(raw.parentId):null,pivot,identityLocked,repairIds});
  }
  for(const node of normalized)if(node.parentId&&!ids.has(node.parentId))fail("Rig node parent does not exist: "+node.parentId);
  for(const node of normalized){const visited=new Set([node.id]);let parent=node.parentId;while(parent){if(visited.has(parent))fail("Rig hierarchy contains a cycle.");visited.add(parent);parent=normalized.find(n=>n.id===parent)?.parentId||null;}}

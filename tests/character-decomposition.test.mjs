@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createCharacterDecomposition, validateCharacterDecomposition, compositeCharacterDecomposition,
-  auditCharacterDecomposition, approveOcclusionRepair, createCharacterRig, sampleCharacterRig,
+  auditCharacterDecomposition, approveOcclusionRepair, compositeCharacterDecomposition, createCharacterRig, sampleCharacterRig,
   auditCharacterRig, validateCharacterRig
 } from "../app/character-decomposition.mjs";
 import { createProject, normalizeProject } from "../app/engine.mjs";
@@ -23,6 +23,10 @@ function masks() {
 function decomposition(overrides={}) {
   return createCharacterDecomposition({ characterAssetId:"kimono-library-01", source:source(), parts:masks(), ...overrides });
 }
+function decompositionWithRepair() {
+  const mask=new Uint8Array(8);mask[0]=255;const pixels=new Uint8Array(32);pixels.set([8,9,10,255],0);
+  return decomposition({occlusionRegions:[{id:"hair-underlay",name:"Hair hidden area",method:"manual-paint",occludedByPartId:"hair",reviewStatus:"approved",mask,pixels}]});
+}
 test("decomposition round-trips the complete original RGBA source pixel-for-pixel", () => {
   const record=decomposition(), audit=auditCharacterDecomposition(record);
   assert.equal(validateCharacterDecomposition(record).pixelExactSource,true);
@@ -42,22 +46,27 @@ test("decomposition rejects malformed dimensions, non-binary masks and transpare
   assert.throws(()=>createCharacterDecomposition({characterAssetId:"c",source:transparent,parts:masks()}),/transparent/);
 });
 test("hidden regions require explicit complete repair pixels and remain pending until reviewed", () => {
-  const mask=new Uint8Array(8);mask[2]=255;
-  const pixels=new Uint8Array(32);pixels.set([0,0,255,255],8);
-  const record=decomposition({occlusionRegions:[{id:"head-under-hair",name:"Head area hidden by hair",method:"manual-paint",mask,pixels}]});
+  const mask=new Uint8Array(8);mask[0]=255;
+  const pixels=new Uint8Array(32);pixels.set([0,0,255,255],0);
+  const record=decomposition({occlusionRegions:[{id:"head-under-hair",name:"Head area hidden by hair",method:"manual-paint",occludedByPartId:"hair",mask,pixels}]});
   let audit=auditCharacterDecomposition(record);
   assert.equal(audit.occlusionRepairCount,1);
   assert.equal(audit.allRepairsApproved,false);
   assert.equal(audit.readyForLayerMotion,false);
+  assert.throws(()=>createCharacterRig({decomposition:record,nodes:[{id:"hair-node",partId:"hair",identityLocked:false,repairIds:["head-under-hair"]},{id:"face-node",partId:"face"}]}),/approved repair behind that exact part/);
   approveOcclusionRepair(record,"head-under-hair");
+  const hair=record.parts.find(part=>part.id==="hair");hair.visible=false;
+  const revealed=compositeCharacterDecomposition(record,{includeRepairs:true});
+  assert.deepEqual(Array.from(revealed.slice(0,4)),[0,0,255,255]);
+  hair.visible=true;
   audit=auditCharacterDecomposition(record);
   assert.equal(audit.allRepairsApproved,true);
   assert.equal(audit.readyForLayerMotion,true);
-  assert.throws(()=>decomposition({occlusionRegions:[{id:"bad",name:"Incomplete",method:"manual-paint",mask,pixels:new Uint8Array(32)}]}),/every hidden-area mask pixel/);
+  assert.throws(()=>decomposition({occlusionRegions:[{id:"bad",name:"Incomplete",method:"manual-paint",occludedByPartId:"hair",mask,pixels:new Uint8Array(32)}]}),/every hidden-area mask pixel/);
 });
 test("repair methods cannot claim automatic generative fill", () => {
   const mask=new Uint8Array(8);mask[0]=255;const pixels=new Uint8Array(32);pixels.set([1,2,3,255],0);
-  assert.throws(()=>decomposition({occlusionRegions:[{id:"r",name:"Repair",method:"ai-fill",mask,pixels}]}),/explicit, reviewable repair method/);
+  assert.throws(()=>decomposition({occlusionRegions:[{id:"r",name:"Repair",method:"ai-fill",occludedByPartId:"hair",mask,pixels}]}),/explicit, reviewable repair method/);
 });
 test("rig requires exactly one node per part and rejects missing parents and cycles", () => {
   const d=decomposition(),nodes=[{id:"hair-node",partId:"hair"},{id:"face-node",partId:"face",parentId:"hair-node"}];
@@ -84,10 +93,12 @@ test("rig clamps secondary motion and never transforms identity-locked face part
   assert.equal(validateCharacterRig(rig,d).sourceHash,d.sourceHash);
 });
 test("project persistence keeps decomposition records and rejects corrupted source hashes", () => {
-  const project=createProject(),record=decomposition();project.characterDecompositions=[record];project.characterRigs=[createCharacterRig({decomposition:record,nodes:[{id:"hair-node",partId:"hair",identityLocked:false},{id:"face-node",partId:"face"}]})];
+  const project=createProject(),record=decompositionWithRepair();project.characterDecompositions=[record];project.characterRigs=[createCharacterRig({decomposition:record,nodes:[{id:"hair-node",partId:"hair",identityLocked:false,repairIds:["hair-underlay"]},{id:"face-node",partId:"face"}]})];
   const reopened=normalizeProject(JSON.parse(JSON.stringify(project)));
   assert.equal(reopened.characterDecompositions.length,1);
-  assert.equal(reopened.characterDecompositions[0].characterAssetId,"kimono-library-01");\n  assert.equal(reopened.characterRigs.length,1);\n  assert.equal(reopened.characterRigs[0].sourceHash,record.sourceHash);
+  assert.equal(reopened.characterDecompositions[0].characterAssetId,"kimono-library-01");
+  assert.equal(reopened.characterRigs.length,1);
+  assert.equal(reopened.characterRigs[0].sourceHash,record.sourceHash);
   const corrupted=JSON.parse(JSON.stringify(project));corrupted.characterDecompositions[0].sourceHash="tampered";
   assert.throws(()=>normalizeProject(corrupted),/Immutable source pixels changed/);
 });
