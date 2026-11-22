@@ -29,6 +29,8 @@ a{color:var(--accent)}
 <div><label>ملف مشروع ZERO (.zero) — اختياري</label><input id="projectFile" type="file" accept=".zero,application/json"></div>
 <div><label>صورة الشخصية المعتمدة (PNG / JPEG / WebP)</label><input id="sourceFile" type="file" accept="image/png,image/jpeg,image/webp"></div>
 </div>
+<div class="row" style="margin-top:8px"><button id="splitViewsBtn" class="primary" disabled>اكتشاف وفصل المناظر الثلاثة تلقائياً</button><div id="viewChoices" class="row"></div></div>
+<p class="note">الفصل يعتمد على اتصال الخلفية البيضاء بحواف الصورة. يبقى كل بكسل داخل حدود الشخصية كما هو؛ تُزال الخلفية الخارجية فقط. إذا لم تُكتشف ثلاثة مكونات واضحة، لن يخمّن النظام مواقعها.</p>
 <p class="note">ورقة الكيمونو الأصلية موجودة في معرض المشروع. نزّلها من <a href="https://zero-studio-flux2-preview.9test4675a26.workers.dev/gallery/be172712-e073-4d06-9587-eec7e6c62a84" target="_blank" rel="noopener">مرجع الشخصية بثلاث زوايا</a> ثم اختر الصورة هنا. لا نحمّل صورة من خادم خارجي إلى Canvas تلقائياً كي لا نخاطر بتلوث اللوحة أو فقدان البكسلات.</p>
 <div id="sourceStatus" class="status">لم تُحمّل صورة بعد.</div>
 </section>
@@ -55,8 +57,9 @@ a{color:var(--accent)}
 <div><label>اسم منطقة الإصلاح</label><input id="repairName" type="text" value="الرأس خلف الشعر"></div>
 <div><label>الجزء الأمامي الذي يحجبها</label><select id="occluderSelect"></select></div>
 <div><label>لون الإصلاح اليدوي</label><input id="repairColor" type="color" value="#f3d9ca"></div>
+<div><label>طريقة استعادة البكسلات</label><select id="repairMethod"><option value="manual-paint">طلاء يدوي بلون محدد</option><option value="clone-source">نسخ بكسلات من المرجع الحالي</option></select></div>
 </div>
-<div class="row"><button id="startRepairBtn">بدء منطقة إصلاح جديدة</button><button id="approveRepairBtn" disabled>اعتماد منطقة الإصلاح الحالية</button></div>
+<div class="row"><button id="startRepairBtn">بدء منطقة إصلاح جديدة</button><button id="pickCloneSourceBtn" disabled>تحديد نقطة مصدر النسخ</button><button id="approveRepairBtn" disabled>اعتماد منطقة الإصلاح الحالية</button></div>
 <div id="repairStatus" class="status">الإصلاحات اليدوية تظل غير معتمدة حتى تراجعها.</div>
 </section>
 <section class="panel">
