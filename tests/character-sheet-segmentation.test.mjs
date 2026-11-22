@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { extractCharacterViews } from "../app/character-sheet-segmentation.mjs";
+import { extractCharacterViews, cleanCharacterViewMatte } from "../app/character-sheet-segmentation.mjs";
 
 function modelSheet() {
   const width = 42, height = 24;
@@ -54,4 +54,35 @@ test("rejects invalid pixels, dimensions and unsafe segmentation options", () =>
   assert.throws(() => extractCharacterViews({ ...source, data: new Uint8Array(3) }), /RGBA pixels are missing/);
   assert.throws(() => extractCharacterViews({ ...source, width: 0 }), /dimensions must be positive/);
   assert.throws(() => extractCharacterViews(source, { whiteThreshold: 190 }), /options are invalid/);
+});
+
+test("removes enclosed white matte islands and pale foot shadows but preserves highlights and warm shoe colors", () => {
+  const width = 40, height = 60;
+  const data = new Uint8ClampedArray(width * height * 4);
+  const fill = (x0, y0, w, h, rgba) => {
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
+      data.set(rgba, (y * width + x) * 4);
+    }
+  };
+  fill(2, 4, 10, 10, [253, 253, 253, 255]); // enclosed background pocket: remove
+  fill(17, 5, 5, 5, [255, 255, 255, 255]); // small specular detail: keep
+  fill(3, 55, 10, 5, [228, 229, 232, 255]); // pale ground shadow: remove
+  fill(24, 54, 10, 6, [242, 198, 184, 255]); // warm shoe/skin: keep
+  const cleaned = cleanCharacterViewMatte(data, width, height);
+  const pixel = (x, y) => Array.from(cleaned.data.slice((y * width + x) * 4, (y * width + x) * 4 + 4));
+  assert.equal(cleaned.whiteIslandPixelsRemoved, 100);
+  assert.equal(cleaned.footShadowPixelsRemoved, 50);
+  assert.equal(pixel(4, 5)[3], 0);
+  assert.equal(pixel(4, 56)[3], 0);
+  assert.equal(pixel(18, 6)[3], 255);
+  assert.deepEqual(pixel(25, 55), [242, 198, 184, 255]);
+});
+
+test("reports matte cleanup statistics for extracted front, side and back views", () => {
+  const result = extractCharacterViews(modelSheet(), { minArea: 10 });
+  for (const view of result.views) {
+    assert.ok(view.matteCleanup);
+    assert.ok(Number.isInteger(view.matteCleanup.whiteIslandPixelsRemoved));
+    assert.ok(Number.isInteger(view.matteCleanup.footShadowPixelsRemoved));
+  }
 });
