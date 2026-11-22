@@ -1,11 +1,12 @@
 import{validateAnimeCharacterDNA,validateAnimeFrameRasterAsset}from"./anime-anatomy-engine.mjs";
 import{validateArtistLearningRecord}from"./digital-artist-learning.mjs";
+import{validateCharacterDecomposition,validateCharacterRig}from"./character-decomposition.mjs";
 export const WIDTH=1920,HEIGHT=1080,MAX_FRAMES=30000,MAX_LAYERS=100,MAX_OPERATIONS=10000;
 const NS="http://www.w3.org/2000/svg";
 export const uid=(p="id")=>p+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
 export const createLayer=(name="طبقة 1")=>({id:uid("layer"),name,visible:true,locked:false,operations:[]});
 export const createFrame=()=>({id:uid("frame"),layers:[createLayer()]});
-export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()],characterLibrary:[],animeCharacterDNA:[],animeAutoSequence:null,animationBackground:null,artistLearning:null});
+export const createProject=(name="مشروع جديد")=>({format:"zero-studio",version:2,name,width:WIDTH,height:HEIGHT,fps:24,frames:[createFrame()],characterLibrary:[],characterDecompositions:[],characterRigs:[],animeCharacterDNA:[],animeAutoSequence:null,animationBackground:null,artistLearning:null});
 export function safeColor(c,f="#172033"){return typeof c==="string"&&(/^#[0-9a-f]{3,8}$/i.test(c)||/^(black|white|red|blue|green|none)$/i.test(c)||/^url\(#zero-[a-z0-9-]+\)$/i.test(c))?c:f}
 export const SVG_DEFS="<defs><linearGradient id=\"zero-sky\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e2f2ee\"/><stop offset=\".55\" stop-color=\"#c7dfd8\"/><stop offset=\"1\" stop-color=\"#a7c1b3\"/></linearGradient><radialGradient id=\"zero-sun\"><stop offset=\"0\" stop-color=\"#fff0c8\"/><stop offset=\".72\" stop-color=\"#f6d99e\"/><stop offset=\"1\" stop-color=\"#eebf78\"/></radialGradient><linearGradient id=\"zero-wall\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#eadcc3\"/><stop offset=\".48\" stop-color=\"#d4c1a0\"/><stop offset=\"1\" stop-color=\"#a99578\"/></linearGradient><linearGradient id=\"zero-wood\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#8b6c51\"/><stop offset=\".5\" stop-color=\"#6d503d\"/><stop offset=\"1\" stop-color=\"#49382e\"/></linearGradient><linearGradient id=\"zero-roof\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#7a7168\"/><stop offset=\".45\" stop-color=\"#4d4b4a\"/><stop offset=\"1\" stop-color=\"#292f33\"/></linearGradient><linearGradient id=\"zero-glass\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#d2e7dc\"/><stop offset=\".35\" stop-color=\"#8db9b3\"/><stop offset=\"1\" stop-color=\"#466d72\"/></linearGradient><linearGradient id=\"zero-road\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#858c82\"/><stop offset=\".4\" stop-color=\"#666f69\"/><stop offset=\"1\" stop-color=\"#4c5753\"/></linearGradient><linearGradient id=\"zero-leaf\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#a6bd79\"/><stop offset=\".42\" stop-color=\"#658b5b\"/><stop offset=\"1\" stop-color=\"#315b46\"/></linearGradient><linearGradient id=\"zero-shadow\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#68786a\"/><stop offset=\"1\" stop-color=\"#a4a38b\"/></linearGradient></defs>";
 
@@ -354,6 +355,23 @@ export function normalizeProject(p){
  const rawLibrary=Array.isArray(p.characterLibrary)?p.characterLibrary:[];
  if(rawLibrary.length>100)throw Error("تحتوي مكتبة الشخصيات على أكثر من 100 نموذج");
  const characterLibrary=rawLibrary.map(normalizeCharacterAsset);
+ const rawDecompositions=Array.isArray(p.characterDecompositions)?p.characterDecompositions:[];
+ if(rawDecompositions.length>12)throw Error("لا يمكن حفظ أكثر من 12 عملية تفكيك شخصية في المشروع");
+ const decompositionIds=new Set();
+ const characterDecompositions=rawDecompositions.map(record=>{
+  validateCharacterDecomposition(record);
+  if(decompositionIds.has(record.characterAssetId))throw Error("تفكيك الشخصية مكرر داخل المشروع");
+  decompositionIds.add(record.characterAssetId);
+  if(JSON.stringify(record).length>64*1024*1024)throw Error("ملف تفكيك الشخصية يتجاوز 64 ميغابايت");
+  return record;
+ });
+ const rawRigs=Array.isArray(p.characterRigs)?p.characterRigs:[];
+ if(rawRigs.length>100)throw Error("تجاوزت مكتبة هياكل تحريك الشخصيات الحد الأقصى");
+ const characterRigs=rawRigs.map(rig=>{
+  const source=characterDecompositions.find(item=>item.characterAssetId===rig.characterAssetId);
+  if(!source)throw Error("هيكل التحريك لا يرتبط بتفكيك شخصية محفوظ");
+  return validateCharacterRig(rig,source);
+ });
  const rawAnimeDNA=Array.isArray(p.animeCharacterDNA)?p.animeCharacterDNA:[];
  if(rawAnimeDNA.length>100)throw Error("تحتوي مكتبة هويات الأنمي التشريحية على أكثر من 100 شخصية");
  const animeCharacterDNA=rawAnimeDNA.map(validateAnimeCharacterDNA);
@@ -382,7 +400,7 @@ export function normalizeProject(p){
  if(p.animationBackground!==undefined&&p.animationBackground!==null){if(!Array.isArray(p.animationBackground)||p.animationBackground.length<1||p.animationBackground.length>MAX_LAYERS)throw Error("طبقات الخلفية الثابتة غير صالحة");const names=new Set();let count=0;animationBackground=p.animationBackground.map((source,index)=>{const layer=normalizeLayer(source,index);if(names.has(layer.name))throw Error("أسماء طبقات الخلفية الثابتة مكررة");names.add(layer.name);count+=layer.operations.length;if(count>2800)throw Error("تجاوزت الخلفية الثابتة حد 2800 عملية متجهية");layer.locked=true;return layer})}
  if(animationProduction&&frames.length!==Math.max(1,animationProduction.baseFrameCount+animationProduction.completedFrames))throw Error("عدد إطارات المشروع لا يطابق سجل إنتاج الحركة.");
  const artistLearning=p.artistLearning&&typeof p.artistLearning==="object"&&!Array.isArray(p.artistLearning)?validateArtistLearningRecord(p.artistLearning):null;
- return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,animeCharacterDNA,animationProduction,animeAutoSequence,animationBackground,artistLearning};
+ return{format:"zero-studio",version:2,name:String(p.name||"مشروع مستورد").slice(0,80),width:WIDTH,height:HEIGHT,fps:[6,12,24].includes(+p.fps)?+p.fps:24,frames,characterLibrary,characterDecompositions,characterRigs,animeCharacterDNA,animationProduction,animeAutoSequence,animationBackground,artistLearning};
 }
 export function addLayer(f,name){if(f.layers.length>=MAX_LAYERS)throw Error("بلغت الحد الأقصى للطبقات");const l=createLayer(name||("طبقة "+(f.layers.length+1)));f.layers.push(l);return l}
 export function createRasterLayer({name="طبقة نقطية",dataUrl,mimeType,width,height,opacity=1,blendMode="normal"}={}){
