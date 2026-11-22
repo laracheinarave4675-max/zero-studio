@@ -4,7 +4,7 @@ const crcTable=(()=>{const table=new Uint32Array(256);for(let n=0;n<256;n++){let
 export function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}
 function u16(view,offset,value){view.setUint16(offset,value,true)}
 function u32(view,offset,value){view.setUint32(offset,value>>>0,true)}
-function safeName(name){const value=String(name||"").replace(/\\/g,"/").replace(/^\/+|\.\.(?:\/|$)/g,"").replace(/[^\p{L}\p{N}._/-]+/gu,"-");if(!value||value.length>180)throw Error("ZIP entry name is invalid.");return value}
+function safeName(name){const raw=String(name||"").replace(/\\/g,"/");if(!raw||raw.startsWith("/")||raw.split("/").some(part=>part===".."||part===""))throw Error("ZIP entry name is invalid.");const value=raw.replace(/[^\p{L}\p{N}._/-]+/gu,"-");if(!value||value.length>180)throw Error("ZIP entry name is invalid.");return value}
 export function createStoredZip(entries){
  if(!Array.isArray(entries)||!entries.length||entries.length>256)throw Error("ZIP requires 1–256 entries.");
  const local=[],central=[];let offset=0;const names=new Set();
