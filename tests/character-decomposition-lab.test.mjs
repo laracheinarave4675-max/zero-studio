@@ -47,3 +47,11 @@ test("the mask editor exposes pixel-level undo and redo history", () => {
   assert.match(script, /applyHistoryEdit/);
   assert.match(script, /undoStack\.push/);
 });
+
+test("the lab exports per-part PNG files and a ZIP manifest", () => {
+  assert.match(script, /canvasPngBytes/);
+  assert.match(script, /createStoredZip/);
+  assert.match(script, /manifest\.json/);
+  assert.match(script, /character-decomposition\.json/);
+  assert.match(script, /application\/zip/);
+});
