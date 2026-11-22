@@ -47,3 +47,19 @@ test("rejects unsafe dimensions, missing source pixels, invalid seed and toleran
   assert.throws(()=>floodSelectConnectedRegion({width:2,height:2,rgba,seedX:2,seedY:0}),/outside/);
   assert.throws(()=>floodSelectConnectedRegion({width:2,height:2,rgba,seedX:0,seedY:0,tolerance:221}),/tolerance/);
 });
+
+test("eligible ownership mask prevents a selection from stealing another authored part",()=>{
+  const width=7,height=3,rgba=new Uint8Array(width*height*4),eligible=new Uint8Array(width*height);
+  for(let i=0;i<width*height;i++)rgba.set([120,80,60,255],i*4);
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(x<=2||x>=5)eligible[y*width+x]=255;
+  const result=floodSelectConnectedRegion({width,height,rgba,seedX:1,seedY:1,tolerance:0,eligibleMask:eligible});
+  assert.equal(result.pixelCount,9);
+  assert.equal(result.mask[1*width+3],0);
+  assert.equal(result.mask[1*width+5],0);
+});
+test("connected selection grows its queue with the selected region rather than preallocating image-sized queue memory",()=>{
+  const width=100,height=100,rgba=new Uint8Array(width*height*4);
+  for(let i=0;i<width*height;i++)rgba.set([40,50,60,255],i*4);
+  const result=floodSelectConnectedRegion({width,height,rgba,seedX:50,seedY:50,tolerance:0});
+  assert.equal(result.pixelCount,width*height);
+});
