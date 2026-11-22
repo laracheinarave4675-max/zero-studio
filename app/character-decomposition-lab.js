@@ -60,7 +60,7 @@ $("splitViewsBtn").onclick=()=>{
    button.textContent=view.label+" · "+view.width+"×"+view.height;
    button.addEventListener("click",()=>{
     activateImagePixels(view.data,view.width,view.height,view.id,view.label);
-    status("sourceStatus",view.label+" — تم فصل المنظر مع خلفية شفافة. المساحة الأصلية: "+view.pixelCount+" بكسل؛ يمكن بدء تفكيك هذا المنظر.");
+    status("sourceStatus",view.label+" — تم فصل المنظر وتنظيف الخلفية. البكسلات المحتفظ بها: "+view.pixelCount+"؛ إزالة خلفية بيضاء محصورة: "+view.matteCleanup.whiteIslandPixelsRemoved+" بكسل؛ إزالة ظلال أرضية عند القدمين: "+view.matteCleanup.footShadowPixelsRemoved+" بكسل. يمكنك بدء التفكيك التشريحي.");
    });
    $("viewChoices").append(button);
   });
