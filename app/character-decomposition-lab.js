@@ -2,6 +2,7 @@
 import {createProject,normalizeProject} from "./engine.mjs";
 import {extractCharacterViews} from "./character-sheet-segmentation.mjs";
 import {floodSelectConnectedRegion} from "./character-mask-tools.mjs";
+import {createStoredZip} from "./character-layer-zip.mjs";
 import {createCharacterDecomposition,auditCharacterDecomposition,approveOcclusionRepair,createCharacterRig,sampleCharacterRig,compositeCharacterDecomposition,validateCharacterDecomposition} from "./character-decomposition.mjs";
 const $=id=>document.getElementById(id),sourceCanvas=$("sourceCanvas"),ctx=sourceCanvas.getContext("2d",{willReadFrequently:true}),preview=$("previewCanvas"),pctx=preview.getContext("2d");
 let project=createProject("تفكيك شخصية أنمي"),imageData=null,owner=null,parts=[],activePart=0,mode="partition",repairMask=null,repairPixels=null,currentRepair=null,repairs=[],decomposition=null,rig=null,sourceImage=null,extractedViews=[],activeViewId="sheet",activeViewName="ورقة كاملة",cloneSample=null,cloneSamplePicking=false,cloneOffset=null,undoStack=[],redoStack=[],activeMaskEdit=null;
@@ -234,5 +235,30 @@ $("buildRigBtn").onclick=()=>{
 };
 $("motionScrub").oninput=()=>renderPreview(Number($("motionScrub").value)/100);
 $("saveProjectBtn").onclick=()=>{try{if(!decomposition)throw Error("لا يوجد تفكيك محفوظ");project.characterDecompositions=(project.characterDecompositions||[]).filter(x=>x.characterAssetId!==decomposition.characterAssetId);project.characterDecompositions.push(decomposition);if(rig){project.characterRigs=(project.characterRigs||[]).filter(x=>x.characterAssetId!==rig.characterAssetId);project.characterRigs.push(rig)}const normalized=normalizeProject(project);const blob=new Blob([JSON.stringify(normalized)],{type:"application/json"});download(blob,"zero-studio-character-decomposition.zero");status("qualityStatus","تم حفظ المشروع محلياً مع التفكيك والهيكل.");}catch(err){status("qualityStatus","تعذر الحفظ: "+err.message)}};
-$("exportLayersBtn").onclick=()=>{if(!decomposition)return;const blob=new Blob([JSON.stringify(decomposition)],{type:"application/json"});download(blob,"character-decomposition.json")};
+async function canvasPngBytes(canvas){
+ const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error("تعذر إنشاء PNG للطبقة.")),"image/png"));
+ return new Uint8Array(await blob.arrayBuffer());
+}
+$("exportLayersBtn").onclick=async()=>{
+ if(!decomposition)return;
+ const button=$("exportLayersBtn");button.disabled=true;
+ try{
+  const entries=[],manifest={format:"zero-studio-character-layer-export",version:1,characterAssetId:decomposition.characterAssetId,sourceHash:decomposition.sourceHash,width:decomposition.width,height:decomposition.height,sourceCompositeExact:auditCharacterDecomposition(decomposition).sourceCompositeExact,parts:[],occlusionRepairs:[]};
+  for(const part of [...decomposition.parts].sort((a,b)=>a.order-b.order)){
+   const name="layers/"+String(part.order+1).padStart(2,"0")+"-"+part.id+".png";
+   entries.push({name,data:await canvasPngBytes(partCanvas(part))});
+   manifest.parts.push({id:part.id,name:part.name,role:part.role,order:part.order,parentId:part.parentId,bounds:part.bounds,identityLocked:part.identityLocked,visible:part.visible,pixelHash:part.pixelHash,png:name});
+  }
+  for(const repair of decomposition.occlusionRepairs){
+   const name="repairs/"+repair.id+".png";
+   entries.push({name,data:await canvasPngBytes(partCanvas(repair))});
+   manifest.occlusionRepairs.push({id:repair.id,name:repair.name,method:repair.method,occludedByPartId:repair.occludedByPartId,reviewStatus:repair.reviewStatus,bounds:repair.bounds,pixelHash:repair.pixelHash,png:name});
+  }
+  entries.push({name:"character-decomposition.json",data:new TextEncoder().encode(JSON.stringify(decomposition))});
+  entries.push({name:"manifest.json",data:new TextEncoder().encode(JSON.stringify(manifest,null,2))});
+  const archive=createStoredZip(entries);download(new Blob([archive],{type:"application/zip"}),"zero-studio-character-layers.zip");
+  status("qualityStatus","تم تصدير "+manifest.parts.length+" طبقة PNG و"+manifest.occlusionRepairs.length+" إصلاحات، مع ملف المصدر والبيانات الوصفية. التطابق الأصلي: "+manifest.sourceCompositeExact+".");
+ }catch(err){status("qualityStatus","فشل تصدير الطبقات: "+err.message)}
+ finally{button.disabled=false}
+};
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
