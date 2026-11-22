@@ -48,3 +48,10 @@ Good first motions: slight hair-tip follow, sleeve lag, and tiny torso breathing
 - The user-provided source image remains a conversation asset rather than a committed repository binary. The downloadable cleaned PNG crops are deliverables, not silently written into the library.
 
 Next gate: author and review the actual front-view masks, then the hidden-area patches behind the front hair and sleeves. Only after those patches are approved should the first bounded hair/sleeve motion be tested. No current claim of completed semantic decomposition, completed hidden-region reconstruction, or accepted animation is made.
+
+
+## Smart-selection ownership safety and mobile memory
+
+- The connected-color selector now receives an eligibility mask that allows transfer only from the base/unassigned layer or the currently active part. Pixels already assigned to another anatomical layer are hard barriers, preventing a later selection from silently stealing authored hair/face/garment pixels.
+- The flood-fill queue now grows geometrically from a small initial allocation rather than allocating one 32-bit queue slot for every source pixel up front. The selected mask remains image-sized, but ordinary small selections no longer reserve a full-image queue.
+- Regression tests cover ownership barriers and a full connected region that forces queue growth.
