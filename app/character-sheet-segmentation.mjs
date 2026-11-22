@@ -3,6 +3,61 @@
 const MAX_PIXELS = 16_000_000;
 const fail = message => { throw new Error(message); };
 
+// Remove large, enclosed near-white matte islands and pale neutral ground shadows below the feet.
+// Small white sparkles, warm skin, and saturated footwear are deliberately retained.
+function removeConnectedCandidates(data,width,height,candidate,minArea){
+  const count=width*height,visited=new Uint8Array(count),queue=new Int32Array(count);
+  let removedPixels=0,removedComponents=0;
+  for(let start=0;start<count;start++){
+    if(!candidate(start)||visited[start])continue;
+    let head=0,tail=0;queue[tail++]=start;visited[start]=1;
+    while(head<tail){
+      const index=queue[head++],x=index%width,y=Math.floor(index/width);
+      const y0=Math.max(0,y-1),y1=Math.min(height-1,y+1);
+      const x0=Math.max(0,x-1),x1=Math.min(width-1,x+1);
+      for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){
+        const next=yy*width+xx;
+        if(!visited[next]&&candidate(next)){visited[next]=1;queue[tail++]=next;}
+      }
+    }
+    if(tail>=minArea){
+      for(let i=0;i<tail;i++)data[queue[i]*4+3]=0;
+      removedPixels+=tail;removedComponents++;
+    }
+  }
+  return{pixels:removedPixels,components:removedComponents};
+}
+export function cleanCharacterViewMatte(input,width,height,options={}){
+  if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width*height>MAX_PIXELS||
+     !(input instanceof Uint8Array||input instanceof Uint8ClampedArray||Array.isArray(input))||input.length!==width*height*4){
+    fail("Character view pixels or dimensions are invalid.");
+  }
+  const whiteMin=Number(options.whiteMin??248),whiteChroma=Number(options.whiteChroma??18);
+  const whiteMinArea=Number(options.whiteMinArea??96),footMin=Number(options.footMin??180);
+  const footChroma=Number(options.footChroma??18),footMinArea=Number(options.footMinArea??40);
+  const footBandStart=Number(options.footBandStart??0.93);
+  if(![whiteMin,whiteChroma,whiteMinArea,footMin,footChroma,footMinArea,footBandStart].every(Number.isFinite)||
+     whiteMin<200||whiteMin>255||whiteChroma<0||whiteChroma>80||whiteMinArea<1||
+     footMin<120||footMin>255||footChroma<0||footChroma>80||footMinArea<1||footBandStart<0.8||footBandStart>=1){
+    fail("Character matte cleanup settings are invalid.");
+  }
+  const data=new Uint8ClampedArray(input),count=width*height;
+  const white=removeConnectedCandidates(data,width,height,index=>{
+    const p=index*4;if(!data[p+3])return false;
+    const r=data[p],g=data[p+1],b=data[p+2],min=Math.min(r,g,b),max=Math.max(r,g,b);
+    return min>=whiteMin&&max-min<=whiteChroma;
+  },whiteMinArea);
+  const footStart=Math.floor(height*footBandStart);
+  const foot=removeConnectedCandidates(data,width,height,index=>{
+    const y=Math.floor(index/width);if(y<footStart)return false;
+    const p=index*4;if(!data[p+3])return false;
+    const r=data[p],g=data[p+1],b=data[p+2],min=Math.min(r,g,b),max=Math.max(r,g,b);
+    return min>=footMin&&max-min<=footChroma;
+  },footMinArea);
+  return{data,whiteIslandPixelsRemoved:white.pixels,whiteIslandComponentsRemoved:white.components,
+    footShadowPixelsRemoved:foot.pixels,footShadowComponentsRemoved:foot.components};
+}
+
 export function extractCharacterViews(source, options = {}) {
   const width = Number(source?.width), height = Number(source?.height);
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > MAX_PIXELS) {
@@ -90,14 +145,19 @@ export function extractCharacterViews(source, options = {}) {
       const from = global * 4, to = (y * component.width + x) * 4;
       data.set(input.subarray ? input.subarray(from, from + 4) : input.slice(from, from + 4), to);
     }
+    const cleaned=cleanCharacterViewMatte(data,component.width,component.height);
     return {
       id: ids[index],
       label: labels[index] || `View ${index + 1}`,
       bounds: { x: component.x, y: component.y, width: component.width, height: component.height },
       width: component.width,
       height: component.height,
-      pixelCount: component.pixels,
-      data
+      pixelCount: component.pixels-cleaned.whiteIslandPixelsRemoved-cleaned.footShadowPixelsRemoved,
+      matteCleanup: {
+        whiteIslandPixelsRemoved: cleaned.whiteIslandPixelsRemoved,
+        footShadowPixelsRemoved: cleaned.footShadowPixelsRemoved
+      },
+      data: cleaned.data
     };
   });
 
