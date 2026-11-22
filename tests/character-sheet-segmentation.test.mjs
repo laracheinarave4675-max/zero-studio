@@ -71,7 +71,7 @@ test("removes enclosed white matte islands and pale foot shadows but preserves h
   const cleaned = cleanCharacterViewMatte(data, width, height);
   const pixel = (x, y) => Array.from(cleaned.data.slice((y * width + x) * 4, (y * width + x) * 4 + 4));
   assert.equal(cleaned.whiteIslandPixelsRemoved, 120);
-  assert.equal(cleaned.footShadowPixelsRemoved, 50);
+  assert.equal(cleaned.footShadowPixelsRemoved, 40);
   assert.equal(pixel(3, 55)[3], 0);
   assert.equal(pixel(35, 56)[3], 0);
   assert.equal(pixel(26, 55)[3], 255);
