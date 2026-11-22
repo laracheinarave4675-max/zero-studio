@@ -151,13 +151,14 @@ function applySmartSelection(event){
  if(activePart===0)return status("decomposeStatus","أضف طبقة تشريحية واخترها أولاً قبل استخدام العصا السحرية.");
  const point=canvasPoint(event),seedX=Math.max(0,Math.min(sourceCanvas.width-1,Math.floor(point.x))),seedY=Math.max(0,Math.min(sourceCanvas.height-1,Math.floor(point.y)));
  try{
-  const selection=floodSelectConnectedRegion({width:sourceCanvas.width,height:sourceCanvas.height,rgba:imageData.data,seedX,seedY,tolerance:Number($("selectTolerance").value)});
+  const eligibleMask=new Uint8Array(owner.length);for(let i=0;i<owner.length;i++)if(owner[i]===0||owner[i]===activePart)eligibleMask[i]=255;
+  const selection=floodSelectConnectedRegion({width:sourceCanvas.width,height:sourceCanvas.height,rgba:imageData.data,seedX,seedY,tolerance:Number($("selectTolerance").value),eligibleMask});
   if(!selection.pixelCount)return status("decomposeStatus","لم تُحدد منطقة مرئية عند هذه النقطة. جرّب موضعاً آخر أو غيّر الحساسية.");
   if(decomposition){decomposition=null;rig=null;setEnabled("buildRigBtn",false);setEnabled("saveProjectBtn",false);setEnabled("exportLayersBtn",false);setEnabled("motionScrub",false)}
   const indices=[],before=[],after=[];let transferred=0;for(let i=0;i<owner.length;i++)if(selection.mask[i]&&owner[i]!==activePart){indices.push(i);before.push(owner[i]);owner[i]=activePart;after.push(activePart);transferred++}
   if(indices.length){undoStack.push({indices,before,after});if(undoStack.length>30)undoStack.shift();redoStack=[];refreshPartCounts()}
   drawOverlay();
-  status("decomposeStatus","العصا السحرية: حددت "+selection.pixelCount+" بكسل متصل، ونقلت "+transferred+" بكسل إلى «"+parts[activePart].name+"». نطاق الاختيار: "+selection.bounds.width+" × "+selection.bounds.height+". إذا تسرب الاختيار خارج الخطوط، خفّض الحساسية.");
+  status("decomposeStatus","العصا السحرية: حددت "+selection.pixelCount+" بكسل متصل، ونقلت "+transferred+" بكسل إلى «"+parts[activePart].name+"». نطاق الاختيار: "+selection.bounds.width+" × "+selection.bounds.height+". الاختيار لا يستطيع سرقة بكسلات طبقة تشريحية أخرى؛ إذا تسرب داخل الطبقة الأساسية، خفّض الحساسية.");
  }catch(err){status("decomposeStatus","تعذر الاختيار: "+err.message)}
 }
 function paint(event){
